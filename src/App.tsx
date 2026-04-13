@@ -165,14 +165,51 @@ interface RoadmapItem {
 }
 
 interface LetterData {
+  // Ortak alanlar
   fullName: string;
   passportNumber: string;
+  birthDate: string;
+  nationality: string;
+  phone: string;
+  email: string;
+  address: string;
   targetCountry: string;
   purpose: string;
   startDate: string;
   endDate: string;
+  // Finansal & Mesleki
   occupation: string;
+  companyEmployer: string;
   monthlyIncome: string;
+  bankBalance: string;
+  insuranceProvider: string;
+  insurancePolicyNo: string;
+  // Konaklama & Uçuş
+  hotelName: string;
+  hotelAddress: string;
+  hotelReservationNo: string;
+  flightOutbound: string;
+  flightInbound: string;
+  // Bağlar
+  tieDescription: string;
+  // Sponsor alanları
+  sponsorFullName: string;
+  sponsorRelation: string;
+  sponsorId: string;
+  sponsorAddress: string;
+  sponsorPhone: string;
+  sponsorOccupation: string;
+  sponsorIncome: string;
+  // İşveren alanları
+  companyName: string;
+  companyAddress: string;
+  companyPhone: string;
+  jobStartDate: string;
+  authorizedName: string;
+  authorizedTitle: string;
+  returnDate: string;
+  // Seyahat planı
+  dailyPlan: string;
 }
 
 const ukDocuments = {
@@ -740,15 +777,19 @@ export default function App() {
   const [ocrResults, setOcrResults] = useState<{file: string, status: string}[]>([]);
   const [simulatorValue, setSimulatorValue] = useState(0); // For dynamic balance simulation
 
+  const [activeLetterType, setActiveLetterType] = useState<'cover' | 'sponsor' | 'employer' | 'itinerary'>('cover');
   const [letterData, setLetterData] = useState<LetterData>({
-    fullName: '',
-    passportNumber: '',
-    targetCountry: 'Almanya',
-    purpose: 'Turistik Gezi',
-    startDate: '',
-    endDate: '',
-    occupation: '',
-    monthlyIncome: '',
+    fullName: '', passportNumber: '', birthDate: '', nationality: 'Türk', phone: '', email: '', address: '',
+    targetCountry: profile.targetCountry || 'Almanya', purpose: 'Turistik Gezi ve Kültürel Keşif',
+    startDate: '', endDate: '',
+    occupation: '', companyEmployer: '', monthlyIncome: '', bankBalance: '',
+    insuranceProvider: '', insurancePolicyNo: '',
+    hotelName: '', hotelAddress: '', hotelReservationNo: '',
+    flightOutbound: '', flightInbound: '',
+    tieDescription: 'Türkiye\'deki işim, ailem ve mülklerim',
+    sponsorFullName: '', sponsorRelation: '', sponsorId: '', sponsorAddress: '', sponsorPhone: '', sponsorOccupation: '', sponsorIncome: '',
+    companyName: '', companyAddress: '', companyPhone: '', jobStartDate: '', authorizedName: '', authorizedTitle: 'İnsan Kaynakları Müdürü', returnDate: '',
+    dailyPlan: '',
   });
 
   // ============================================================
@@ -1503,132 +1544,239 @@ Türkçe, madde madde ve net bir şekilde yanıtla.` },
     setProfile((prev: ProfileData) => ({ ...prev, [key]: !prev[key] }));
   };
 
-  const generatePDF = (type: 'cover' | 'sponsor' | 'employer' | 'itinerary' = 'cover') => {
-    const doc = new jsPDF();
-    const date = new Date().toLocaleDateString('tr-TR');
-    
-    // jsPDF default fonts do not support Turkish characters well. 
-    // We normalize them to ensure the PDF is readable and professional.
-    const normalizeTr = (text: string) => {
-      return text
-        .replace(/ğ/g, 'g').replace(/Ğ/g, 'G')
-        .replace(/ü/g, 'u').replace(/Ü/g, 'U')
-        .replace(/ş/g, 's').replace(/Ş/g, 'S')
-        .replace(/ı/g, 'i').replace(/İ/g, 'I')
-        .replace(/ö/g, 'o').replace(/Ö/g, 'O')
-        .replace(/ç/g, 'c').replace(/Ç/g, 'C');
-    };
+  // ──────────────────────────────────────────────────────────────────
+  // SMART DOCUMENT GENERATOR 2.0 — 2024-2026 Konsolosluk Standartları
+  // ──────────────────────────────────────────────────────────────────
+  const normalizeTr = (text: string) => text
+    .replace(/ğ/g, 'g').replace(/Ğ/g, 'G')
+    .replace(/ü/g, 'u').replace(/Ü/g, 'U')
+    .replace(/ş/g, 's').replace(/Ş/g, 'S')
+    .replace(/ı/g, 'i').replace(/İ/g, 'I')
+    .replace(/ö/g, 'o').replace(/Ö/g, 'O')
+    .replace(/ç/g, 'c').replace(/Ç/g, 'C');
 
-    doc.setFontSize(10);
-    doc.text(date, 170, 20);
-    
-    doc.setFontSize(14);
-    const titles = {
-      cover: 'VIZE NIYET MEKTUBU (COVER LETTER)',
-      sponsor: 'SPONSORLUK TAAHHUTNAMESI',
-      employer: 'ISVEREN CALISMA VE IZIN BELGESI',
-      itinerary: 'DETAYLI SEYAHAT PLANI (ITINERARY)'
-    };
-    doc.text(titles[type], 20, 35);
-    
-    doc.setFontSize(11);
-    
-    let body = '';
+  const buildLetterBody = (type: 'cover' | 'sponsor' | 'employer' | 'itinerary'): string => {
+    const d = letterData;
+    const today = new Date().toLocaleDateString('tr-TR');
+    const tripDays = d.startDate && d.endDate
+      ? Math.max(1, Math.round((new Date(d.endDate).getTime() - new Date(d.startDate).getTime()) / 86400000))
+      : '[GÜN SAYISI]';
+
     if (type === 'cover') {
-      body = `Ilgili Makama / Sayin Konsolosluk Yetkilisi,
+      return `${d.address || '[Adresiniz]'}
+${today}
 
-Konu: Turistik Vize Basvurusu - ${letterData.fullName} (Pasaport No: ${letterData.passportNumber})
+${d.targetCountry} Başkonsolosluğu
+Vize Birimi
 
-Ben ${letterData.fullName}, ${letterData.targetCountry} ulkesine ${letterData.startDate} ile ${letterData.endDate} tarihleri arasinda '${letterData.purpose}' amaciyla gerceklestirmeyi planladigim seyahatime istinaden bu dilekceyi sunuyorum.
+Konu: Turistik Ziyaret Vize Başvurusu — ${d.fullName} (Pasaport No: ${d.passportNumber})
 
-Profesyonel Durumum ve Finansman:
-Su anda Turkiye'de yerlesik olarak ${letterData.occupation} pozisyonunda calismaktayim ve aylik duzenli gelirim ${letterData.monthlyIncome} TL'dir. Seyahatim suresince olusacak ucak, konaklama, sehir ici ulasim, yeme-icme ve acil saglik gibi tum masraflarim sahsim tarafindan, ekte dokumlerini sundugum sahsi banka hesabimdan karsilanacaktir.
+Sayın Konsolosluk Yetkilisi,
 
-Seyahat Amacim ve Geri Donus Taahhudum:
-Bu seyahatin temel amaci tamamen turistik ve kulturel kesiftir. Turkiye'deki kurulu duzenim, devam eden mesleki kariyerim ve ailevi baglarim sebebiyle, vizemin bitis tarihinden once ulkeme kesin olarak donus yapacagimi ve isime/duzenime geri donecegimi taahhut ederim. 
+Ben, ${d.fullName}, ${d.birthDate || '[Doğum Tarihi]'} tarihinde doğmuş, ${d.nationality || 'Türk'} vatandaşı olarak ${d.passportNumber} numaralı pasaportumla ${d.targetCountry} ülkesine ${d.startDate || '[Başlangıç]'} - ${d.endDate || '[Bitiş]'} tarihleri arasında (${tripDays} gece/gündüz) ${d.purpose} amacıyla girmek üzere vize talebinde bulunuyorum.
 
-Seyahatim boyunca hedef ulkenizin yasalarina harfiyen uyacagimi beyan eder, vize basvurumun olumlu degerlendirilmesini saygilarimla arz ederim.
+1. KİŞİSEL VE MESLEKİ DURUM
 
-Saygilarimla,
+Türkiye'de ${d.companyEmployer || '[Şirket/Kurum Adı]'} bünyesinde ${d.occupation || '[Pozisyon]'} olarak görev yapmaktayım. Aylık düzenli gelirim ${d.monthlyIncome || '[Gelir]'} TL olmakla birlikte, mevcut tasarruflarım ${d.bankBalance || '[Banka Bakiyesi]'} TL seviyesindedir. İlgili banka ekstreleri, maş bordroları ve istihdam belgeleri başvuru dosyama eklenmiştir.
 
-Ad Soyad: ${letterData.fullName}
-Imza: ___________________
-Telefon: [Telefon Numaranizi Yazin]
-E-posta: [E-posta Adresinizi Yazin]`;
-    } else if (type === 'sponsor') {
-      body = `Ilgili Makama / Sayin Konsolosluk Yetkilisi,
+2. SEYAHAT AMACI VE PLANLANAN AKTİVİTELER
 
-Konu: ${letterData.fullName} (Pasaport No: ${letterData.passportNumber}) icin Sponsorluk Taahhutnamesi
+Bu seyahatin amacı tamamen turistik ve kültürel niteliktedir. ${d.targetCountry} ülkesinin tarihi mekanlarını, müzelerini ve doğal güzelliklerini keşfetmeyi planlamaktayım. Seyahat süresince konaklamam ${d.hotelName || '[Otel Adı]'} (Rez. No: ${d.hotelReservationNo || '[Rez. No]'}) adresinde gerçekleşecektir. Gidiş uçuşum ${d.flightOutbound || '[TK/PC XXXX]'} sefer sayılı uçuştur; dönüş biletim de kesin olarak alınmış olup ${d.flightInbound || '[TK/PC XXXX]'} sefer numarasıyla gerçekleşecektir.
 
-Ben [Sponsorun Adi Soyadi], bu dilekce ile [Yakinlik Derecesi, orn: Oglum/Kizim/Esim] olan ${letterData.fullName}'in ${letterData.startDate} - ${letterData.endDate} tarihleri arasinda ${letterData.targetCountry} ulkesine yapacagi '${letterData.purpose}' amacli seyahatin yegane finansal sponsoru oldugumu beyan ederim.
+3. FİNANSAL GÜVENCE
 
-Finansal Taahhut:
-Basvuru sahibinin seyahati boyunca ihtiyac duyacagi gidis-donus ucak biletleri, otel konaklamasi, gunluk harcamalari, sehir ici ulasim ve olasi acil saglik masraflarinin tamami tarafimca karsilanacaktir. Bu harcamalari rahatlikla karsilayabilecegimi gosteren sahsi banka hesap dokumlerim, maas bordrolarim ve isyeri belgelerim basvuru dosyasina eklenmistir.
+Seyahat süresince oluşacak; ulaşım, konaklama, iaşe, şehir içi ulaşım ve acil sağlık harcamalarının tamamı, şahsıma ait banka kaynaklarımdan karşılanacaktır. Günlük ortalama harcama bütçem uluslararası standartların üzerindedir. ${d.insuranceProvider ? `${d.insuranceProvider} tarafından düzenlenmiş, en az €30.000 teminatlı seyahat sağlık sigortam (Poliçe No: ${d.insurancePolicyNo || '-'}) başvuruya eklenmiştir.` : 'Zorunlu seyahat sağlık sigortası başvuruya eklenmiştir.'}
 
-Geri Donus Taahhudum:
-${letterData.fullName}'in seyahatini tamamladiktan sonra vize suresi ihlali yapmadan Turkiye'ye kesin donus yapacagini sahsen garanti ederim.
+4. TÜRKİYE'YE BAĞLARIM VE GERİ DÖNÜŞ TAAHÜDÜ
 
-Gereginin yapilmasini saygilarimla arz ederim.
+Türkiye'de kurulu yaşam düzenim, mesleki kariyerim ve aile bağlarım, bu ülkede kalmamı her koşulda zorunlu kılmaktadır. ${d.tieDescription || 'Süregelen iş sözleşmem, mülklerim ve aile sorumluluklarım'} nedeniyle vize süresinin bitiminden önce Türkiye'ye kesin dönüş yapacağımı taahhüt ederim. Bu seyahatin geçici nitelikte olduğunu, hiçbir şekilde göç veya yasadışı çalışma amacı taşımadığını açıkça beyan ederim.
 
-Sponsor Adi Soyadi: [Sponsorun Adi Soyadi]
-Imza: ___________________
-TC Kimlik No: [Sponsor TC Kimlik No]
-Telefon: [Sponsor Telefon Numarasi]
-Adres: [Sponsor Ikamet Adresi]`;
-    } else if (type === 'employer') {
-      body = `[Sirket Antetli Kagidina Yazdirilmalidir]
+Başvurumun olumlu değerlendirilmesini diler, ek bilgi veya belge talep etmeniz halinde ${d.phone || '[Telefon]'} / ${d.email || '[E-posta]'} üzerinden iletişime geçilmesini rica ederim.
 
-Ilgili Makama / ${letterData.targetCountry} Baskonsoloslugu Vize Bolumune,
+Saygılarımla,
 
-Konu: Calisma Belgesi ve Izin Onayi - ${letterData.fullName}
-
-Bu belge, ${letterData.fullName} isimli calisanimizin (TC Kimlik No: [TC No], Pasaport No: ${letterData.passportNumber}) sirketimizde [Ise Baslama Tarihi] tarihinden bu yana tam zamanli ve kadrolu olarak "${letterData.occupation}" pozisyonunda calismakta oldugunu dogrulamak amaciyla duzenlenmistir. Calisanimizin aylik net maasi ${letterData.monthlyIncome} TL'dir.
-
-Calisanimiz, ${letterData.startDate} ile ${letterData.endDate} tarihleri arasinda ${letterData.targetCountry} ulkesine yapacagi turistik seyahat icin sirketimizden resmi olarak yillik ucretli izne ayrilmistir. 
-
-Geri Donus Garantisi:
-Calisanimiz ${letterData.fullName}, seyahatini tamamlamasinin ardindan [Ise Donus Tarihi] tarihinde sirketimizdeki gorevine ve mevcut pozisyonuna ayni sartlarda geri donecek ve mesaisine devam edecektir.
-
-Calisanimizin vize basvurusunun olumlu degerlendirilmesini rica ederiz. Herhangi bir ek bilgi talebiniz olmasi durumunda asagidaki iletisim bilgilerinden bize ulasabilirsiniz.
-
-Saygilarimizla,
-
-Sirket Yetkilisi Adi Soyadi: [Yetkili Adi]
-Unvani: [Orn: Insan Kaynaklari Muduru]
-Imza ve Sirket Kasesi: ___________________
-Sirket Telefonu: [Sirket Telefonu]
-Sirket Adresi: [Sirket Adresi]`;
-    } else if (type === 'itinerary') {
-      body = `DETAYLI SEYAHAT PLANI (ITINERARY)
-
-Basvuru Sahibi: ${letterData.fullName}
-Pasaport No: ${letterData.passportNumber}
-Hedef Ulke: ${letterData.targetCountry}
-Seyahat Tarihleri: ${letterData.startDate} - ${letterData.endDate}
-
-Ulasim Bilgileri:
-- Gidis Ucusu: [Tarih], [Kalkis Sehri] -> [Varis Sehri], Ucus No: [Orn: TK1907]
-- Donus Ucusu: [Tarih], [Kalkis Sehri] -> [Varis Sehri], Ucus No: [Orn: TK1908]
-
-Konaklama Bilgileri:
-- Otel Adi: [Otel Adi]
-- Adres: [Otel Tam Adresi]
-- Rezervasyon No: [Rezervasyon Numarasi]
-
-Gunluk Rota ve Aktiviteler:
-1. Gun (${letterData.startDate}): ${letterData.targetCountry}'ye varis, otele transfer ve check-in. Cevreyi tanima ve dinlenme.
-2. Gun: Sehir merkezindeki tarihi ve turistik lokasyonlarin (Orn: Ana meydan, muzeler) ziyareti.
-3. Gun: Kulturel etkinlikler, yerel gastronomi deneyimi ve alisveris.
-4. Gun: Yakin cevredeki turistik bir bolgeye gunubirlik gezi.
-5. Gun (${letterData.endDate}): Otelden cikis islemleri, havalimanina transfer ve Turkiye'ye donus ucusu.
-
-* Not: Tum ucak ve otel rezervasyon belgeleri basvuru dosyasina eklenmistir.`;
+${d.fullName}
+Pasaport No: ${d.passportNumber}
+Telefon: ${d.phone || '_______________'}
+E-posta: ${d.email || '_______________'}
+İmza: _______________     Tarih: ${today}`;
     }
 
-    const splitText = doc.splitTextToSize(normalizeTr(body), 170);
-    doc.text(splitText, 20, 50);
-    
-    doc.save(`vize_${type}_${normalizeTr(letterData.fullName).replace(/\s+/g, '_')}.pdf`);
+    if (type === 'sponsor') {
+      return `${d.sponsorAddress || '[Sponsor Adresi]'}
+${today}
+
+${d.targetCountry} Başkonsolosluğu
+Vize Birimi
+
+Konu: Finansal Sponsorluk Beyannamesi — ${d.fullName} (Pasaport No: ${d.passportNumber})
+
+Sayın Konsolosluk Yetkilisi,
+
+Ben, ${d.sponsorFullName || '[Sponsor Adı]'} (TC Kimlik No: ${d.sponsorId || '[TC Kimlik No]'}), bu beyanname ile ${d.sponsorRelation || '[Yakınlık Derecesi: oğlum/kızım/eşim vb.]'} olan ve ${d.passportNumber} numaralı pasaport hamili ${d.fullName}'in ${d.startDate || '[Tarih]'} - ${d.endDate || '[Tarih]'} tarihleri arasında ${d.targetCountry} ülkesine gerçekleştireceği ${d.purpose} amaçlı seyahatin tek ve münhasır finansal sponsoru olduğumu beyan ederim.
+
+1. SPONSOR KİMLİĞİ VE MALİ DURUMU
+
+${d.sponsorOccupation || '[Meslek/Pozisyon]'} olarak görev yapmakta olup aylık düzenli gelirim ${d.sponsorIncome || '[Gelir]'} TL'dir. Finansal kapasitemi kanıtlayan banka ekstreleri, maaş bordroları ve ilgili gelir belgeleri işbu beyannameye eklenmiştir.
+
+2. FİNANSAL TAAHHÜT KAPSAMI
+
+Başvuru sahibi ${d.fullName}'in söz konusu seyahat döneminde ihtiyaç duyacağı aşağıdaki harcamaların tamamını karşılamayı taahhüt ederim:
+  • Gidiş-dönüş uçak biletleri
+  • ${d.hotelName || 'Otel'} konaklaması (${tripDays} gece)
+  • Günlük yaşam ve iaşe giderleri
+  • Şehir içi ulaşım
+  • Olası acil sağlık masrafları
+  • Seyahat sigortası primleri
+
+3. GERİ DÖNÜŞ TAAHÜDÜ
+
+${d.fullName}'in seyahatini tamamladıktan sonra, vize geçerlilik süresi ihlali yapmaksızın belirlenen dönüş tarihinde Türkiye'ye kesin dönüş yapacağını taahhüt ederim. Başvuru sahibinin Türkiye'deki ikamet etme yükümlülüğünün bilincinde olduğunu ve bu doğrultuda hareket edeceğini beyan ederim.
+
+Gereğinin yapılmasını saygılarımla arz ederim.
+
+Sponsor: ${d.sponsorFullName || '_______________'}
+TC Kimlik No: ${d.sponsorId || '_______________'}
+Telefon: ${d.sponsorPhone || '_______________'}
+İmza: _______________     Tarih: ${today}`;
+    }
+
+    if (type === 'employer') {
+      return `[ŞİRKET ANTETLİ KAĞIDINA YAZILMALIDIR]
+${d.companyName || '[Şirket Adı]'}
+${d.companyAddress || '[Şirket Adresi]'}
+Tel: ${d.companyPhone || '[Telefon]'}
+
+${today}
+
+${d.targetCountry} Başkonsolosluğu
+Vize Birimi
+
+Konu: Çalışma Belgesi, Ücretli İzin Onayı ve İşe Dönüş Garantisi — ${d.fullName}
+
+Sayın Konsolosluk Yetkilisi,
+
+Şirketimiz ${d.companyName || '[Şirket Adı]'} adına düzenlenen bu belge; ${d.passportNumber} pasaport numaralı çalışanımız ${d.fullName}'in istihdam durumunu resmi olarak onaylamak amacıyla hazırlanmıştır.
+
+1. İSTİHDAM BİLGİLERİ
+
+Çalışanımız ${d.fullName}, ${d.jobStartDate || '[İşe Başlama Tarihi]'} tarihinden itibaren şirketimizde tam zamanlı ve kadrolu statüde "${d.occupation || '[Pozisyon]'}" pozisyonunda görev yapmaktadır. Çalışanın aylık net ücreti ${d.monthlyIncome || '[Ücret]'} TL olup düzenli maaş ödemeleri banka kanalıyla yapılmaktadır.
+
+2. ÜCRETLİ İZİN ONAYI
+
+Çalışanımız ${d.fullName}'e, ${d.startDate || '[Tarih]'} - ${d.endDate || '[Tarih]'} tarihleri arasında ${d.targetCountry} ülkesine gerçekleştireceği turistik seyahat için yıllık ücretli izin talebinde bulunmuştur. Söz konusu izin talebi şirketimiz insan kaynakları birimi tarafından resmi olarak onaylanmıştır.
+
+3. İŞE DÖNÜŞ GARANTİSİ
+
+Çalışanımız ${d.fullName}, seyahatini tamamladıktan sonra en geç ${d.returnDate || '[Dönüş Tarihi]'} tarihinde şirketimizdeki görevine ve mevcut pozisyonuna aynı koşullar ve ücret düzeyi ile geri dönecektir. Çalışanımızın iş akdi sürekliliği tarafımızca garanti altındadır.
+
+Çalışanımızın vize başvurusunun olumlu değerlendirilmesini diler, belge doğrulama veya ek bilgi talebi durumunda aşağıdaki iletişim bilgilerimizden bize ulaşmanızı rica ederiz.
+
+Saygılarımızla,
+
+${d.authorizedName || '[Yetkili Adı Soyadı]'}
+${d.authorizedTitle || 'İnsan Kaynakları Müdürü'}
+${d.companyName || '[Şirket Adı]'}
+Tel: ${d.companyPhone || '_______________'}
+İmza ve Şirket Kaşesi: _______________
+Tarih: ${today}`;
+    }
+
+    // itinerary
+    const plan = d.dailyPlan || `1. Gün (${d.startDate || '[Tarih]'}): ${d.targetCountry || '[Ülke]'}'ye varış, havalimanından transfer, otel check-in. Dinlenme ve çevre keşfi.
+2. Gün: Şehir merkezi turu — tarihi yapılar, müzeler, anıtlar.
+3. Gün: Kültürel etkinlikler, yerel mutfak deneyimi, yerel pazar ziyareti.
+4. Gün: Yakın çevrede günübirlik doğa veya kültür gezisi.
+5. Gün (${d.endDate || '[Tarih]'}): Otel check-out, alışveriş, havalimanı transferi, Türkiye'ye dönüş.`;
+
+    return `DETAYLI SEYAHAT PLANI / TRAVEL ITINERARY
+${today}
+
+BAŞVURU SAHİBİ BİLGİLERİ
+Ad Soyad          : ${d.fullName}
+Pasaport No       : ${d.passportNumber}
+Doğum Tarihi      : ${d.birthDate || '[Doğum Tarihi]'}
+Uyruk             : ${d.nationality || 'Türk'}
+Telefon           : ${d.phone || '_______________'}
+E-posta           : ${d.email || '_______________'}
+
+SEYAHAT GENEL BİLGİLERİ
+Hedef Ülke        : ${d.targetCountry}
+Giriş Tarihi      : ${d.startDate || '[Giriş Tarihi]'}
+Çıkış Tarihi      : ${d.endDate || '[Çıkış Tarihi]'}
+Konaklama Süresi  : ${tripDays} gece
+Seyahat Amacı     : ${d.purpose}
+
+ULAŞIM BİLGİLERİ
+Gidiş Uçuşu       : ${d.flightOutbound || '[Sefer No: TK/PC XXXX] — İstanbul → [Varış Şehri]'}
+Dönüş Uçuşu       : ${d.flightInbound || '[Sefer No: TK/PC XXXX] — [Kalkış Şehri] → İstanbul'}
+
+KONAKLAMA BİLGİLERİ
+Otel Adı          : ${d.hotelName || '[Otel Adı]'}
+Otel Adresi       : ${d.hotelAddress || '[Otel Tam Adresi]'}
+Rezervasyon No    : ${d.hotelReservationNo || '[Rezervasyon Numarası]'}
+
+SİGORTA BİLGİLERİ (Schengen: min. €30.000 zorunlu)
+Sigorta Şirketi   : ${d.insuranceProvider || '[Sigorta Şirketi]'}
+Poliçe No         : ${d.insurancePolicyNo || '[Poliçe No]'}
+
+GÜNLÜK SEYAHAT PROGRAMI
+${plan}
+
+BÜTÇE PLANI
+Günlük ortalama harcama : ~€120-150
+Toplam tahmini masraf   : ~€${typeof tripDays === 'number' ? (tripDays * 135).toLocaleString('tr-TR') : 'XXX'} (€30.000 sağlık sigortası dahil)
+Finansman kaynağı       : Kişisel banka tasarrufları
+
+NOT: Tüm uçak rezervasyon onayları, otel voucher'ları ve seyahat sigortası poliçesi bu plana eklenmiştir. Rezervasyonlar kesin bilet/poliçe statüsündedir.
+
+${d.fullName}
+İmza: _______________     Tarih: ${today}`;
+  };
+
+  const generatePDF = (type: 'cover' | 'sponsor' | 'employer' | 'itinerary' = 'cover') => {
+    const doc = new jsPDF();
+    const today = new Date().toLocaleDateString('tr-TR');
+    const titles: Record<string, string> = {
+      cover: 'VIZE NIYET MEKTUBU / COVER LETTER',
+      sponsor: 'FINANSAL SPONSORLUK BEYANNAMESI',
+      employer: 'CALISMA BELGESI VE IZIN ONAYI',
+      itinerary: 'DETAYLI SEYAHAT PLANI / ITINERARY'
+    };
+
+    // Header
+    doc.setFillColor(37, 99, 235);
+    doc.rect(0, 0, 210, 18, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.text('VizeAkil — vizeakil.com', 14, 12);
+    doc.text(today, 196, 12, { align: 'right' });
+
+    // Title
+    doc.setTextColor(30, 41, 59);
+    doc.setFontSize(13);
+    doc.text(normalizeTr(titles[type]), 14, 30);
+    doc.setDrawColor(229, 231, 235);
+    doc.line(14, 33, 196, 33);
+
+    // Body
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9.5);
+    doc.setTextColor(51, 65, 85);
+    const body = buildLetterBody(type);
+    const splitText = doc.splitTextToSize(normalizeTr(body), 180);
+    doc.text(splitText, 14, 40);
+
+    // Footer
+    const pageHeight = doc.internal.pageSize.height;
+    doc.setFillColor(248, 250, 252);
+    doc.rect(0, pageHeight - 12, 210, 12, 'F');
+    doc.setTextColor(148, 163, 184);
+    doc.setFontSize(7);
+    doc.text('Bu belge VizeAkil (vizeakil.com) Smart Document Generator 2.0 ile olusturulmustur. Resmi vize danismanliginin yerini tutmaz.', 14, pageHeight - 4);
+
+    doc.save(`VizeAkil_${normalizeTr(titles[type]).replace(/\s+/g, '_')}_${normalizeTr(letterData.fullName || 'Belge').replace(/\s+/g, '_')}.pdf`);
   };
 
   // Open a tool: if premium-gated and not premium, show upgrade modal; else navigate to dashboard + open
@@ -4015,81 +4163,329 @@ Gunluk Rota ve Aktiviteler:
           )}
 
           {step === 'letter' && (
-            <motion.div 
+            <motion.div
               key="letter"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="space-y-10"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="space-y-8"
             >
-              <div className="flex items-center gap-6">
-                <button onClick={() => setStep('dashboard')} className="p-3 bg-white border border-slate-100 hover:bg-slate-50 rounded-2xl transition-all shadow-sm">
-                  <ArrowLeft className="w-6 h-6" />
+              {/* Header */}
+              <div className="flex items-center gap-4">
+                <button type="button" onClick={() => setStep('dashboard')} className="p-3 bg-white border border-slate-100 hover:bg-slate-50 rounded-2xl transition-all shadow-sm shrink-0">
+                  <ArrowLeft className="w-5 h-5" />
                 </button>
                 <div>
-                  <h2 className="text-4xl font-black text-slate-900">Niyet Mektubu Oluşturucu</h2>
-                  <p className="text-slate-500 text-lg">Profesyonel ve ikna edici bir mektup için bilgilerinizi girin.</p>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-[10px] font-black bg-brand-50 text-brand-600 border border-brand-100 px-2 py-1 rounded-lg uppercase tracking-widest">Smart Document Generator 2.0</span>
+                    <span className="text-[10px] font-black bg-emerald-50 text-emerald-600 border border-emerald-100 px-2 py-1 rounded-lg uppercase tracking-widest">2024-2026 Standartları</span>
+                  </div>
+                  <h2 className="text-3xl font-black text-slate-900">Profesyonel Vize Belgesi Oluşturucu</h2>
+                  <p className="text-slate-500 text-sm mt-0.5">Konsolosluk standartlarında, 4 farklı belge tipi — bilgilerinizi girin, PDF alın.</p>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-                <div className="p-10 bg-white rounded-[3rem] border border-slate-100 shadow-sm space-y-8">
-                  <h3 className="text-2xl font-bold text-slate-900 flex items-center gap-3">
-                    <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600">
-                      <PenTool className="w-5 h-5" />
+              {/* Belge Tipi Seçici */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {[
+                  {
+                    id: 'cover' as const,
+                    icon: PenTool,
+                    title: 'Niyet Mektubu',
+                    sub: 'Kişisel beyanınız',
+                    color: 'brand',
+                    bg: 'from-brand-600 to-indigo-600',
+                    desc: '2024-2026 konsolosluk formatında, 4 bölümlü kapsamlı niyet mektubu'
+                  },
+                  {
+                    id: 'sponsor' as const,
+                    icon: Wallet,
+                    title: 'Sponsor Mektubu',
+                    sub: 'Finansör beyanı',
+                    color: 'emerald',
+                    bg: 'from-emerald-600 to-teal-600',
+                    desc: 'Aile veya üçüncü kişi sponsorluğu için resmi taahhütname'
+                  },
+                  {
+                    id: 'employer' as const,
+                    icon: Briefcase,
+                    title: 'İşveren İzin Yazısı',
+                    sub: 'Şirket onayı',
+                    color: 'violet',
+                    bg: 'from-violet-600 to-purple-600',
+                    desc: 'SGK\'lı çalışanlar için işe dönüş garantili resmi çalışma belgesi'
+                  },
+                  {
+                    id: 'itinerary' as const,
+                    icon: Map,
+                    title: 'Seyahat Planı',
+                    sub: 'Günlük itinerary',
+                    color: 'amber',
+                    bg: 'from-amber-500 to-orange-500',
+                    desc: 'Günlük rota, konaklama ve uçuş detaylarını içeren seyahat planı'
+                  },
+                ].map(({ id, icon: Icon, title, sub, color, bg, desc }) => (
+                  <button key={id} type="button" onClick={() => setActiveLetterType(id)}
+                    className={`p-4 rounded-2xl border-2 text-left transition-all ${activeLetterType === id ? `border-${color}-400 bg-${color}-50` : 'border-slate-100 bg-white hover:border-slate-200'}`}>
+                    <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${bg} flex items-center justify-center mb-3`}>
+                      <Icon className="w-5 h-5 text-white" />
                     </div>
-                    Bilgilerinizi Girin
-                  </h3>
-                  <div className="grid grid-cols-1 gap-5">
-                    {[
-                      { id: 'fullName', label: 'Ad Soyad', type: 'text', placeholder: 'Örn: Emre Korn' },
-                      { id: 'passportNumber', label: 'Pasaport No', type: 'text', placeholder: 'Örn: U12345678' },
-                      { id: 'targetCountry', label: 'Hedef Ülke', type: 'text', placeholder: 'Örn: Almanya' },
-                      { id: 'purpose', label: 'Seyahat Amacı', type: 'text', placeholder: 'Örn: Turistik Gezi' },
-                      { id: 'startDate', label: 'Başlangıç Tarihi', type: 'date' },
-                      { id: 'endDate', label: 'Bitiş Tarihi', type: 'date' },
-                      { id: 'occupation', label: 'Meslek', type: 'text', placeholder: 'Örn: Yazılım Mühendisi' },
-                      { id: 'monthlyIncome', label: 'Aylık Gelir (TL)', type: 'number', placeholder: 'Örn: 50000' },
-                    ].map((field) => (
-                      <div key={field.id} className="space-y-2">
-                        <label className="text-sm font-bold text-slate-700 ml-1">{field.label}</label>
-                        <input 
-                          type={field.type}
-                          placeholder={field.placeholder}
-                          value={letterData[field.id as keyof LetterData]}
-                          onChange={(e) => setLetterData({...letterData, [field.id]: e.target.value})}
-                          className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-900 font-medium"
-                        />
-                      </div>
-                    ))}
+                    <div className="font-black text-slate-900 text-sm">{title}</div>
+                    <div className="text-[10px] text-slate-400 font-bold mt-0.5">{sub}</div>
+                    {activeLetterType === id && <p className="text-[10px] text-slate-500 mt-2 leading-relaxed">{desc}</p>}
+                  </button>
+                ))}
+              </div>
+
+              {/* 2 Kolon: Form + Önizleme */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Sol: Dinamik Form */}
+                <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden">
+                  <div className="p-5 border-b border-slate-50 bg-slate-50">
+                    <h3 className="font-black text-slate-900">Bilgilerinizi Girin</h3>
+                    <p className="text-xs text-slate-400 mt-0.5">Yazarken önizleme otomatik güncellenir</p>
+                  </div>
+                  <div className="p-5 space-y-4 max-h-[70vh] overflow-y-auto">
+                    {/* Ortak alanlar */}
+                    <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Kimlik Bilgileri</div>
+                    <div className="grid grid-cols-2 gap-3">
+                      {[
+                        { id: 'fullName', label: 'Ad Soyad', placeholder: 'Emre Kaya' },
+                        { id: 'passportNumber', label: 'Pasaport No', placeholder: 'U12345678' },
+                        { id: 'birthDate', label: 'Doğum Tarihi', type: 'date' },
+                        { id: 'nationality', label: 'Uyruk', placeholder: 'Türk' },
+                        { id: 'phone', label: 'Telefon', placeholder: '+90 5XX XXX XXXX' },
+                        { id: 'email', label: 'E-posta', placeholder: 'ornek@mail.com' },
+                      ].map(f => (
+                        <div key={f.id} className="space-y-1">
+                          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">{f.label}</label>
+                          <input type={f.type || 'text'} placeholder={f.placeholder}
+                            value={letterData[f.id as keyof LetterData]}
+                            onChange={e => setLetterData(prev => ({ ...prev, [f.id]: e.target.value }))}
+                            className="w-full px-3 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all" />
+                        </div>
+                      ))}
+                    </div>
+                    <div className="col-span-2 space-y-1">
+                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Adres</label>
+                      <input type="text" placeholder="İlçe, İl, Türkiye"
+                        value={letterData.address}
+                        onChange={e => setLetterData(prev => ({ ...prev, address: e.target.value }))}
+                        className="w-full px-3 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all" />
+                    </div>
+
+                    <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest pt-2">Seyahat Bilgileri</div>
+                    <div className="grid grid-cols-2 gap-3">
+                      {[
+                        { id: 'targetCountry', label: 'Hedef Ülke', placeholder: 'Almanya' },
+                        { id: 'purpose', label: 'Seyahat Amacı', placeholder: 'Turistik Gezi' },
+                        { id: 'startDate', label: 'Giriş Tarihi', type: 'date' },
+                        { id: 'endDate', label: 'Çıkış Tarihi', type: 'date' },
+                        { id: 'flightOutbound', label: 'Gidiş Uçuşu', placeholder: 'TK1907 İST→FRA' },
+                        { id: 'flightInbound', label: 'Dönüş Uçuşu', placeholder: 'TK1908 FRA→İST' },
+                        { id: 'hotelName', label: 'Otel Adı', placeholder: 'Hilton Frankfurt' },
+                        { id: 'hotelReservationNo', label: 'Rezervasyon No', placeholder: 'HLT-2025-XXXX' },
+                      ].map(f => (
+                        <div key={f.id} className="space-y-1">
+                          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">{f.label}</label>
+                          <input type={f.type || 'text'} placeholder={f.placeholder}
+                            value={letterData[f.id as keyof LetterData]}
+                            onChange={e => setLetterData(prev => ({ ...prev, [f.id]: e.target.value }))}
+                            className="w-full px-3 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all" />
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Niyet Mektubu ek alanlar */}
+                    {activeLetterType === 'cover' && (
+                      <>
+                        <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest pt-2">Finansal & Mesleki</div>
+                        <div className="grid grid-cols-2 gap-3">
+                          {[
+                            { id: 'occupation', label: 'Meslek/Pozisyon', placeholder: 'Yazılım Mühendisi' },
+                            { id: 'companyEmployer', label: 'Şirket/İşveren', placeholder: 'ABC A.Ş.' },
+                            { id: 'monthlyIncome', label: 'Aylık Gelir (TL)', placeholder: '50.000' },
+                            { id: 'bankBalance', label: 'Banka Bakiyesi (TL)', placeholder: '150.000' },
+                            { id: 'insuranceProvider', label: 'Sigorta Şirketi', placeholder: 'AXA / Allianz' },
+                            { id: 'insurancePolicyNo', label: 'Poliçe No', placeholder: 'POL-2025-XXXX' },
+                          ].map(f => (
+                            <div key={f.id} className="space-y-1">
+                              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">{f.label}</label>
+                              <input type="text" placeholder={f.placeholder}
+                                value={letterData[f.id as keyof LetterData]}
+                                onChange={e => setLetterData(prev => ({ ...prev, [f.id]: e.target.value }))}
+                                className="w-full px-3 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all" />
+                            </div>
+                          ))}
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Türkiye'deki Bağlarınız (aile, mülk, iş)</label>
+                          <textarea rows={2} placeholder="Örn: İstanbul'daki işim, eşim ve iki çocuğum, sahibi olduğum daire"
+                            value={letterData.tieDescription}
+                            onChange={e => setLetterData(prev => ({ ...prev, tieDescription: e.target.value }))}
+                            className="w-full px-3 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all resize-none" />
+                        </div>
+                      </>
+                    )}
+
+                    {/* Sponsor ek alanlar */}
+                    {activeLetterType === 'sponsor' && (
+                      <>
+                        <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest pt-2">Sponsor Bilgileri</div>
+                        <div className="grid grid-cols-2 gap-3">
+                          {[
+                            { id: 'sponsorFullName', label: 'Sponsor Adı Soyadı', placeholder: 'Ali Kaya' },
+                            { id: 'sponsorRelation', label: 'Yakınlık Derecesi', placeholder: 'Babam / Eşim' },
+                            { id: 'sponsorId', label: 'TC Kimlik No', placeholder: 'XXXXXXXXXXX' },
+                            { id: 'sponsorPhone', label: 'Telefon', placeholder: '+90 5XX XXX XXXX' },
+                            { id: 'sponsorOccupation', label: 'Meslek', placeholder: 'İşletme Sahibi' },
+                            { id: 'sponsorIncome', label: 'Aylık Gelir (TL)', placeholder: '80.000' },
+                          ].map(f => (
+                            <div key={f.id} className="space-y-1">
+                              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">{f.label}</label>
+                              <input type="text" placeholder={f.placeholder}
+                                value={letterData[f.id as keyof LetterData]}
+                                onChange={e => setLetterData(prev => ({ ...prev, [f.id]: e.target.value }))}
+                                className="w-full px-3 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all" />
+                            </div>
+                          ))}
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Sponsor Adresi</label>
+                          <input type="text" placeholder="İlçe, İl, Türkiye"
+                            value={letterData.sponsorAddress}
+                            onChange={e => setLetterData(prev => ({ ...prev, sponsorAddress: e.target.value }))}
+                            className="w-full px-3 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all" />
+                        </div>
+                      </>
+                    )}
+
+                    {/* İşveren ek alanlar */}
+                    {activeLetterType === 'employer' && (
+                      <>
+                        <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest pt-2">Mesleki Bilgiler</div>
+                        <div className="grid grid-cols-2 gap-3">
+                          {[
+                            { id: 'occupation', label: 'Pozisyon/Ünvan', placeholder: 'Yazılım Geliştirici' },
+                            { id: 'monthlyIncome', label: 'Aylık Net Maaş (TL)', placeholder: '50.000' },
+                            { id: 'jobStartDate', label: 'İşe Başlama Tarihi', type: 'date' },
+                            { id: 'returnDate', label: 'İşe Dönüş Tarihi', type: 'date' },
+                          ].map(f => (
+                            <div key={f.id} className="space-y-1">
+                              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">{f.label}</label>
+                              <input type={f.type || 'text'} placeholder={f.placeholder}
+                                value={letterData[f.id as keyof LetterData]}
+                                onChange={e => setLetterData(prev => ({ ...prev, [f.id]: e.target.value }))}
+                                className="w-full px-3 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all" />
+                            </div>
+                          ))}
+                        </div>
+                        <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest pt-2">Şirket Bilgileri</div>
+                        <div className="grid grid-cols-2 gap-3">
+                          {[
+                            { id: 'companyName', label: 'Şirket Adı', placeholder: 'ABC Teknoloji A.Ş.' },
+                            { id: 'companyPhone', label: 'Şirket Telefonu', placeholder: '+90 212 XXX XXXX' },
+                            { id: 'authorizedName', label: 'Yetkili Adı Soyadı', placeholder: 'Mehmet Yılmaz' },
+                            { id: 'authorizedTitle', label: 'Yetkili Ünvanı', placeholder: 'İK Müdürü' },
+                          ].map(f => (
+                            <div key={f.id} className="space-y-1">
+                              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">{f.label}</label>
+                              <input type="text" placeholder={f.placeholder}
+                                value={letterData[f.id as keyof LetterData]}
+                                onChange={e => setLetterData(prev => ({ ...prev, [f.id]: e.target.value }))}
+                                className="w-full px-3 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all" />
+                            </div>
+                          ))}
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Şirket Adresi</label>
+                          <input type="text" placeholder="Mahalle, İlçe, İl"
+                            value={letterData.companyAddress}
+                            onChange={e => setLetterData(prev => ({ ...prev, companyAddress: e.target.value }))}
+                            className="w-full px-3 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all" />
+                        </div>
+                      </>
+                    )}
+
+                    {/* Seyahat planı ek alanlar */}
+                    {activeLetterType === 'itinerary' && (
+                      <>
+                        <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest pt-2">Sigorta & Konaklama</div>
+                        <div className="grid grid-cols-2 gap-3">
+                          {[
+                            { id: 'hotelAddress', label: 'Otel Adresi', placeholder: 'Kaiserstr. 1, Frankfurt' },
+                            { id: 'insuranceProvider', label: 'Sigorta Şirketi', placeholder: 'AXA Sigorta' },
+                            { id: 'insurancePolicyNo', label: 'Poliçe No', placeholder: 'POL-2025-XXXX' },
+                          ].map(f => (
+                            <div key={f.id} className="space-y-1">
+                              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">{f.label}</label>
+                              <input type="text" placeholder={f.placeholder}
+                                value={letterData[f.id as keyof LetterData]}
+                                onChange={e => setLetterData(prev => ({ ...prev, [f.id]: e.target.value }))}
+                                className="w-full px-3 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all" />
+                            </div>
+                          ))}
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Günlük Seyahat Programı (isteğe bağlı, otomatik doldurulur)</label>
+                          <textarea rows={5}
+                            placeholder={`1. Gün: Varış, check-in\n2. Gün: Şehir turu...\n3. Gün: Müze ziyareti...\n...`}
+                            value={letterData.dailyPlan}
+                            onChange={e => setLetterData(prev => ({ ...prev, dailyPlan: e.target.value }))}
+                            className="w-full px-3 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all resize-none font-mono" />
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
 
-                <div className="space-y-8">
-                  <div className="p-10 bg-slate-900 rounded-[3rem] text-white space-y-6 relative overflow-hidden shadow-2xl">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-blue-600/20 blur-3xl rounded-full" />
-                    <h3 className="text-2xl font-bold relative z-10">Önizleme</h3>
-                    <div className="bg-white/5 border border-white/10 p-8 rounded-[2rem] text-slate-300 text-sm leading-relaxed font-mono relative z-10">
-                      <p className="mb-4 text-right">{new Date().toLocaleDateString('tr-TR')}</p>
-                      <p className="mb-6 font-bold text-white">Sayın Konsolosluk Yetkilisi,</p>
-                      <p>Ben {letterData.fullName || '...'}, {letterData.passportNumber || '...'} numaralı pasaport hamili olarak, {letterData.targetCountry || '...'} ülkesine {letterData.startDate || '...'} - {letterData.endDate || '...'} tarihleri arasında {letterData.purpose || '...'} amacıyla seyahat etmeyi planlıyorum...</p>
+                {/* Sağ: Önizleme + İndir */}
+                <div className="space-y-4">
+                  {/* Önizleme */}
+                  <div className="bg-slate-900 rounded-[2rem] overflow-hidden shadow-2xl">
+                    <div className="px-5 py-3 bg-blue-600 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 bg-rose-400 rounded-full" />
+                        <div className="w-3 h-3 bg-amber-400 rounded-full" />
+                        <div className="w-3 h-3 bg-emerald-400 rounded-full" />
+                        <span className="text-white text-xs font-bold ml-2">Önizleme — Gerçek Zamanlı</span>
+                      </div>
+                      <span className="text-blue-200 text-[10px] font-bold uppercase tracking-widest">PDF Formatı</span>
                     </div>
-                    <button 
-                      onClick={generatePDF}
-                      className="w-full py-5 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl font-bold text-lg transition-all shadow-xl shadow-blue-900/40 flex items-center justify-center gap-3 relative z-10"
-                    >
-                      PDF Olarak İndir <Download className="w-6 h-6" />
-                    </button>
+                    <div className="p-5 overflow-y-auto max-h-[55vh]">
+                      <pre className="text-slate-300 text-[11px] leading-relaxed font-mono whitespace-pre-wrap break-words">
+                        {buildLetterBody(activeLetterType)}
+                      </pre>
+                    </div>
                   </div>
 
-                  <div className="p-8 bg-blue-50 rounded-[2.5rem] border border-blue-100 space-y-4">
-                    <div className="flex items-center gap-3 text-blue-600">
-                      <Info className="w-6 h-6" />
-                      <h4 className="font-bold">Neden Önemli?</h4>
+                  {/* İndir butonu */}
+                  <button type="button"
+                    onClick={() => generatePDF(activeLetterType)}
+                    className="w-full py-4 bg-gradient-to-r from-brand-600 to-indigo-600 text-white rounded-2xl font-black text-base flex items-center justify-center gap-3 hover:opacity-90 transition-opacity shadow-xl shadow-brand-500/30">
+                    <Download className="w-5 h-5" />
+                    PDF Olarak İndir
+                  </button>
+
+                  {/* 4 belgeyi birden indir */}
+                  <div className="grid grid-cols-2 gap-2">
+                    {(['cover', 'sponsor', 'employer', 'itinerary'] as const).map(t => (
+                      <button key={t} type="button" onClick={() => generatePDF(t)}
+                        className="py-2.5 bg-white border border-slate-100 hover:bg-slate-50 rounded-xl text-xs font-bold text-slate-600 flex items-center justify-center gap-1.5 transition-colors">
+                        <Download className="w-3.5 h-3.5" />
+                        {t === 'cover' ? 'Niyet' : t === 'sponsor' ? 'Sponsor' : t === 'employer' ? 'İşveren' : 'Seyahat Planı'}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Bilgi kutusu */}
+                  <div className="p-4 bg-amber-50 border border-amber-100 rounded-2xl">
+                    <div className="flex items-start gap-3">
+                      <Star className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                      <div className="text-xs text-amber-800 leading-relaxed">
+                        <strong>2024-2026 Kritik Kural:</strong> Tüm belgelerdeki isim, pasaport numarası ve tarihler birbiriyle birebir eşleşmeli. Tutarsızlık otomatik ret sebebidir. Belgeleri doldurmadan önce pasaportunuzu kontrol edin.
+                      </div>
                     </div>
-                    <p className="text-blue-800/70 text-sm leading-relaxed">
-                      Niyet mektubu, vize memurunun sizinle kurduğu tek doğrudan iletişimdir. Profesyonel bir dille yazılmış, net ve tutarlı bir mektup kabul şansınızı %20'ye kadar artırabilir.
-                    </p>
                   </div>
                 </div>
               </div>
