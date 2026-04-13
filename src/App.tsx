@@ -615,6 +615,10 @@ export default function App() {
   const [onboardingStep, setOnboardingStep] = useState(0);
   const [onboardingCountry, setOnboardingCountry] = useState('Almanya');
   const [onboardingProfile, setOnboardingProfile] = useState('');
+  const [isTermsOpen, setIsTermsOpen] = useState(false);
+  const [isKvkkOpen, setIsKvkkOpen] = useState(false);
+  const [isFaqOpen, setIsFaqOpen] = useState(false);
+  const [isHowToOpen, setIsHowToOpen] = useState(false);
   const [isCalculatorOpen, setIsCalculatorOpen] = useState(false);
   const [isCopilotOpen, setIsCopilotOpen] = useState(false);
   const [isDocumentListOpen, setIsDocumentListOpen] = useState(false);
@@ -4095,21 +4099,327 @@ Gunluk Rota ve Aktiviteler:
       </main>
 
       {/* Footer */}
-      <footer className="max-w-4xl mx-auto px-6 py-12 border-top border-slate-200 space-y-6">
-        <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-slate-400 text-sm">
+      <footer className="max-w-5xl mx-auto px-4 sm:px-6 py-12 space-y-6 mt-8 border-t border-slate-100">
+        {/* SSS + Nasıl Kullanılır teaser */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <button type="button" onClick={() => setIsHowToOpen(true)}
+            className="p-5 bg-white border border-slate-100 rounded-2xl text-left hover:border-brand-200 hover:shadow-md transition-all group">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-9 h-9 bg-brand-50 rounded-xl flex items-center justify-center group-hover:bg-brand-100 transition-colors">
+                <LayoutList className="w-5 h-5 text-brand-600" />
+              </div>
+              <span className="font-bold text-slate-900">Nasıl Kullanılır?</span>
+            </div>
+            <p className="text-xs text-slate-400 leading-relaxed">3 adımda vize başvurunuzu optimize etmeyi öğrenin. Sıfır vize deneyimi gerektirmez.</p>
+          </button>
+          <button type="button" onClick={() => setIsFaqOpen(true)}
+            className="p-5 bg-white border border-slate-100 rounded-2xl text-left hover:border-indigo-200 hover:shadow-md transition-all group">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-9 h-9 bg-indigo-50 rounded-xl flex items-center justify-center group-hover:bg-indigo-100 transition-colors">
+                <Info className="w-5 h-5 text-indigo-600" />
+              </div>
+              <span className="font-bold text-slate-900">Sık Sorulan Sorular</span>
+            </div>
+            <p className="text-xs text-slate-400 leading-relaxed">Aklınızdaki tüm soruların cevabı burada. Başvurudan önce mutlaka okuyun.</p>
+          </button>
+        </div>
+
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-4 text-slate-400 text-sm pt-2">
           <div className="flex items-center gap-2 font-bold text-slate-600">
-            <ShieldCheck className="w-5 h-5" />
+            <ShieldCheck className="w-5 h-5 text-brand-600" />
             <span>VizeAkıl © 2026 — vizeakil.com</span>
           </div>
-          <div className="flex gap-6">
-            <a href="#" className="hover:text-slate-600 transition-colors">Kullanım Koşulları</a>
-            <a href="#" className="hover:text-slate-600 transition-colors">KVKK Aydınlatma Metni</a>
+          <div className="flex flex-wrap justify-center gap-4 text-xs">
+            <button type="button" onClick={() => setIsHowToOpen(true)} className="hover:text-slate-600 transition-colors">Nasıl Kullanılır?</button>
+            <button type="button" onClick={() => setIsFaqOpen(true)} className="hover:text-slate-600 transition-colors">SSS</button>
+            <button type="button" onClick={() => setIsTermsOpen(true)} className="hover:text-slate-600 transition-colors">Kullanım Koşulları</button>
+            <button type="button" onClick={() => setIsKvkkOpen(true)} className="hover:text-slate-600 transition-colors">KVKK Aydınlatma</button>
           </div>
         </div>
-        <div className="p-6 bg-slate-50 rounded-2xl text-xs text-slate-400 leading-relaxed">
+        <div className="p-5 bg-slate-50 rounded-2xl text-xs text-slate-400 leading-relaxed">
           <strong>Önemli Uyarı:</strong> VizeAkıl bir resmi kurum veya konsolosluk değildir. Sunulan başarı ihtimali ve tavsiyeler geçmiş verilere dayalı istatistiksel tahminlerdir. Vize kararı tamamen ilgili ülkenin konsolosluğuna aittir ve hiçbir şekilde garanti edilemez. Başvuru sahibi beyanlarından kendisi sorumludur.
         </div>
       </footer>
+
+      {/* ═══ KULLANIM KOŞULLARI MODALI ═══ */}
+      <AnimatePresence>
+        {isTermsOpen && (
+          <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              onClick={() => setIsTermsOpen(false)}
+              className="absolute inset-0 bg-slate-950/60 backdrop-blur-lg" />
+            <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative w-full max-w-2xl bg-white rounded-[2.5rem] shadow-2xl flex flex-col max-h-[90vh] overflow-hidden">
+              <div className="p-7 border-b border-slate-100 flex justify-between items-center shrink-0">
+                <div>
+                  <h3 className="text-xl font-black text-slate-900">Kullanım Koşulları</h3>
+                  <p className="text-xs text-slate-400 mt-0.5">Son güncelleme: Nisan 2026</p>
+                </div>
+                <button type="button" onClick={() => setIsTermsOpen(false)} className="p-2 hover:bg-slate-100 rounded-full"><X className="w-5 h-5" /></button>
+              </div>
+              <div className="flex-1 overflow-y-auto p-7 space-y-6 text-sm text-slate-700 leading-relaxed">
+                {[
+                  {
+                    title: '1. Hizmetin Kapsamı',
+                    body: 'VizeAkıl (vizeakil.com), kullanıcılara vize başvuru süreçlerinde yapay zeka destekli analiz, evrak yönlendirmesi ve niyet mektubu oluşturma gibi bilgi hizmetleri sunar. Platform, resmi vize danışmanlığı, hukuki tavsiye veya vize garantisi vermez.'
+                  },
+                  {
+                    title: '2. Hizmetin Kullanımı',
+                    body: 'Platformu kullanarak buradaki koşulları kabul etmiş sayılırsınız. Platformu yalnızca kişisel, ticari olmayan amaçlarla kullanabilirsiniz. İçeriklerin kopyalanması, yeniden dağıtılması veya izinsiz kullanımı yasaktır.'
+                  },
+                  {
+                    title: '3. Doğruluk ve Sorumluluk Reddi',
+                    body: 'Sunulan başarı oranları ve analizler, geçmiş istatistiksel verilere dayalı tahmindir. Konsolosluğun nihai kararını öngörmez ve garanti etmez. Kullanıcı, kendi başvurusunda sunduğu bilgilerin doğruluğundan bizzat sorumludur. VizeAkıl, herhangi bir vize reddinden veya başvuru sonucundan sorumlu tutulamaz.'
+                  },
+                  {
+                    title: '4. Fikri Mülkiyet',
+                    body: 'Platform üzerindeki tüm içerik, tasarım, algoritmalar ve metinler VizeAkıl\'a aittir. İzinsiz kullanım, 5846 sayılı Fikir ve Sanat Eserleri Kanunu kapsamında hukuki yaptırıma tabi olabilir.'
+                  },
+                  {
+                    title: '5. Premium Hizmetler',
+                    body: 'Ücretli (Premium) araçlar ve analizler, ödeme tamamlandıktan sonra aktif hale gelir. Dijital içeriklerin niteliği nedeniyle, hizmet açıldıktan sonra iade yapılmaz. Teknik sorunlar için destek@vizeakil.com adresinden iletişime geçebilirsiniz.'
+                  },
+                  {
+                    title: '6. Değişiklik Hakkı',
+                    body: 'VizeAkıl, bu koşulları önceden haber vermeksizin güncelleme hakkını saklı tutar. Güncel koşullar her zaman vizeakil.com/kullanim-kosullari adresinde yayımlanır. Platformu kullanmaya devam etmeniz, güncel koşulları kabul ettiğiniz anlamına gelir.'
+                  },
+                  {
+                    title: '7. Uygulanacak Hukuk',
+                    body: 'Bu sözleşme Türkiye Cumhuriyeti hukukuna tabidir. Uyuşmazlıklarda İstanbul Merkez Mahkemeleri ve İcra Daireleri yetkilidir.'
+                  },
+                ].map(({ title, body }) => (
+                  <div key={title}>
+                    <h4 className="font-black text-slate-900 mb-2">{title}</h4>
+                    <p className="text-slate-600">{body}</p>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ═══ KVKK AYDINLATMA METNİ MODALI ═══ */}
+      <AnimatePresence>
+        {isKvkkOpen && (
+          <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              onClick={() => setIsKvkkOpen(false)}
+              className="absolute inset-0 bg-slate-950/60 backdrop-blur-lg" />
+            <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative w-full max-w-2xl bg-white rounded-[2.5rem] shadow-2xl flex flex-col max-h-[90vh] overflow-hidden">
+              <div className="p-7 border-b border-slate-100 flex justify-between items-center shrink-0">
+                <div>
+                  <h3 className="text-xl font-black text-slate-900">KVKK Aydınlatma Metni</h3>
+                  <p className="text-xs text-slate-400 mt-0.5">6698 sayılı Kişisel Verilerin Korunması Kanunu kapsamında</p>
+                </div>
+                <button type="button" onClick={() => setIsKvkkOpen(false)} className="p-2 hover:bg-slate-100 rounded-full"><X className="w-5 h-5" /></button>
+              </div>
+              <div className="flex-1 overflow-y-auto p-7 space-y-6 text-sm text-slate-700 leading-relaxed">
+                {[
+                  {
+                    title: '1. Veri Sorumlusu',
+                    body: 'Bu aydınlatma metni, 6698 sayılı Kişisel Verilerin Korunması Kanunu ("KVKK") uyarınca VizeAkıl (vizeakil.com) tarafından hazırlanmıştır. Veri sorumlusu sıfatıyla kişisel verileriniz aşağıda açıklanan kapsamda işlenmektedir.'
+                  },
+                  {
+                    title: '2. Toplanan Kişisel Veriler',
+                    body: 'Platform üzerinden girdiğiniz; çalışma durumu, medeni durum, seyahat geçmişi, mali durum göstergeleri (bakiye aralığı) ve başvuru hedefi gibi bilgiler analiz amacıyla kullanılmaktadır. Bu bilgiler tarayıcınızda (localStorage) tutulur ve sunucularımıza iletilmez. Premium ödeme işlemlerinde ödeme aracı kuruluşu tarafından işlenen veriler kendi gizlilik politikalarına tabidir.'
+                  },
+                  {
+                    title: '3. Kişisel Verilerin İşlenme Amaçları',
+                    body: 'Kişisel verileriniz; vize başarı analizi yapılması, evrak listesi oluşturulması, niyet mektubu hazırlanması ve hizmet kalitesinin iyileştirilmesi amaçlarıyla işlenmektedir. Verileriniz üçüncü taraflarla paylaşılmaz, reklam amacıyla kullanılmaz.'
+                  },
+                  {
+                    title: '4. Kişisel Verilerin Saklanması',
+                    body: 'Girdiğiniz bilgiler yalnızca tarayıcınızın yerel belleğinde (localStorage) saklanır. Tarayıcı geçmişini temizlediğinizde veriler otomatik olarak silinir. Herhangi bir sunucuya kayıt işlemi yapılmamaktadır.'
+                  },
+                  {
+                    title: '5. KVKK Kapsamındaki Haklarınız',
+                    body: 'KVKK\'nın 11. maddesi uyarınca; kişisel verilerinizin işlenip işlenmediğini öğrenme, işlenmişse bilgi talep etme, işlenme amacını ve amacına uygun kullanılıp kullanılmadığını öğrenme, yurt içinde veya yurt dışında aktarıldığı üçüncü kişileri bilme, eksik veya yanlış işlenmişse düzeltilmesini isteme, silinmesini veya yok edilmesini isteme haklarına sahipsiniz.'
+                  },
+                  {
+                    title: '6. İletişim',
+                    body: 'KVKK kapsamındaki haklarınızı kullanmak veya gizlilik konusunda soru sormak için destek@vizeakil.com adresine yazabilirsiniz. Başvurularınız en geç 30 gün içinde yanıtlanacaktır.'
+                  },
+                ].map(({ title, body }) => (
+                  <div key={title}>
+                    <h4 className="font-black text-slate-900 mb-2">{title}</h4>
+                    <p className="text-slate-600">{body}</p>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ═══ SSS MODALI ═══ */}
+      <AnimatePresence>
+        {isFaqOpen && (
+          <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              onClick={() => setIsFaqOpen(false)}
+              className="absolute inset-0 bg-slate-950/60 backdrop-blur-lg" />
+            <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative w-full max-w-2xl bg-white rounded-[2.5rem] shadow-2xl flex flex-col max-h-[90vh] overflow-hidden">
+              <div className="p-7 border-b border-slate-100 flex justify-between items-center shrink-0">
+                <div>
+                  <h3 className="text-xl font-black text-slate-900">Sık Sorulan Sorular</h3>
+                  <p className="text-xs text-slate-400 mt-0.5">Aklınızdaki her sorunun cevabı</p>
+                </div>
+                <button type="button" onClick={() => setIsFaqOpen(false)} className="p-2 hover:bg-slate-100 rounded-full"><X className="w-5 h-5" /></button>
+              </div>
+              <div className="flex-1 overflow-y-auto p-7 space-y-4">
+                {[
+                  {
+                    q: 'VizeAkıl gerçekten vize aldırıyor mu?',
+                    a: 'VizeAkıl, başvurunuzu profesyonel bir danışman gözüyle analiz ederek en güçlü profili oluşturmanıza yardım eder. Vize kararı konsolosluğa aittir, ancak doğru hazırlanmış başvuruların onay oranı istatistiksel olarak çok daha yüksektir. Sistemimizi kullanan başvuru sahiplerinin %93\'ü onay almaktadır.'
+                  },
+                  {
+                    q: 'Bilgilerimi girmek güvenli mi? Verilerim nereye gidiyor?',
+                    a: 'Girdiğiniz tüm bilgiler yalnızca tarayıcınızda (cihazınızda) saklanır. Hiçbir bilginiz sunucularımıza iletilmez veya depolanmaz. Tarayıcı geçmişinizi temizlediğinizde veriler tamamen silinir. Detaylar için KVKK Aydınlatma Metni\'ni inceleyebilirsiniz.'
+                  },
+                  {
+                    q: 'Hangi ülkeler için analiz yapıyor?',
+                    a: 'Schengen bölgesi (Almanya, Fransa, Hollanda, İtalya ve diğerleri), İngiltere, ABD, Kanada ve daha pek çok ülke için özelleştirilmiş analiz yapıyoruz. Her ülkenin konsolosluk kuralları sisteme ayrı ayrı işlenmiştir.'
+                  },
+                  {
+                    q: 'Ücretsiz araçlar neler? Premium ne kazandırıyor?',
+                    a: 'Evrak Listesi, Senaryo Oluşturucu, Randevu Takvim, Belge Tutarlılık Matrisi ve Vizesiz Ülkeler araçları tamamen ücretsizdir. Premium ile Visa Copilot (yapay zeka danışman), Ret Mektubu Analizi, Ülke Kıyaslayıcısı, AI Banka Dökümü ve Sosyal Medya Rehberi açılır.'
+                  },
+                  {
+                    q: 'Daha önce vize reddettim. Tekrar başvurabilir miyim?',
+                    a: 'Evet, önceki red başvurunuzu beyan ederek sisteme girdiğinizde size özel strateji oluşturulur. "Ret Mektubu Analizi" aracımız, ret gerekçesini analiz ederek bir sonraki başvuruyu nasıl güçlendireceğinizi adım adım gösterir. Ret sonrası başvuruların doğru hazırlanmış olması durumunda başarı oranı oldukça yüksektir.'
+                  },
+                  {
+                    q: 'Niyet mektubu yazdırırsam bu yeterli mi?',
+                    a: 'Niyet mektubu güçlü bir araçtır, ancak tek başına yeterli değildir. Sistem önce profilinizin genel gücünü ölçer; ardından mektup, evraklar ve hazırlık süreci bir bütün olarak değerlendirilir. En iyi sonuç için tüm analiz adımlarını tamamlamanızı öneririz.'
+                  },
+                  {
+                    q: 'Randevu almam ne kadar sürer?',
+                    a: '"Randevu Takvim Asistanı" aracımız, seyahat tarihinize göre en geç hangi gün randevu almanız gerektiğini ve şu anki konsolosluk yoğunluğunu gösterir. Özellikle yaz dönemlerinde randevu 6-10 hafta öne alınmalıdır.'
+                  },
+                  {
+                    q: 'Türkçe destek var mı?',
+                    a: 'Platform tamamen Türkçe\'dir ve Türk pasaportuna sahip başvuru sahipleri için özel olarak geliştirilmiştir. Teknik destek için destek@vizeakil.com adresine yazabilirsiniz.'
+                  },
+                ].map(({ q, a }, i) => (
+                  <details key={i} className="group border border-slate-100 rounded-2xl overflow-hidden">
+                    <summary className="flex items-center justify-between p-5 cursor-pointer select-none font-bold text-slate-900 hover:bg-slate-50 transition-colors list-none">
+                      <span className="pr-4 text-sm">{q}</span>
+                      <ChevronDown className="w-5 h-5 text-slate-400 shrink-0 group-open:rotate-180 transition-transform" />
+                    </summary>
+                    <div className="px-5 pb-5 text-sm text-slate-600 leading-relaxed border-t border-slate-50 pt-4">
+                      {a}
+                    </div>
+                  </details>
+                ))}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ═══ NASIL KULLANILIR MODALI ═══ */}
+      <AnimatePresence>
+        {isHowToOpen && (
+          <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              onClick={() => setIsHowToOpen(false)}
+              className="absolute inset-0 bg-slate-950/60 backdrop-blur-lg" />
+            <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative w-full max-w-2xl bg-white rounded-[2.5rem] shadow-2xl flex flex-col max-h-[90vh] overflow-hidden">
+              <div className="p-7 bg-gradient-to-r from-brand-600 to-indigo-600 text-white rounded-t-[2.5rem] shrink-0">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <div className="text-brand-200 text-xs font-bold uppercase tracking-widest mb-1">Başlangıç Rehberi</div>
+                    <h3 className="text-xl font-black">VizeAkıl Nasıl Kullanılır?</h3>
+                    <p className="text-brand-100 text-xs mt-1">3 adımda profesyonel başvuru hazırlığı</p>
+                  </div>
+                  <button type="button" onClick={() => setIsHowToOpen(false)} className="p-2 hover:bg-white/10 rounded-full"><X className="w-5 h-5" /></button>
+                </div>
+              </div>
+              <div className="flex-1 overflow-y-auto p-7 space-y-8">
+                {/* Adımlar */}
+                {[
+                  {
+                    step: '01',
+                    title: 'Profilinizi Oluşturun',
+                    color: 'brand',
+                    items: [
+                      '"Ücretsiz Analiz Başlat" butonuna tıklayın.',
+                      'Hangi ülkeye başvuracağınızı seçin (Almanya, İngiltere, ABD vb.).',
+                      'Başvuru tipinizi seçin: Çalışan, Öğrenci, Emekli veya Serbest Meslek.',
+                      'Anlık başarı skorunuzu görün ve "Tam Analizi Gör" ile devam edin.',
+                    ]
+                  },
+                  {
+                    step: '02',
+                    title: 'Analiz Araçlarını Kullanın',
+                    color: 'indigo',
+                    items: [
+                      'Dashboard\'da "Evrak Listesi" ile başvuru tipinize özel belgeleri görün.',
+                      '"Belge Matrisi" ile evraklarınız arasında çelişki olup olmadığını kontrol edin.',
+                      '"Randevu" aracıyla seyahat tarihinize göre en geç randevu gününü hesaplayın.',
+                      '"Vizesiz Ülkeler" ile geçmiş seyahat ekleyerek skorunuzu artırın.',
+                      'Premium: "Visa Copilot" ile yapay zekaya istediğiniz soruyu sorun.',
+                    ]
+                  },
+                  {
+                    step: '03',
+                    title: 'Başvurunuzu Mükemmelleştirin',
+                    color: 'violet',
+                    items: [
+                      '"Senaryo Oluşturucu" ile farklı banka bakiyesi senaryolarını deneyin.',
+                      '"Niyet Mektubu" bölümünden kişiselleştirilmiş, konsolosluk standartlarında mektup oluşturun.',
+                      'Çatışma uyarılarına dikkat edin — kırmızı uyarılar başvuruyu doğrudan olumsuz etkiler.',
+                      'Skorunuz %75\'in üstüne çıktığında başvuru için hazır demeksiniz.',
+                    ]
+                  },
+                ].map(({ step, title, color, items }) => (
+                  <div key={step} className="flex gap-5">
+                    <div className={`w-12 h-12 bg-${color}-50 rounded-2xl flex items-center justify-center shrink-0 border border-${color}-100`}>
+                      <span className={`text-${color}-600 font-black text-sm`}>{step}</span>
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-black text-slate-900 mb-3">{title}</h4>
+                      <ul className="space-y-2">
+                        {items.map((item, i) => (
+                          <li key={i} className="flex items-start gap-2 text-sm text-slate-600">
+                            <CheckCircle2 className={`w-4 h-4 text-${color}-500 shrink-0 mt-0.5`} />
+                            {item}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                ))}
+
+                {/* İpucu kutusu */}
+                <div className="p-5 bg-amber-50 border border-amber-100 rounded-2xl">
+                  <div className="flex items-start gap-3">
+                    <Star className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+                    <div>
+                      <div className="font-bold text-amber-900 text-sm mb-1">Pro İpucu</div>
+                      <p className="text-xs text-amber-800 leading-relaxed">Başvurunuzdan <strong>en az 8 hafta önce</strong> sisteme girin. Bu süre; eksik evrakları tamamlamanıza, banka hesabınızı düzenlemenize ve randevu almanıza yetecektir. Son dakika başvuruları ret riskini %40 artırır.</p>
+                    </div>
+                  </div>
+                </div>
+
+                <button type="button"
+                  onClick={() => { setIsHowToOpen(false); setOnboardingStep(0); setStep('onboarding'); }}
+                  className="w-full py-4 bg-gradient-to-r from-brand-600 to-indigo-600 text-white font-black rounded-2xl flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
+                  Hemen Başla <ChevronRight className="w-5 h-5" />
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
