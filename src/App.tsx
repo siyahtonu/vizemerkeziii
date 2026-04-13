@@ -29,10 +29,7 @@ import {
   LayoutList,
   MessageSquare,
   AlertTriangle,
-  Map,
-  CreditCard,
-  Check,
-  X
+  Map
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { jsPDF } from 'jspdf';
@@ -97,28 +94,7 @@ interface ProfileData {
   
   // Extra
   hasTravelInsurance: boolean;
-
-  // 7. Kritik Yeni Alanlar (2025-2026 Konsolosluk Kuralları)
-  has28DayHolding: boolean;         // UK: Para 28 gün hesapta bekledi mi?
-  has6MonthStatements: boolean;     // UK: 6 aylık hesap dökümü var mı?
-  hasPreviousRefusal: boolean;      // Önceki vize reddi var mı?
-  previousRefusalDisclosed: boolean;// Önceki ret beyan edildi mi?
-  dailyBudgetSufficient: boolean;   // Schengen: Günlük €100-120 gösterilebiliyor mu?
-  hasReturnTicket: boolean;         // Dönüş bileti rezervasyonu var mı?
-  hasHealthInsurance: boolean;      // Sağlık/seyahat sigortası var mı? (Schengen zorunlu)
-  multiTieStrength: number;         // Kaç farklı bağ kategorisi var? (0-4: iş, mülk, aile, sosyal)
-  interviewConfidence: 'low' | 'medium' | 'high'; // ABD mülakatı için özgüven/hazırlık
-  statementMonths: number;          // Kaç aylık banka dökümü sunulacak (3, 6, 12)
-  incomeSourceClear: boolean;       // Gelir kaynağı netçe banka dökümünde görünüyor mu?
-  noFakeBooking: boolean;           // Sahte otel/uçak rezervasyonu yok mu?
-  tieCategories: {                  // Çok katmanlı bağlar - her biri ayrı puan
-    employment: boolean;
-    property: boolean;
-    family: boolean;
-    community: boolean;
-    education: boolean;
-  };
-
+  
   // Strategy & Intelligence (New)
   targetCountry: string;
   persona: string;
@@ -156,94 +132,10 @@ interface LetterData {
   monthlyIncome: string;
 }
 
-const ukDocuments = {
-  employer: [
-    "Vize Başvuru Formu (Tarafımızdan doldurulur)",
-    "İngiltere Konsolosluğuna hitaben dilekçe (Seyahat amacı, kiminle gidileceği, adres, tarihler ve masrafları kimin karşılayacağı belirtilmeli)",
-    "Talep edilen vizenin bitiş tarihinden en az 2 yıl sonrasına kadar geçerli pasaport ve varsa eski pasaportların tüm sayfalarının renkli taranmış kopyaları",
-    "Uçak rezervasyonu ve eğer davetiye yoksa otel rezervasyonu",
-    "Varsa İngiltere'den davet eden kişi tarafından hazırlanmış davetiye ve pasaport fotokopisi",
-    "Başvuru sahibine ait son 3 aylık hesap dökümü (Banka kaşeli, imzalı ve imza sirkülü)",
-    "Adınıza varsa tapu ve araç ruhsatı fotokopisi",
-    "Tam tekmil vukuatlı nüfus kayıt örneği (E-Devlet'ten barkodlu, tüm aile bireyleri dahil. Kadınlar için evlilik öncesi ve sonrası 2 adet)",
-    "Nüfus cüzdanı fotokopisi",
-    "Eğer evliyse, E-devlet'ten FORMÜL B belgesi",
-    "SGK hizmet dökümü (E-Devlet'ten barkodlu)",
-    "İş yerine ait yeni tarihli vergi levhası fotokopisi",
-    "İş yerine ait Ticaret Odası kayıt sureti (6 aydan eski olmamalı)",
-    "İş yerine ait ticaret sicil gazetesi kayıt sureti fotokopisi",
-    "İş yerine ait imza sirküleri fotokopisi",
-    "Firmanın antetli kağıdına kaşe ve imzalı İngiltere'ye seyahat amacını belirten niyet mektubu",
-    "Firmaya ait son 3 aylık hesap hareketleri (Banka kaşeli, imzalı ve imza sirkülü)",
-    "E-devlet'ten barkodlu YERLEŞİM YERİ BELGESİ",
-    "E-devlet'ten barkodlu TARİHÇELİ YERLEŞİM YERİ BELGESİ",
-    "E-devlet'ten YURDA GİRİŞ ÇIKIŞ BELGESİ (01.01.2009'dan bugüne)",
-    "Emeklilik durumu varsa: E-devlet'ten barkodlu 4A/4B/4C Emeklilik Bilgisi Belgesi ve son 3 aylık emekli maaş dökümü (Kaşeli, imzalı, imza sirkülü)"
-  ],
-  unemployed: [
-    "Vize Başvuru Formu (Tarafımızdan doldurulur)",
-    "İngiltere Konsolosluğuna hitaben dilekçe",
-    "Talep edilen vizenin bitiş tarihinden en az 2 yıl sonrasına kadar geçerli pasaport ve varsa eski pasaportların tüm sayfalarının renkli taranmış kopyaları",
-    "Uçak rezervasyonu ve eğer davetiye yoksa otel rezervasyonu",
-    "Varsa İngiltere'den davet eden kişi tarafından verilen davetiye ve kimlik/pasaport fotokopisi",
-    "Başvuru sahibine ait son 3 aylık hesap dökümü (Banka kaşeli, imzalı)",
-    "Tam tekmil vukuatlı nüfus kayıt örneği (E-devlet'ten barkodlu, adres belirtilmeli)",
-    "E-devlet'ten FORMÜL B (Evlilik kayıt belgesi)",
-    "Adınıza varsa tapu ve araç ruhsatı fotokopisi",
-    "E-devlet'ten Yerleşim Yeri Belgesi (Barkodlu)",
-    "E-devlet'ten Tarihçeli Yerleşim Yeri Belgesi (Barkodlu)",
-    "Nüfus cüzdanı fotokopisi",
-    "Masraflar eşiniz tarafından karşılanacaksa, eşinize ait tüm iş belgeleri ve son 3 aylık banka hesap dökümleri",
-    "Sponsor olacak kişiden sponsor olacağına dair dilekçe (Kaşeli, imzalı)"
-  ],
-  minor: [
-    "Vize Başvuru Formu (Tarafımızdan doldurulur)",
-    "İngiltere Konsolosluğuna hitaben dilekçe",
-    "Talep edilen vizenin bitiş tarihinden en az 2 yıl sonrasına kadar geçerli pasaport ve varsa eski pasaportların tüm sayfalarının renkli taranmış kopyaları",
-    "Uçak rezervasyonu ve eğer davetiye yoksa otel rezervasyonu",
-    "İngiltere'den davet eden kişi tarafından verilen davetiye ve pasaport/kimlik fotokopisi",
-    "Tam tekmil vukuatlı nüfus kayıt örneği (Nüfus müdürlüğünden alınmalı, anne bilgileri dahil)",
-    "Devam ettiği okuldan güncel Öğrenci belgesi ve Transcript",
-    "E-devlet'ten FORMUL-A (Doğum Belgesi)",
-    "Yerleşim Yeri Belgesi (E-Devlet'ten barkodlu)",
-    "Tarihçeli Yerleşim Yeri Belgesi (E-Devlet'ten barkodlu)",
-    "Nüfus cüzdanı fotokopisi",
-    "Sponsor olacak kişinin tüm iş belgeleri ve banka belgeleri",
-    "18 Yaş altı için anne ve babanın imzasının bulunduğu noter tasdikli MUVAFAKATNAME"
-  ],
-  sponsor: [
-    "Sponsor olacak kişiye ait son 3 aylık TL/DÖVİZ/ALTIN ve varsa BORSA hesap dökümleri (Banka kaşeli, imzalı ve imza sirkülü)",
-    "Adınıza varsa tapu ve araç ruhsatı fotokopisi",
-    "Tam tekmil vukuatlı nüfus kayıt örneği (E-Devlet'ten barkodlu, adres belirtilmeli)",
-    "Yerleşim Yeri Belgesi (E-Devlet'ten barkodlu)",
-    "Nüfus cüzdanı fotokopisi",
-    "SGK hizmet dökümü (E-Devlet'ten barkodlu)",
-    "Firmanıza ait yeni tarihli vergi levhası fotokopisi",
-    "Firmanıza ait Ticaret Odası kayıt sureti (6 aydan eski olmamalı)",
-    "Firmanıza ticaret sicil gazetesi kayıt sureti fotokopisi",
-    "Firmanıza ait imza sirküleri fotokopisi",
-    "Firmaya ait son 3 aylık hesap hareketleri (Banka kaşeli, imzalı ve imza sirkülü)",
-    "Sponsor olacağını açıklayan SPONSORLUK DİLEKÇESİ (Firma kaşesi ve imza olmalıdır)"
-  ]
-};
-
-const ukPricing = {
-  consulate: "185 USD (6 aylık) + 76,50 GBP (parmak izi) + 2600 TL (evrak tarama). *Parmak izi ücreti Ankara ve İstanbul'da alınmamaktadır.",
-  agency: "200 USD",
-  durations: [
-    { label: "6 Aylık Vize", price: "185 USD" },
-    { label: "2 Yıllık Vize", price: "695 USD" },
-    { label: "5 Yıllık Vize", price: "1200 USD" },
-    { label: "10 Yıllık Vize", price: "1510 USD" }
-  ]
-};
-
 export default function App() {
   const [step, setStep] = useState<'hero' | 'assessment' | 'dashboard' | 'letter' | 'tactics'>('hero');
   const [isCalculatorOpen, setIsCalculatorOpen] = useState(false);
   const [isCopilotOpen, setIsCopilotOpen] = useState(false);
-  const [isDocumentListOpen, setIsDocumentListOpen] = useState(false);
-  const [applicantType, setApplicantType] = useState<'employer' | 'unemployed' | 'minor'>('employer');
   
   const [profile, setProfile] = useState<ProfileData>({
     bankRegularity: false,
@@ -292,27 +184,6 @@ export default function App() {
     hasBarcodeSgk: false,
     hasTravelInsurance: false,
     
-    // 7. Kritik Yeni Alanlar (2025-2026)
-    has28DayHolding: false,
-    has6MonthStatements: false,
-    hasPreviousRefusal: false,
-    previousRefusalDisclosed: true,
-    dailyBudgetSufficient: false,
-    hasReturnTicket: false,
-    hasHealthInsurance: false,
-    multiTieStrength: 0,
-    interviewConfidence: 'medium',
-    statementMonths: 3,
-    incomeSourceClear: false,
-    noFakeBooking: true,
-    tieCategories: {
-      employment: false,
-      property: false,
-      family: false,
-      community: false,
-      education: false,
-    },
-
     // Strategy & Intelligence (New)
     targetCountry: 'Almanya',
     persona: 'Analiz Ediliyor...',
@@ -342,172 +213,57 @@ export default function App() {
     monthlyIncome: '',
   });
 
-  // ============================================================
-  // GELİŞMİŞ VİZE BAŞARI SKORU HESAPLAYICI v2.0
-  // 2025-2026 Konsolosluk Kriterleri + Çok Katmanlı Ağırlıklı Sistem
-  // Hedef: Danışmanlık müşterilerinde %90+ başarı oranı
-  // ============================================================
+  // Advanced Probability Calculation
   const calculateScore = (data: ProfileData, simValue: number = 0) => {
-    let score = 10; // Temel başlangıç puanı
+    let score = 15; // Base score
 
-    // ─────────────────────────────────────────────────────────
-    // BÖLÜM 1: FİNANSAL GÜÇ (Maks 28 puan)
-    // Araştırma: Konsoloslukların en çok reddettiği alan (%25-30 ret)
-    // ─────────────────────────────────────────────────────────
-
-    // Yeterli bakiye (simülatörle desteklenir)
-    if (data.bankSufficientBalance || simValue > 150000) score += 7;
-    else if (simValue > 75000) score += 3;
-
-    // Yüksek birikim → güçlü güvence
-    if (data.highSavingsAmount || simValue > 350000) score += 5;
-
-    // Gelir düzenliliği (Konsolosluk: "süreklilik miktar kadar önemli")
-    if (data.bankRegularity) score += 5;
-
-    // Gelir kaynağı banka dökümünde net görünüyor mu?
-    if (data.incomeSourceClear) score += 4;
-
-    // Düzenli maaş tespiti
-    if (data.salaryDetected) score += 3;
-
-    // Gayrimenkul/araç → geri dönüş güvencesi
+    // 1. Financial (Max 25)
+    if (data.bankRegularity) score += 6;
+    if (data.bankSufficientBalance || simValue > 150000) score += 6;
+    if (data.bankNoLastMinuteDeposit && !data.hasSuspiciousLargeDeposit) score += 3;
+    if (data.highSavingsAmount || simValue > 300000) score += 4;
     if (data.hasAssets) score += 3;
+    if (data.hasSteadyIncome) score += 3;
+    if (!data.hasRegularSpending) score -= 5; // Penalty for "dead" account
 
-    // Düzenli harcama kalıbı (aktif hesap)
-    if (data.hasRegularSpending && data.recurringExpensesDetected) score += 3;
+    // 2. Professional (Max 20)
+    if (data.hasSgkJob) score += 10;
+    if (data.isPublicSectorEmployee) score += 5;
+    if (data.sgkEmployerLetterWithReturn) score += 3;
+    if (data.yearsInCurrentJob === 1) score += 2;
+    if (data.yearsInCurrentJob === 2) score += 4;
+    if (data.sgkAddressMatchesDs160) score += 2;
 
-    // Günlük bütçe yeterliliği (Schengen €100-120/gün kriteri)
-    if (data.dailyBudgetSufficient) score += 4;
+    // 3. Travel History (Max 20)
+    if (data.hasHighValueVisa) score += 20;
+    else if (data.hasOtherVisa) score += 10;
+    else if (data.travelHistoryNonVisa) score += 5;
+    if (!data.noOverstayHistory) score -= 40; // Heavier penalty 2025
+    if (data.hasSocialMediaFootprint) score += 2; // New trust factor
 
-    // CEZALAR - Finansal
-    if (!data.hasRegularSpending) score -= 8;      // "Ölü hesap" - emanet şüphesi
-    if (data.hasSuspiciousLargeDeposit) score -= 10; // Son dakika toplu para → kritik ret sebebi
-    if (data.unusualLargeTransactions) score -= 5;   // Açıklanamayan büyük hareketler
-    if (data.monthlyInflow < data.monthlyOutflow && data.monthlyInflow > 0) score -= 6; // Negatif nakit akışı
-
-    // ─────────────────────────────────────────────────────────
-    // BÖLÜM 2: İNGİLTERE ÖZEL KURALLAR (UK Critical Rules)
-    // 28-Gün Kuralı + 6 Aylık Döküm → UK'te ret/onayın en net belirleyicisi
-    // ─────────────────────────────────────────────────────────
-    if (data.targetCountry === 'İngiltere') {
-      if (data.has28DayHolding) score += 8;   // Para 28 gün hesapta bekledi
-      else score -= 12;                        // Beklemedi → neredeyse kesin ret
-
-      if (data.has6MonthStatements) score += 6;  // 6 aylık döküm tam
-      else if (data.statementMonths >= 3) score += 2; // 3 aylık minimum
-      else score -= 8;                          // Eksik döküm → otomatik ret
-    }
-
-    // ─────────────────────────────────────────────────────────
-    // BÖLÜM 3: MESLEKİ BAĞLILIK (Maks 22 puan)
-    // Araştırma: İstihdam + işveren mektubu en güçlü tek bağ kategorisi
-    // ─────────────────────────────────────────────────────────
-    if (data.hasSgkJob) score += 12;           // SGK kaydı → en önemli profesyonel kanıt
-    if (data.isPublicSectorEmployee) score += 6; // Kamu çalışanı → en yüksek güven grubu
-    if (data.sgkEmployerLetterWithReturn) score += 5; // İşverenden dönüş garantili yazı
-
-    // Kıdem bonusu (araştırma: yeni işe girenler reddediliyor)
-    if (data.yearsInCurrentJob >= 3) score += 5;
-    else if (data.yearsInCurrentJob === 2) score += 4;
-    else if (data.yearsInCurrentJob === 1) score += 2;
-    else score -= 4;  // <1 yıl kıdem: düşük güven
-
-    if (data.sgkAddressMatchesDs160) score += 2;  // Adres tutarlılığı
-    if (data.hasBarcodeSgk) score += 2;           // Barkodlu SGK → sahtecilik önleyici
-
-    // ─────────────────────────────────────────────────────────
-    // BÖLÜM 4: ÇOK KATMANLI BAĞLAR - "Multifaceted Ties" (Maks 20 puan)
-    // Araştırma: Tek bağ yeterli değil, konsolosluk memurunun
-    // "toplam hayat bağlantısını" değerlendirdiği kısım
-    // ─────────────────────────────────────────────────────────
-    const activeTieCount = [
-      data.tieCategories?.employment,
-      data.tieCategories?.property,
-      data.tieCategories?.family,
-      data.tieCategories?.community,
-      data.tieCategories?.education,
-    ].filter(Boolean).length;
-
-    // Her bağ kategorisi ayrı puan
-    if (data.tieCategories?.employment) score += 5;  // İstihdam bağı
-    if (data.tieCategories?.property) score += 5;   // Mülkiyet bağı
-    if (data.tieCategories?.family) score += 4;     // Aile bağı
-    if (data.tieCategories?.community) score += 3;  // Sosyal/topluluk bağı
-    if (data.tieCategories?.education) score += 3;  // Eğitim bağı
-
-    // Çok katmanlılık bonusu (3+ farklı kategoride bağ = güçlü profil)
-    if (activeTieCount >= 4) score += 6;
-    else if (activeTieCount === 3) score += 3;
-
-    // Legacy alanlarla da uyum
-    if (data.isMarried) score += 3;
+    // 4. Family & Social Ties (Max 10)
+    if (data.isMarried) score += 4;
     if (data.hasChildren) score += 3;
-    if (data.isStudent) score += 2;
-    if (data.strongFamilyTies) score += 1;
-    if (data.hasSocialMediaFootprint) score += 2;  // 2025: Dijital ayak izi güven faktörü
+    if (data.isStudent) score += 3;
+    if (data.strongFamilyTies) score += 2;
 
-    // ─────────────────────────────────────────────────────────
-    // BÖLÜM 5: SEYAHAT GEÇMİŞİ (Maks 20 puan)
-    // Araştırma: Önceki güçlü vize → en hızlı onay yolu
-    // ─────────────────────────────────────────────────────────
-    if (data.hasHighValueVisa) score += 20;      // ABD/UK/Schengen geçmişi → altın kart
-    else if (data.hasOtherVisa) score += 12;
-    else if (data.travelHistoryNonVisa) score += 6;
-
-    if (!data.noOverstayHistory) score -= 45;   // Süre aşımı → 2025'te hemen hemen kesin ret
-
-    // Önceki ret yönetimi (araştırma: gizlemek, retten daha kötü)
-    if (data.hasPreviousRefusal && !data.previousRefusalDisclosed) score -= 20; // Beyan etmemek = dolandırıcılık
-    if (data.hasPreviousRefusal && data.previousRefusalDisclosed) score -= 5;   // Beyan edilmiş ret → küçük ceza
-
-    // ─────────────────────────────────────────────────────────
-    // BÖLÜM 6: BAŞVURU KALİTESİ & NİYET KANITI (Maks 15 puan)
-    // Araştırma: Belge organizasyonu memur kararını doğrudan etkiliyor
-    // ─────────────────────────────────────────────────────────
-    if (data.useOurTemplate) score += 5;         // Profesyonel niyet mektubu şablonu
-    if (data.hasInvitation) score += 3;          // Davetiye → güçlü amaç kanıtı
+    // 5. Purpose & Commitment (Max 15)
+    if (data.useOurTemplate) score += 5;
+    if (data.hasInvitation) score += 3;
     if (data.paidReservations) score += 3;
     if (data.addressMatchSgk) score += 2;
-    if (data.datesMatchReservations) score += 2; // Tarih tutarlılığı
-    if (data.purposeClear) score += 2;
-    if (data.hasReturnTicket) score += 3;        // Dönüş bileti = geri dönüş niyeti
-    if (!data.noFakeBooking) score -= 15;        // SAHTE rezervasyon = yasak listesi riski
+    if (data.datesMatchReservations) score += 2;
 
-    // ABD Mülakatı hazırlığı
-    if (data.targetCountry === 'ABD') {
-      if (data.interviewPrepared) score += 4;
-      if (data.interviewConfidence === 'high') score += 3;
-      else if (data.interviewConfidence === 'medium') score += 1;
-      else score -= 2;
-    }
-
-    // ─────────────────────────────────────────────────────────
-    // BÖLÜM 7: GÜVEN & BELGE KALİTESİ (Maks 12 puan)
-    // ─────────────────────────────────────────────────────────
+    // 6. Quality & Trust (Max 10)
     if (data.hasValidPassport && data.passportConditionGood) score += 3;
-    if (data.passportValidityLong) score += 3;   // Vize bitişinden 6+ ay geçerlilik
-    if (data.documentConsistency) score += 3;    // Tüm belgeler arası tutarlılık
-    if (data.cleanCriminalRecord) score += 3;
+    if (data.passportValidityLong) score += 2;
+    if (data.documentConsistency) score += 2;
+    if (data.hasBarcodeSgk) score += 2;
+    if (data.interviewPrepared) score += 1;
+    if (data.cleanCriminalRecord) score += 2;
 
-    // Sigorta (Schengen'de zorunlu - eksikse ret)
-    if (data.hasHealthInsurance || data.hasTravelInsurance) score += 4;
-    if (data.targetCountry !== 'ABD' && data.targetCountry !== 'İngiltere' &&
-        !data.hasHealthInsurance && !data.hasTravelInsurance) score -= 10; // Schengen zorunlu
-
-    // ─────────────────────────────────────────────────────────
-    // BÖLÜM 8: ÜLKEYE ÖZEL DÜZELTMELER
-    // Araştırma: Türk vatandaşlarına göre ülke zorluk çarpanları
-    // ─────────────────────────────────────────────────────────
-    const countryDifficulty: Record<string, number> = {
-      'İtalya': +3,     // %8.7 ret oranı - en kolay Schengen
-      'İspanya': +2,    // Orta kolaylık
-      'Fransa': 0,      // Ortalama
-      'Almanya': -3,    // Ankara %27.1, İstanbul %21.5 ret oranı
-      'İngiltere': -2,  // ETA sonrası sıkılaştı
-      'ABD': -5,        // B2 ret oranı %20.6 - İstanbul 188 gün bekleme
-    };
-    score += (countryDifficulty[data.targetCountry] ?? 0);
+    // Extra
+    if (data.hasTravelInsurance) score += 5;
 
     return Math.max(0, Math.min(score, 100));
   };
@@ -515,134 +271,58 @@ export default function App() {
   const currentScore = useMemo(() => calculateScore(profile, simulatorValue), [profile, simulatorValue]);
 
   const intelligence = useMemo(() => {
-    // ─────────────────────────────────────────────────────────
-    // 1. GELİŞMİŞ PERSONA SINIFLANDIRMASI (8 Kategori)
-    // 2025-2026 araştırmasına dayalı konsolosluk memuru perspektifi
-    // ─────────────────────────────────────────────────────────
+    // 1. Persona Classification
     let persona = "Standart Profil";
     let personaDestiny = "Orta riskli, standart inceleme.";
-
-    const activeTies = [
-      profile.tieCategories?.employment,
-      profile.tieCategories?.property,
-      profile.tieCategories?.family,
-      profile.tieCategories?.community,
-      profile.tieCategories?.education,
-    ].filter(Boolean).length;
-
-    if (profile.isPublicSectorEmployee && profile.bankSufficientBalance) {
-      persona = "Altın Profil: Kamu Güvencesi";
-      personaDestiny = "Konsoloslukların en hızlı onayladığı grup. Kamu çalışanlarında geri dönüş riski sıfıra yakın. İtalya/Almanya için onay neredeyse garantili.";
-    } else if (profile.hasSgkJob && profile.yearsInCurrentJob >= 3 && profile.bankSufficientBalance && activeTies >= 3) {
-      persona = "Güçlü Profil: Stabil Profesyonel";
-      personaDestiny = "Çok katmanlı bağları olan bu profil, konsolosluk gözünde en güvenilir özel sektör kategorisi. %90+ onay beklentisi.";
-    } else if (profile.hasSgkJob && profile.yearsInCurrentJob >= 2 && profile.bankSufficientBalance) {
-      persona = "Güvenilir Profil: Deneyimli Çalışan";
-      personaDestiny = "Finansal istikrar ve iş sürekliliği ile güçlü bir profil. Ek bağ kanıtlarıyla %90'a taşınabilir.";
-    } else if (profile.hasHighValueVisa) {
-      persona = "Geçmişten Güç: Vizenin Vizesi";
-      personaDestiny = "Önceki ABD/UK/Schengen vizesi en güçlü referanstır. Konsolosluk bu profili öncelikli işler.";
+    
+    if (profile.hasSgkJob && profile.yearsInCurrentJob >= 2 && profile.bankSufficientBalance) {
+      persona = "Stabil Profesyonel";
+      personaDestiny = "Konsolosluk gözünde en güvenilir kategori. Onay şansı çok yüksek.";
+    } else if (!profile.hasSgkJob && !profile.isMarried && profile.yearsInCurrentJob < 1) {
+      persona = "Yüksek Riskli Genç";
+      personaDestiny = "Göç riski taşıyan profil. Çok güçlü finansal kanıt ve niyet mektubu şart.";
+    } else if (profile.isPublicSectorEmployee) {
+      persona = "Kamu Güvencesi";
+      personaDestiny = "Geri dönüş garantisi en yüksek görülen grup. Hızlı onay alabilir.";
     } else if (profile.hasSuspiciousLargeDeposit || profile.unusualLargeTransactions) {
-      persona = "KRİTİK: Şüpheli Finansal Profil";
-      personaDestiny = "Emanet para şüphesi nedeniyle ret riski %85+. Başvurudan önce kaynağı belgele veya 2 ay bekle. Bu profille kesinlikle başvurma.";
-    } else if (!profile.hasSgkJob && !profile.isMarried && activeTies < 2 && profile.yearsInCurrentJob < 1) {
-      persona = "Yüksek Risk: Göç Şüpheli Profil";
-      personaDestiny = "Konsolosluk memurunun ilk baktığı 'göç riski' profili. Tek çözüm: çok güçlü finansal + en az 2 ek bağ kanıtı.";
-    } else if (!profile.hasSgkJob && profile.isMarried && profile.hasAssets) {
-      persona = "Orta Risk: Ev Hanımı/Bağımsız";
-      personaDestiny = "Sponsor (eş/aile) gerekli. Sponsor belgeleri eksiksiz olursa onay mümkün.";
-    } else if (profile.hasPreviousRefusal && !profile.previousRefusalDisclosed) {
-      persona = "KRİTİK: Beyan Hatası Var!";
-      personaDestiny = "Önceki reddini beyan etmemek dolandırıcılık sayılır ve kalıcı ban riski taşır. Hemen düzelt!";
-    } else {
-      persona = "Geliştirilmesi Gereken Profil";
-      personaDestiny = "Temel kriterler tamamlanmamış. Aşağıdaki kritik adımları tamamlayarak %90 eşiğine ulaşabilirsiniz.";
+      persona = "Şüpheli Finansal Profil";
+      personaDestiny = "Emanet para şüphesi nedeniyle ret riski %80. Kaynak belgelenmeli.";
     }
 
-    // ─────────────────────────────────────────────────────────
-    // 2. HAZIRLIKta DURUM - Daha hassas eşikler
-    // ─────────────────────────────────────────────────────────
+    // 2. Readiness Status
     let readiness: 'apply' | 'wait' | 'risky' = 'wait';
-    const hardBlocks = profile.hasSuspiciousLargeDeposit ||
-                       (!profile.previousRefusalDisclosed && profile.hasPreviousRefusal) ||
-                       !profile.noOverstayHistory ||
-                       !profile.noFakeBooking;
-
-    if (currentScore >= 82 && !hardBlocks) readiness = 'apply';
-    else if (currentScore >= 65 && !hardBlocks) readiness = 'risky';
+    if (currentScore >= 80 && !profile.hasSuspiciousLargeDeposit) readiness = 'apply';
+    else if (currentScore >= 60) readiness = 'risky';
     else readiness = 'wait';
 
-    // ─────────────────────────────────────────────────────────
-    // 3. BELGE GÜÇ SKORU (0-10, daha hassas)
-    // ─────────────────────────────────────────────────────────
+    // 3. Document Strength (0-10)
     const docStrengths = {
-      financial: Math.min(10, Math.round(
-        (profile.bankRegularity ? 3 : 0) +
-        (profile.bankSufficientBalance ? 3 : 0) +
-        (profile.incomeSourceClear ? 2 : 0) +
-        (profile.has28DayHolding ? 1.5 : 0) +
-        (profile.has6MonthStatements ? 1 : 0) -
-        (profile.hasSuspiciousLargeDeposit ? 5 : 0)
-      )),
-      professional: Math.min(10,
-        (profile.hasSgkJob ? 4 : 0) +
-        (profile.isPublicSectorEmployee ? 3 : 0) +
-        (profile.yearsInCurrentJob >= 3 ? 2 : profile.yearsInCurrentJob >= 1 ? 1 : 0) +
-        (profile.hasBarcodeSgk ? 1 : 0)
-      ),
+      financial: Math.min(10, (profile.bankHealthScore / 10)),
+      professional: profile.hasSgkJob ? (profile.yearsInCurrentJob === 2 ? 10 : 7) : 3,
       history: profile.hasHighValueVisa ? 10 : (profile.hasOtherVisa ? 7 : (profile.travelHistoryNonVisa ? 4 : 1)),
-      trust: Math.min(10,
-        (profile.documentConsistency ? 3 : 0) +
-        (profile.hasBarcodeSgk ? 2 : 0) +
-        (profile.cleanCriminalRecord ? 2 : 0) +
-        (profile.noFakeBooking ? 2 : 0) +
-        (profile.previousRefusalDisclosed || !profile.hasPreviousRefusal ? 1 : -5)
-      )
+      trust: profile.documentConsistency && profile.hasBarcodeSgk ? 10 : 5
     };
 
-    // ─────────────────────────────────────────────────────────
-    // 4. ZAMANLAMA TAVSİYESİ - Ülke + profil özelinde
-    // ─────────────────────────────────────────────────────────
-    let timeline = "Profiliniz başvuruya hazır görünüyor.";
+    // 4. Timeline Intelligence
+    let timeline = "Şu an başvurabilirsiniz.";
     const today = new Date();
-    const month = today.getMonth(); // 0=Ocak, 5=Haziran
-
+    const month = today.getMonth();
+    if (month >= 5 && month <= 7) {
+      timeline = "Yaz sezonu yoğunluğu! Randevu bulmak zor olabilir, 2 hafta erken planlayın.";
+    }
+    if (profile.salaryDetected && profile.yearsInCurrentJob === 0) {
+      timeline = "Yeni işe girdiniz. Maaş artışından veya işe girişten 3 ay sonra başvurmanız daha sağlıklı olur.";
+    }
     if (profile.hasSuspiciousLargeDeposit) {
-      timeline = "⚠ BEKLE: Hesaba yeni büyük para girişi var. 28-45 gün hesapta beklettikten sonra başvur.";
-    } else if (profile.targetCountry === 'ABD' && !profile.interviewPrepared) {
-      timeline = "⚠ ABD mülakatı İstanbul'da 188, Ankara'da 175 gün bekleme var. Hemen randevu al, hazırlığa başla!";
-    } else if (profile.targetCountry === 'İngiltere' && !profile.has28DayHolding) {
-      timeline = "⚠ UK 28 gün kuralı: Paranın hesapta en az 28 gün kalması şart. Tarih planını buna göre yap.";
-    } else if (profile.targetCountry === 'İngiltere' && !profile.has6MonthStatements) {
-      timeline = "⚠ UK için 6 aylık banka dökümü zorunlu. Döküm hazırlanana kadar başvurma.";
-    } else if (profile.yearsInCurrentJob === 0) {
-      timeline = "⚠ Yeni iş: İşe girişten itibaren en az 3 ay beklemek başarı şansını ciddi artırır.";
-    } else if (month >= 4 && month <= 6) {
-      timeline = "ℹ Yaz sezonu yoğunluğu (Mayıs-Temmuz) yaklaşıyor. Randevuları 3 hafta önceden al.";
-    } else if (currentScore >= 82) {
-      timeline = "✅ Profil başvuruya hazır. En kısa randevuyu al.";
-    } else {
-      timeline = "Aşağıdaki eksiklikleri tamamladıktan sonra başvur.";
+      timeline = "Hesaba yeni toplu para yattı. Bu paranın hesapta 1-2 ay 'soğumasını' bekleyin.";
     }
 
-    // ─────────────────────────────────────────────────────────
-    // 5. STRATEJİK ROTA - Skor + ülkeye özel
-    // ─────────────────────────────────────────────────────────
-    let route: string[] = [];
-    if (currentScore < 55) {
-      route = ["Sırbistan (Vizesiz)", "Karadağ (Vizesiz)", "Makedonya (Vizesiz)", "→ Yunanistan (Kolay Schengen)", "→ Hedef Ülke"];
-    } else if (currentScore < 70) {
-      if (profile.targetCountry === 'Almanya') {
-        route = ["İtalya (Ret Oranı %8.7)", "→ Almanya"];
-      } else if (profile.targetCountry === 'ABD') {
-        route = ["Schengen Vizesi Al", "→ ABD B2 Başvurusu"];
-      } else {
-        route = ["İtalya/Slovakya (En kolay Schengen)", "→ Hedef Ülke"];
-      }
-    } else if (currentScore < 82) {
-      route = [profile.targetCountry + " (Direkt Başvuru)", "Eksikleri Tamamla"];
-    } else {
-      route = ["✅ " + profile.targetCountry + " — Direkt Başvur"];
+    // 5. Strategy Route
+    let route = ["Hedef Ülke"];
+    if (currentScore < 60) {
+      route = ["Sırbistan (Vizesiz)", "Yunanistan (Kolay Schengen)", "Hedef Ülke"];
+    } else if (currentScore < 80) {
+      route = ["İtalya/Fransa (Esnek)", "Hedef Ülke"];
     }
 
     return { persona, personaDestiny, readiness, docStrengths, timeline, route };
@@ -758,142 +438,18 @@ export default function App() {
       });
     }
 
-    // ─────────────────────────────────────────────────────────
-    // YENİ 2025-2026 KRİTİK KURALLAR
-    // ─────────────────────────────────────────────────────────
-
-    // UK: 28 Gün Kuralı (kritik - ihlali neredeyse kesin ret)
-    if (profile.targetCountry === 'İngiltere' && !profile.has28DayHolding) {
-      list.push({
-        type: 'error',
-        message: 'UK KRİTİK: 28 Gün Kuralı İhlali',
-        suggestion: 'İngiltere Konsolosluğu banka bakiyesinin başvurudan en az 28 gün önce hesapta olmasını şart koşar. Para geçen hafta yatırıldıysa 28 gün bekleyin. Bu kural ihlali doğrudan reddeder.'
-      });
-    }
-
-    // UK: 6 Aylık Döküm Zorunluluğu
-    if (profile.targetCountry === 'İngiltere' && !profile.has6MonthStatements) {
-      list.push({
-        type: 'error',
-        message: 'UK: 6 Aylık Banka Dökümü Eksik',
-        suggestion: '3 aylık döküm yeterli değil! UK vizesi için bankadan son 6 aya ait kaşeli imzalı döküm alın. 31 günden eski döküm kapanış tarihleri "geçersiz" sayılır ve otomatik ret sebebidir.'
-      });
-    }
-
-    // Önceki Ret Beyanı (Gizlemek = Dolandırıcılık)
-    if (profile.hasPreviousRefusal && !profile.previousRefusalDisclosed) {
-      list.push({
-        type: 'error',
-        message: 'KRİTİK: Önceki Red Beyan Edilmemiş!',
-        suggestion: 'Önceki vize reddini gizlemek, hemen hemen tüm ülkelerde "yanlış beyanda bulunma" suçu sayılır ve kalıcı seyahat yasağına yol açabilir. Mutlaka beyan edin. Ret beyan etmek çok küçük bir ceza alırken, gizlemek kalıcı ban riski taşır.'
-      });
-    }
-
-    // Schengen: Günlük bütçe yetersizliği (€100-120/gün kriteri)
-    if (profile.targetCountry !== 'İngiltere' && profile.targetCountry !== 'ABD' && !profile.dailyBudgetSufficient) {
-      list.push({
-        type: 'warning',
-        message: 'Schengen: Günlük Bütçe Kanıtı Eksik',
-        suggestion: 'Schengen ülkeleri gayri resmi olarak günlük €100-120 finansal kapasite bekler. Seyahat sürenize göre toplam tutarı (ör. 7 gün × €120 = €840) banka dökümünde net gösterin.'
-      });
-    }
-
-    // Schengen: Sağlık sigortası zorunluluğu
-    if (profile.targetCountry !== 'İngiltere' && profile.targetCountry !== 'ABD' &&
-        !profile.hasHealthInsurance && !profile.hasTravelInsurance) {
-      list.push({
-        type: 'error',
-        message: 'Schengen ZORUNLU: Seyahat Sağlık Sigortası Eksik',
-        suggestion: 'Schengen vizesi için en az €30.000 teminatlı, tüm Schengen ülkelerini kapsayan seyahat sağlık sigortası zorunludur. Bu olmadan başvuru geçersiz sayılır. SGK yetersizdir, özel seyahat sigortası alınmalıdır.'
-      });
-    }
-
-    // Sahte rezervasyon tespiti uyarısı
-    if (!profile.noFakeBooking) {
-      list.push({
-        type: 'error',
-        message: 'KRİTİK: Sahte Rezervasyon Riski',
-        suggestion: 'Sahte veya iptal edilebilir ücretli otel/uçak rezervasyonu konsolosluklarca tespit edilmekte. İspanya ve Almanya bu konuda özellikle sıkı. Gerçek rezervasyon veya Booking.com\'un ücretsiz iptalli rezervasyonunu kullanın, sahte PDF kesinlikle sunmayın.'
-      });
-    }
-
-    // Çok katmanlı bağ uyarısı (tek bağ yetersiz)
-    const tieCount = [
-      profile.tieCategories?.employment,
-      profile.tieCategories?.property,
-      profile.tieCategories?.family,
-      profile.tieCategories?.community,
-      profile.tieCategories?.education,
-    ].filter(Boolean).length;
-
-    if (tieCount < 2) {
-      list.push({
-        type: 'warning',
-        message: 'Zayıf Bağ Profili: Tek Bağ Yeterli Değil',
-        suggestion: 'Araştırmalar, konsoloslukların tek bir bağ kategorisini (örn. sadece iş) yetersiz bulduğunu gösteriyor. İstihdam + mülkiyet veya İstihdam + aile gibi en az 2 farklı kategoride kanıt sunun.'
-      });
-    }
-
-    // ABD: Mülakat tutarsızlık uyarısı
-    if (profile.targetCountry === 'ABD' && !profile.sgkAddressMatchesDs160) {
-      list.push({
-        type: 'error',
-        message: 'ABD DS-160: Adres/Bilgi Tutarsızlığı',
-        suggestion: 'DS-160 formundaki her bilgi (işveren adı, adresi, gelir) gerçek belgelerle birebir eşleşmeli. Mülakata 3-5 dakika süre verilir; memur ilk 20 saniyede DS-160 çelişkilerini sorar. Tüm formu tekrar kontrol edin.'
-      });
-    }
-
     return list;
   }, [profile]);
 
   const roadmap = useMemo((): RoadmapItem[] => {
-    if (currentScore >= 82) return []; // %82+ = başvur, roadmap gerekmez
-    const items: RoadmapItem[] = [];
-
-    // Finansal güçlendirme
-    if (!profile.bankRegularity || !profile.incomeSourceClear) {
-      items.push({ week: 1, task: "Maaş/kira gelirlerini banka açıklamalarına yazdır, 3 ay bekle.", impact: "+9 Puan" });
-    }
-    if (!profile.has28DayHolding && profile.targetCountry === 'İngiltere') {
-      items.push({ week: 1, task: "UK 28-gün kuralı: Parayı hesaba yatır, 28 gün bekle, sonra başvur.", impact: "+8 Puan" });
-    }
-    if (!profile.has6MonthStatements && profile.targetCountry === 'İngiltere') {
-      items.push({ week: 2, task: "Bankadan 6 aylık kaşeli-imzalı döküm al (31 gün içinde kapanış tarihi olacak).", impact: "+6 Puan" });
-    }
-    if (!profile.dailyBudgetSufficient && profile.targetCountry !== 'İngiltere') {
-      items.push({ week: 2, task: "Schengen €100-120/gün hesabı: Süre × €120 = Gereken miktar. Hesapta net göster.", impact: "+4 Puan" });
-    }
-
-    // Bağ güçlendirme
-    const tieCount = [profile.tieCategories?.employment, profile.tieCategories?.property,
-      profile.tieCategories?.family, profile.tieCategories?.community].filter(Boolean).length;
-    if (tieCount < 2) {
-      items.push({ week: 2, task: "İkinci bağ kategorisi ekle: Tapu/araç + aile nüfus kaydı veya bağlı olduğun dernek/kulüp yazısı.", impact: "+7 Puan" });
-    }
-
-    // Seyahat geçmişi
-    if (!profile.hasHighValueVisa && !profile.hasOtherVisa) {
-      items.push({ week: 3, task: "Vizesiz ülkelere gir-çık: Sırbistan, Karadağ, Makedonya (pasaporta giriş-çıkış damgası al).", impact: "+6 Puan" });
-    }
-
-    // Belge kalitesi
-    if (!profile.hasBarcodeSgk) {
-      items.push({ week: 3, task: "e-Devlet'ten 'Barkodlu Belge Oluştur' ile SGK döküm al. Barkod yoksa sahte sayılır.", impact: "+2 Puan" });
-    }
-    if (!profile.hasHealthInsurance && !profile.hasTravelInsurance) {
-      items.push({ week: 3, task: "Schengen için €30.000 teminatlı seyahat sigortası satın al (Europ Assistance veya AXA).", impact: "+4 Puan" });
-    }
-    if (!profile.useOurTemplate) {
-      items.push({ week: 4, task: "Sistemimizin profesyonel niyet mektubu şablonunu kullan (geri dönüş taahhüdü + finansal taahhüt).", impact: "+5 Puan" });
-    }
-
-    // Sosyal medya
-    if (!profile.hasSocialMediaFootprint) {
-      items.push({ week: 4, task: "LinkedIn profilini güncelle. Instagram/Facebook hesabını 'Türk hayatı' gösteren içerikle besle.", impact: "+2 Puan" });
-    }
-
-    return items.slice(0, 6); // Maksimum 6 madde göster
-  }, [currentScore, profile]);
+    if (currentScore >= 75) return [];
+    return [
+      { week: 1, task: "Vizesiz 2 ülkeye (Sırbistan/Karadağ) giriş-çıkış yap.", impact: "+8 Puan" },
+      { week: 2, task: "Banka hesabına düzenli 'Kira/Maaş' açıklamalı ödemeler ekle.", impact: "+10 Puan" },
+      { week: 3, task: "SGK dökümünü barkodlu al ve işveren yazısını güncellet.", impact: "+5 Puan" },
+      { week: 4, task: "Sosyal medya hesaplarını profesyonel ve açık hale getir.", impact: "+2 Puan" },
+    ];
+  }, [currentScore]);
 
   const handleOcrUpload = (files: FileList | null) => {
     if (!files) return;
@@ -908,7 +464,7 @@ export default function App() {
         { file: 'banka_dokumu.pdf', status: 'Maaş, Kira ve 4 Abonelik Tespit Edildi - OK' },
         { file: 'sgk_hizmet.pdf', status: '2 Yıl 1 Ay Kıdem Tespit Edildi - OK' }
       ]);
-      setProfile((prev: ProfileData) => ({
+      setProfile(prev => ({
         ...prev,
         hasValidPassport: true,
         passportValidityLong: true,
@@ -917,26 +473,16 @@ export default function App() {
         salaryDetected: true,
         recurringExpensesDetected: true,
         hasRegularSpending: true,
-        incomeSourceClear: true,
-        has6MonthStatements: false,
-        has28DayHolding: false,
         lowSpendingActivity: false,
         unusualLargeTransactions: false,
         monthlyInflow: 65000,
         monthlyOutflow: 42000,
-        transactionFrequency: 'high' as const,
+        transactionFrequency: 'high',
         recurringPaymentTypes: ['Maaş', 'Kira', 'Fatura', 'Netflix', 'Spor Salonu'],
         hasSgkJob: true,
-        yearsInCurrentJob: 2,
+        yearsInCurrentJob: 1,
         hasBarcodeSgk: true,
-        documentConsistency: true,
-        tieCategories: {
-          employment: true,
-          property: false,
-          family: false,
-          community: false,
-          education: false,
-        }
+        documentConsistency: true
       }));
     }, 3000);
   };
@@ -968,135 +514,73 @@ export default function App() {
   }, [profile]);
 
   const handleProfileToggle = (key: keyof ProfileData) => {
-    setProfile((prev: ProfileData) => ({ ...prev, [key]: !prev[key] }));
+    setProfile(prev => ({ ...prev, [key]: !prev[key] }));
   };
 
   const generatePDF = (type: 'cover' | 'sponsor' | 'employer' | 'itinerary' = 'cover') => {
     const doc = new jsPDF();
     const date = new Date().toLocaleDateString('tr-TR');
     
-    // jsPDF default fonts do not support Turkish characters well. 
-    // We normalize them to ensure the PDF is readable and professional.
-    const normalizeTr = (text: string) => {
-      return text
-        .replace(/ğ/g, 'g').replace(/Ğ/g, 'G')
-        .replace(/ü/g, 'u').replace(/Ü/g, 'U')
-        .replace(/ş/g, 's').replace(/Ş/g, 'S')
-        .replace(/ı/g, 'i').replace(/İ/g, 'I')
-        .replace(/ö/g, 'o').replace(/Ö/g, 'O')
-        .replace(/ç/g, 'c').replace(/Ç/g, 'C');
-    };
-
-    doc.setFontSize(10);
-    doc.text(date, 170, 20);
+    doc.setFontSize(12);
+    doc.text(date, 160, 20);
     
-    doc.setFontSize(14);
+    doc.setFontSize(16);
     const titles = {
-      cover: 'VIZE NIYET MEKTUBU (COVER LETTER)',
-      sponsor: 'SPONSORLUK TAAHHUTNAMESI',
-      employer: 'ISVEREN CALISMA VE IZIN BELGESI',
-      itinerary: 'DETAYLI SEYAHAT PLANI (ITINERARY)'
+      cover: 'Vize Niyet Mektubu (Cover Letter)',
+      sponsor: 'Sponsorluk Taahhütnamesi',
+      employer: 'İşveren Çalışma ve İzin Belgesi',
+      itinerary: 'Detaylı Seyahat Planı (Itinerary)'
     };
-    doc.text(titles[type], 20, 35);
+    doc.text(titles[type], 20, 40);
     
-    doc.setFontSize(11);
+    doc.setFontSize(12);
+    doc.text(`Sayın Konsolosluk Yetkilisi,`, 20, 60);
     
     let body = '';
     if (type === 'cover') {
-      body = `Ilgili Makama / Sayin Konsolosluk Yetkilisi,
+      body = `
+Ben ${letterData.fullName}, ${letterData.passportNumber} numaralı pasaport hamili olarak, ${letterData.targetCountry} ülkesine ${letterData.startDate} - ${letterData.endDate} tarihleri arasında ${letterData.purpose} amacıyla seyahat etmeyi planlıyorum.
 
-Konu: Turistik Vize Basvurusu - ${letterData.fullName} (Pasaport No: ${letterData.passportNumber})
+Şu anda ${letterData.occupation} olarak çalışmaktayım ve aylık gelirim yaklaşık ${letterData.monthlyIncome} TL'dir. Seyahat masraflarımın tamamı tarafımdan karşılanacaktır.
 
-Ben ${letterData.fullName}, ${letterData.targetCountry} ulkesine ${letterData.startDate} ile ${letterData.endDate} tarihleri arasinda '${letterData.purpose}' amaciyla gerceklestirmeyi planladigim seyahatime istinaden bu dilekceyi sunuyorum.
+Seyahatim süresince tüm yerel yasalara ve vize kurallarına uymayı, planlanan tarihte ülkeme geri dönmeyi taahhüt ederim. Başvurumun olumlu değerlendirilmesini saygılarımla arz ederim.
 
-Profesyonel Durumum ve Finansman:
-Su anda Turkiye'de yerlesik olarak ${letterData.occupation} pozisyonunda calismaktayim ve aylik duzenli gelirim ${letterData.monthlyIncome} TL'dir. Seyahatim suresince olusacak ucak, konaklama, sehir ici ulasim, yeme-icme ve acil saglik gibi tum masraflarim sahsim tarafindan, ekte dokumlerini sundugum sahsi banka hesabimdan karsilanacaktir.
-
-Seyahat Amacim ve Geri Donus Taahhudum:
-Bu seyahatin temel amaci tamamen turistik ve kulturel kesiftir. Turkiye'deki kurulu duzenim, devam eden mesleki kariyerim ve ailevi baglarim sebebiyle, vizemin bitis tarihinden once ulkeme kesin olarak donus yapacagimi ve isime/duzenime geri donecegimi taahhut ederim. 
-
-Seyahatim boyunca hedef ulkenizin yasalarina harfiyen uyacagimi beyan eder, vize basvurumun olumlu degerlendirilmesini saygilarimla arz ederim.
-
-Saygilarimla,
-
-Ad Soyad: ${letterData.fullName}
-Imza: ___________________
-Telefon: [Telefon Numaranizi Yazin]
-E-posta: [E-posta Adresinizi Yazin]`;
+Saygılarımla,
+${letterData.fullName}
+      `;
     } else if (type === 'sponsor') {
-      body = `Ilgili Makama / Sayin Konsolosluk Yetkilisi,
+      body = `
+Ben ${letterData.fullName}, ${letterData.passportNumber} numaralı pasaport hamili olan (Yakınlık Derecesi) ${letterData.fullName}'ın ${letterData.targetCountry} seyahati süresince oluşacak tüm konaklama, ulaşım, sağlık ve diğer yaşam masraflarını karşılayacağımı taahhüt ederim.
 
-Konu: ${letterData.fullName} (Pasaport No: ${letterData.passportNumber}) icin Sponsorluk Taahhutnamesi
+Sponsor olarak finansal dökümlerim ekte sunulmuştur.
 
-Ben [Sponsorun Adi Soyadi], bu dilekce ile [Yakinlik Derecesi, orn: Oglum/Kizim/Esim] olan ${letterData.fullName}'in ${letterData.startDate} - ${letterData.endDate} tarihleri arasinda ${letterData.targetCountry} ulkesine yapacagi '${letterData.purpose}' amacli seyahatin yegane finansal sponsoru oldugumu beyan ederim.
-
-Finansal Taahhut:
-Basvuru sahibinin seyahati boyunca ihtiyac duyacagi gidis-donus ucak biletleri, otel konaklamasi, gunluk harcamalari, sehir ici ulasim ve olasi acil saglik masraflarinin tamami tarafimca karsilanacaktir. Bu harcamalari rahatlikla karsilayabilecegimi gosteren sahsi banka hesap dokumlerim, maas bordrolarim ve isyeri belgelerim basvuru dosyasina eklenmistir.
-
-Geri Donus Taahhudum:
-${letterData.fullName}'in seyahatini tamamladiktan sonra vize suresi ihlali yapmadan Turkiye'ye kesin donus yapacagini sahsen garanti ederim.
-
-Gereginin yapilmasini saygilarimla arz ederim.
-
-Sponsor Adi Soyadi: [Sponsorun Adi Soyadi]
-Imza: ___________________
-TC Kimlik No: [Sponsor TC Kimlik No]
-Telefon: [Sponsor Telefon Numarasi]
-Adres: [Sponsor Ikamet Adresi]`;
+Saygılarımla,
+${letterData.fullName}
+      `;
     } else if (type === 'employer') {
-      body = `[Sirket Antetli Kagidina Yazdirilmalidir]
+      body = `
+Şirketimizde ${letterData.occupation} pozisyonunda çalışmakta olan ${letterData.fullName}, ${letterData.startDate} - ${letterData.endDate} tarihleri arasında yıllık iznini kullanacaktır.
 
-Ilgili Makama / ${letterData.targetCountry} Baskonsoloslugu Vize Bolumune,
+Çalışanımızın seyahat dönüşü şirketimizdeki görevine aynı şartlarda devam edeceğini onaylar, vize alması hususunda gereğinin yapılmasını rica ederiz.
 
-Konu: Calisma Belgesi ve Izin Onayi - ${letterData.fullName}
-
-Bu belge, ${letterData.fullName} isimli calisanimizin (TC Kimlik No: [TC No], Pasaport No: ${letterData.passportNumber}) sirketimizde [Ise Baslama Tarihi] tarihinden bu yana tam zamanli ve kadrolu olarak "${letterData.occupation}" pozisyonunda calismakta oldugunu dogrulamak amaciyla duzenlenmistir. Calisanimizin aylik net maasi ${letterData.monthlyIncome} TL'dir.
-
-Calisanimiz, ${letterData.startDate} ile ${letterData.endDate} tarihleri arasinda ${letterData.targetCountry} ulkesine yapacagi turistik seyahat icin sirketimizden resmi olarak yillik ucretli izne ayrilmistir. 
-
-Geri Donus Garantisi:
-Calisanimiz ${letterData.fullName}, seyahatini tamamlamasinin ardindan [Ise Donus Tarihi] tarihinde sirketimizdeki gorevine ve mevcut pozisyonuna ayni sartlarda geri donecek ve mesaisine devam edecektir.
-
-Calisanimizin vize basvurusunun olumlu degerlendirilmesini rica ederiz. Herhangi bir ek bilgi talebiniz olmasi durumunda asagidaki iletisim bilgilerinden bize ulasabilirsiniz.
-
-Saygilarimizla,
-
-Sirket Yetkilisi Adi Soyadi: [Yetkili Adi]
-Unvani: [Orn: Insan Kaynaklari Muduru]
-Imza ve Sirket Kasesi: ___________________
-Sirket Telefonu: [Sirket Telefonu]
-Sirket Adresi: [Sirket Adresi]`;
+Şirket Yetkilisi İmza/Kaşe
+      `;
     } else if (type === 'itinerary') {
-      body = `DETAYLI SEYAHAT PLANI (ITINERARY)
+      body = `
+1. Gün: ${letterData.targetCountry} varış ve otele yerleşme.
+2. Gün: Şehir merkezi ve tarihi yerlerin ziyareti.
+3. Gün: Yerel müzeler ve kültürel etkinlikler.
+4. Gün: Yakın şehir turu veya alışveriş.
+5. Gün: Otelden ayrılış ve dönüş yolculuğu.
 
-Basvuru Sahibi: ${letterData.fullName}
-Pasaport No: ${letterData.passportNumber}
-Hedef Ulke: ${letterData.targetCountry}
-Seyahat Tarihleri: ${letterData.startDate} - ${letterData.endDate}
-
-Ulasim Bilgileri:
-- Gidis Ucusu: [Tarih], [Kalkis Sehri] -> [Varis Sehri], Ucus No: [Orn: TK1907]
-- Donus Ucusu: [Tarih], [Kalkis Sehri] -> [Varis Sehri], Ucus No: [Orn: TK1908]
-
-Konaklama Bilgileri:
-- Otel Adi: [Otel Adi]
-- Adres: [Otel Tam Adresi]
-- Rezervasyon No: [Rezervasyon Numarasi]
-
-Gunluk Rota ve Aktiviteler:
-1. Gun (${letterData.startDate}): ${letterData.targetCountry}'ye varis, otele transfer ve check-in. Cevreyi tanima ve dinlenme.
-2. Gun: Sehir merkezindeki tarihi ve turistik lokasyonlarin (Orn: Ana meydan, muzeler) ziyareti.
-3. Gun: Kulturel etkinlikler, yerel gastronomi deneyimi ve alisveris.
-4. Gun: Yakin cevredeki turistik bir bolgeye gunubirlik gezi.
-5. Gun (${letterData.endDate}): Otelden cikis islemleri, havalimanina transfer ve Turkiye'ye donus ucusu.
-
-* Not: Tum ucak ve otel rezervasyon belgeleri basvuru dosyasina eklenmistir.`;
+Tüm rezervasyonlar onaylıdır ve ekte sunulmuştur.
+      `;
     }
 
-    const splitText = doc.splitTextToSize(normalizeTr(body), 170);
-    doc.text(splitText, 20, 50);
+    const splitText = doc.splitTextToSize(body, 170);
+    doc.text(splitText, 20, 75);
     
-    doc.save(`vize_${type}_${normalizeTr(letterData.fullName).replace(/\s+/g, '_')}.pdf`);
+    doc.save(`vize_${type}_${letterData.fullName.replace(/\s+/g, '_')}.pdf`);
   };
 
   return (
@@ -1130,130 +614,6 @@ Gunluk Rota ve Aktiviteler:
       </nav>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative">
-        {/* Document List Modal */}
-        <AnimatePresence mode="wait">
-          {isDocumentListOpen && (
-            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
-              <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                onClick={() => setIsDocumentListOpen(false)}
-                className="absolute inset-0 bg-slate-950/40 backdrop-blur-md"
-              />
-              <motion.div 
-                initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                className="relative w-full max-w-4xl bg-white rounded-[2.5rem] shadow-2xl overflow-hidden border border-slate-200 flex flex-col max-h-[90vh]"
-              >
-                <div className="p-8 border-b border-slate-100 flex justify-between items-center bg-slate-50 shrink-0">
-                  <div>
-                    <h3 className="text-2xl font-black text-slate-900 flex items-center gap-2">
-                      <FileCheck className="w-6 h-6 text-emerald-600" />
-                      İngiltere Vizesi Evrak Listesi
-                    </h3>
-                    <p className="text-slate-500 mt-1">Başvuru tipinize göre hazırlamanız gereken evraklar ve ücretlendirme.</p>
-                  </div>
-                  <button 
-                    onClick={() => setIsDocumentListOpen(false)}
-                    className="p-2 hover:bg-slate-200 rounded-full transition-colors"
-                  >
-                    <X className="w-6 h-6 text-slate-500" />
-                  </button>
-                </div>
-
-                <div className="p-8 overflow-y-auto flex-1">
-                  <div className="flex flex-wrap gap-2 mb-8">
-                    <button
-                      onClick={() => setApplicantType('employer')}
-                      className={`px-4 py-2 rounded-xl font-bold text-sm transition-colors ${
-                        applicantType === 'employer' 
-                          ? 'bg-slate-900 text-white' 
-                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                      }`}
-                    >
-                      İşverenler
-                    </button>
-                    <button
-                      onClick={() => setApplicantType('unemployed')}
-                      className={`px-4 py-2 rounded-xl font-bold text-sm transition-colors ${
-                        applicantType === 'unemployed' 
-                          ? 'bg-slate-900 text-white' 
-                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                      }`}
-                    >
-                      Çalışmayanlar
-                    </button>
-                    <button
-                      onClick={() => setApplicantType('minor')}
-                      className={`px-4 py-2 rounded-xl font-bold text-sm transition-colors ${
-                        applicantType === 'minor' 
-                          ? 'bg-slate-900 text-white' 
-                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                      }`}
-                    >
-                      Reşit Olmayanlar
-                    </button>
-                    <button
-                      onClick={() => setApplicantType('sponsor')}
-                      className={`px-4 py-2 rounded-xl font-bold text-sm transition-colors ${
-                        applicantType === 'sponsor' 
-                          ? 'bg-slate-900 text-white' 
-                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                      }`}
-                    >
-                      Sponsor Olacak Kişi
-                    </button>
-                  </div>
-
-                  <div className="space-y-4 mb-12">
-                    {ukDocuments[applicantType as keyof typeof ukDocuments].map((doc, idx) => (
-                      <div key={idx} className="flex items-start gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                        <div className="w-6 h-6 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 mt-0.5">
-                          <Check className="w-4 h-4" />
-                        </div>
-                        <p className="text-slate-700 text-sm leading-relaxed">{doc}</p>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="bg-blue-50 rounded-3xl p-8 border border-blue-100">
-                    <h4 className="text-lg font-bold text-blue-900 mb-6 flex items-center gap-2">
-                      <CreditCard className="w-5 h-5" />
-                      Ücretlendirme
-                    </h4>
-                    
-                    <div className="space-y-6">
-                      <div>
-                        <div className="text-xs font-bold text-blue-600 uppercase tracking-widest mb-2">Konsolosluk Harçları</div>
-                        <p className="text-sm text-blue-800">{ukPricing.consulate}</p>
-                      </div>
-                      
-                      <div>
-                        <div className="text-xs font-bold text-blue-600 uppercase tracking-widest mb-2">Vize Takip Bedeli</div>
-                        <p className="text-sm text-blue-800 font-bold">{ukPricing.agency}</p>
-                      </div>
-
-                      <div>
-                        <div className="text-xs font-bold text-blue-600 uppercase tracking-widest mb-3">Vize Sürelerine Göre Ücretler</div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                          {ukPricing.durations.map((duration, idx) => (
-                            <div key={idx} className="bg-white p-4 rounded-xl border border-blue-100 flex justify-between items-center">
-                              <span className="font-medium text-slate-700">{duration.label}</span>
-                              <span className="font-bold text-blue-700">{duration.price}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            </div>
-          )}
-        </AnimatePresence>
-
         {/* Calculator Modal */}
         <AnimatePresence mode="wait">
           {isCalculatorOpen && (
@@ -1423,27 +783,13 @@ Gunluk Rota ve Aktiviteler:
                           ABD mülakatında <strong>ilk 20 saniye</strong> kritiktir. Kısa, net ve Türkiye'ye döneceğinizi kanıtlayan cevaplar hazırlayın.
                         </p>
                       )}
-                      <button 
-                        onClick={() => {
-                          setIsCopilotOpen(false);
-                          setStep('tactics');
-                        }}
-                        className="text-xs font-bold text-blue-600 hover:underline"
-                      >
-                        Tüm taktikleri gör →
-                      </button>
+                      <button className="text-xs font-bold text-blue-600 hover:underline">Tüm taktikleri gör →</button>
                     </div>
                   </div>
                 </div>
 
                 <div className="p-8 border-t border-slate-100 bg-slate-50">
-                  <button 
-                    onClick={() => {
-                      setIsCopilotOpen(false);
-                      setStep('assessment');
-                    }}
-                    className="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold flex items-center justify-center gap-2"
-                  >
+                  <button className="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold flex items-center justify-center gap-2">
                     <Zap className="w-5 h-5 text-amber-400" />
                     Şimdi Başvuruyu Başlat
                   </button>
@@ -1532,99 +878,48 @@ Gunluk Rota ve Aktiviteler:
                 </div>
               </div>
 
-              <div className="space-y-10">
-                <div>
-                  <h3 className="text-xl font-bold text-slate-900 mb-4">1. Başvuru Tipiniz</h3>
-                  <div className="flex flex-wrap gap-3">
-                    <button
-                      onClick={() => setApplicantType('employer')}
-                      className={`px-6 py-4 rounded-2xl font-bold text-sm transition-all border-2 ${
-                        applicantType === 'employer' 
-                          ? 'bg-blue-50 border-blue-600 text-blue-700' 
-                          : 'bg-white border-slate-100 text-slate-600 hover:border-slate-200'
-                      }`}
-                    >
-                      İşveren / Çalışan
-                    </button>
-                    <button
-                      onClick={() => setApplicantType('unemployed')}
-                      className={`px-6 py-4 rounded-2xl font-bold text-sm transition-all border-2 ${
-                        applicantType === 'unemployed' 
-                          ? 'bg-blue-50 border-blue-600 text-blue-700' 
-                          : 'bg-white border-slate-100 text-slate-600 hover:border-slate-200'
-                      }`}
-                    >
-                      Çalışmayan
-                    </button>
-                    <button
-                      onClick={() => setApplicantType('minor')}
-                      className={`px-6 py-4 rounded-2xl font-bold text-sm transition-all border-2 ${
-                        applicantType === 'minor' 
-                          ? 'bg-blue-50 border-blue-600 text-blue-700' 
-                          : 'bg-white border-slate-100 text-slate-600 hover:border-slate-200'
-                      }`}
-                    >
-                      Reşit Olmayan
-                    </button>
-                    <button
-                      onClick={() => setApplicantType('sponsor')}
-                      className={`px-6 py-4 rounded-2xl font-bold text-sm transition-all border-2 ${
-                        applicantType === 'sponsor' 
-                          ? 'bg-blue-50 border-blue-600 text-blue-700' 
-                          : 'bg-white border-slate-100 text-slate-600 hover:border-slate-200'
-                      }`}
-                    >
-                      Sponsor
-                    </button>
-                  </div>
-                </div>
-
-                <div>
-                  <h3 className="text-xl font-bold text-slate-900 mb-4">2. Temel Kriterleriniz</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {[
-                      { id: 'bankSufficientBalance', label: 'Yeterli Banka Bakiyesi', icon: Wallet, color: 'brand' },
-                      { id: 'hasSgkJob', label: 'Düzenli İş & SGK', icon: Briefcase, color: 'emerald' },
-                      { id: 'hasHighValueVisa', label: 'Önceki Güçlü Vizeler', icon: ShieldCheck, color: 'amber' },
-                      { id: 'hasAssets', label: 'Gayrimenkul / Araç', icon: Home, color: 'purple' },
-                      { id: 'isMarried', label: 'Aile Bağları (Evli)', icon: Globe, color: 'indigo' },
-                      { id: 'cleanCriminalRecord', label: 'Temiz Adli Sicil', icon: CheckCircle2, color: 'emerald' },
-                    ].map((item) => (
-                      <button
-                        key={`assess-${item.id}`}
-                        onClick={() => handleProfileToggle(item.id as keyof ProfileData)}
-                        className={`p-6 rounded-2xl border-2 text-left transition-all flex items-center justify-between group relative overflow-hidden ${
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {[
+                  { id: 'bankSufficientBalance', label: 'Yeterli Banka Bakiyesi', icon: Wallet, color: 'brand' },
+                  { id: 'hasSgkJob', label: 'Düzenli İş & SGK', icon: Briefcase, color: 'emerald' },
+                  { id: 'hasHighValueVisa', label: 'Önceki Güçlü Vizeler', icon: ShieldCheck, color: 'amber' },
+                  { id: 'hasAssets', label: 'Gayrimenkul / Araç', icon: Home, color: 'purple' },
+                  { id: 'isMarried', label: 'Aile Bağları (Evli)', icon: Globe, color: 'indigo' },
+                  { id: 'cleanCriminalRecord', label: 'Temiz Adli Sicil', icon: CheckCircle2, color: 'emerald' },
+                ].map((item) => (
+                  <button
+                    key={`assess-${item.id}`}
+                    onClick={() => handleProfileToggle(item.id as keyof ProfileData)}
+                    className={`p-6 rounded-2xl border-2 text-left transition-all flex items-center justify-between group relative overflow-hidden ${
+                      profile[item.id as keyof ProfileData] 
+                        ? `border-${item.color === 'brand' ? 'brand-600' : item.color + '-600'} bg-${item.color === 'brand' ? 'brand-50' : item.color + '-50'}/50` 
+                        : 'border-slate-100 bg-white hover:border-slate-200'
+                    }`}
+                  >
+                    <div className="flex items-center gap-4 z-10">
+                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all ${
+                        profile[item.id as keyof ProfileData] 
+                          ? `bg-${item.color === 'brand' ? 'brand-600' : item.color + '-600'} text-white` 
+                          : 'bg-slate-50 text-slate-400 group-hover:bg-slate-100'
+                      }`}>
+                        <item.icon className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <div className="font-bold text-slate-900">{item.label}</div>
+                        <div className={`text-[10px] font-bold uppercase tracking-widest ${
                           profile[item.id as keyof ProfileData] 
-                            ? `border-${item.color === 'brand' ? 'brand-600' : item.color + '-600'} bg-${item.color === 'brand' ? 'brand-50' : item.color + '-50'}/50` 
-                            : 'border-slate-100 bg-white hover:border-slate-200'
-                        }`}
-                      >
-                        <div className="flex items-center gap-4 z-10">
-                          <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all ${
-                            profile[item.id as keyof ProfileData] 
-                              ? `bg-${item.color === 'brand' ? 'brand-600' : item.color + '-600'} text-white` 
-                              : 'bg-slate-50 text-slate-400 group-hover:bg-slate-100'
-                          }`}>
-                            <item.icon className="w-6 h-6" />
-                          </div>
-                          <div>
-                            <div className="font-bold text-slate-900">{item.label}</div>
-                            <div className={`text-[10px] font-bold uppercase tracking-widest ${
-                              profile[item.id as keyof ProfileData] 
-                                ? `text-${item.color === 'brand' ? 'brand-600' : item.color + '-600'}` 
-                                : 'text-slate-400'
-                            }`}>Kritik Kriter</div>
-                          </div>
-                        </div>
-                        {profile[item.id as keyof ProfileData] ? (
-                          <CheckCircle2 className={`w-6 h-6 text-${item.color === 'brand' ? 'brand-600' : item.color + '-600'} z-10`} />
-                        ) : (
-                          <Circle className="w-6 h-6 text-slate-200 z-10" />
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+                            ? `text-${item.color === 'brand' ? 'brand-600' : item.color + '-600'}` 
+                            : 'text-slate-400'
+                        }`}>Kritik Kriter</div>
+                      </div>
+                    </div>
+                    {profile[item.id as keyof ProfileData] ? (
+                      <CheckCircle2 className={`w-6 h-6 text-${item.color === 'brand' ? 'brand-600' : item.color + '-600'} z-10`} />
+                    ) : (
+                      <Circle className="w-6 h-6 text-slate-200 z-10" />
+                    )}
+                  </button>
+                ))}
               </div>
 
               <div className="p-8 md:p-12 bg-slate-900 rounded-[2.5rem] text-white flex flex-col lg:flex-row items-center justify-between gap-10 relative overflow-hidden shadow-2xl">
@@ -1659,14 +954,7 @@ Gunluk Rota ve Aktiviteler:
                   <h2 className="text-4xl font-black text-slate-900">Vize Yol Haritanız</h2>
                   <p className="text-slate-500 text-lg">Başvurunuzu mükemmelleştirmek için kişisel analiziniz.</p>
                 </div>
-                <div className="flex flex-wrap gap-3">
-                  <button 
-                    onClick={() => setIsDocumentListOpen(true)}
-                    className="px-6 py-4 bg-emerald-600 text-white rounded-2xl font-bold flex items-center gap-2 hover:bg-emerald-500 transition-all shadow-lg shadow-emerald-200"
-                  >
-                    <FileCheck className="w-5 h-5" />
-                    Evrak Listesi
-                  </button>
+                <div className="flex gap-3">
                   <button 
                     onClick={() => setIsCopilotOpen(true)}
                     className="px-6 py-4 bg-blue-600 text-white rounded-2xl font-bold flex items-center gap-2 hover:bg-blue-500 transition-all shadow-lg shadow-blue-200"
