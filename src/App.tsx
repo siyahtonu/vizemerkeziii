@@ -605,8 +605,16 @@ const socialMediaChecklist: SocialMediaItem[] = [
   },
 ];
 
+// Premium tool IDs
+const PREMIUM_TOOLS = ['copilot', 'comparator', 'refusal', 'aibank', 'socialmedia'];
+
 export default function App() {
-  const [step, setStep] = useState<'hero' | 'assessment' | 'dashboard' | 'letter' | 'tactics'>('hero');
+  const [step, setStep] = useState<'hero' | 'onboarding' | 'assessment' | 'dashboard' | 'letter' | 'tactics'>('hero');
+  const [isPremium, setIsPremium] = useState(false);
+  const [isUpgradeOpen, setIsUpgradeOpen] = useState(false);
+  const [onboardingStep, setOnboardingStep] = useState(0);
+  const [onboardingCountry, setOnboardingCountry] = useState('Almanya');
+  const [onboardingProfile, setOnboardingProfile] = useState('');
   const [isCalculatorOpen, setIsCalculatorOpen] = useState(false);
   const [isCopilotOpen, setIsCopilotOpen] = useState(false);
   const [isDocumentListOpen, setIsDocumentListOpen] = useState(false);
@@ -1619,30 +1627,56 @@ Gunluk Rota ve Aktiviteler:
     doc.save(`vize_${type}_${normalizeTr(letterData.fullName).replace(/\s+/g, '_')}.pdf`);
   };
 
+  // Open a tool: if premium-gated and not premium, show upgrade modal; else navigate to dashboard + open
+  const openTool = (toolId: string, setter: (b: boolean) => void) => {
+    if (PREMIUM_TOOLS.includes(toolId) && !isPremium) {
+      setIsUpgradeOpen(true);
+      return;
+    }
+    if (step !== 'dashboard') {
+      setStep('dashboard');
+      setTimeout(() => setter(true), 150);
+    } else {
+      setter(true);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans selection:bg-brand-100 selection:text-brand-900">
       {/* Navigation */}
-      <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-200/60 px-6 py-4">
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <div 
+      <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur-xl border-b border-slate-200/60 px-4 sm:px-6 py-3 sm:py-4">
+        <div className="max-w-7xl mx-auto flex justify-between items-center gap-3">
+          <div
             onClick={() => setStep('hero')}
-            className="flex items-center gap-2.5 font-display font-bold text-2xl text-brand-600 cursor-pointer hover:opacity-80 transition-opacity"
+            className="flex items-center gap-2 font-display font-bold text-xl sm:text-2xl text-brand-600 cursor-pointer hover:opacity-80 transition-opacity min-w-0"
           >
-            <div className="w-10 h-10 bg-brand-600 rounded-xl flex items-center justify-center shadow-lg shadow-brand-500/20">
-              <ShieldCheck className="w-6 h-6 text-white" />
+            <div className="w-9 h-9 sm:w-10 sm:h-10 bg-brand-600 rounded-xl flex items-center justify-center shadow-lg shadow-brand-500/20 shrink-0">
+              <ShieldCheck className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
-            <span className="tracking-tight">VizeAsistan</span>
+            <span className="tracking-tight truncate">VizeAkıl</span>
           </div>
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-2 sm:gap-4 shrink-0">
+            {!isPremium && (
+              <button type="button" onClick={() => setIsUpgradeOpen(true)}
+                className="hidden sm:flex items-center gap-1.5 text-xs font-bold text-amber-600 bg-amber-50 border border-amber-100 px-3 py-1.5 rounded-xl hover:bg-amber-100 transition-colors">
+                🔒 Premium
+              </button>
+            )}
+            {isPremium && (
+              <span className="hidden sm:flex items-center gap-1.5 text-xs font-bold text-emerald-600 bg-emerald-50 border border-emerald-100 px-3 py-1.5 rounded-xl">
+                ✓ Premium
+              </span>
+            )}
             <div className="hidden md:flex items-center gap-1.5 text-xs font-bold text-slate-400 uppercase tracking-widest">
               <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-              Yapay Zeka Aktif
+              AI Aktif
             </div>
-            <button 
+            <button
+              type="button"
               onClick={() => setIsCopilotOpen(true)}
-              className="p-2.5 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors relative"
+              className="p-2 sm:p-2.5 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors relative"
             >
-              <MessageSquare className="w-5 h-5 text-slate-600" />
+              <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5 text-slate-600" />
               <span className="absolute -top-1 -right-1 w-3 h-3 bg-brand-500 border-2 border-white rounded-full" />
             </button>
           </div>
@@ -1650,6 +1684,66 @@ Gunluk Rota ve Aktiviteler:
       </nav>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative">
+
+        {/* ═══ UPGRADE MODAL ═══ */}
+        <AnimatePresence>
+          {isUpgradeOpen && (
+            <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                onClick={() => setIsUpgradeOpen(false)}
+                className="absolute inset-0 bg-slate-950/70 backdrop-blur-lg" />
+              <motion.div initial={{ opacity: 0, scale: 0.9, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: 30 }}
+                className="relative w-full max-w-lg bg-white rounded-[2.5rem] shadow-2xl overflow-hidden">
+                {/* Header */}
+                <div className="bg-gradient-to-br from-slate-900 to-indigo-900 p-8 text-white text-center">
+                  <button onClick={() => setIsUpgradeOpen(false)} className="absolute top-4 right-4 p-2 hover:bg-white/10 rounded-full"><X className="w-5 h-5" /></button>
+                  <div className="w-16 h-16 bg-amber-400/20 rounded-[1.5rem] flex items-center justify-center mx-auto mb-4">
+                    <Sparkles className="w-8 h-8 text-amber-300" />
+                  </div>
+                  <h3 className="text-2xl font-black">VizeAsistan Premium</h3>
+                  <p className="text-slate-300 text-sm mt-1">Tüm yapay zeka araçlarına sınırsız erişim</p>
+                  <div className="mt-4">
+                    <span className="text-5xl font-black text-white">₺499</span>
+                    <span className="text-slate-300 text-sm ml-2">/ tek seferlik</span>
+                  </div>
+                </div>
+                {/* Features */}
+                <div className="p-8 space-y-6">
+                  <div className="space-y-3">
+                    {[
+                      { icon: MessageSquare, label: 'Visa Copilot — AI Strateji Asistanı', desc: 'Sınırsız yapay zeka danışmanlığı' },
+                      { icon: AlertTriangle, label: 'Ret Mektubu Analizi', desc: 'Geçmiş reddi anlayın ve strateji kurun' },
+                      { icon: Globe, label: 'Ülke Kıyaslayıcısı', desc: 'Hangi konsoloslukta şansınız daha yüksek?' },
+                      { icon: Sparkles, label: 'AI Banka Dökümü Analizi', desc: 'Banka ekstrenizi yapay zeka ile analiz edin' },
+                      { icon: ShieldCheck, label: 'Sosyal Medya Denetim Rehberi', desc: 'Sosyal medyanızı vize-safe hale getirin' },
+                      { icon: Download, label: 'Sınırsız PDF Raporu', desc: 'Her analizi PDF olarak indirin' },
+                    ].map(({ icon: Icon, label, desc }) => (
+                      <div key={label} className="flex items-start gap-3">
+                        <div className="w-8 h-8 bg-brand-50 rounded-xl flex items-center justify-center shrink-0 mt-0.5">
+                          <Icon className="w-4 h-4 text-brand-600" />
+                        </div>
+                        <div>
+                          <div className="font-bold text-slate-900 text-sm">{label}</div>
+                          <div className="text-xs text-slate-400">{desc}</div>
+                        </div>
+                        <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0 ml-auto mt-0.5" />
+                      </div>
+                    ))}
+                  </div>
+                  <button
+                    onClick={() => { setIsPremium(true); setIsUpgradeOpen(false); }}
+                    className="w-full py-4 bg-gradient-to-r from-brand-600 to-indigo-600 text-white font-black rounded-2xl text-lg hover:opacity-90 transition-opacity shadow-xl shadow-brand-500/30 flex items-center justify-center gap-2">
+                    <Sparkles className="w-5 h-5 text-yellow-300" />
+                    Premium'u Aktifleştir
+                  </button>
+                  <p className="text-center text-xs text-slate-400">Demo modunda ödeme sistemi simüle edilmektedir. Gerçek ödeme entegrasyonu için bizimle iletişime geçin.</p>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
         {/* Document List Modal */}
         <AnimatePresence mode="wait">
           {isDocumentListOpen && (
@@ -2711,14 +2805,62 @@ Gunluk Rota ve Aktiviteler:
                   </div>
                 </div>
 
-                <div className="p-6 border-t border-slate-100 bg-slate-50 shrink-0 rounded-b-[2.5rem]">
-                  <div className="flex items-start gap-3 p-4 bg-amber-50 rounded-2xl border border-amber-200">
-                    <Info className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-                    <p className="text-xs text-amber-800 leading-relaxed">
-                      <strong>Not:</strong> Her konsolosluk sosyal medyayı taramaz, ancak 2025 itibarıyla ABD, İngiltere ve bazı Schengen ülkelerinin bu yöntemi giderek daha fazla kullandığı bilinmektedir. Önlem almak her zaman daha güvenlidir.
-                    </p>
-                  </div>
-                </div>
+                {/* 100% Tamamlama Sonuç Paneli */}
+                {(() => {
+                  const total = socialMediaChecklist.length;
+                  const checked = Object.values(socialMediaChecked).filter(Boolean).length;
+                  const pct = Math.round((checked / total) * 100);
+                  const riskChecked = socialMediaChecklist.filter(i => i.category === 'risk' && socialMediaChecked[i.id]).length;
+                  const riskTotal = socialMediaChecklist.filter(i => i.category === 'risk').length;
+                  const actionChecked = socialMediaChecklist.filter(i => i.category === 'action' && socialMediaChecked[i.id]).length;
+                  const positiveChecked = socialMediaChecklist.filter(i => i.category === 'positive' && socialMediaChecked[i.id]).length;
+                  if (pct >= 80) {
+                    return (
+                      <div className="p-6 border-t border-emerald-100 bg-emerald-50 shrink-0 rounded-b-[2.5rem] space-y-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center">
+                            <BadgeCheck className="w-6 h-6 text-emerald-600" />
+                          </div>
+                          <div>
+                            <div className="font-black text-emerald-900">Sosyal Medyanız Vize-Safe! (%{pct} tamamlandı)</div>
+                            <div className="text-xs text-emerald-700">Denetim tamamlandı — aşağıda sonuç özeti</div>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-3 gap-3">
+                          <div className="bg-white rounded-xl p-3 text-center border border-emerald-100">
+                            <div className="text-xl font-black text-rose-600">{riskChecked}/{riskTotal}</div>
+                            <div className="text-[10px] text-slate-500 font-bold uppercase">Risk Temizlendi</div>
+                          </div>
+                          <div className="bg-white rounded-xl p-3 text-center border border-emerald-100">
+                            <div className="text-xl font-black text-blue-600">{actionChecked}</div>
+                            <div className="text-[10px] text-slate-500 font-bold uppercase">Aksiyon Alındı</div>
+                          </div>
+                          <div className="bg-white rounded-xl p-3 text-center border border-emerald-100">
+                            <div className="text-xl font-black text-emerald-600">{positiveChecked}</div>
+                            <div className="text-[10px] text-slate-500 font-bold uppercase">Avantaj Aktif</div>
+                          </div>
+                        </div>
+                        <div className="p-3 bg-white rounded-xl border border-emerald-100 text-xs text-slate-700 leading-relaxed">
+                          <strong className="text-emerald-700">Analiz Sonucu:</strong>{' '}
+                          {riskChecked === riskTotal
+                            ? 'Tüm kritik riskler temizlendi. Sosyal medya profiliniz konsolosluk taramasına hazır.'
+                            : `${riskTotal - riskChecked} kritik risk henüz çözülmedi. Başvurudan önce bu maddeleri tamamlayın.`}{' '}
+                          {positiveChecked >= 3 ? 'Güçlendirici içerikleriniz başvurunuzu destekleyecek.' : 'Daha fazla pozitif içerik paylaşmanız skoru artırır.'}
+                        </div>
+                      </div>
+                    );
+                  }
+                  return (
+                    <div className="p-6 border-t border-slate-100 bg-slate-50 shrink-0 rounded-b-[2.5rem]">
+                      <div className="flex items-start gap-3 p-4 bg-amber-50 rounded-2xl border border-amber-200">
+                        <Info className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                        <p className="text-xs text-amber-800 leading-relaxed">
+                          <strong>Denetim Sonucu:</strong> {checked === 0 ? 'Listeyi işaretleyerek ilerlemenizi takip edin. Tamamlandıkça analiz sonucu burada görünecek.' : `${checked} adım tamamlandı. %80'e ulaştığınızda tam analiz raporu oluşturulacak.`}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })()}
               </motion.div>
             </div>
           )}
@@ -2829,49 +2971,69 @@ Gunluk Rota ve Aktiviteler:
         </AnimatePresence>
         <AnimatePresence mode="wait">
           {step === 'hero' && (
-            <motion.div 
+            <motion.div
               key="hero"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="text-center space-y-16 py-12 lg:py-20"
+              className="text-center space-y-10 py-8 lg:py-16"
             >
-              <div className="space-y-8 max-w-4xl mx-auto">
-                <motion.div 
+              <div className="space-y-6 max-w-4xl mx-auto px-2">
+                {/* Trust badge */}
+                <motion.div
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 0.2 }}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-brand-50 text-brand-700 rounded-full text-xs font-bold tracking-widest uppercase border border-brand-100"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-700 rounded-full text-xs font-bold tracking-widest uppercase border border-emerald-100"
                 >
-                  <ShieldCheck className="w-4 h-4" /> Yapay Zeka Destekli Vize Stratejisti
+                  <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+                  2026 Güncel Konsolosluk Verileri ile Analiz
                 </motion.div>
-                <h1 className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tight text-slate-900 leading-[1.05]">
-                  Vize Başvurunuzda <br />
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-600 to-indigo-600">Sıfır Hata Payı</span>
+                <h1 className="text-4xl sm:text-5xl md:text-7xl font-black tracking-tight text-slate-900 leading-tight">
+                  Vize Başvurunuzda{' '}
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-600 to-indigo-600 block sm:inline">Sıfır Hata Payı</span>
                 </h1>
-                <p className="text-lg md:text-xl text-slate-500 max-w-2xl mx-auto leading-relaxed font-medium">
-                  Profesyonel danışmanlık kalitesini dijitalleştiriyoruz. Başarı ihtimalinizi hesaplayın, evraklarınızı optimize edin ve niyet mektubunuzu saniyeler içinde oluşturun.
+                <p className="text-base md:text-xl text-slate-500 max-w-2xl mx-auto leading-relaxed font-medium">
+                  2 dakikada profilinizi analiz edin, hangi belgeler eksik öğrenin, niyet mektubunuzu otomatik oluşturun. <strong className="text-slate-700">Ücretsiz.</strong>
                 </p>
+                {/* Social proof row — horizontal scroll on mobile */}
+                <div className="flex gap-3 overflow-x-auto pb-1 justify-start sm:justify-center scrollbar-hide -mx-4 px-4">
+                  {[
+                    { avatar: '👨‍💼', name: 'Mehmet K.', text: 'Almanya vizesi aldım!' },
+                    { avatar: '👩‍🎓', name: 'Selin A.', text: 'Ret sonrası tekrar başvurdum.' },
+                    { avatar: '🧑‍💻', name: 'Arda T.', text: 'UK vizesi için mükemmel.' },
+                  ].map(({ avatar, name, text }) => (
+                    <div key={name} className="flex items-center gap-2 bg-white border border-slate-100 rounded-full px-3 py-2 shadow-sm shrink-0">
+                      <span className="text-lg">{avatar}</span>
+                      <div className="text-left">
+                        <div className="text-xs font-bold text-slate-900 whitespace-nowrap">{name}</div>
+                        <div className="text-[10px] text-slate-400 whitespace-nowrap">{text}</div>
+                      </div>
+                      <div className="text-amber-400 text-[10px] ml-1">★★★★★</div>
+                    </div>
+                  ))}
+                </div>
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
-                <button 
-                  onClick={() => setIsCalculatorOpen(true)}
-                  className="btn-primary text-lg px-10 py-5 flex items-center justify-center gap-3 group"
+              <div className="flex flex-col sm:flex-row gap-3 justify-center px-4">
+                <button
+                  type="button"
+                  onClick={() => { setOnboardingStep(0); setStep('onboarding'); }}
+                  className="btn-primary text-base sm:text-lg px-8 py-4 sm:py-5 flex items-center justify-center gap-3 group"
                 >
-                  Hemen Hesapla 
-                  <TrendingUp className="w-5 h-5 group-hover:translate-y-[-2px] group-hover:translate-x-[2px] transition-transform" />
+                  Ücretsiz Analiz Başlat
+                  <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </button>
-                <button 
-                  onClick={() => setStep('assessment')}
-                  className="btn-secondary text-lg px-10 py-5"
+                <button type="button"
+                  onClick={() => setIsUpgradeOpen(true)}
+                  className="btn-secondary text-base sm:text-lg px-8 py-4 sm:py-5 flex items-center justify-center gap-2"
                 >
-                  Nasıl Çalışır?
+                  🔒 Premium Planlar
                 </button>
               </div>
 
               {/* Stats bar */}
-              <div className="flex flex-wrap justify-center gap-8 pt-6">
+              <div className="flex flex-wrap justify-center gap-6 sm:gap-8 px-4">
                 {[
                   { value: '%93', label: 'Ortalama Onay Oranı' },
                   { value: '10+', label: 'Analiz Aracı' },
@@ -2902,34 +3064,157 @@ Gunluk Rota ve Aktiviteler:
                 ))}
               </div>
 
-              {/* Tools showcase strip */}
+              {/* Tools showcase strip — clickable */}
               <div className="bg-white border border-slate-100 rounded-[2rem] p-6 shadow-sm">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest text-center mb-5">10 Uzman Aracı — Hepsi Ücretsiz</p>
+                <div className="flex items-center justify-between mb-5">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">10 Uzman Aracı — Tıklayarak Kullan</p>
+                  <span className="text-[10px] bg-amber-50 text-amber-600 border border-amber-100 font-black px-2 py-1 rounded-lg uppercase tracking-widest">3 Premium</span>
+                </div>
                 <div className="flex flex-wrap justify-center gap-3">
                   {[
-                    { icon: FileCheck, label: 'Evrak Listesi', color: 'emerald' },
-                    { icon: MessageSquare, label: 'Visa Copilot', color: 'blue' },
-                    { icon: Zap, label: 'Senaryo', color: 'slate' },
-                    { icon: Globe, label: 'Ülke Kıyasla', color: 'indigo' },
-                    { icon: ShieldCheck, label: 'Sosyal Medya', color: 'violet' },
-                    { icon: AlertTriangle, label: 'Ret Analizi', color: 'rose' },
-                    { icon: Calendar, label: 'Randevu', color: 'teal' },
-                    { icon: CheckCircle2, label: 'Belge Matrisi', color: 'slate' },
-                    { icon: Plane, label: 'Vizesiz Ülkeler', color: 'emerald' },
-                    { icon: Sparkles, label: 'AI Banka', color: 'blue' },
-                  ].map(({ icon: Icon, label, color }) => (
-                    <div key={label} className={`flex items-center gap-1.5 px-3 py-2 rounded-xl bg-${color}-50 text-${color}-700 text-xs font-bold border border-${color}-100`}>
-                      <Icon className="w-3.5 h-3.5" />
-                      {label}
-                    </div>
-                  ))}
+                    { icon: FileCheck, label: 'Evrak Listesi', color: 'emerald', id: 'docs', setter: setIsDocumentListOpen },
+                    { icon: MessageSquare, label: 'Visa Copilot', color: 'blue', id: 'copilot', setter: setIsCopilotOpen },
+                    { icon: Zap, label: 'Senaryo', color: 'slate', id: 'calculator', setter: setIsCalculatorOpen },
+                    { icon: Globe, label: 'Ülke Kıyasla', color: 'indigo', id: 'comparator', setter: setIsSchengenComparatorOpen },
+                    { icon: ShieldCheck, label: 'Sosyal Medya', color: 'violet', id: 'socialmedia', setter: setIsSocialMediaOpen },
+                    { icon: AlertTriangle, label: 'Ret Analizi', color: 'rose', id: 'refusal', setter: setIsRefusalOpen },
+                    { icon: Calendar, label: 'Randevu', color: 'teal', id: 'appointment', setter: setIsAppointmentOpen },
+                    { icon: CheckCircle2, label: 'Belge Matrisi', color: 'slate', id: 'consistency', setter: setIsConsistencyOpen },
+                    { icon: Plane, label: 'Vizesiz Ülkeler', color: 'emerald', id: 'visafree', setter: setIsVisaFreeOpen },
+                    { icon: Sparkles, label: 'AI Banka', color: 'blue', id: 'aibank', setter: setIsAiBankOpen },
+                  ].map(({ icon: Icon, label, color, id, setter }) => {
+                    const locked = PREMIUM_TOOLS.includes(id) && !isPremium;
+                    return (
+                      <button key={label} onClick={() => openTool(id, setter)}
+                        className={`relative flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold border transition-all hover:scale-105 hover:shadow-md ${locked ? 'bg-slate-50 text-slate-400 border-slate-100' : `bg-${color}-50 text-${color}-700 border-${color}-100`}`}>
+                        <Icon className="w-3.5 h-3.5" />
+                        {label}
+                        {locked && <span className="ml-1 text-amber-500">🔒</span>}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             </motion.div>
           )}
 
+          {step === 'onboarding' && (
+            <motion.div
+              key="onboarding"
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="max-w-2xl mx-auto py-16 space-y-10"
+            >
+              {/* Step indicator */}
+              <div className="flex items-center justify-center gap-2">
+                {[0, 1, 2].map(i => (
+                  <div key={i} className={`h-1.5 rounded-full transition-all duration-300 ${i === onboardingStep ? 'w-8 bg-brand-600' : i < onboardingStep ? 'w-4 bg-brand-300' : 'w-4 bg-slate-200'}`} />
+                ))}
+              </div>
+
+              {onboardingStep === 0 && (
+                <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="text-center space-y-8">
+                  <div className="w-20 h-20 bg-brand-50 rounded-[2rem] flex items-center justify-center mx-auto">
+                    <Globe className="w-10 h-10 text-brand-600" />
+                  </div>
+                  <div>
+                    <h2 className="text-3xl font-black text-slate-900">Hangi ülkeye başvuruyorsunuz?</h2>
+                    <p className="text-slate-500 mt-2">Ülkeye özel kurallar ve ret oranlarına göre analiz yapacağız.</p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    {[
+                      { label: 'Almanya', flag: '🇩🇪', sub: 'Schengen' },
+                      { label: 'İngiltere', flag: '🇬🇧', sub: 'UK Vizesi' },
+                      { label: 'ABD', flag: '🇺🇸', sub: 'B1/B2 Vizesi' },
+                      { label: 'Fransa', flag: '🇫🇷', sub: 'Schengen' },
+                      { label: 'Hollanda', flag: '🇳🇱', sub: 'Schengen' },
+                      { label: 'İtalya', flag: '🇮🇹', sub: 'Schengen' },
+                      { label: 'Kanada', flag: '🇨🇦', sub: 'Visitor Visa' },
+                      { label: 'Diğer', flag: '🌍', sub: 'Farklı ülke' },
+                    ].map(({ label, flag, sub }) => (
+                      <button key={label}
+                        onClick={() => { setOnboardingCountry(label); setProfile((prev: ProfileData) => ({ ...prev, targetCountry: label })); setOnboardingStep(1); }}
+                        className={`p-4 rounded-2xl border-2 text-left transition-all hover:border-brand-400 hover:bg-brand-50 ${onboardingCountry === label ? 'border-brand-500 bg-brand-50' : 'border-slate-100 bg-white'}`}>
+                        <div className="text-2xl mb-1">{flag}</div>
+                        <div className="font-bold text-slate-900 text-sm">{label}</div>
+                        <div className="text-xs text-slate-400">{sub}</div>
+                      </button>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+
+              {onboardingStep === 1 && (
+                <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="text-center space-y-8">
+                  <div className="w-20 h-20 bg-indigo-50 rounded-[2rem] flex items-center justify-center mx-auto">
+                    <Briefcase className="w-10 h-10 text-indigo-600" />
+                  </div>
+                  <div>
+                    <h2 className="text-3xl font-black text-slate-900">Başvuru profiliniz nedir?</h2>
+                    <p className="text-slate-500 mt-2">Her profil farklı belgeler gerektirir.</p>
+                  </div>
+                  <div className="space-y-3">
+                    {[
+                      { id: 'employer', icon: Briefcase, label: 'Çalışan / İşveren', desc: 'SGK\'lı işte çalışıyorum veya şirket sahibiyim', color: 'blue' },
+                      { id: 'student', icon: Brain, label: 'Öğrenci', desc: 'Üniversite veya lise öğrencisiyim', color: 'violet' },
+                      { id: 'unemployed', icon: Home, label: 'Çalışmıyor / Emekli', desc: 'Çalışmıyorum, eş/aile sponsorluğu var', color: 'emerald' },
+                      { id: 'self', icon: Target, label: 'Serbest Meslek', desc: 'Kendi işimi yapıyorum, vergi mükellefi', color: 'amber' },
+                    ].map(({ id, icon: Icon, label, desc, color }) => (
+                      <button key={id}
+                        onClick={() => { setOnboardingProfile(id); setApplicantType(id === 'employer' || id === 'unemployed' ? id as 'employer' | 'unemployed' : 'employer'); setOnboardingStep(2); }}
+                        className={`w-full p-4 rounded-2xl border-2 text-left transition-all hover:border-${color}-400 hover:bg-${color}-50 flex items-center gap-4 ${onboardingProfile === id ? `border-${color}-500 bg-${color}-50` : 'border-slate-100 bg-white'}`}>
+                        <div className={`w-12 h-12 bg-${color}-50 rounded-xl flex items-center justify-center text-${color}-600 shrink-0`}>
+                          <Icon className="w-6 h-6" />
+                        </div>
+                        <div>
+                          <div className="font-bold text-slate-900">{label}</div>
+                          <div className="text-xs text-slate-400 mt-0.5">{desc}</div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+
+              {onboardingStep === 2 && (
+                <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="text-center space-y-8">
+                  <div className="w-20 h-20 bg-emerald-50 rounded-[2rem] flex items-center justify-center mx-auto">
+                    <TrendingUp className="w-10 h-10 text-emerald-600" />
+                  </div>
+                  <div>
+                    <div className="text-sm font-bold text-emerald-600 uppercase tracking-widest mb-2">Harika! Profiliniz hazır</div>
+                    <h2 className="text-3xl font-black text-slate-900">İlk skorunuz hesaplandı</h2>
+                    <div className="text-7xl font-black text-brand-600 my-4">%{currentScore}</div>
+                    <p className="text-slate-500">Detaylı analizinizi görmek ve skoru artırmak için devam edin.</p>
+                  </div>
+                  <div className="p-5 bg-slate-50 rounded-2xl text-left space-y-2">
+                    <div className="flex justify-between text-sm"><span className="text-slate-500">Hedef ülke</span><span className="font-bold text-slate-900">{onboardingCountry}</span></div>
+                    <div className="flex justify-between text-sm"><span className="text-slate-500">Profil tipi</span><span className="font-bold text-slate-900">{onboardingProfile === 'employer' ? 'Çalışan' : onboardingProfile === 'student' ? 'Öğrenci' : onboardingProfile === 'unemployed' ? 'Çalışmıyor' : 'Serbest Meslek'}</span></div>
+                    <div className="flex justify-between text-sm"><span className="text-slate-500">Kullanılabilir araç</span><span className="font-bold text-emerald-600">7 Ücretsiz + 3 Premium</span></div>
+                  </div>
+                  <div className="flex flex-col gap-3">
+                    <button onClick={() => setStep('dashboard')}
+                      className="btn-primary w-full py-5 text-lg flex items-center justify-center gap-2 group">
+                      Tam Analizi Gör <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                    </button>
+                    <button onClick={() => setIsUpgradeOpen(true)}
+                      className="w-full py-4 rounded-2xl border-2 border-amber-200 bg-amber-50 text-amber-700 font-bold text-sm hover:bg-amber-100 transition-colors flex items-center justify-center gap-2">
+                      🔒 Tüm Araçları Aç — Premium
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+
+              <button onClick={() => onboardingStep > 0 ? setOnboardingStep(s => s - 1) : setStep('hero')}
+                className="flex items-center gap-2 text-sm text-slate-400 hover:text-slate-600 transition-colors mx-auto">
+                <ArrowLeft className="w-4 h-4" /> Geri
+              </button>
+            </motion.div>
+          )}
+
           {step === 'assessment' && (
-            <motion.div 
+            <motion.div
               key="assessment"
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -3041,18 +3326,19 @@ Gunluk Rota ve Aktiviteler:
                 </div>
               </div>
 
-              <div className="p-8 md:p-12 bg-slate-900 rounded-[2.5rem] text-white flex flex-col lg:flex-row items-center justify-between gap-10 relative overflow-hidden shadow-2xl">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-brand-600/20 blur-[100px] rounded-full" />
-                <div className="space-y-4 text-center lg:text-left z-10">
+              <div className="p-8 md:p-12 bg-slate-900 rounded-[2.5rem] text-white flex flex-col lg:flex-row items-center justify-between gap-8 relative overflow-hidden shadow-2xl">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-brand-600/20 blur-[100px] rounded-full pointer-events-none" />
+                <div className="space-y-4 text-center lg:text-left relative z-10">
                   <div className="text-brand-400 text-xs font-bold uppercase tracking-[0.2em]">Tahmini Başarı İhtimali</div>
-                  <div className="text-7xl md:text-8xl font-black text-white">%{currentScore}</div>
+                  <div className="text-6xl md:text-8xl font-black text-white">%{currentScore}</div>
                   <p className="text-slate-400 text-sm max-w-xs mx-auto lg:mx-0 font-medium">
-                    *Gelişmiş analiz için dashboard üzerinden detaylı kriterleri doldurun.
+                    Detaylı kriterleri doldurun, skorunuzu maximize edin.
                   </p>
                 </div>
-                <button 
+                <button
+                  type="button"
                   onClick={() => setStep('dashboard')}
-                  className="btn-primary w-full lg:w-auto px-12 py-6 text-xl flex items-center justify-center gap-2 group"
+                  className="btn-primary relative z-10 w-full lg:w-auto px-10 py-5 text-lg flex items-center justify-center gap-2 group"
                 >
                   Dashboard'a Git <ChevronRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
                 </button>
@@ -3077,26 +3363,43 @@ Gunluk Rota ve Aktiviteler:
                 </div>
                 {/* Araçlar Paneli */}
                 <div className="bg-white border border-slate-100 rounded-[2rem] p-5 shadow-sm">
-                  <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Analiz Araçları</div>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Analiz Araçları</div>
+                    {!isPremium && (
+                      <button onClick={() => setIsUpgradeOpen(true)}
+                        className="text-[10px] bg-amber-50 text-amber-600 border border-amber-100 font-black px-2 py-1 rounded-lg uppercase tracking-widest hover:bg-amber-100 transition-colors">
+                        🔒 Premium'a Geç
+                      </button>
+                    )}
+                    {isPremium && (
+                      <span className="text-[10px] bg-emerald-50 text-emerald-600 border border-emerald-100 font-black px-2 py-1 rounded-lg uppercase tracking-widest">
+                        ✓ Premium Aktif
+                      </span>
+                    )}
+                  </div>
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
                     {[
-                      { label: 'Evrak Listesi', icon: FileCheck, color: 'bg-emerald-500', fn: () => setIsDocumentListOpen(true) },
-                      { label: 'Visa Copilot', icon: MessageSquare, color: 'bg-blue-500', fn: () => setIsCopilotOpen(true) },
-                      { label: 'Senaryo', icon: Zap, color: 'bg-slate-900', fn: () => setIsCalculatorOpen(true) },
-                      { label: 'Ülke Kıyasla', icon: Globe, color: 'bg-indigo-500', fn: () => setIsSchengenComparatorOpen(true) },
-                      { label: 'Sosyal Medya', icon: ShieldCheck, color: 'bg-violet-500', fn: () => setIsSocialMediaOpen(true) },
-                      { label: 'Ret Analizi', icon: AlertTriangle, color: 'bg-rose-500', fn: () => setIsRefusalOpen(true) },
-                      { label: 'Randevu', icon: Calendar, color: 'bg-teal-500', fn: () => setIsAppointmentOpen(true) },
-                      { label: 'Belge Matrisi', icon: CheckCircle2, color: 'bg-slate-600', fn: () => setIsConsistencyOpen(true) },
-                      { label: 'Vizesiz Ülkeler', icon: Plane, color: 'bg-emerald-600', fn: () => setIsVisaFreeOpen(true) },
-                      { label: 'AI Banka', icon: Sparkles, color: 'bg-blue-700', fn: () => setIsAiBankOpen(true) },
-                    ].map(({ label, icon: Icon, color, fn }) => (
-                      <button key={label} onClick={fn}
-                        className={`${color} text-white rounded-xl px-3 py-2.5 font-bold text-xs flex items-center gap-1.5 hover:opacity-90 transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5`}>
-                        <Icon className="w-4 h-4 shrink-0" />
-                        <span>{label}</span>
-                      </button>
-                    ))}
+                      { label: 'Evrak Listesi', icon: FileCheck, color: 'bg-emerald-500', id: 'docs', setter: setIsDocumentListOpen },
+                      { label: 'Visa Copilot', icon: MessageSquare, color: 'bg-blue-500', id: 'copilot', setter: setIsCopilotOpen },
+                      { label: 'Senaryo', icon: Zap, color: 'bg-slate-900', id: 'calculator', setter: setIsCalculatorOpen },
+                      { label: 'Ülke Kıyasla', icon: Globe, color: 'bg-indigo-500', id: 'comparator', setter: setIsSchengenComparatorOpen },
+                      { label: 'Sosyal Medya', icon: ShieldCheck, color: 'bg-violet-500', id: 'socialmedia', setter: setIsSocialMediaOpen },
+                      { label: 'Ret Analizi', icon: AlertTriangle, color: 'bg-rose-500', id: 'refusal', setter: setIsRefusalOpen },
+                      { label: 'Randevu', icon: Calendar, color: 'bg-teal-500', id: 'appointment', setter: setIsAppointmentOpen },
+                      { label: 'Belge Matrisi', icon: CheckCircle2, color: 'bg-slate-600', id: 'consistency', setter: setIsConsistencyOpen },
+                      { label: 'Vizesiz Ülkeler', icon: Plane, color: 'bg-emerald-600', id: 'visafree', setter: setIsVisaFreeOpen },
+                      { label: 'AI Banka', icon: Sparkles, color: 'bg-blue-700', id: 'aibank', setter: setIsAiBankOpen },
+                    ].map(({ label, icon: Icon, color, id, setter }) => {
+                      const locked = PREMIUM_TOOLS.includes(id) && !isPremium;
+                      return (
+                        <button key={label} onClick={() => openTool(id, setter)}
+                          className={`relative rounded-xl px-3 py-2.5 font-bold text-xs flex items-center gap-1.5 transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 ${locked ? 'bg-slate-100 text-slate-400' : `${color} text-white hover:opacity-90`}`}>
+                          <Icon className="w-4 h-4 shrink-0" />
+                          <span>{label}</span>
+                          {locked && <span className="ml-auto text-amber-400">🔒</span>}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               </div>
@@ -3174,7 +3477,7 @@ Gunluk Rota ve Aktiviteler:
                           />
                         </div>
                         <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
-                          Mavi alan: VizeAsistan stratejik katkısı
+                          Mavi alan: VizeAkıl stratejik katkısı
                         </p>
                       </div>
 
@@ -3796,7 +4099,7 @@ Gunluk Rota ve Aktiviteler:
         <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-slate-400 text-sm">
           <div className="flex items-center gap-2 font-bold text-slate-600">
             <ShieldCheck className="w-5 h-5" />
-            <span>VizeAsistan © 2026</span>
+            <span>VizeAkıl © 2026 — vizeakil.com</span>
           </div>
           <div className="flex gap-6">
             <a href="#" className="hover:text-slate-600 transition-colors">Kullanım Koşulları</a>
@@ -3804,7 +4107,7 @@ Gunluk Rota ve Aktiviteler:
           </div>
         </div>
         <div className="p-6 bg-slate-50 rounded-2xl text-xs text-slate-400 leading-relaxed">
-          <strong>Önemli Uyarı:</strong> VizeAsistan bir resmi kurum veya konsolosluk değildir. Sunulan başarı ihtimali ve tavsiyeler geçmiş verilere dayalı istatistiksel tahminlerdir. Vize kararı tamamen ilgili ülkenin konsolosluğuna aittir ve hiçbir şekilde garanti edilemez. Başvuru sahibi beyanlarından kendisi sorumludur.
+          <strong>Önemli Uyarı:</strong> VizeAkıl bir resmi kurum veya konsolosluk değildir. Sunulan başarı ihtimali ve tavsiyeler geçmiş verilere dayalı istatistiksel tahminlerdir. Vize kararı tamamen ilgili ülkenin konsolosluğuna aittir ve hiçbir şekilde garanti edilemez. Başvuru sahibi beyanlarından kendisi sorumludur.
         </div>
       </footer>
     </div>
