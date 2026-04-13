@@ -238,11 +238,193 @@ const ukPricing = {
   ]
 };
 
+// ============================================================
+// ÖZELLİK 7: SCHENGEN ÜLKE KARŞILAŞTIRICI VERİ TABANI
+// Kaynak: 2024-2025 Schengen ret oranı istatistikleri (Türk başvurucular)
+// ============================================================
+interface SchengenCountry {
+  name: string;
+  flag: string;
+  rejectionRate: number;       // Türk başvurucular için ret oranı (%)
+  avgProcessDays: number;      // Ortalama işlem süresi
+  dailyBudgetReq: number;      // Günlük bütçe gereksinimi (€)
+  difficulty: 'Kolay' | 'Orta' | 'Zor' | 'Çok Zor';
+  difficultyColor: string;
+  strengths: string[];         // Bu konsoloslukta avantaj sağlayan faktörler
+  warnings: string[];          // Bu konsoloslukta dikkat edilmesi gerekenler
+  tip: string;                 // Özel ipucu
+  consulate: string;           // Türkiye'deki konsolosluk şehri
+}
+
+const schengenCountries: SchengenCountry[] = [
+  {
+    name: "Slovakya", flag: "🇸🇰", rejectionRate: 6.6, avgProcessDays: 10,
+    dailyBudgetReq: 60, difficulty: "Kolay", difficultyColor: "emerald",
+    strengths: ["En düşük ret oranı (%6.6)", "Hızlı işlem", "Esnek finansal değerlendirme"],
+    warnings: ["Turistik çekicilik az — güçlü amaç kanıtı şart", "Çok kişi bilmiyor, yoğunluk az"],
+    tip: "Slovakya üzerinden başvurarak Schengen geçmişi oluştur, sonra hedef ülkeye geç.",
+    consulate: "Ankara"
+  },
+  {
+    name: "İtalya", flag: "🇮🇹", rejectionRate: 8.7, avgProcessDays: 15,
+    dailyBudgetReq: 80, difficulty: "Kolay", difficultyColor: "emerald",
+    strengths: ["Düşük ret oranı (%8.7)", "Turizm odaklı — seyahat amacı kolay kanıtlanır", "Esnek bütçe değerlendirmesi"],
+    warnings: ["Roma/Milano için otel fiyatları yüksek — rezervasyonlar incelenir", "Sahte rezervasyona hassas"],
+    tip: "İtalya Schengen'e girmek için stratejik ilk adım. Güçlü turizm geçmişi oluşturur.",
+    consulate: "İstanbul / Ankara"
+  },
+  {
+    name: "Slovenya", flag: "🇸🇮", rejectionRate: 10.9, avgProcessDays: 12,
+    dailyBudgetReq: 70, difficulty: "Kolay", difficultyColor: "emerald",
+    strengths: ["Düşük ret oranı", "Az bilinen avantajlı konsolosluk", "Hızlı randevu"],
+    warnings: ["Turistik gerekçe net olmalı"],
+    tip: "Az kalabalık konsolosluk sayesinde randevu bulmak kolay.",
+    consulate: "Ankara"
+  },
+  {
+    name: "İspanya", flag: "🇪🇸", rejectionRate: 14.2, avgProcessDays: 15,
+    dailyBudgetReq: 90, difficulty: "Orta", difficultyColor: "amber",
+    strengths: ["Güçlü turizm motivasyonu", "Belge tutarlılığına önem verir"],
+    warnings: ["Sahte rezervasyon tespiti çok gelişmiş (UGE-CE sistemi)", "Gizlenmiş ret = kalıcı ban"],
+    tip: "İspanya'da sahte rezervasyon sistematik olarak tespit edilir. Yalnızca gerçek rezervasyonla başvur.",
+    consulate: "İstanbul / Ankara"
+  },
+  {
+    name: "Fransa", flag: "🇫🇷", rejectionRate: 17.8, avgProcessDays: 20,
+    dailyBudgetReq: 100, difficulty: "Orta", difficultyColor: "amber",
+    strengths: ["Kültür/sanat amacı iyi karşılanır", "İş bağlantısı güçlü profiller avantajlı"],
+    warnings: ["Belge kalitesine çok hassas", "Dil engeli: Fransızca özgeçmiş avantaj sağlar"],
+    tip: "Fransa için davetiye veya kültürel etkinlik belgesi (konser, sergi) eklemek onay şansını artırır.",
+    consulate: "İstanbul / Ankara"
+  },
+  {
+    name: "Almanya", flag: "🇩🇪", rejectionRate: 22.9, avgProcessDays: 30,
+    dailyBudgetReq: 100, difficulty: "Zor", difficultyColor: "orange",
+    strengths: ["İş/ticaret amacı güçlü kabul görür", "Uzun kıdem avantajlı"],
+    warnings: ["Ankara'da ret %27.1, İstanbul'da %21.5", "Finansal süreklilik miktardan önemli", "Beklenmedik mevduat anında ret sebebi"],
+    tip: "Almanya için son 6 ayın her ayında sabit maaş görünmeli. Tek büyük yatırım yerine aylık düzenlilik aranır.",
+    consulate: "İstanbul (daha düşük ret) / Ankara / İzmir"
+  },
+  {
+    name: "Hollanda", flag: "🇳🇱", rejectionRate: 24.1, avgProcessDays: 25,
+    dailyBudgetReq: 110, difficulty: "Zor", difficultyColor: "orange",
+    strengths: ["İş/fuar amacı iyi değerlendirilir"],
+    warnings: ["Yüksek ret oranı", "Güçlü finansal kanıt şart"],
+    tip: "Hollanda için davet mektubu (fuar, iş toplantısı) başarı şansını önemli ölçüde artırır.",
+    consulate: "Ankara"
+  },
+  {
+    name: "Danimarka", flag: "🇩🇰", rejectionRate: 39.4, avgProcessDays: 35,
+    dailyBudgetReq: 120, difficulty: "Çok Zor", difficultyColor: "rose",
+    strengths: ["Akraba daveti güçlü kanıt"],
+    warnings: ["Türkler için %39.4 ret — en yüksek gruplardan", "Çok katı finansal inceleme", "Kısa kıdem kesin ret sebebi"],
+    tip: "Danimarka'ya direkt başvurmak yerine önce İtalya/İspanya Schengen geçmişi oluştur.",
+    consulate: "Ankara"
+  },
+  {
+    name: "Finlandiya", flag: "🇫🇮", rejectionRate: 31.3, avgProcessDays: 30,
+    dailyBudgetReq: 115, difficulty: "Çok Zor", difficultyColor: "rose",
+    strengths: ["Akraba ziyareti güçlü gerekçe"],
+    warnings: ["Yüksek ret oranı (%31.3)", "Kış turizmi gerekçesi zayıf bulunabilir"],
+    tip: "Finlandiya için çok güçlü finansal profil ve önceki Schengen geçmişi şart.",
+    consulate: "Ankara"
+  },
+  {
+    name: "Estonya", flag: "🇪🇪", rejectionRate: 42.5, avgProcessDays: 40,
+    dailyBudgetReq: 100, difficulty: "Çok Zor", difficultyColor: "rose",
+    strengths: ["Dijital nomad/teknoloji iş amacı kabul görebilir"],
+    warnings: ["En yüksek ret oranı (%42.5) — Türkler için", "Çok az turist için uygun"],
+    tip: "Estonya'ya başvurmak yerine başka konsolosluğu tercih et. Bu istatistik çok yüksek.",
+    consulate: "Ankara"
+  },
+];
+
+// ============================================================
+// ÖZELLİK 8: SOSYAL MEDYA DENETİM REHBERİ VERİSİ
+// ============================================================
+interface SocialMediaItem {
+  id: string;
+  category: 'risk' | 'action' | 'positive';
+  platform: string;
+  title: string;
+  description: string;
+  severity: 'critical' | 'warning' | 'tip';
+}
+
+const socialMediaChecklist: SocialMediaItem[] = [
+  // KRİTİK RİSKLER
+  {
+    id: 'sm1', category: 'risk', platform: 'Tüm Platformlar', severity: 'critical',
+    title: '"Yurt dışında kalmak istiyorum" paylaşımları',
+    description: 'Göç niyeti ima eden her paylaşım (tweet, hikaye, yorum) konsolosluk taramasında ret gerekçesi olabilir. Bu tür içerikleri başvurudan 6 ay önce sil.'
+  },
+  {
+    id: 'sm2', category: 'risk', platform: 'Instagram / Twitter', severity: 'critical',
+    title: 'Yabancı ülkede çalışma/yerleşme planları',
+    description: '"Almanya\'da iş arıyorum", "Green card başvurusu" gibi içerikler konsolosluk memuruna direkt ret gerekçesi sağlar. Hepsini kaldır.'
+  },
+  {
+    id: 'sm3', category: 'risk', platform: 'LinkedIn', severity: 'critical',
+    title: 'Yurt dışı iş başvurusu aktivitesi',
+    description: 'LinkedIn\'de yabancı şirketlere "Open to Work" bayrağı veya aktif başvuru geçmişi görünüyorsa, konsolosluk memurunun erişimi olabilir. Başvuru sürecinde kaldır.'
+  },
+  {
+    id: 'sm4', category: 'risk', platform: 'Facebook / Instagram', severity: 'warning',
+    title: 'Aşırı lüks yaşam gösterisi ile finansal profil çelişkisi',
+    description: 'Sosyal medyada pahalı araba/tatil sergilerken banka dökümünde düşük bakiye görünüyorsa çelişki yaratır. Tutarlı ol.'
+  },
+  {
+    id: 'sm5', category: 'risk', platform: 'Tüm Platformlar', severity: 'warning',
+    title: 'Siyasi hassas içerikler',
+    description: 'Hedef ülkenin hükümetini veya politikalarını eleştiren içerikler bazı konsolosluklarda (özellikle ABD, İsrail) sorun yaratabilir.'
+  },
+  // ALINMASI GEREKEN AKSIYONLAR
+  {
+    id: 'sm6', category: 'action', platform: 'Instagram', severity: 'tip',
+    title: 'Türkiye\'deki günlük hayatını belgele',
+    description: 'İş yerine git, kafe, aile yemeği, Türk tatil yerleri gibi içerikler "Türkiye\'ye bağlı bir hayatım var" mesajı verir. Bu tür paylaşımları artır.'
+  },
+  {
+    id: 'sm7', category: 'action', platform: 'LinkedIn', severity: 'tip',
+    title: 'LinkedIn profilini Türkiye odaklı güncelle',
+    description: 'Mevcut işveren, Türkiye şirket ağı, Türk mesleki dernekler — bunlar geri dönüş bağını dijital olarak kanıtlar. Profili tamamla ve güncel tut.'
+  },
+  {
+    id: 'sm8', category: 'action', platform: 'Facebook', severity: 'tip',
+    title: 'Aile fotoğrafları ve sosyal bağlar',
+    description: 'Evlilik, çocuk, aile etkinlikleri gibi paylaşımlar "güçlü aile bağı" kanıtıdır. Bu içerikler görünür ve herkese açık olsun.'
+  },
+  {
+    id: 'sm9', category: 'action', platform: 'Tüm Platformlar', severity: 'tip',
+    title: 'Gizlilik ayarlarını kontrol et',
+    description: 'Tüm platformlarda "arkadaşlarım" gizlilik ayarı yerine "herkese açık" tercih et. Boş veya gizli profil "şüpheli" olarak yorumlanabilir.'
+  },
+  // POZİTİF FAKTÖRLER
+  {
+    id: 'sm10', category: 'positive', platform: 'Instagram / Facebook', severity: 'tip',
+    title: 'Önceki seyahat fotoğrafları büyük avantaj',
+    description: 'Önceki yurt içi/yurt dışı seyahatlerden fotoğraflar "turistik amaçlı seyahat eden biri" imajı yaratır. Özellikle Türk şehirlerine tatil paylaşımları güçlü.'
+  },
+  {
+    id: 'sm11', category: 'positive', platform: 'LinkedIn', severity: 'tip',
+    title: 'Profesyonel başarılar ve Türkiye ağı',
+    description: 'Terfi, proje tamamlama, Türk iş dünyasıyla etkileşim — bunlar hem gelir hem de geri dönüş motivasyonu kanıtıdır.'
+  },
+  {
+    id: 'sm12', category: 'positive', platform: 'Tüm Platformlar', severity: 'tip',
+    title: 'Hedef ülkeyi turistik amaçla araştırma içerikleri',
+    description: 'Hedef ülkenin müzeleri, restoranları, manzaraları hakkında paylaşımlar seyahat amacını destekler. "Berlin\'deki müzeleri görmek istiyorum" gibi içerikler pozitif.'
+  },
+];
+
 export default function App() {
   const [step, setStep] = useState<'hero' | 'assessment' | 'dashboard' | 'letter' | 'tactics'>('hero');
   const [isCalculatorOpen, setIsCalculatorOpen] = useState(false);
   const [isCopilotOpen, setIsCopilotOpen] = useState(false);
   const [isDocumentListOpen, setIsDocumentListOpen] = useState(false);
+  const [isSchengenComparatorOpen, setIsSchengenComparatorOpen] = useState(false);
+  const [isSocialMediaOpen, setIsSocialMediaOpen] = useState(false);
+  const [socialMediaChecked, setSocialMediaChecked] = useState<Record<string, boolean>>({});
   const [applicantType, setApplicantType] = useState<'employer' | 'unemployed' | 'minor'>('employer');
   
   const [profile, setProfile] = useState<ProfileData>({
@@ -1349,6 +1531,343 @@ Gunluk Rota ve Aktiviteler:
 
 
 
+        {/* ═══════════════════════════════════════════════════
+            ÖZELLİK 7: SCHENGEN ÜLKE KARŞILAŞTIRICI MODALI
+            ═══════════════════════════════════════════════════ */}
+        <AnimatePresence>
+          {isSchengenComparatorOpen && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+              <motion.div
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                onClick={() => setIsSchengenComparatorOpen(false)}
+                className="absolute inset-0 bg-slate-950/50 backdrop-blur-md"
+              />
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                className="relative w-full max-w-5xl bg-white rounded-[2.5rem] shadow-2xl border border-slate-200 flex flex-col max-h-[92vh] overflow-hidden"
+              >
+                {/* Header */}
+                <div className="p-8 border-b border-slate-100 bg-gradient-to-r from-blue-600 to-indigo-700 text-white shrink-0 rounded-t-[2.5rem]">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <div className="flex items-center gap-2 text-blue-200 text-xs font-bold uppercase tracking-widest mb-2">
+                        <Globe className="w-4 h-4" /> Profil Bazlı Analiz
+                      </div>
+                      <h3 className="text-2xl font-black">Schengen Ülke Kıyaslayıcısı</h3>
+                      <p className="text-blue-100 text-sm mt-1">
+                        Profilinize göre hangi konsoloslukta onay şansınız en yüksek? 2024-2025 ret oranları.
+                      </p>
+                    </div>
+                    <button onClick={() => setIsSchengenComparatorOpen(false)}
+                      className="p-2 hover:bg-white/10 rounded-full transition-colors">
+                      <X className="w-6 h-6" />
+                    </button>
+                  </div>
+                  {/* Profil özet bandı */}
+                  <div className="flex flex-wrap gap-3 mt-6">
+                    {[
+                      { label: "Mevcut Skor", value: `%${currentScore}`, color: currentScore >= 70 ? "bg-emerald-400/20 text-emerald-100" : "bg-rose-400/20 text-rose-100" },
+                      { label: "SGK", value: profile.hasSgkJob ? "✓ Var" : "✗ Yok", color: profile.hasSgkJob ? "bg-emerald-400/20 text-emerald-100" : "bg-rose-400/20 text-rose-100" },
+                      { label: "Önceki Vize", value: profile.hasHighValueVisa ? "✓ Güçlü" : profile.hasOtherVisa ? "✓ Var" : "✗ Yok", color: (profile.hasHighValueVisa || profile.hasOtherVisa) ? "bg-emerald-400/20 text-emerald-100" : "bg-rose-400/20 text-rose-100" },
+                      { label: "Sigorta", value: (profile.hasHealthInsurance || profile.hasTravelInsurance) ? "✓ Var" : "✗ Yok", color: (profile.hasHealthInsurance || profile.hasTravelInsurance) ? "bg-emerald-400/20 text-emerald-100" : "bg-rose-400/20 text-rose-100" },
+                    ].map((b, i) => (
+                      <div key={`schengen-badge-${i}`} className={`px-3 py-1.5 rounded-xl text-xs font-bold ${b.color}`}>
+                        {b.label}: {b.value}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Ülke listesi */}
+                <div className="overflow-y-auto flex-1 p-6 space-y-4">
+                  {/* Öneri bandı */}
+                  {(() => {
+                    const best = [...schengenCountries]
+                      .filter(c => c.difficulty === 'Kolay' || (currentScore >= 65 && c.difficulty === 'Orta'))
+                      .sort((a, b) => a.rejectionRate - b.rejectionRate)[0];
+                    return best ? (
+                      <div className="p-5 bg-emerald-50 border-2 border-emerald-200 rounded-2xl flex items-start gap-4 mb-2">
+                        <div className="text-3xl">{best.flag}</div>
+                        <div>
+                          <div className="text-xs font-black text-emerald-600 uppercase tracking-widest mb-1">
+                            🎯 Profiliniz İçin En Uygun Seçim
+                          </div>
+                          <div className="font-bold text-slate-900 text-lg">{best.name} — Ret Oranı %{best.rejectionRate}</div>
+                          <p className="text-sm text-slate-600 mt-1">{best.tip}</p>
+                        </div>
+                      </div>
+                    ) : null;
+                  })()}
+
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    {schengenCountries.map((country) => {
+                      const diffColors: Record<string, string> = {
+                        emerald: 'bg-emerald-50 border-emerald-200',
+                        amber: 'bg-amber-50 border-amber-200',
+                        orange: 'bg-orange-50 border-orange-200',
+                        rose: 'bg-rose-50 border-rose-200',
+                      };
+                      const badgeColors: Record<string, string> = {
+                        emerald: 'bg-emerald-100 text-emerald-700',
+                        amber: 'bg-amber-100 text-amber-700',
+                        orange: 'bg-orange-100 text-orange-700',
+                        rose: 'bg-rose-100 text-rose-700',
+                      };
+                      const isRecommended = currentScore >= 82
+                        ? country.difficulty !== 'Çok Zor'
+                        : currentScore >= 65
+                          ? (country.difficulty === 'Kolay' || country.difficulty === 'Orta')
+                          : country.difficulty === 'Kolay';
+
+                      return (
+                        <div key={country.name}
+                          className={`p-5 rounded-2xl border-2 transition-all ${diffColors[country.difficultyColor]} ${isRecommended ? 'ring-2 ring-offset-1 ring-blue-400/30' : 'opacity-80'}`}
+                        >
+                          <div className="flex items-start justify-between mb-3">
+                            <div className="flex items-center gap-3">
+                              <span className="text-3xl">{country.flag}</span>
+                              <div>
+                                <div className="font-black text-slate-900 text-base">{country.name}</div>
+                                <div className="text-xs text-slate-500">{country.consulate}</div>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className={`text-xs font-black px-3 py-1 rounded-lg ${badgeColors[country.difficultyColor]}`}>
+                                {country.difficulty}
+                              </div>
+                              <div className="text-xs text-slate-400 mt-1 font-mono">
+                                ~{country.avgProcessDays} gün
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Ret oranı çubuğu */}
+                          <div className="mb-3">
+                            <div className="flex justify-between text-xs font-bold text-slate-500 mb-1">
+                              <span>Türk Başvurucular — Ret Oranı</span>
+                              <span className={`font-black ${country.rejectionRate > 30 ? 'text-rose-600' : country.rejectionRate > 20 ? 'text-orange-600' : country.rejectionRate > 12 ? 'text-amber-600' : 'text-emerald-600'}`}>
+                                %{country.rejectionRate}
+                              </span>
+                            </div>
+                            <div className="w-full bg-white/60 rounded-full h-2">
+                              <div
+                                className={`h-2 rounded-full transition-all ${country.rejectionRate > 30 ? 'bg-rose-500' : country.rejectionRate > 20 ? 'bg-orange-500' : country.rejectionRate > 12 ? 'bg-amber-500' : 'bg-emerald-500'}`}
+                                style={{ width: `${Math.min(country.rejectionRate * 2, 100)}%` }}
+                              />
+                            </div>
+                          </div>
+
+                          {/* Güçlü yönler */}
+                          <div className="space-y-1 mb-3">
+                            {country.strengths.slice(0, 2).map((s, i) => (
+                              <div key={`str-${i}`} className="flex items-start gap-2 text-xs text-slate-700">
+                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />
+                                <span>{s}</span>
+                              </div>
+                            ))}
+                            {country.warnings.slice(0, 1).map((w, i) => (
+                              <div key={`warn-${i}`} className="flex items-start gap-2 text-xs text-slate-700">
+                                <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />
+                                <span>{w}</span>
+                              </div>
+                            ))}
+                          </div>
+
+                          {/* İpucu */}
+                          <div className="p-3 bg-white/70 rounded-xl border border-white text-xs text-slate-600 italic leading-relaxed">
+                            💡 {country.tip}
+                          </div>
+
+                          {/* Günlük bütçe */}
+                          <div className="mt-3 flex items-center justify-between">
+                            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Günlük Bütçe Kriteri</div>
+                            <div className="text-sm font-black text-slate-700">€{country.dailyBudgetReq}/gün</div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="p-6 border-t border-slate-100 bg-slate-50 shrink-0 rounded-b-[2.5rem]">
+                  <p className="text-xs text-slate-400 text-center">
+                    * Veriler 2024-2025 Schengen istatistiklerine dayanmaktadır. Ret oranları Türk başvurucuları için hesaplanmıştır.
+                  </p>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
+        {/* ═══════════════════════════════════════════════════
+            ÖZELLİK 8: SOSYAL MEDYA DENETİM REHBERİ MODALI
+            ═══════════════════════════════════════════════════ */}
+        <AnimatePresence>
+          {isSocialMediaOpen && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+              <motion.div
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                onClick={() => setIsSocialMediaOpen(false)}
+                className="absolute inset-0 bg-slate-950/50 backdrop-blur-md"
+              />
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                className="relative w-full max-w-3xl bg-white rounded-[2.5rem] shadow-2xl border border-slate-200 flex flex-col max-h-[92vh] overflow-hidden"
+              >
+                {/* Header */}
+                <div className="p-8 border-b border-slate-100 bg-gradient-to-r from-violet-600 to-purple-700 text-white shrink-0 rounded-t-[2.5rem]">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <div className="flex items-center gap-2 text-violet-200 text-xs font-bold uppercase tracking-widest mb-2">
+                        <ShieldCheck className="w-4 h-4" /> 2025 Konsolosluk Tarama Kriterleri
+                      </div>
+                      <h3 className="text-2xl font-black">Sosyal Medya Denetim Rehberi</h3>
+                      <p className="text-violet-100 text-sm mt-1">
+                        Başvurunuzdan önce sosyal medyanızı "vize-safe" hale getirin.
+                      </p>
+                    </div>
+                    <button onClick={() => setIsSocialMediaOpen(false)}
+                      className="p-2 hover:bg-white/10 rounded-full transition-colors">
+                      <X className="w-6 h-6" />
+                    </button>
+                  </div>
+                  {/* İlerleme */}
+                  {(() => {
+                    const total = socialMediaChecklist.length;
+                    const checked = Object.values(socialMediaChecked).filter(Boolean).length;
+                    const pct = Math.round((checked / total) * 100);
+                    return (
+                      <div className="mt-6">
+                        <div className="flex justify-between text-xs font-bold text-violet-200 mb-2">
+                          <span>Tamamlanan Adımlar</span>
+                          <span>{checked}/{total} — %{pct}</span>
+                        </div>
+                        <div className="w-full bg-white/20 rounded-full h-2">
+                          <div className="bg-white h-2 rounded-full transition-all duration-500"
+                            style={{ width: `${pct}%` }} />
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+
+                {/* İçerik */}
+                <div className="overflow-y-auto flex-1 p-6 space-y-6">
+                  {/* KRİTİK RİSKLER */}
+                  <div>
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="w-6 h-6 bg-rose-100 rounded-lg flex items-center justify-center">
+                        <AlertCircle className="w-4 h-4 text-rose-600" />
+                      </div>
+                      <h4 className="font-black text-slate-900 text-sm uppercase tracking-wide">Kritik Riskler — Hemen Kontrol Et</h4>
+                    </div>
+                    <div className="space-y-3">
+                      {socialMediaChecklist.filter(item => item.category === 'risk').map((item) => (
+                        <div key={item.id}
+                          onClick={() => setSocialMediaChecked(prev => ({ ...prev, [item.id]: !prev[item.id] }))}
+                          className={`p-4 rounded-2xl border-2 cursor-pointer transition-all select-none ${socialMediaChecked[item.id] ? 'bg-rose-50 border-rose-200 opacity-60' : 'bg-white border-rose-100 hover:border-rose-200'}`}
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className={`w-5 h-5 rounded-full border-2 shrink-0 mt-0.5 flex items-center justify-center transition-all ${socialMediaChecked[item.id] ? 'bg-rose-500 border-rose-500' : 'border-rose-300'}`}>
+                              {socialMediaChecked[item.id] && <Check className="w-3 h-3 text-white" />}
+                            </div>
+                            <div className="flex-1">
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="font-bold text-slate-900 text-sm">{item.title}</span>
+                                <span className={`text-[10px] font-black px-2 py-0.5 rounded-lg ml-2 shrink-0 ${item.severity === 'critical' ? 'bg-rose-100 text-rose-600' : 'bg-amber-100 text-amber-600'}`}>
+                                  {item.severity === 'critical' ? 'KRİTİK' : 'UYARI'}
+                                </span>
+                              </div>
+                              <div className="text-[10px] font-bold text-violet-500 mb-1">{item.platform}</div>
+                              <p className="text-xs text-slate-600 leading-relaxed">{item.description}</p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* YAPILMASI GEREKENLER */}
+                  <div>
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="w-6 h-6 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <Target className="w-4 h-4 text-blue-600" />
+                      </div>
+                      <h4 className="font-black text-slate-900 text-sm uppercase tracking-wide">Yapılması Gerekenler</h4>
+                    </div>
+                    <div className="space-y-3">
+                      {socialMediaChecklist.filter(item => item.category === 'action').map((item) => (
+                        <div key={item.id}
+                          onClick={() => setSocialMediaChecked(prev => ({ ...prev, [item.id]: !prev[item.id] }))}
+                          className={`p-4 rounded-2xl border-2 cursor-pointer transition-all select-none ${socialMediaChecked[item.id] ? 'bg-blue-50 border-blue-200 opacity-60' : 'bg-white border-blue-100 hover:border-blue-200'}`}
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className={`w-5 h-5 rounded-full border-2 shrink-0 mt-0.5 flex items-center justify-center transition-all ${socialMediaChecked[item.id] ? 'bg-blue-500 border-blue-500' : 'border-blue-300'}`}>
+                              {socialMediaChecked[item.id] && <Check className="w-3 h-3 text-white" />}
+                            </div>
+                            <div className="flex-1">
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="font-bold text-slate-900 text-sm">{item.title}</span>
+                              </div>
+                              <div className="text-[10px] font-bold text-violet-500 mb-1">{item.platform}</div>
+                              <p className="text-xs text-slate-600 leading-relaxed">{item.description}</p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* POZİTİF FAKTÖRLER */}
+                  <div>
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="w-6 h-6 bg-emerald-100 rounded-lg flex items-center justify-center">
+                        <TrendingUp className="w-4 h-4 text-emerald-600" />
+                      </div>
+                      <h4 className="font-black text-slate-900 text-sm uppercase tracking-wide">Profili Güçlendiren İçerikler</h4>
+                    </div>
+                    <div className="space-y-3">
+                      {socialMediaChecklist.filter(item => item.category === 'positive').map((item) => (
+                        <div key={item.id}
+                          onClick={() => setSocialMediaChecked(prev => ({ ...prev, [item.id]: !prev[item.id] }))}
+                          className={`p-4 rounded-2xl border-2 cursor-pointer transition-all select-none ${socialMediaChecked[item.id] ? 'bg-emerald-50 border-emerald-200 opacity-60' : 'bg-white border-emerald-100 hover:border-emerald-200'}`}
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className={`w-5 h-5 rounded-full border-2 shrink-0 mt-0.5 flex items-center justify-center transition-all ${socialMediaChecked[item.id] ? 'bg-emerald-500 border-emerald-500' : 'border-emerald-300'}`}>
+                              {socialMediaChecked[item.id] && <Check className="w-3 h-3 text-white" />}
+                            </div>
+                            <div className="flex-1">
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="font-bold text-slate-900 text-sm">{item.title}</span>
+                                <span className="text-[10px] font-black px-2 py-0.5 rounded-lg ml-2 shrink-0 bg-emerald-100 text-emerald-600">AVANTAJ</span>
+                              </div>
+                              <div className="text-[10px] font-bold text-violet-500 mb-1">{item.platform}</div>
+                              <p className="text-xs text-slate-600 leading-relaxed">{item.description}</p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-6 border-t border-slate-100 bg-slate-50 shrink-0 rounded-b-[2.5rem]">
+                  <div className="flex items-start gap-3 p-4 bg-amber-50 rounded-2xl border border-amber-200">
+                    <Info className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                    <p className="text-xs text-amber-800 leading-relaxed">
+                      <strong>Not:</strong> Her konsolosluk sosyal medyayı taramaz, ancak 2025 itibarıyla ABD, İngiltere ve bazı Schengen ülkelerinin bu yöntemi giderek daha fazla kullandığı bilinmektedir. Önlem almak her zaman daha güvenlidir.
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
         {/* Visa Copilot Sidebar */}
         <AnimatePresence>
           {isCopilotOpen && (
@@ -1674,12 +2193,26 @@ Gunluk Rota ve Aktiviteler:
                     <MessageSquare className="w-5 h-5" />
                     Visa Copilot
                   </button>
-                  <button 
+                  <button
                     onClick={() => setIsCalculatorOpen(true)}
                     className="px-6 py-4 bg-slate-900 text-white rounded-2xl font-bold flex items-center gap-2 hover:bg-slate-800 transition-all shadow-lg shadow-slate-200"
                   >
                     <Zap className="w-5 h-5 text-amber-400" />
                     Senaryo Oluşturucu
+                  </button>
+                  <button
+                    onClick={() => setIsSchengenComparatorOpen(true)}
+                    className="px-6 py-4 bg-indigo-600 text-white rounded-2xl font-bold flex items-center gap-2 hover:bg-indigo-500 transition-all shadow-lg shadow-indigo-200"
+                  >
+                    <Globe className="w-5 h-5" />
+                    Ülke Kıyasla
+                  </button>
+                  <button
+                    onClick={() => setIsSocialMediaOpen(true)}
+                    className="px-6 py-4 bg-violet-600 text-white rounded-2xl font-bold flex items-center gap-2 hover:bg-violet-500 transition-all shadow-lg shadow-violet-200"
+                  >
+                    <ShieldCheck className="w-5 h-5" />
+                    Sosyal Medya
                   </button>
                 </div>
               </div>
