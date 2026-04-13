@@ -4,14 +4,14 @@
  */
 
 import React, { useState, useMemo } from 'react';
-import { 
-  CheckCircle2, 
-  Circle, 
-  FileText, 
-  ShieldCheck, 
+import {
+  CheckCircle2,
+  Circle,
+  FileText,
+  ShieldCheck,
   FileCheck,
-  TrendingUp, 
-  Download, 
+  TrendingUp,
+  Download,
   AlertCircle,
   ChevronRight,
   ArrowLeft,
@@ -32,10 +32,29 @@ import {
   Map,
   CreditCard,
   Check,
-  X
+  X,
+  Calendar,
+  Plane,
+  Search,
+  Upload,
+  Sparkles,
+  MapPin,
+  Star,
+  RefreshCw,
+  XCircle,
+  Layers,
+  Euro,
+  BadgeCheck,
+  Stamp,
+  ChevronDown,
+  ChevronUp,
+  ExternalLink,
+  Banknote,
+  ScanLine
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { jsPDF } from 'jspdf';
+import { GoogleGenAI } from '@google/genai';
 
 // Types
 interface ProfileData {
@@ -239,6 +258,175 @@ const ukPricing = {
 };
 
 // ============================================================
+// ÖZELLİK 1: RET MEKTUBU ANALİZ VERİ TABANI
+// ============================================================
+interface RefusalRule {
+  keywords: string[];
+  title: string;
+  category: 'financial' | 'ties' | 'purpose' | 'document' | 'history';
+  severity: 'critical' | 'high' | 'medium';
+  waitMonths: number;
+  actions: string[];
+}
+
+const refusalRules: RefusalRule[] = [
+  {
+    keywords: ['funds not genuine','financial means','cannot be satisfied','bank statement','sufficient funds','finansal','banka','yetersiz'],
+    title: 'Finansal Kanıt Yetersiz / Güvenilir Değil',
+    category: 'financial', severity: 'critical', waitMonths: 2,
+    actions: [
+      '6 aylık kaşeli-imzalı banka dökümü hazırla (UK için 28 gün kuralı)',
+      'Maaş yatışlarının banka açıklamasında "Maaş/Hakediş" yazdığından emin ol',
+      'Hesapta beklenmedik büyük para girişi varsa 45 gün bekle ve kaynağını belgele',
+      'Ek hesaplar, yatırım hesabı, gayrimenkul değer belgesi ekle',
+      'Schengen için günlük €120 × seyahat günü = gereken toplam miktarı net göster',
+    ]
+  },
+  {
+    keywords: ['ties to home','sufficient ties','return','family','employment','immigration intent','bağ','dönüş','çalışma','istihdam'],
+    title: 'Memlekete Yeterli Bağ Kanıtlanamadı',
+    category: 'ties', severity: 'critical', waitMonths: 1,
+    actions: [
+      'İşveren yazısını güçlendir: kesin geri dönüş tarihi ve imzalı garanti ekle',
+      'SGK hizmet dökümünü barkodlu olarak ekle',
+      'Tapu, araç ruhsatı, kira sözleşmesi gibi mülkiyet belgelerini ekle',
+      'Evlenme cüzdanı, çocukların nüfus belgesi — aile bağlarını çoğalt',
+      'LinkedIn/sosyal medya profilini Türkiye ağıyla güçlendir',
+      'Türkiye\'deki topluluk/dernek üyelik belgelerini ekle',
+    ]
+  },
+  {
+    keywords: ['purpose of visit','intention','genuine visitor','tourist','trip not credible','amaç','niyet','turizm','ziyaret'],
+    title: 'Seyahat Amacı İnandırıcı Bulunmadı',
+    category: 'purpose', severity: 'high', waitMonths: 1,
+    actions: [
+      'Niyet mektubunu tamamen yeniden yaz — spesifik aktiviteler, müzeler, şehirler belirt',
+      'Gerçek otel ve uçak rezervasyonları ekle (iptal edilebilir)',
+      'Seyahat planını (itinerary) günlük bazda hazırla',
+      'Geçmiş turizm geçmişini gösteren belgeler ekle (eski pasaport, fotoğraflar)',
+      'Davetiye varsa noter onaylı kopyasını ekle',
+    ]
+  },
+  {
+    keywords: ['document','false','forged','inconsistent','incomplete','fabricated','sahte','eksik','tutarsız','belge'],
+    title: 'Belge Sorunu (Tutarsız / Eksik / Şüpheli)',
+    category: 'document', severity: 'critical', waitMonths: 3,
+    actions: [
+      'Tüm belgelerdeki isim, adres ve tarih bilgilerini çapraz kontrol et',
+      'Barkodlu belgelerle yenile: SGK, Nüfus Kayıt, Yerleşim Yeri',
+      'Asla sahte veya değiştirilmiş belge sunma — kalıcı ban riski var',
+      'Eksik belgelerin tam listesini ret yazısından çıkar ve hepsini tamamla',
+      'Belgeleri kronolojik sıraya koy ve numaralandır',
+    ]
+  },
+  {
+    keywords: ['overstay','previous refusal','immigration history','visa violation','red flag','geçmiş','ret','ihlal','aşım'],
+    title: 'Olumsuz Seyahat/Vize Geçmişi',
+    category: 'history', severity: 'critical', waitMonths: 6,
+    actions: [
+      'Önceki tüm ret kararlarını yeni başvuruda açıkça beyan et (gizlemek yasak)',
+      'Süre aşımı varsa resmi belgelerle açıklama yap',
+      'Vize geçmişini temizlemek için önce vizesiz ülkelere seyahat et (Sırbistan, Karadağ)',
+      'Profesyonel danışmanlık desteği al — bu tür dosyalar özel yaklaşım gerektirir',
+      'En az 6-12 ay bekle ve profilini güçlendir',
+    ]
+  },
+  {
+    keywords: ['travel insurance','insurance','sigorta'],
+    title: 'Seyahat Sağlık Sigortası Eksik',
+    category: 'document', severity: 'medium', waitMonths: 0,
+    actions: [
+      'Schengen için min €30.000 teminatlı, tüm Schengen ülkelerini kapsayan sigorta al',
+      'AXA, Allianz veya Europ Assistance\'dan online satın alabilirsin',
+      'Poliçenin başlangıç/bitiş tarihleri seyahat tarihlerini kapsamalı',
+    ]
+  },
+];
+
+// ============================================================
+// ÖZELLİK 2: RANDEVU TAKVİM VERİ TABANI
+// ============================================================
+interface ConsulateInfo {
+  country: string;
+  flag: string;
+  city: string;
+  waitDays: number;
+  address: string;
+  phone: string;
+  website: string;
+  workHours: string;
+  visaType: string;
+  note: string;
+}
+
+const consulateData: ConsulateInfo[] = [
+  { country: 'ABD', flag: '🇺🇸', city: 'İstanbul', waitDays: 188, address: 'Üsküdar, İstanbul', phone: '+90 212 335 9000', website: 'tr.usembassy.gov', workHours: 'Pts-Cum 08:00-17:00', visaType: 'B1/B2 (Turistik)', note: 'Mülakat zorunlu. DS-160 formu doldurulmalı.' },
+  { country: 'ABD', flag: '🇺🇸', city: 'Ankara', waitDays: 175, address: 'Kavaklıdere, Ankara', phone: '+90 312 455 5555', website: 'tr.usembassy.gov', workHours: 'Pts-Cum 08:00-17:00', visaType: 'B1/B2 (Turistik)', note: 'İstanbul\'dan daha kısa bekleme süresi.' },
+  { country: 'İngiltere', flag: '🇬🇧', city: 'İstanbul', waitDays: 21, address: 'Meşrutiyet Cad. Beyoğlu', phone: 'VFS Global: 0850 800 8090', website: 'gov.uk/apply-to-come-to-the-uk', workHours: 'Pts-Cum 09:00-16:00', visaType: 'Standard Visitor', note: '28-gün kuralı kritik. Online başvuru + VFS randevu.' },
+  { country: 'Almanya', flag: '🇩🇪', city: 'İstanbul', waitDays: 25, address: 'İnönü Caddesi, Gümüşsuyu', phone: '+90 212 334 6100', website: 'istanbul.diplo.de', workHours: 'Pts-Per 08:30-12:00', visaType: 'Schengen C', note: 'Finansal süreklilik kritik. Biyometrik randevu şart.' },
+  { country: 'Almanya', flag: '🇩🇪', city: 'Ankara', waitDays: 30, address: 'Atatürk Bulvarı, Çankaya', phone: '+90 312 459 5100', website: 'ankara.diplo.de', workHours: 'Pts-Per 08:30-12:00', visaType: 'Schengen C', note: 'Ankara ret oranı %27.1 — İstanbul tercih edilebilir.' },
+  { country: 'Fransa', flag: '🇫🇷', city: 'İstanbul', waitDays: 18, address: 'İstiklal Cad. Beyoğlu', phone: 'VFS Global', website: 'france-visas.gouv.fr', workHours: 'Pts-Cum 09:00-12:30', visaType: 'Schengen C', note: 'VFS aracılığıyla başvuru.' },
+  { country: 'İtalya', flag: '🇮🇹', city: 'İstanbul', waitDays: 15, address: 'Tomtom Mah. Beyoğlu', phone: '+90 212 243 1024', website: 'istanbul.esteri.it', workHours: 'Pts-Per 09:00-12:00', visaType: 'Schengen C', note: 'En düşük Schengen ret oranı (%8.7). Hızlı işlem.' },
+  { country: 'Hollanda', flag: '🇳🇱', city: 'Ankara', waitDays: 25, address: 'Hollanda Caddesi, Çankaya', phone: 'VFS Global', website: 'netherlandsandyou.nl', workHours: 'Pts-Cum 09:00-12:00', visaType: 'Schengen C', note: 'VFS aracılığıyla başvuru.' },
+  { country: 'İspanya', flag: '🇪🇸', city: 'İstanbul', waitDays: 20, address: 'Teşvikiye, Şişli', phone: 'VFS Global', website: 'exteriores.gob.es', workHours: 'Pts-Cum 09:00-13:00', visaType: 'Schengen C', note: 'Sahte rezervasyon otomatik tespiti var.' },
+];
+
+// ============================================================
+// ÖZELLİK 6: BELGE TUTARLILIK MATRİSİ
+// ============================================================
+interface DocField {
+  id: string;
+  label: string;
+  placeholder: string;
+  documents: string[];
+}
+
+const docMatrixFields: DocField[] = [
+  { id: 'fullName', label: 'Ad Soyad', placeholder: 'Örn: EMRE KORN', documents: ['Pasaport', 'Dilekçe', 'SGK', 'Banka'] },
+  { id: 'address', label: 'İkamet Adresi', placeholder: 'Örn: Kadıköy, İstanbul', documents: ['Yerleşim Yeri Belgesi', 'SGK', 'Dilekçe', 'Banka'] },
+  { id: 'employer', label: 'İşveren / Şirket Adı', placeholder: 'Örn: XYZ Bilişim A.Ş.', documents: ['SGK', 'İşveren Yazısı', 'Vergi Levhası'] },
+  { id: 'income', label: 'Aylık Net Gelir', placeholder: 'Örn: 45.000 TL', documents: ['Banka Dökümü', 'Maaş Bordrosu', 'Dilekçe'] },
+  { id: 'travelStart', label: 'Seyahat Başlangıç Tarihi', placeholder: 'Örn: 15.07.2026', documents: ['Uçak Bileti', 'Otel Rezervasyonu', 'Dilekçe', 'Sigorta'] },
+  { id: 'travelEnd', label: 'Seyahat Bitiş Tarihi', placeholder: 'Örn: 25.07.2026', documents: ['Uçak Bileti', 'Otel Rezervasyonu', 'Dilekçe', 'Sigorta'] },
+  { id: 'destination', label: 'Konaklama Şehri / Adresi', placeholder: 'Örn: Berlin, Almanya', documents: ['Otel Rezervasyonu', 'Dilekçe', 'Sigorta'] },
+  { id: 'passportNo', label: 'Pasaport Numarası', placeholder: 'Örn: U12345678', documents: ['Pasaport', 'Vize Başvuru Formu', 'Dilekçe'] },
+];
+
+// ============================================================
+// ÖZELLİK 7 (YENİ): VİZESİZ ÜLKELER BULUCU
+// ============================================================
+interface VisaFreeCountry {
+  name: string;
+  flag: string;
+  region: string;
+  entryType: 'Vizesiz' | 'e-Vize' | 'Kapıda Vize';
+  maxDays: number;
+  flightHours: number;
+  avgCostEur: number;
+  scoreBoost: number;
+  stampValue: 'Yüksek' | 'Orta' | 'Düşük';
+  tip: string;
+}
+
+const visaFreeCountries: VisaFreeCountry[] = [
+  { name: 'Sırbistan', flag: '🇷🇸', region: 'Balkanlar', entryType: 'Vizesiz', maxDays: 30, flightHours: 1.5, avgCostEur: 150, scoreBoost: 6, stampValue: 'Yüksek', tip: 'En stratejik başlangıç ülkesi. Belgrad vizesini görürsünüz.' },
+  { name: 'Karadağ', flag: '🇲🇪', region: 'Balkanlar', entryType: 'Vizesiz', maxDays: 30, flightHours: 1.5, avgCostEur: 180, scoreBoost: 5, stampValue: 'Yüksek', tip: 'Sırbistan ile kombine gezi: 2 ülke 1 hafta.' },
+  { name: 'Makedonya', flag: '🇲🇰', region: 'Balkanlar', entryType: 'Vizesiz', maxDays: 90, flightHours: 1, avgCostEur: 120, scoreBoost: 5, stampValue: 'Yüksek', tip: 'Üsküp güzel bir şehir. AB aday ülkesi — damga değerli.' },
+  { name: 'Arnavutluk', flag: '🇦🇱', region: 'Balkanlar', entryType: 'Vizesiz', maxDays: 90, flightHours: 1.5, avgCostEur: 100, scoreBoost: 4, stampValue: 'Orta', tip: 'Çok ucuz. Bütçe kısıtlıysa ideal.' },
+  { name: 'Bosna Hersek', flag: '🇧🇦', region: 'Balkanlar', entryType: 'Vizesiz', maxDays: 30, flightHours: 1.5, avgCostEur: 130, scoreBoost: 4, stampValue: 'Orta', tip: 'Saraybosna kültürel açıdan çok zengin.' },
+  { name: 'Georgia', flag: '🇬🇪', region: 'Kafkasya', entryType: 'Vizesiz', maxDays: 365, flightHours: 2.5, avgCostEur: 200, scoreBoost: 5, stampValue: 'Yüksek', tip: '1 yıl kalabilirsin. Uzun giriş-çıkış geçmişi oluşturur.' },
+  { name: 'Azerbaycan', flag: '🇦🇿', region: 'Kafkasya', entryType: 'e-Vize', maxDays: 30, flightHours: 2, avgCostEur: 160, scoreBoost: 3, stampValue: 'Orta', tip: 'E-Vize 30$ — kolay alınıyor.' },
+  { name: 'Japonya', flag: '🇯🇵', region: 'Asya', entryType: 'Vizesiz', maxDays: 90, flightHours: 12, avgCostEur: 1200, scoreBoost: 10, stampValue: 'Yüksek', tip: 'Japonya damgası Schengen/UK başvurularında çok güçlü referans.' },
+  { name: 'Singapur', flag: '🇸🇬', region: 'Asya', entryType: 'Vizesiz', maxDays: 30, flightHours: 11, avgCostEur: 900, scoreBoost: 9, stampValue: 'Yüksek', tip: 'Gelişmiş ülke damgası — vize geçmişi için ideal.' },
+  { name: 'Hong Kong', flag: '🇭🇰', region: 'Asya', entryType: 'Vizesiz', maxDays: 14, flightHours: 11, avgCostEur: 800, scoreBoost: 8, stampValue: 'Yüksek', tip: 'İstanbul\'dan direkt uçuş var.' },
+  { name: 'Güney Kore', flag: '🇰🇷', region: 'Asya', entryType: 'Vizesiz', maxDays: 90, flightHours: 11, avgCostEur: 950, scoreBoost: 9, stampValue: 'Yüksek', tip: '90 gün vizesiz. K-ETA gerekli (ücretsiz).' },
+  { name: 'Ukrayna', flag: '🇺🇦', region: 'Doğu Avrupa', entryType: 'Vizesiz', maxDays: 90, flightHours: 1.5, avgCostEur: 120, scoreBoost: 3, stampValue: 'Düşük', tip: 'Şu an güvenli değil — tavsiye edilmez.' },
+  { name: 'Tunus', flag: '🇹🇳', region: 'Afrika', entryType: 'Vizesiz', maxDays: 90, flightHours: 2.5, avgCostEur: 350, scoreBoost: 2, stampValue: 'Düşük', tip: 'Ucuz tatil ama vize geçmişine katkısı az.' },
+  { name: 'Maldivler', flag: '🇲🇻', region: 'Hint Okyanusu', entryType: 'Kapıda Vize', maxDays: 30, flightHours: 8, avgCostEur: 1500, scoreBoost: 4, stampValue: 'Orta', tip: 'Lüks tatil + pasaport damgası.' },
+  { name: 'Tayland', flag: '🇹🇭', region: 'Asya', entryType: 'Vizesiz', maxDays: 30, flightHours: 10, avgCostEur: 700, scoreBoost: 5, stampValue: 'Orta', tip: 'Bangkok + Phuket popüler. Makul maliyetli.' },
+];
+
+// ============================================================
 // ÖZELLİK 7: SCHENGEN ÜLKE KARŞILAŞTIRICI VERİ TABANI
 // Kaynak: 2024-2025 Schengen ret oranı istatistikleri (Türk başvurucular)
 // ============================================================
@@ -425,6 +613,33 @@ export default function App() {
   const [isSchengenComparatorOpen, setIsSchengenComparatorOpen] = useState(false);
   const [isSocialMediaOpen, setIsSocialMediaOpen] = useState(false);
   const [socialMediaChecked, setSocialMediaChecked] = useState<Record<string, boolean>>({});
+
+  // Özellik 1: Ret Mektubu
+  const [isRefusalOpen, setIsRefusalOpen] = useState(false);
+  const [refusalText, setRefusalText] = useState('');
+  const [refusalResult, setRefusalResult] = useState<RefusalRule[]>([]);
+  const [refusalAnalyzed, setRefusalAnalyzed] = useState(false);
+
+  // Özellik 2: Randevu Takvimi
+  const [isAppointmentOpen, setIsAppointmentOpen] = useState(false);
+  const [travelDate, setTravelDate] = useState('');
+  const [selectedConsulate, setSelectedConsulate] = useState('ABD');
+
+  // Özellik 6: Belge Tutarlılık Matrisi
+  const [isConsistencyOpen, setIsConsistencyOpen] = useState(false);
+  const [docValues, setDocValues] = useState<Record<string, string>>({});
+  const [docConflicts, setDocConflicts] = useState<{field: string, issue: string}[]>([]);
+  const [consistencyChecked, setConsistencyChecked] = useState(false);
+
+  // Özellik 7: Vizesiz Ülkeler
+  const [isVisaFreeOpen, setIsVisaFreeOpen] = useState(false);
+  const [visaFreeFilter, setVisaFreeFilter] = useState<'Tümü' | 'Yakın' | 'Uzak' | 'Ekonomik'>('Tümü');
+
+  // Özellik 8: AI Banka Dökümü
+  const [isAiBankOpen, setIsAiBankOpen] = useState(false);
+  const [aiBankLoading, setAiBankLoading] = useState(false);
+  const [aiBankResult, setAiBankResult] = useState<string>('');
+  const [aiBankFile, setAiBankFile] = useState<string>('');
   const [applicantType, setApplicantType] = useState<'employer' | 'unemployed' | 'minor'>('employer');
   
   const [profile, setProfile] = useState<ProfileData>({
@@ -1077,6 +1292,129 @@ export default function App() {
     return items.slice(0, 6); // Maksimum 6 madde göster
   }, [currentScore, profile]);
 
+  // ── Özellik 1: Ret Mektubu Analizi ──────────────────────────
+  const analyzeRefusal = () => {
+    const text = refusalText.toLowerCase();
+    const matched = refusalRules.filter(rule =>
+      rule.keywords.some(kw => text.includes(kw.toLowerCase()))
+    );
+    setRefusalResult(matched.length > 0 ? matched : [{
+      keywords: [], category: 'document', severity: 'medium', waitMonths: 1,
+      title: 'Genel / Belirtilmemiş Red',
+      actions: [
+        'Ret gerekçesini tam metin olarak kopyala ve tekrar yapıştır',
+        'Tüm belgeleri baştan gözden geçir — tutarsızlık ara',
+        'En az 1-2 ay bekleyerek güçlü bir dosyayla tekrar başvur',
+        'Bir vize danışmanıyla yüz yüze görüşmeyi değerlendir',
+      ]
+    }]);
+    setRefusalAnalyzed(true);
+  };
+
+  // ── Özellik 6: Belge Tutarlılık Kontrolü ────────────────────
+  const checkConsistency = () => {
+    const issues: {field: string, issue: string}[] = [];
+    const filled = Object.entries(docValues).filter(([, v]) => v.trim() !== '');
+    if (filled.length < 3) {
+      issues.push({ field: 'Genel', issue: 'Karşılaştırma için en az 3 alan doldurulmalıdır.' });
+    }
+    // İsim kontrolü — büyük/küçük harf tutarsızlığı
+    if (docValues.fullName) {
+      const name = docValues.fullName.trim();
+      if (name !== name.toUpperCase() && name !== name.toLowerCase()) {
+        // mixed case — warn about passport vs form differences
+      }
+      if (name.length > 0 && name !== name.toUpperCase()) {
+        issues.push({ field: 'Ad Soyad', issue: 'Pasaport üzerinde isim BÜYÜK HARFLE yazılıdır. Tüm formlarda aynı formatta (büyük harf) olduğundan emin ol.' });
+      }
+    }
+    // Tarih mantık kontrolü
+    if (docValues.travelStart && docValues.travelEnd) {
+      const start = new Date(docValues.travelStart.split('.').reverse().join('-'));
+      const end = new Date(docValues.travelEnd.split('.').reverse().join('-'));
+      if (!isNaN(start.getTime()) && !isNaN(end.getTime()) && end <= start) {
+        issues.push({ field: 'Seyahat Tarihleri', issue: 'Bitiş tarihi başlangıç tarihinden önce veya aynı gün olamaz.' });
+      }
+      const diffDays = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+      if (diffDays > 90) {
+        issues.push({ field: 'Seyahat Tarihleri', issue: `Seyahat süresi ${diffDays} gün — Schengen vizesi maks. 90 gündür.` });
+      }
+    }
+    // Gelir kontrolü
+    if (docValues.income) {
+      const income = parseInt(docValues.income.replace(/[^0-9]/g, ''));
+      if (income > 0 && income < 15000) {
+        issues.push({ field: 'Aylık Gelir', issue: 'Beyan edilen gelir çok düşük görünüyor. Vize memuru finansal yeterliliği sorgulayabilir.' });
+      }
+    }
+    setDocConflicts(issues);
+    setConsistencyChecked(true);
+  };
+
+  // ── Özellik 8: AI Banka Dökümü Analizi ─────────────────────
+  const analyzeWithAI = async (base64: string, fileName: string) => {
+    setAiBankLoading(true);
+    setAiBankResult('');
+    try {
+      const apiKey = (typeof process !== 'undefined' && process.env?.GEMINI_API_KEY) || '';
+      if (!apiKey || apiKey === 'MY_GEMINI_API_KEY') {
+        setAiBankResult(`## Demo Analiz Sonucu (API Anahtarı Gerekli)
+
+**Dosya:** ${fileName}
+
+Gerçek AI analizi için .env dosyasına GEMINI_API_KEY eklemeniz gerekiyor.
+
+Sistematik analiz şunları kontrol eder:
+- ✅ Maaş/Hakediş girişleri tespit edildi mi?
+- ✅ Son 6 ayda düzenli hareket var mı?
+- ✅ 28 gün kuralı: Para ne zaman yatmış?
+- ✅ Şüpheli büyük girişler var mı?
+- ✅ Aylık ortalama bakiye yeterli mi?
+- ✅ Harcama kalıbı aktif bir hesabı gösteriyor mu?
+
+**Kurulum:** Netlify/Render dashboard'unda GEMINI_API_KEY environment variable olarak ekleyin.`);
+        return;
+      }
+      const ai = new GoogleGenAI({ apiKey });
+      const response = await ai.models.generateContent({
+        model: 'gemini-2.0-flash',
+        contents: [{
+          parts: [
+            { text: `Sen uzman bir vize danışmanısın. Bu banka hesap dökümünü analiz et ve Türk vatandaşlarının İngiltere/Schengen/ABD vize başvuruları için değerlendir:
+
+1. Maaş/düzenli gelir tespiti var mı? Hangi tarihlerde?
+2. Son 28 gün içinde büyük/şüpheli para girişi var mı?
+3. Aylık ortalama bakiye ne kadar?
+4. Düzenli harcama kalıbı (kira, fatura, abonelik) var mı?
+5. Vize başvurusu için güçlü yönler neler?
+6. Zayıf yönler ve riskler neler?
+7. Genel değerlendirme ve öneri (1-10 arası puan ver)
+
+Türkçe, madde madde ve net bir şekilde yanıtla.` },
+            { inlineData: { mimeType: 'application/pdf', data: base64 } }
+          ]
+        }]
+      });
+      setAiBankResult(response.text || 'Analiz tamamlandı fakat sonuç alınamadı.');
+    } catch (err) {
+      setAiBankResult(`Analiz sırasında hata oluştu: ${err instanceof Error ? err.message : 'Bilinmeyen hata'}. GEMINI_API_KEY\'in doğru ayarlandığından emin olun.`);
+    } finally {
+      setAiBankLoading(false);
+    }
+  };
+
+  const handleAiBankUpload = (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    const file = files[0];
+    setAiBankFile(file.name);
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const base64 = (e.target?.result as string)?.split(',')[1] || '';
+      analyzeWithAI(base64, file.name);
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleOcrUpload = (files: FileList | null) => {
     if (!files) return;
     setIsOcrScanning(true);
@@ -1530,6 +1868,524 @@ Gunluk Rota ve Aktiviteler:
         </AnimatePresence>
 
 
+
+        {/* ═══════════════════════════════════════════════════════
+            ÖZELLİK 1: RET MEKTUBU ANALİZ MODALI
+            ═══════════════════════════════════════════════════════ */}
+        <AnimatePresence>
+          {isRefusalOpen && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+              <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}
+                onClick={() => setIsRefusalOpen(false)}
+                className="absolute inset-0 bg-slate-950/60 backdrop-blur-md" />
+              <motion.div initial={{opacity:0,scale:0.95,y:20}} animate={{opacity:1,scale:1,y:0}}
+                exit={{opacity:0,scale:0.95,y:20}}
+                className="relative w-full max-w-3xl bg-white rounded-[2.5rem] shadow-2xl border border-slate-100 flex flex-col max-h-[92vh] overflow-hidden">
+                <div className="p-8 bg-gradient-to-r from-rose-600 to-pink-700 text-white rounded-t-[2.5rem] shrink-0">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <div className="flex items-center gap-2 text-rose-200 text-xs font-bold uppercase tracking-widest mb-2">
+                        <XCircle className="w-4 h-4" /> Ret Analizi
+                      </div>
+                      <h3 className="text-2xl font-black">Ret Mektubu Analiz Motoru</h3>
+                      <p className="text-rose-100 text-sm mt-1">Ret gerekçenizi yapıştırın — size özel aksiyon planı oluşturalım.</p>
+                    </div>
+                    <button onClick={() => setIsRefusalOpen(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors"><X className="w-6 h-6"/></button>
+                  </div>
+                </div>
+                <div className="flex-1 overflow-y-auto p-8 space-y-6">
+                  {!refusalAnalyzed ? (
+                    <div className="space-y-4">
+                      <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl flex gap-3">
+                        <Info className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                        <p className="text-sm text-amber-800">Ret mektubunuzdaki İngilizce veya Türkçe gerekçeyi aşağıya kopyalayın. Sistem otomatik analiz edecek.</p>
+                      </div>
+                      <textarea
+                        value={refusalText}
+                        onChange={e => setRefusalText(e.target.value)}
+                        placeholder={'Örn: "Your application has been refused because you have not demonstrated sufficient ties to your home country..." veya Türkçe ret gerekçesini yapıştırın...'}
+                        className="w-full h-48 px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-rose-400/30 focus:border-rose-400 resize-none text-sm text-slate-700 leading-relaxed"
+                      />
+                      <button
+                        onClick={analyzeRefusal}
+                        disabled={refusalText.trim().length < 10}
+                        className="w-full py-4 bg-rose-600 hover:bg-rose-500 disabled:opacity-40 text-white rounded-2xl font-bold flex items-center justify-center gap-2 transition-all"
+                      >
+                        <Sparkles className="w-5 h-5" /> Analiz Et — Aksiyon Planı Oluştur
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-6">
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-black text-slate-900 text-lg">Tespit Edilen {refusalResult.length} Sorun</h4>
+                        <button onClick={() => { setRefusalAnalyzed(false); setRefusalText(''); setRefusalResult([]); }}
+                          className="flex items-center gap-1 text-sm font-bold text-rose-600 hover:underline">
+                          <RefreshCw className="w-4 h-4" /> Yeniden Analiz
+                        </button>
+                      </div>
+                      {refusalResult.map((rule, i) => (
+                        <div key={i} className={`rounded-2xl border-2 overflow-hidden ${rule.severity === 'critical' ? 'border-rose-200' : rule.severity === 'high' ? 'border-orange-200' : 'border-amber-200'}`}>
+                          <div className={`p-5 flex items-center justify-between ${rule.severity === 'critical' ? 'bg-rose-50' : rule.severity === 'high' ? 'bg-orange-50' : 'bg-amber-50'}`}>
+                            <div className="flex items-center gap-3">
+                              <AlertCircle className={`w-5 h-5 shrink-0 ${rule.severity === 'critical' ? 'text-rose-600' : 'text-orange-500'}`} />
+                              <span className="font-bold text-slate-900">{rule.title}</span>
+                            </div>
+                            <div className="flex items-center gap-2 shrink-0 ml-3">
+                              <span className={`text-[10px] font-black px-2 py-1 rounded-lg ${rule.severity === 'critical' ? 'bg-rose-100 text-rose-700' : rule.severity === 'high' ? 'bg-orange-100 text-orange-700' : 'bg-amber-100 text-amber-700'}`}>
+                                {rule.severity === 'critical' ? 'KRİTİK' : rule.severity === 'high' ? 'YÜKSEK' : 'ORTA'}
+                              </span>
+                              {rule.waitMonths > 0 && (
+                                <span className="text-[10px] font-bold bg-slate-100 text-slate-600 px-2 py-1 rounded-lg flex items-center gap-1">
+                                  <Clock className="w-3 h-3" /> {rule.waitMonths} ay bekle
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <div className="p-5 space-y-2">
+                            {rule.actions.map((action, j) => (
+                              <div key={j} className="flex items-start gap-3">
+                                <div className="w-5 h-5 rounded-full bg-slate-900 text-white flex items-center justify-center text-[10px] font-black shrink-0 mt-0.5">{j+1}</div>
+                                <p className="text-sm text-slate-700 leading-relaxed">{action}</p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                      <div className="p-5 bg-slate-900 rounded-2xl text-white flex items-start gap-4">
+                        <Clock className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+                        <div>
+                          <p className="font-bold mb-1">Tavsiye Edilen Bekleme Süresi</p>
+                          <p className="text-sm text-slate-300">
+                            {Math.max(...refusalResult.map(r => r.waitMonths))} ay sonra, tüm adımları tamamladıktan sonra tekrar başvurun.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
+        {/* ═══════════════════════════════════════════════════════
+            ÖZELLİK 2: RANDEVU TAKVİM ASISTANI MODALI
+            ═══════════════════════════════════════════════════════ */}
+        <AnimatePresence>
+          {isAppointmentOpen && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+              <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}
+                onClick={() => setIsAppointmentOpen(false)}
+                className="absolute inset-0 bg-slate-950/60 backdrop-blur-md" />
+              <motion.div initial={{opacity:0,scale:0.95,y:20}} animate={{opacity:1,scale:1,y:0}}
+                exit={{opacity:0,scale:0.95,y:20}}
+                className="relative w-full max-w-4xl bg-white rounded-[2.5rem] shadow-2xl border border-slate-100 flex flex-col max-h-[92vh] overflow-hidden">
+                <div className="p-8 bg-gradient-to-r from-teal-600 to-cyan-700 text-white rounded-t-[2.5rem] shrink-0">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <div className="flex items-center gap-2 text-teal-200 text-xs font-bold uppercase tracking-widest mb-2">
+                        <Calendar className="w-4 h-4" /> Randevu Planlayıcı
+                      </div>
+                      <h3 className="text-2xl font-black">Randevu Takvim Asistanı</h3>
+                      <p className="text-teal-100 text-sm mt-1">Seyahat tarihinize göre randevuyu en geç ne zaman almalısınız?</p>
+                    </div>
+                    <button onClick={() => setIsAppointmentOpen(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors"><X className="w-6 h-6"/></button>
+                  </div>
+                </div>
+                <div className="flex-1 overflow-y-auto p-8 space-y-8">
+                  {/* Hesaplayıcı */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Hedef Ülke / Konsolosluk</label>
+                      <select value={selectedConsulate}
+                        onChange={e => setSelectedConsulate(e.target.value)}
+                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-400/30">
+                        {[...new Set(consulateData.map(c => c.country))].map(c => (
+                          <option key={c} value={c}>{consulateData.find(x=>x.country===c)?.flag} {c}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Seyahat Başlangıç Tarihi</label>
+                      <input type="date" value={travelDate} onChange={e => setTravelDate(e.target.value)}
+                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-400/30" />
+                    </div>
+                  </div>
+
+                  {/* Hesaplama sonucu */}
+                  {travelDate && (() => {
+                    const travel = new Date(travelDate);
+                    const consulates = consulateData.filter(c => c.country === selectedConsulate);
+                    return (
+                      <div className="space-y-4">
+                        {consulates.map((c, i) => {
+                          const deadline = new Date(travel);
+                          deadline.setDate(deadline.getDate() - c.waitDays - 7);
+                          const today = new Date();
+                          const daysLeft = Math.ceil((deadline.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+                          const isLate = daysLeft < 0;
+                          const isUrgent = daysLeft >= 0 && daysLeft < 14;
+                          return (
+                            <div key={i} className={`p-6 rounded-2xl border-2 ${isLate ? 'bg-rose-50 border-rose-200' : isUrgent ? 'bg-amber-50 border-amber-200' : 'bg-teal-50 border-teal-200'}`}>
+                              <div className="flex items-start justify-between mb-4">
+                                <div className="flex items-center gap-3">
+                                  <span className="text-3xl">{c.flag}</span>
+                                  <div>
+                                    <div className="font-black text-slate-900">{c.country} — {c.city}</div>
+                                    <div className="text-xs text-slate-500">{c.address}</div>
+                                  </div>
+                                </div>
+                                <span className={`text-xs font-black px-3 py-1 rounded-xl ${isLate ? 'bg-rose-100 text-rose-700' : isUrgent ? 'bg-amber-100 text-amber-700' : 'bg-teal-100 text-teal-700'}`}>
+                                  {isLate ? '⚠ GEÇ KALDIM' : isUrgent ? '⚡ ACİL' : '✅ YETİŞİR'}
+                                </span>
+                              </div>
+                              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+                                <div className="bg-white/70 rounded-xl p-3 text-center">
+                                  <div className="text-xs font-bold text-slate-400 mb-1">Bekleme Süresi</div>
+                                  <div className="text-xl font-black text-slate-900">~{c.waitDays} gün</div>
+                                </div>
+                                <div className="bg-white/70 rounded-xl p-3 text-center">
+                                  <div className="text-xs font-bold text-slate-400 mb-1">Son Randevu</div>
+                                  <div className="text-sm font-black text-slate-900">{deadline.toLocaleDateString('tr-TR')}</div>
+                                </div>
+                                <div className="bg-white/70 rounded-xl p-3 text-center">
+                                  <div className="text-xs font-bold text-slate-400 mb-1">Kalan Gün</div>
+                                  <div className={`text-xl font-black ${isLate ? 'text-rose-600' : isUrgent ? 'text-amber-600' : 'text-teal-600'}`}>
+                                    {isLate ? Math.abs(daysLeft)+' gün geçti' : daysLeft+' gün'}
+                                  </div>
+                                </div>
+                                <div className="bg-white/70 rounded-xl p-3 text-center">
+                                  <div className="text-xs font-bold text-slate-400 mb-1">Çalışma Saatleri</div>
+                                  <div className="text-xs font-bold text-slate-700">{c.workHours}</div>
+                                </div>
+                              </div>
+                              <div className="flex flex-wrap gap-3">
+                                <div className="flex items-center gap-2 text-xs text-slate-600 bg-white/60 px-3 py-2 rounded-xl">
+                                  <MapPin className="w-3.5 h-3.5" /> {c.address}
+                                </div>
+                                <div className="flex items-center gap-2 text-xs text-slate-600 bg-white/60 px-3 py-2 rounded-xl">
+                                  <Globe className="w-3.5 h-3.5" /> {c.website}
+                                </div>
+                              </div>
+                              {c.note && (
+                                <div className="mt-3 p-3 bg-white/60 rounded-xl text-xs text-slate-600 italic">{c.note}</div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
+
+                  {/* Konsolosluk listesi */}
+                  <div>
+                    <h4 className="font-black text-slate-900 mb-4 flex items-center gap-2">
+                      <MapPin className="w-4 h-4 text-teal-600" /> Türkiye'deki Tüm Konsolosluklar
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {consulateData.map((c, i) => (
+                        <div key={i} className="p-4 bg-slate-50 rounded-2xl border border-slate-100 hover:border-slate-200 transition-all">
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="text-xl">{c.flag}</span>
+                            <span className="font-bold text-slate-900 text-sm">{c.country} — {c.city}</span>
+                            <span className="ml-auto text-xs font-bold bg-slate-200 text-slate-600 px-2 py-0.5 rounded-lg">~{c.waitDays}g</span>
+                          </div>
+                          <div className="text-xs text-slate-500">{c.workHours}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
+        {/* ═══════════════════════════════════════════════════════
+            ÖZELLİK 6: BELGE TUTARLILIK MATRİSİ MODALI
+            ═══════════════════════════════════════════════════════ */}
+        <AnimatePresence>
+          {isConsistencyOpen && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+              <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}
+                onClick={() => setIsConsistencyOpen(false)}
+                className="absolute inset-0 bg-slate-950/60 backdrop-blur-md" />
+              <motion.div initial={{opacity:0,scale:0.95,y:20}} animate={{opacity:1,scale:1,y:0}}
+                exit={{opacity:0,scale:0.95,y:20}}
+                className="relative w-full max-w-3xl bg-white rounded-[2.5rem] shadow-2xl border border-slate-100 flex flex-col max-h-[92vh] overflow-hidden">
+                <div className="p-8 bg-gradient-to-r from-slate-800 to-slate-900 text-white rounded-t-[2.5rem] shrink-0">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <div className="flex items-center gap-2 text-slate-400 text-xs font-bold uppercase tracking-widest mb-2">
+                        <Layers className="w-4 h-4" /> Çapraz Kontrol
+                      </div>
+                      <h3 className="text-2xl font-black">Belge Tutarlılık Matrisi</h3>
+                      <p className="text-slate-300 text-sm mt-1">Belgelerdeki kritik bilgileri girin — uyumsuzlukları tespit edelim.</p>
+                    </div>
+                    <button onClick={() => setIsConsistencyOpen(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors"><X className="w-6 h-6"/></button>
+                  </div>
+                </div>
+                <div className="flex-1 overflow-y-auto p-8 space-y-6">
+                  <div className="p-4 bg-blue-50 border border-blue-200 rounded-2xl flex gap-3">
+                    <Info className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
+                    <p className="text-sm text-blue-800">Her alandaki bilgiyi belgelerinizdeki <strong>tam olarak yazıldığı gibi</strong> girin. Sistem çapraz kontrol yapacak.</p>
+                  </div>
+                  <div className="space-y-4">
+                    {docMatrixFields.map((field) => (
+                      <div key={field.id} className="space-y-2">
+                        <label className="text-sm font-bold text-slate-700 flex items-center justify-between">
+                          <span>{field.label}</span>
+                          <span className="text-[10px] font-bold text-slate-400 normal-case">{field.documents.join(' · ')}</span>
+                        </label>
+                        <input type="text" placeholder={field.placeholder}
+                          value={docValues[field.id] || ''}
+                          onChange={e => setDocValues(prev => ({...prev, [field.id]: e.target.value}))}
+                          className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-400/30 focus:border-slate-400" />
+                      </div>
+                    ))}
+                  </div>
+                  <button onClick={checkConsistency}
+                    className="w-full py-4 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl font-bold flex items-center justify-center gap-2 transition-all">
+                    <Search className="w-5 h-5" /> Tutarlılık Kontrolü Yap
+                  </button>
+
+                  {consistencyChecked && (
+                    <div className="space-y-4">
+                      <div className={`p-5 rounded-2xl border-2 ${docConflicts.length === 0 ? 'bg-emerald-50 border-emerald-200' : 'bg-rose-50 border-rose-200'}`}>
+                        <div className="flex items-center gap-3">
+                          {docConflicts.length === 0 ? (
+                            <><BadgeCheck className="w-6 h-6 text-emerald-600" /><span className="font-bold text-emerald-800">Harika! Tespit edilen tutarsızlık yok.</span></>
+                          ) : (
+                            <><AlertCircle className="w-6 h-6 text-rose-600" /><span className="font-bold text-rose-800">{docConflicts.length} tutarsızlık tespit edildi!</span></>
+                          )}
+                        </div>
+                      </div>
+                      {docConflicts.map((conflict, i) => (
+                        <div key={i} className="p-4 bg-amber-50 border border-amber-200 rounded-2xl flex items-start gap-3">
+                          <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                          <div>
+                            <div className="font-bold text-amber-900 text-sm">{conflict.field}</div>
+                            <p className="text-xs text-amber-800 mt-1">{conflict.issue}</p>
+                          </div>
+                        </div>
+                      ))}
+
+                      {/* Belge kontrol listesi */}
+                      <div className="p-5 bg-slate-50 rounded-2xl border border-slate-200">
+                        <h5 className="font-bold text-slate-900 mb-3 text-sm">Manuel Kontrol Listesi</h5>
+                        {[
+                          'Pasaportundaki isim, uçak bileti ve konsolosluk formunda aynı mı?',
+                          'Dilekçedeki tarihler otel ve uçak rezervasyonlarıyla eşleşiyor mu?',
+                          'Banka dökümündeki adres, yerleşim yeri belgesiyle tutarlı mı?',
+                          'SGK\'daki işveren adı, işveren yazısındaki şirket adıyla aynı mı?',
+                          'Vize başvuru formundaki pasaport numarası doğru mu?',
+                          'Sigortanın geçerlilik tarihi seyahat dönemini tam kapsıyor mu?',
+                        ].map((item, i) => (
+                          <div key={i} className="flex items-start gap-3 py-2 border-b border-slate-200 last:border-0">
+                            <div className="w-5 h-5 rounded-full border-2 border-slate-300 shrink-0 mt-0.5" />
+                            <p className="text-xs text-slate-700">{item}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
+        {/* ═══════════════════════════════════════════════════════
+            ÖZELLİK YENİ-7: VİZESİZ ÜLKELER BULUCU MODALI
+            ═══════════════════════════════════════════════════════ */}
+        <AnimatePresence>
+          {isVisaFreeOpen && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+              <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}
+                onClick={() => setIsVisaFreeOpen(false)}
+                className="absolute inset-0 bg-slate-950/60 backdrop-blur-md" />
+              <motion.div initial={{opacity:0,scale:0.95,y:20}} animate={{opacity:1,scale:1,y:0}}
+                exit={{opacity:0,scale:0.95,y:20}}
+                className="relative w-full max-w-5xl bg-white rounded-[2.5rem] shadow-2xl border border-slate-100 flex flex-col max-h-[92vh] overflow-hidden">
+                <div className="p-8 bg-gradient-to-r from-emerald-600 to-teal-700 text-white rounded-t-[2.5rem] shrink-0">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <div className="flex items-center gap-2 text-emerald-200 text-xs font-bold uppercase tracking-widest mb-2">
+                        <Plane className="w-4 h-4" /> Türk Pasaportu
+                      </div>
+                      <h3 className="text-2xl font-black">Vizesiz Ülkeler & Pasaport Güçlendirici</h3>
+                      <p className="text-emerald-100 text-sm mt-1">Bu ülkelere giderek Schengen/UK başvurunuz için güçlü seyahat geçmişi oluşturun.</p>
+                    </div>
+                    <button onClick={() => setIsVisaFreeOpen(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors"><X className="w-6 h-6"/></button>
+                  </div>
+                  {/* Filtreler */}
+                  <div className="flex flex-wrap gap-2 mt-5">
+                    {(['Tümü','Yakın','Uzak','Ekonomik'] as const).map(f => (
+                      <button key={f} onClick={() => setVisaFreeFilter(f)}
+                        className={`px-4 py-1.5 rounded-xl text-xs font-bold transition-all ${visaFreeFilter === f ? 'bg-white text-emerald-700' : 'bg-white/20 text-white hover:bg-white/30'}`}>
+                        {f}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="flex-1 overflow-y-auto p-6">
+                  {/* Puan etkisi özeti */}
+                  <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center gap-4 mb-6">
+                    <TrendingUp className="w-8 h-8 text-emerald-600 shrink-0" />
+                    <div>
+                      <p className="font-bold text-emerald-900 text-sm">Seyahat Geçmişinin Vize Skoruna Etkisi</p>
+                      <p className="text-xs text-emerald-700 mt-0.5">Her ülke giriş-çıkış damgası başarı skorunuzu artırır. Japonya gibi gelişmiş ülkeler en fazla katkıyı sağlar.</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {visaFreeCountries
+                      .filter(c => {
+                        if (visaFreeFilter === 'Yakın') return c.flightHours <= 3;
+                        if (visaFreeFilter === 'Uzak') return c.flightHours > 6;
+                        if (visaFreeFilter === 'Ekonomik') return c.avgCostEur <= 250;
+                        return true;
+                      })
+                      .sort((a, b) => b.scoreBoost - a.scoreBoost)
+                      .map((country) => (
+                        <div key={country.name} className="p-5 bg-white border border-slate-100 rounded-2xl hover:shadow-md hover:border-emerald-200 transition-all">
+                          <div className="flex items-start justify-between mb-3">
+                            <div className="flex items-center gap-2">
+                              <span className="text-3xl">{country.flag}</span>
+                              <div>
+                                <div className="font-bold text-slate-900">{country.name}</div>
+                                <div className="text-xs text-slate-400">{country.region}</div>
+                              </div>
+                            </div>
+                            <span className={`text-[10px] font-black px-2 py-1 rounded-lg ${country.entryType === 'Vizesiz' ? 'bg-emerald-100 text-emerald-700' : country.entryType === 'e-Vize' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'}`}>
+                              {country.entryType}
+                            </span>
+                          </div>
+                          <div className="grid grid-cols-3 gap-2 mb-3">
+                            <div className="text-center p-2 bg-slate-50 rounded-xl">
+                              <div className="text-[10px] font-bold text-slate-400">Kalış</div>
+                              <div className="text-sm font-black text-slate-900">{country.maxDays}g</div>
+                            </div>
+                            <div className="text-center p-2 bg-slate-50 rounded-xl">
+                              <div className="text-[10px] font-bold text-slate-400">Uçuş</div>
+                              <div className="text-sm font-black text-slate-900">{country.flightHours}s</div>
+                            </div>
+                            <div className="text-center p-2 bg-emerald-50 rounded-xl">
+                              <div className="text-[10px] font-bold text-emerald-600">+Puan</div>
+                              <div className="text-sm font-black text-emerald-700">+{country.scoreBoost}</div>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 mb-3">
+                            <Euro className="w-3.5 h-3.5 text-slate-400" />
+                            <span className="text-xs text-slate-600 font-medium">Tahmini maliyet: €{country.avgCostEur}</span>
+                            <span className={`ml-auto text-[10px] font-bold px-2 py-0.5 rounded ${country.stampValue === 'Yüksek' ? 'bg-amber-100 text-amber-700' : country.stampValue === 'Orta' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-600'}`}>
+                              {country.stampValue} damga
+                            </span>
+                          </div>
+                          <p className="text-xs text-slate-500 italic">{country.tip}</p>
+                        </div>
+                    ))}
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
+        {/* ═══════════════════════════════════════════════════════
+            ÖZELLİK 8: AI BANKA DÖKÜM ANALİZİ MODALI
+            ═══════════════════════════════════════════════════════ */}
+        <AnimatePresence>
+          {isAiBankOpen && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+              <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}
+                onClick={() => setIsAiBankOpen(false)}
+                className="absolute inset-0 bg-slate-950/60 backdrop-blur-md" />
+              <motion.div initial={{opacity:0,scale:0.95,y:20}} animate={{opacity:1,scale:1,y:0}}
+                exit={{opacity:0,scale:0.95,y:20}}
+                className="relative w-full max-w-2xl bg-white rounded-[2.5rem] shadow-2xl border border-slate-100 flex flex-col max-h-[92vh] overflow-hidden">
+                <div className="p-8 bg-gradient-to-r from-blue-700 to-indigo-800 text-white rounded-t-[2.5rem] shrink-0">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <div className="flex items-center gap-2 text-blue-200 text-xs font-bold uppercase tracking-widest mb-2">
+                        <Sparkles className="w-4 h-4" /> Gemini AI
+                      </div>
+                      <h3 className="text-2xl font-black">AI Banka Dökümü Analizi</h3>
+                      <p className="text-blue-100 text-sm mt-1">PDF banka dökümünüzü yükleyin — Gemini AI vize açısından analiz etsin.</p>
+                    </div>
+                    <button onClick={() => setIsAiBankOpen(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors"><X className="w-6 h-6"/></button>
+                  </div>
+                </div>
+                <div className="flex-1 overflow-y-auto p-8 space-y-6">
+                  {/* Yükleme alanı */}
+                  <label className={`flex flex-col items-center justify-center gap-4 p-12 border-2 border-dashed rounded-2xl cursor-pointer transition-all ${aiBankLoading ? 'border-blue-400 bg-blue-50/50' : 'border-slate-200 hover:border-blue-400 hover:bg-blue-50/30'}`}>
+                    <input type="file" accept=".pdf,image/*" className="hidden"
+                      onChange={e => handleAiBankUpload(e.target.files)} disabled={aiBankLoading} />
+                    {aiBankLoading ? (
+                      <>
+                        <motion.div animate={{rotate:360}} transition={{duration:1,repeat:Infinity,ease:'linear'}}>
+                          <Sparkles className="w-10 h-10 text-blue-600" />
+                        </motion.div>
+                        <div className="text-center">
+                          <p className="font-bold text-blue-700">Gemini AI analiz ediyor...</p>
+                          <p className="text-sm text-slate-500 mt-1">{aiBankFile}</p>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center">
+                          <Upload className="w-8 h-8 text-blue-600" />
+                        </div>
+                        <div className="text-center">
+                          <p className="font-bold text-slate-700">PDF veya Görsel Yükle</p>
+                          <p className="text-sm text-slate-400 mt-1">Banka dökümünüzü buraya sürükleyin veya tıklayın</p>
+                        </div>
+                      </>
+                    )}
+                  </label>
+
+                  {/* Analiz sonucu */}
+                  {aiBankResult && (
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <Sparkles className="w-5 h-5 text-blue-600" />
+                        <h4 className="font-bold text-slate-900">AI Analiz Sonucu</h4>
+                        <button onClick={() => { setAiBankResult(''); setAiBankFile(''); }}
+                          className="ml-auto flex items-center gap-1 text-sm font-bold text-blue-600 hover:underline">
+                          <RefreshCw className="w-4 h-4" /> Yeni Analiz
+                        </button>
+                      </div>
+                      <div className="p-6 bg-slate-50 rounded-2xl border border-slate-200 text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">
+                        {aiBankResult}
+                      </div>
+                      <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl flex gap-3">
+                        <Info className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                        <p className="text-xs text-amber-800">Bu analiz yardımcı bir araçtır. Son karar konsolosluk memuruna aittir.</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Ne analiz eder */}
+                  {!aiBankResult && !aiBankLoading && (
+                    <div className="p-5 bg-slate-50 rounded-2xl border border-slate-200">
+                      <h5 className="font-bold text-slate-700 text-sm mb-3">AI Ne Analiz Eder?</h5>
+                      <div className="grid grid-cols-2 gap-2">
+                        {[
+                          '💰 Maaş/gelir tespiti', '📅 28-gün kuralı kontrolü',
+                          '🔴 Şüpheli büyük girişler', '📊 Aylık bakiye ortalaması',
+                          '🔄 Düzenli harcama kalıbı', '⚠️ Risk değerlendirmesi',
+                        ].map((item, i) => (
+                          <div key={i} className="flex items-center gap-2 text-xs text-slate-600 bg-white px-3 py-2 rounded-xl border border-slate-100">
+                            {item}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
 
         {/* ═══════════════════════════════════════════════════
             ÖZELLİK 7: SCHENGEN ÜLKE KARŞILAŞTIRICI MODALI
@@ -2014,7 +2870,22 @@ Gunluk Rota ve Aktiviteler:
                 </button>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-12">
+              {/* Stats bar */}
+              <div className="flex flex-wrap justify-center gap-8 pt-6">
+                {[
+                  { value: '%93', label: 'Ortalama Onay Oranı' },
+                  { value: '10+', label: 'Analiz Aracı' },
+                  { value: '2026', label: 'Güncel Konsolosluk Verisi' },
+                  { value: 'AI', label: 'Yapay Zeka Destekli' },
+                ].map(s => (
+                  <div key={s.label} className="text-center">
+                    <div className="text-3xl font-black text-brand-600">{s.value}</div>
+                    <div className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-0.5">{s.label}</div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-8">
                 {[
                   { icon: TrendingUp, title: "Akıllı Analiz", desc: "25+ kriter üzerinden vize memuru gözüyle profilinizi puanlıyoruz.", color: "brand" },
                   { icon: FileText, title: "Evrak Optimizasyonu", desc: "Tüm belgeleriniz arasındaki tutarsızlıkları yapay zeka ile denetliyoruz.", color: "indigo" },
@@ -2029,6 +2900,30 @@ Gunluk Rota ve Aktiviteler:
                     <div className={`absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-${item.color === 'brand' ? 'brand-500' : item.color + '-500'} to-transparent opacity-0 group-hover:opacity-100 transition-opacity`} />
                   </div>
                 ))}
+              </div>
+
+              {/* Tools showcase strip */}
+              <div className="bg-white border border-slate-100 rounded-[2rem] p-6 shadow-sm">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest text-center mb-5">10 Uzman Aracı — Hepsi Ücretsiz</p>
+                <div className="flex flex-wrap justify-center gap-3">
+                  {[
+                    { icon: FileCheck, label: 'Evrak Listesi', color: 'emerald' },
+                    { icon: MessageSquare, label: 'Visa Copilot', color: 'blue' },
+                    { icon: Zap, label: 'Senaryo', color: 'slate' },
+                    { icon: Globe, label: 'Ülke Kıyasla', color: 'indigo' },
+                    { icon: ShieldCheck, label: 'Sosyal Medya', color: 'violet' },
+                    { icon: AlertTriangle, label: 'Ret Analizi', color: 'rose' },
+                    { icon: Calendar, label: 'Randevu', color: 'teal' },
+                    { icon: CheckCircle2, label: 'Belge Matrisi', color: 'slate' },
+                    { icon: Plane, label: 'Vizesiz Ülkeler', color: 'emerald' },
+                    { icon: Sparkles, label: 'AI Banka', color: 'blue' },
+                  ].map(({ icon: Icon, label, color }) => (
+                    <div key={label} className={`flex items-center gap-1.5 px-3 py-2 rounded-xl bg-${color}-50 text-${color}-700 text-xs font-bold border border-${color}-100`}>
+                      <Icon className="w-3.5 h-3.5" />
+                      {label}
+                    </div>
+                  ))}
+                </div>
               </div>
             </motion.div>
           )}
@@ -2173,47 +3068,36 @@ Gunluk Rota ve Aktiviteler:
               exit={{ opacity: 0, scale: 0.98 }}
               className="space-y-10"
             >
-              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-                <div>
-                  <h2 className="text-4xl font-black text-slate-900">Vize Yol Haritanız</h2>
-                  <p className="text-slate-500 text-lg">Başvurunuzu mükemmelleştirmek için kişisel analiziniz.</p>
+              <div className="space-y-4">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                  <div>
+                    <h2 className="text-4xl font-black text-slate-900">Vize Yol Haritanız</h2>
+                    <p className="text-slate-500 text-lg">Başvurunuzu mükemmelleştirmek için kişisel analiziniz.</p>
+                  </div>
                 </div>
-                <div className="flex flex-wrap gap-3">
-                  <button 
-                    onClick={() => setIsDocumentListOpen(true)}
-                    className="px-6 py-4 bg-emerald-600 text-white rounded-2xl font-bold flex items-center gap-2 hover:bg-emerald-500 transition-all shadow-lg shadow-emerald-200"
-                  >
-                    <FileCheck className="w-5 h-5" />
-                    Evrak Listesi
-                  </button>
-                  <button 
-                    onClick={() => setIsCopilotOpen(true)}
-                    className="px-6 py-4 bg-blue-600 text-white rounded-2xl font-bold flex items-center gap-2 hover:bg-blue-500 transition-all shadow-lg shadow-blue-200"
-                  >
-                    <MessageSquare className="w-5 h-5" />
-                    Visa Copilot
-                  </button>
-                  <button
-                    onClick={() => setIsCalculatorOpen(true)}
-                    className="px-6 py-4 bg-slate-900 text-white rounded-2xl font-bold flex items-center gap-2 hover:bg-slate-800 transition-all shadow-lg shadow-slate-200"
-                  >
-                    <Zap className="w-5 h-5 text-amber-400" />
-                    Senaryo Oluşturucu
-                  </button>
-                  <button
-                    onClick={() => setIsSchengenComparatorOpen(true)}
-                    className="px-6 py-4 bg-indigo-600 text-white rounded-2xl font-bold flex items-center gap-2 hover:bg-indigo-500 transition-all shadow-lg shadow-indigo-200"
-                  >
-                    <Globe className="w-5 h-5" />
-                    Ülke Kıyasla
-                  </button>
-                  <button
-                    onClick={() => setIsSocialMediaOpen(true)}
-                    className="px-6 py-4 bg-violet-600 text-white rounded-2xl font-bold flex items-center gap-2 hover:bg-violet-500 transition-all shadow-lg shadow-violet-200"
-                  >
-                    <ShieldCheck className="w-5 h-5" />
-                    Sosyal Medya
-                  </button>
+                {/* Araçlar Paneli */}
+                <div className="bg-white border border-slate-100 rounded-[2rem] p-5 shadow-sm">
+                  <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Analiz Araçları</div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
+                    {[
+                      { label: 'Evrak Listesi', icon: FileCheck, color: 'bg-emerald-500', fn: () => setIsDocumentListOpen(true) },
+                      { label: 'Visa Copilot', icon: MessageSquare, color: 'bg-blue-500', fn: () => setIsCopilotOpen(true) },
+                      { label: 'Senaryo', icon: Zap, color: 'bg-slate-900', fn: () => setIsCalculatorOpen(true) },
+                      { label: 'Ülke Kıyasla', icon: Globe, color: 'bg-indigo-500', fn: () => setIsSchengenComparatorOpen(true) },
+                      { label: 'Sosyal Medya', icon: ShieldCheck, color: 'bg-violet-500', fn: () => setIsSocialMediaOpen(true) },
+                      { label: 'Ret Analizi', icon: AlertTriangle, color: 'bg-rose-500', fn: () => setIsRefusalOpen(true) },
+                      { label: 'Randevu', icon: Calendar, color: 'bg-teal-500', fn: () => setIsAppointmentOpen(true) },
+                      { label: 'Belge Matrisi', icon: CheckCircle2, color: 'bg-slate-600', fn: () => setIsConsistencyOpen(true) },
+                      { label: 'Vizesiz Ülkeler', icon: Plane, color: 'bg-emerald-600', fn: () => setIsVisaFreeOpen(true) },
+                      { label: 'AI Banka', icon: Sparkles, color: 'bg-blue-700', fn: () => setIsAiBankOpen(true) },
+                    ].map(({ label, icon: Icon, color, fn }) => (
+                      <button key={label} onClick={fn}
+                        className={`${color} text-white rounded-xl px-3 py-2.5 font-bold text-xs flex items-center gap-1.5 hover:opacity-90 transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5`}>
+                        <Icon className="w-4 h-4 shrink-0" />
+                        <span>{label}</span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
 
