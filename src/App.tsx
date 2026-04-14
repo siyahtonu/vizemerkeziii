@@ -4948,7 +4948,7 @@ Signature: _______________     Date: ${today}`;
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <FileCheck className="w-4 h-4 text-brand-500" aria-hidden="true" />
-                  <span>14 analiz aracı</span>
+                  <span>18 analiz aracı</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <Globe className="w-4 h-4 text-indigo-500" aria-hidden="true" />
@@ -5377,10 +5377,10 @@ Signature: _______________     Date: ${today}`;
 
                 {/* Araçlar Paneli */}
                 <div className="bg-white border border-slate-100 rounded-[2rem] p-5 shadow-sm">
-                  <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center justify-between mb-5">
                     <div>
-                      <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Tüm Analiz Araçları</div>
-                      <div className="text-[9px] text-slate-400 mt-0.5">Her araç kullandığında skor güncellenir</div>
+                      <div className="text-sm font-black text-slate-800">18 Analiz Aracı</div>
+                      <div className="text-xs text-slate-400 mt-0.5">Bir araca tıklayarak hemen kullanmaya başlayın</div>
                     </div>
                     {!isPremium && (
                       <button onClick={() => setIsUpgradeOpen(true)}
@@ -5394,34 +5394,51 @@ Signature: _______________     Date: ${today}`;
                       </span>
                     )}
                   </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                     {[
-                      { label: 'Evrak Listesi', icon: FileCheck, color: 'bg-emerald-500', id: 'docs', setter: setIsDocumentListOpen },
-                      { label: 'Vize Danışmanım', icon: MessageSquare, color: 'bg-blue-500', id: 'copilot', setter: setIsCopilotOpen },
-                      { label: 'Senaryo', icon: Zap, color: 'bg-slate-900', id: 'calculator', setter: setIsCalculatorOpen },
-                      { label: 'Ülke Kıyasla', icon: Globe, color: 'bg-indigo-500', id: 'comparator', setter: setIsSchengenComparatorOpen },
-                      { label: 'Sosyal Medya', icon: ShieldCheck, color: 'bg-violet-500', id: 'socialmedia', setter: setIsSocialMediaOpen },
-                      { label: 'Ret Analizi', icon: AlertTriangle, color: 'bg-rose-500', id: 'refusal', setter: setIsRefusalOpen },
-                      { label: 'Randevu', icon: Calendar, color: 'bg-teal-500', id: 'appointment', setter: setIsAppointmentOpen },
-                      { label: 'Belge Matrisi', icon: CheckCircle2, color: 'bg-slate-600', id: 'consistency', setter: setIsConsistencyOpen },
-                      { label: 'Vizesiz Ülkeler', icon: Plane, color: 'bg-emerald-600', id: 'visafree', setter: setIsVisaFreeOpen },
-                      { label: 'Banka Analizi', icon: Sparkles, color: 'bg-blue-700', id: 'aibank', setter: setIsAiBankOpen },
-                      { label: 'Risk Tarayıcı', icon: XCircle, color: 'bg-red-600', id: 'redflag', setter: setIsRedFlagOpen },
-                      { label: 'Mülakat Pratiği', icon: Brain, color: 'bg-amber-500', id: 'interview', setter: setIsInterviewSimOpen },
-                      { label: 'Çoklu Ülke', icon: Map, color: 'bg-cyan-600', id: 'multicountry', setter: setIsMultiCountryOpen },
-                      { label: 'Topluluk', icon: Star, color: 'bg-slate-700', id: 'community', setter: setIsCommunityOpen },
-                      { label: 'Banka Planı', icon: Banknote, color: 'bg-green-600', id: 'bankplan', setter: setIsBankPlanOpen },
-                      { label: 'Ret Haritası', icon: AlertCircle, color: 'bg-orange-600', id: 'refusalmap', setter: setIsRefusalMapOpen },
-                      { label: 'Benchmark', icon: TrendingUp, color: 'bg-purple-600', id: 'benchmark', setter: setIsBenchmarkOpen },
-                      { label: 'Nereye Gidebilirim', icon: Plane, color: 'bg-sky-600', id: 'countryguide', setter: setIsCountryGuideOpen },
-                    ].map(({ label, icon: Icon, color, id, setter }) => {
+                      { label: 'Evrak Listesi', desc: 'Ülke ve profilinize göre eksiksiz belge listesi oluşturur.', icon: FileCheck, color: 'bg-emerald-500', id: 'docs', setter: setIsDocumentListOpen },
+                      { label: 'Vize Danışmanım', desc: 'Profilinizi analiz edip en kritik 3 adımı yapay zeka ile belirler.', icon: MessageSquare, color: 'bg-blue-500', id: 'copilot', setter: setIsCopilotOpen },
+                      { label: 'Senaryo Oluşturucu', desc: '"Bakiyem şu kadar olsa" ile farklı finansal senaryoların skora etkisini görün.', icon: Zap, color: 'bg-slate-800', id: 'calculator', setter: setIsCalculatorOpen },
+                      { label: 'Ülke Kıyaslayıcı', desc: 'Schengen ülkelerini ret oranı, bekleme süresi ve zorluk puanına göre karşılaştırır.', icon: Globe, color: 'bg-indigo-500', id: 'comparator', setter: setIsSchengenComparatorOpen },
+                      { label: 'Sosyal Medya Denetimi', desc: 'Hesaplarınızdaki vize-riskli içerikleri tespit edin, profili güçlendirin.', icon: ShieldCheck, color: 'bg-violet-500', id: 'socialmedia', setter: setIsSocialMediaOpen },
+                      { label: 'Ret Mektubu Analizi', desc: 'Elinizdeki ret mektubunu yapıştırın, hangi koddan reddedildiğinizi öğrenin.', icon: AlertTriangle, color: 'bg-rose-500', id: 'refusal', setter: setIsRefusalOpen },
+                      { label: 'Randevu Takip Botu', desc: 'VFS konsolosluklarında randevu açılınca e-posta bildirimi alın.', icon: Calendar, color: 'bg-teal-500', id: 'appointment', setter: setIsAppointmentOpen },
+                      { label: 'Belge Tutarlılık Matrisi', desc: 'Pasaport, SGK, banka ve otel bilgileri çelişiyor mu? Otomatik kontrol.', icon: CheckCircle2, color: 'bg-slate-600', id: 'consistency', setter: setIsConsistencyOpen },
+                      { label: 'Vizesiz Ülkeler', desc: 'Türk pasaportuyla vizesiz veya kapıda vize ile gidebileceğiniz ülkeler.', icon: Plane, color: 'bg-emerald-600', id: 'visafree', setter: setIsVisaFreeOpen },
+                      { label: 'Banka Dökümü Analizi', desc: 'Banka ekstrenizi yapay zeka ile inceleyin, konsolosluk gözüyle değerlendirin.', icon: Sparkles, color: 'bg-blue-700', id: 'aibank', setter: setIsAiBankOpen },
+                      { label: 'Kırmızı Bayrak Tarayıcı', desc: 'Başvurunuzdaki otomatik ret gerekçelerini başvurmadan önce tespit edin.', icon: XCircle, color: 'bg-red-600', id: 'redflag', setter: setIsRedFlagOpen },
+                      { label: 'Mülakat Pratiği', desc: 'ABD/UK mülakatları için 78 soruluk simülatör. Cevaplarınız puanlanır.', icon: Brain, color: 'bg-amber-500', id: 'interview', setter: setIsInterviewSimOpen },
+                      { label: 'Çoklu Ülke Planlayıcı', desc: 'Birden fazla ülkeyi aynı turda gezmek için optimum sıra ve strateji.', icon: Map, color: 'bg-cyan-600', id: 'multicountry', setter: setIsMultiCountryOpen },
+                      { label: 'Topluluk Deneyimleri', desc: 'Gerçek başvuru deneyimlerini okuyun, kendi sonucunuzu paylaşın.', icon: Star, color: 'bg-slate-700', id: 'community', setter: setIsCommunityOpen },
+                      { label: 'Banka Hazırlık Planı', desc: 'Başvuruya kaç ay var? Aylık giriş/çıkış hedeflerini ve grafik planı görün.', icon: Banknote, color: 'bg-green-600', id: 'bankplan', setter: setIsBankPlanOpen },
+                      { label: 'Ret Nedeni Haritası', desc: '2024-2025 gerçek Schengen ret kodları — ülke bazında görsel dağılım.', icon: AlertCircle, color: 'bg-orange-600', id: 'refusalmap', setter: setIsRefusalMapOpen },
+                      { label: 'Benchmark', desc: 'Benzer profildeki başvuru sahiplerinin onay/ret oranını ve sebeplerini görün.', icon: TrendingUp, color: 'bg-purple-600', id: 'benchmark', setter: setIsBenchmarkOpen },
+                      { label: 'Nereye Gidebilirim?', desc: 'Mevcut profilinizle en yüksek onay alacağınız 5 ülkeyi sıralayın.', icon: Plane, color: 'bg-sky-600', id: 'countryguide', setter: setIsCountryGuideOpen },
+                    ].map(({ label, desc, icon: Icon, color, id, setter }) => {
                       const locked = PREMIUM_TOOLS.includes(id) && !isPremium;
                       return (
-                        <button key={label} onClick={() => openTool(id, setter)}
-                          className={`relative rounded-xl px-3 py-2.5 font-bold text-xs flex items-center gap-1.5 transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 ${locked ? 'bg-slate-100 text-slate-400' : `${color} text-white hover:opacity-90`}`}>
-                          <Icon className="w-4 h-4 shrink-0" />
-                          <span>{label}</span>
-                          {locked && <span className="ml-auto text-amber-400">🔒</span>}
+                        <button key={id} onClick={() => openTool(id, setter)}
+                          className={`group text-left rounded-2xl border p-4 transition-all hover:shadow-md hover:-translate-y-0.5 ${
+                            locked
+                              ? 'bg-slate-50 border-slate-200 cursor-pointer'
+                              : 'bg-white border-slate-200 hover:border-slate-300'
+                          }`}>
+                          <div className="flex items-start gap-3">
+                            <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${locked ? 'bg-slate-200' : color}`}>
+                              <Icon className={`w-4 h-4 ${locked ? 'text-slate-400' : 'text-white'}`} />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className={`text-sm font-bold ${locked ? 'text-slate-400' : 'text-slate-900'}`}>{label}</span>
+                                {locked
+                                  ? <span className="text-[9px] font-black bg-amber-100 text-amber-600 px-1 py-0.5 rounded-md">Premium</span>
+                                  : !PREMIUM_TOOLS.includes(id) && <span className="text-[9px] font-black bg-emerald-100 text-emerald-600 px-1 py-0.5 rounded-md">Ücretsiz</span>
+                                }
+                              </div>
+                              <p className={`text-xs mt-0.5 leading-relaxed ${locked ? 'text-slate-400' : 'text-slate-500'}`}>{desc}</p>
+                            </div>
+                            {locked && <span className="text-amber-400 shrink-0">🔒</span>}
+                          </div>
                         </button>
                       );
                     })}
