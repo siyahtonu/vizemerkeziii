@@ -879,6 +879,7 @@ export default function App() {
   const [wizardHasChild, setWizardHasChild] = useState(false);
   const [wizardResult, setWizardResult] = useState<string[]>([]);
   const [wizardDone, setWizardDone] = useState(false);
+  const [wizardChecked, setWizardChecked] = useState<Set<number>>(new Set());
 
   // Özellik 6: Belge Tutarlılık Matrisi
   const [isConsistencyOpen, setIsConsistencyOpen] = useState(false);
@@ -1601,25 +1602,25 @@ export default function App() {
 
   // ── Roadmap → Araç Eşleştirme ─────────────────────────────
   const actionItems = useMemo(() => {
-    const items: { gain: string; title: string; desc: string; toolLabel: string; toolFn: () => void; priority: number }[] = [];
+    const items: { gain: string; title: string; desc: string; toolLabel: string; toolFn: () => void; doneFn?: () => void; priority: number }[] = [];
 
     if (!profile.bankRegularity || !profile.incomeSourceClear) {
-      items.push({ gain: '+9', title: 'Banka Düzenliliğini Kanıtla', desc: 'Maaş/kira girişleri + 3 aylık ektre — en yüksek puan kazanımı.', toolLabel: 'AI Banka Analizi', toolFn: () => { setStep('dashboard'); setTimeout(() => { setIsAiBankOpen(true); }, 200); }, priority: 1 });
+      items.push({ gain: '+9', title: 'Banka Düzenliliğini Kanıtla', desc: 'Maaş/kira girişleri + 3 aylık ektre — en yüksek puan kazanımı.', toolLabel: 'AI Banka Analizi', toolFn: () => { setStep('dashboard'); setTimeout(() => { setIsAiBankOpen(true); }, 200); }, doneFn: () => setProfile(prev => ({ ...prev, bankRegularity: true, incomeSourceClear: true, hasSteadyIncome: true, bankSufficientBalance: true })), priority: 1 });
     }
     if (!profile.hasSgkJob) {
-      items.push({ gain: '+8', title: 'SGK / İstihdam Belgesi Ekle', desc: 'E-Devlet\'ten barkodlu SGK dökümü — en güçlü geri dönüş kanıtı.', toolLabel: 'Evrak Rehberi', toolFn: () => { setStep('dashboard'); setTimeout(() => setIsDocumentListOpen(true), 200); }, priority: 2 });
+      items.push({ gain: '+8', title: 'SGK / İstihdam Belgesi Ekle', desc: 'E-Devlet\'ten barkodlu SGK dökümü — en güçlü geri dönüş kanıtı.', toolLabel: 'Evrak Rehberi', toolFn: () => { setStep('dashboard'); setTimeout(() => setIsDocumentListOpen(true), 200); }, doneFn: () => setProfile(prev => ({ ...prev, hasSgkJob: true, hasBarcodeSgk: true, sgkEmployerLetterWithReturn: true })), priority: 2 });
     }
     if (!profile.hasHighValueVisa && !profile.hasOtherVisa) {
-      items.push({ gain: '+6', title: 'Doğru Ülkeyi Seç', desc: 'İlk başvuruda red oranı düşük ülkelerden başla — profil uyumu hesaplandı.', toolLabel: 'Ülke Kıyaslayıcı', toolFn: () => { setStep('dashboard'); setTimeout(() => setIsSchengenComparatorOpen(true), 200); }, priority: 3 });
+      items.push({ gain: '+6', title: 'Doğru Ülkeyi Seç', desc: 'İlk başvuruda red oranı düşük ülkelerden başla — profil uyumu hesaplandı.', toolLabel: 'Ülke Kıyaslayıcı', toolFn: () => { setStep('dashboard'); setTimeout(() => openTool('comparator', setIsSchengenComparatorOpen), 200); }, doneFn: () => setProfile(prev => ({ ...prev, hasOtherVisa: true })), priority: 3 });
     }
     if (!profile.hasHealthInsurance && !profile.hasTravelInsurance) {
-      items.push({ gain: '+4', title: 'Seyahat Sigortası Al', desc: '€30.000 teminatlı sigorta olmadan başvuru kabul edilmez.', toolLabel: 'Evrak Sihirbazı', toolFn: () => { setStep('dashboard'); setTimeout(() => setIsDocumentListOpen(true), 200); }, priority: 4 });
+      items.push({ gain: '+4', title: 'Seyahat Sigortası Al', desc: '€30.000 teminatlı sigorta olmadan başvuru kabul edilmez.', toolLabel: 'Evrak Sihirbazı', toolFn: () => { setStep('dashboard'); setTimeout(() => setIsDocumentListOpen(true), 200); }, doneFn: () => setProfile(prev => ({ ...prev, hasTravelInsurance: true, hasHealthInsurance: true })), priority: 4 });
     }
     if (!profile.useOurTemplate) {
-      items.push({ gain: '+5', title: 'Profesyonel Niyet Mektubu Yaz', desc: '2026 konsolosluk standartlarına uygun resmi şablon kullan.', toolLabel: 'Belge Oluşturucu', toolFn: () => setStep('letter'), priority: 5 });
+      items.push({ gain: '+5', title: 'Profesyonel Niyet Mektubu Yaz', desc: '2026 konsolosluk standartlarına uygun resmi şablon kullan.', toolLabel: 'Belge Oluşturucu', toolFn: () => setStep('letter'), doneFn: () => setProfile(prev => ({ ...prev, useOurTemplate: true })), priority: 5 });
     }
     if (!profile.hasSocialMediaFootprint) {
-      items.push({ gain: '+2', title: 'Sosyal Medyayı Vize-Safe Yap', desc: 'LinkedIn + Instagram profili — konsolosluk sosyal medyanıza bakıyor.', toolLabel: 'Sosyal Medya', toolFn: () => { setStep('dashboard'); setTimeout(() => setIsSocialMediaOpen(true), 200); }, priority: 6 });
+      items.push({ gain: '+2', title: 'Sosyal Medyayı Vize-Safe Yap', desc: 'LinkedIn + Instagram profili — konsolosluk sosyal medyanıza bakıyor.', toolLabel: 'Sosyal Medya', toolFn: () => { setStep('dashboard'); setTimeout(() => setIsSocialMediaOpen(true), 200); }, doneFn: () => setProfile(prev => ({ ...prev, hasSocialMediaFootprint: true })), priority: 6 });
     }
     // Risk kontrolü her zaman göster
     items.push({ gain: '⚠️', title: 'Dosyanda Kırmızı Bayrak Var mı?', desc: 'Bakiye vs maliyet, sigorta, dönüş bileti — konsolosluk tutarsızlıkları reddeder.', toolLabel: 'Risk Tarayıcı', toolFn: () => { setStep('dashboard'); setTimeout(() => setIsRedFlagOpen(true), 200); }, priority: 7 });
@@ -2799,19 +2800,38 @@ Signature: _______________     Date: ${today}`;
                         <div className="flex items-center gap-2 mb-3">
                           <CheckCircle2 className="w-5 h-5 text-emerald-700"/>
                           <span className="font-bold text-emerald-900 text-sm">{wizardResult.length} belge — profilinize özel liste</span>
-                          <button onClick={()=>{setWizardDone(false);setWizardResult([]);}}
+                          <button onClick={()=>{setWizardDone(false);setWizardResult([]);setWizardChecked(new Set());}}
                             className="ml-auto text-xs font-bold text-emerald-700 hover:underline flex items-center gap-1">
                             <RefreshCw className="w-3.5 h-3.5"/> Yeniden Oluştur
                           </button>
                         </div>
-                        {wizardResult.map((doc, i) => (
-                          <div key={i} className={`flex items-start gap-3 p-3 rounded-xl ${doc.startsWith('⚠️') || doc.startsWith('UYARI') ? 'bg-amber-50 border border-amber-200' : 'bg-white border border-emerald-100'}`}>
-                            {doc.startsWith('⚠️') || doc.startsWith('UYARI') ?
-                              <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5"/> :
-                              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5"/>}
-                            <p className="text-xs text-slate-700 leading-relaxed">{doc.replace(/^⚠️ /, '')}</p>
-                          </div>
-                        ))}
+                        <p className="text-[10px] text-slate-400 mb-3 font-medium">Tamamladığınız belgelere tıklayın — üzeri çizilir.</p>
+                        {wizardResult.map((doc, i) => {
+                          const isChecked = wizardChecked.has(i);
+                          const isWarning = doc.startsWith('⚠️') || doc.startsWith('UYARI');
+                          return (
+                            <button
+                              key={i}
+                              type="button"
+                              onClick={() => {
+                                setWizardChecked(prev => {
+                                  const next = new Set(prev);
+                                  if (next.has(i)) next.delete(i); else next.add(i);
+                                  return next;
+                                });
+                              }}
+                              className={`w-full text-left flex items-start gap-3 p-3 rounded-xl transition-all ${isChecked ? 'bg-slate-50 border border-slate-200 opacity-60' : isWarning ? 'bg-amber-50 border border-amber-200' : 'bg-white border border-emerald-100 hover:border-emerald-300'}`}>
+                              {isChecked ? (
+                                <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5"/>
+                              ) : isWarning ? (
+                                <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5"/>
+                              ) : (
+                                <Circle className="w-4 h-4 text-slate-300 shrink-0 mt-0.5"/>
+                              )}
+                              <p className={`text-xs text-slate-700 leading-relaxed ${isChecked ? 'line-through text-slate-400' : ''}`}>{doc.replace(/^⚠️ /, '')}</p>
+                            </button>
+                          );
+                        })}
                       </div>
                     )}
                   </div>
@@ -4668,12 +4688,23 @@ Signature: _______________     Date: ${today}`;
                           <p className="font-bold text-slate-900 text-sm">{item.title}</p>
                           <p className="text-xs text-slate-500 mt-0.5 line-clamp-1">{item.desc}</p>
                         </div>
-                        <button
-                          type="button"
-                          onClick={item.toolFn}
-                          className={`shrink-0 px-3 py-2 text-xs font-black rounded-xl transition-colors whitespace-nowrap ${item.gain === '⚠️' ? 'bg-rose-600 text-white hover:bg-rose-700' : 'bg-brand-600 text-white hover:bg-brand-700'}`}>
-                          {item.toolLabel} →
-                        </button>
+                        <div className="shrink-0 flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={item.toolFn}
+                            className={`px-3 py-2 text-xs font-black rounded-xl transition-colors whitespace-nowrap ${item.gain === '⚠️' ? 'bg-rose-600 text-white hover:bg-rose-700' : 'bg-brand-600 text-white hover:bg-brand-700'}`}>
+                            {item.toolLabel} →
+                          </button>
+                          {item.doneFn && (
+                            <button
+                              type="button"
+                              onClick={item.doneFn}
+                              title="Yaptım — puanımı güncelle"
+                              className="px-3 py-2 text-xs font-black rounded-xl transition-colors whitespace-nowrap bg-emerald-100 text-emerald-700 hover:bg-emerald-200 border border-emerald-200">
+                              Yaptım ✓
+                            </button>
+                          )}
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -4762,7 +4793,7 @@ Signature: _______________     Date: ${today}`;
                           className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white text-xs font-bold rounded-xl transition-colors flex items-center gap-1.5">
                           <FileText className="w-3.5 h-3.5"/> Mektup Oluştur
                         </button>
-                        <button onClick={() => setIsSchengenComparatorOpen(true)}
+                        <button onClick={() => openTool('comparator', setIsSchengenComparatorOpen)}
                           className="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold rounded-xl transition-colors flex items-center gap-1.5">
                           <Globe className="w-3.5 h-3.5"/> Ülke Seç
                         </button>
@@ -6009,32 +6040,32 @@ Signature: _______________     Date: ${today}`;
               <div className="flex-1 overflow-y-auto p-7 space-y-4">
                 {[
                   {
-                    q: 'VizeAkıl gerçekten vize aldırıyor mu?',
-                    a: 'VizeAkıl, başvurunuzu profesyonel bir danışman gözüyle analiz ederek en güçlü profili oluşturmanıza yardım eder. Vize kararı konsolosluğa aittir, ancak doğru hazırlanmış başvuruların onay oranı istatistiksel olarak çok daha yüksektir. Sistemimizi kullanan başvuru sahiplerinin %93\'ü onay almaktadır.'
+                    q: 'Başarı skorum neden düşük çıktı?',
+                    a: '"Puanınızı Nasıl Artırırsınız?" bölümündeki adımları takip edin. Her maddenin yanında "Yaptım ✓" butonu var — tıkladığınızda profil güncellenir ve skor anlık olarak yükselir. Banka düzenliliği, SGK belgesi ve seyahat sigortası en çok puan getiren 3 faktördür.'
                   },
                   {
                     q: 'Bilgilerimi girmek güvenli mi? Verilerim nereye gidiyor?',
                     a: 'Girdiğiniz tüm bilgiler yalnızca tarayıcınızda (cihazınızda) saklanır. Hiçbir bilginiz sunucularımıza iletilmez veya depolanmaz. Tarayıcı geçmişinizi temizlediğinizde veriler tamamen silinir. Detaylar için KVKK Aydınlatma Metni\'ni inceleyebilirsiniz.'
                   },
                   {
-                    q: 'Hangi ülkeler için analiz yapıyor?',
-                    a: 'Schengen bölgesi (Almanya, Fransa, Hollanda, İtalya ve diğerleri), İngiltere, ABD, Kanada ve daha pek çok ülke için özelleştirilmiş analiz yapıyoruz. Her ülkenin konsolosluk kuralları sisteme ayrı ayrı işlenmiştir.'
+                    q: 'Evrak Sihirbazı\'nda belge listesini nasıl kullanırım?',
+                    a: 'Ülke ve çalışma durumunuzu seçtikten sonra "Liste Oluştur" butonuna tıklayın. Her belgeye tıkladığınızda üzeri çizilir — hazırladıklarınızı böyle takip edebilirsiniz. Listeyi sıfırlamak için "Yeniden Oluştur" düğmesini kullanın.'
                   },
                   {
                     q: 'Ücretsiz araçlar neler? Premium ne kazandırıyor?',
-                    a: 'Evrak Listesi, Senaryo Oluşturucu, Randevu Takvim, Belge Tutarlılık Matrisi ve Vizesiz Ülkeler araçları tamamen ücretsizdir. Premium ile Visa Copilot (yapay zeka danışman), Ret Mektubu Analizi, Ülke Kıyaslayıcısı, AI Banka Dökümü ve Sosyal Medya Rehberi açılır.'
+                    a: 'Evrak Listesi, Senaryo Oluşturucu, Randevu Takvim, Belge Tutarlılık Matrisi ve Vizesiz Ülkeler araçları tamamen ücretsizdir. Premium ile Visa Copilot (yapay zeka danışman), Ret Mektubu Analizi, Ülke Kıyaslayıcısı, AI Banka Dökümü Analizi, Kırmızı Bayrak Tarayıcı ve Sosyal Medya Rehberi açılır.'
                   },
                   {
                     q: 'Daha önce vize reddettim. Tekrar başvurabilir miyim?',
-                    a: 'Evet, önceki red başvurunuzu beyan ederek sisteme girdiğinizde size özel strateji oluşturulur. "Ret Mektubu Analizi" aracımız, ret gerekçesini analiz ederek bir sonraki başvuruyu nasıl güçlendireceğinizi adım adım gösterir. Ret sonrası başvuruların doğru hazırlanmış olması durumunda başarı oranı oldukça yüksektir.'
+                    a: 'Evet, önceki red başvurunuzu beyan ederek sisteme girdiğinizde size özel strateji oluşturulur. "Ret Mektubu Analizi" aracımız ret gerekçesini analiz ederek bir sonraki başvuruyu nasıl güçlendireceğinizi adım adım gösterir. Premium "Kırmızı Bayrak Tarayıcı" ile dosyanızdaki mantıksal çelişkiler de tespit edilir.'
                   },
                   {
-                    q: 'Niyet mektubu yazdırırsam bu yeterli mi?',
-                    a: 'Niyet mektubu güçlü bir araçtır, ancak tek başına yeterli değildir. Sistem önce profilinizin genel gücünü ölçer; ardından mektup, evraklar ve hazırlık süreci bir bütün olarak değerlendirilir. En iyi sonuç için tüm analiz adımlarını tamamlamanızı öneririz.'
+                    q: 'Niyet mektubunu Türkçe ve İngilizce indirebiliyor muyum?',
+                    a: 'Evet! "Niyet Mektubu Oluşturucu" bölümünde 4 farklı mektup türü (Başvuru Sahipliği, Sponsor, İşveren, Seyahat Planı) için hem 🇹🇷 Türkçe hem de 🇬🇧 İngilizce PDF indirebilirsiniz. İngilizce sürümler uluslararası konsolosluk standartlarına göre hazırlanmıştır.'
                   },
                   {
-                    q: 'Randevu almam ne kadar sürer?',
-                    a: '"Randevu Takvim Asistanı" aracımız, seyahat tarihinize göre en geç hangi gün randevu almanız gerektiğini ve şu anki konsolosluk yoğunluğunu gösterir. Özellikle yaz dönemlerinde randevu 6-10 hafta öne alınmalıdır.'
+                    q: 'Schengen Ülke Kıyaslayıcısı nasıl çalışıyor?',
+                    a: 'Profil bilgilerinize dayanarak her Schengen ülkesini 6 faktörde (onay oranı, finansal uyum, SGK/çalışma durumu, vize geçmişi, trend) puanlar ve en uygun ülkeleri en üste sıralar. "Ülke Seç" veya "Ülke Kıyasla" butonuna tıklayınca bu analiz açılır.'
                   },
                   {
                     q: 'Türkçe destek var mı?',
@@ -6086,32 +6117,32 @@ Signature: _______________     Date: ${today}`;
                     color: 'brand',
                     items: [
                       '"Ücretsiz Analiz Başlat" butonuna tıklayın.',
-                      'Hangi ülkeye başvuracağınızı seçin (Almanya, İngiltere, ABD vb.).',
-                      'Başvuru tipinizi seçin: Çalışan, Öğrenci, Emekli veya Serbest Meslek.',
-                      'Anlık başarı skorunuzu görün ve "Tam Analizi Gör" ile devam edin.',
+                      'Hangi ülkeye başvuracağınızı seçin — Schengen, İngiltere veya ABD.',
+                      'Çalışma durumunuzu, mali profilinizi ve vize geçmişinizi işaretleyin.',
+                      'Anlık başarı skorunuzu görün; "Tam Analizi Gör" ile devam edin.',
                     ]
                   },
                   {
                     step: '02',
-                    title: 'Analiz Araçlarını Kullanın',
+                    title: 'Aksiyon Merkezini Takip Edin',
                     color: 'indigo',
                     items: [
-                      'Dashboard\'da "Evrak Listesi" ile başvuru tipinize özel belgeleri görün.',
-                      '"Belge Matrisi" ile evraklarınız arasında çelişki olup olmadığını kontrol edin.',
-                      '"Randevu" aracıyla seyahat tarihinize göre en geç randevu gününü hesaplayın.',
-                      '"Vizesiz Ülkeler" ile geçmiş seyahat ekleyerek skorunuzu artırın.',
-                      'Premium: "Visa Copilot" ile yapay zekaya istediğiniz soruyu sorun.',
+                      '"Puanınızı Nasıl Artırırsınız?" bölümündeki önerileri sırayla inceleyin.',
+                      'Her maddenin araç butonuna tıklayın — ilgili analiz otomatik açılır.',
+                      'Tamamladığınız adımı "Yaptım ✓" ile onaylayın — skor anlık güncellenir.',
+                      '"Evrak Sihirbazı" ile profilinize özel belge listesi alın; tamamladıklarınızı tıklayarak işaretleyin.',
+                      '"Ülke Seç" ile Schengen ülkelerini profil uyumuna göre kıyaslayın.',
                     ]
                   },
                   {
                     step: '03',
-                    title: 'Başvurunuzu Mükemmelleştirin',
+                    title: 'Başvuruyu Tamamlayın',
                     color: 'violet',
                     items: [
-                      '"Senaryo Oluşturucu" ile farklı banka bakiyesi senaryolarını deneyin.',
-                      '"Niyet Mektubu" bölümünden kişiselleştirilmiş, konsolosluk standartlarında mektup oluşturun.',
-                      'Çatışma uyarılarına dikkat edin — kırmızı uyarılar başvuruyu doğrudan olumsuz etkiler.',
-                      'Skorunuz %75\'in üstüne çıktığında başvuru için hazır demeksiniz.',
+                      '"Kırmızı Bayrak Tarayıcı" ile dosyanızdaki mantıksal çelişkileri kontrol edin.',
+                      '"Niyet Mektubu" bölümünden 🇹🇷 Türkçe veya 🇬🇧 İngilizce PDF indirin.',
+                      'Skorunuz %82\'nin üstüne çıktığında başvuru için güçlü bir profil demektir.',
+                      'Premium "Visa Copilot" ile yapay zekaya son sorularınızı sorun.',
                     ]
                   },
                 ].map(({ step, title, color, items }) => (
