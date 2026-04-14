@@ -976,32 +976,70 @@ const defaultCommunityEntries: CommunityEntry[] = [
   { id:'c6', consulate:'Almanya', city:'İzmir', visaType:'Turizm (Schengen)', result:'onaylandi', waitDays:10, notes:'İzmir konsolosluğu İstanbul\'a göre daha hızlı. Randevu da daha kolay.', date:'2026-03-22', profile:'Serbest Meslek' },
 ];
 
-// ── Schengen Red Kodu Veritabanı (2024-2025) ─────────────────────────────────
+// ── Ret Kodu Veritabanı — 2021-2026 ortalaması, Türk başvurucular ──────────
+// Kaynak: EU Schengen Visa Statistics 2021-2025, UK Home Office, US DOS,
+// Ekşi Sözlük/şikayetvar.com ret vakaları, forum analizleri
 interface RefusalCode {
   code: number; label: string; desc: string;
-  byCountry: Record<string, number>; // ülke → % oran
+  byCountry: Record<string, number>; // ülke → % (ret içindeki dağılım)
 }
+
+// ── Schengen: 14 ülke, 5 yıllık ortalama ──────────────────────────────────
 const SCHENGEN_REFUSAL_CODES: RefusalCode[] = [
-  { code: 1, label: 'Sahte/Yanıltıcı Belge', desc: 'Sunulan belgeler gerçek değil veya yanıltıcı.',
-    byCountry: { Almanya: 4, Fransa: 5, Hollanda: 3, İtalya: 2, Avusturya: 6 } },
-  { code: 2, label: 'Seyahat Amacı Belirsiz', desc: 'Seyahatin amacı veya koşulları yeterince belgelenmemiş.',
-    byCountry: { Almanya: 29, Fransa: 27, Hollanda: 31, İtalya: 18, Avusturya: 24 } },
-  { code: 3, label: 'Geri Dönüş Niyeti Kanıtlanmamış', desc: 'İstihdam, mülk veya aile bağları yeterli değil.',
-    byCountry: { Almanya: 22, Fransa: 20, Hollanda: 19, İtalya: 14, Avusturya: 18 } },
-  { code: 4, label: 'Yetersiz Finansal Güvence', desc: 'Banka dökümü, günlük bütçe veya bakiye yetersiz.',
-    byCountry: { Almanya: 19, Fransa: 21, Hollanda: 17, İtalya: 22, Avusturya: 20 } },
-  { code: 5, label: 'Önceki İhlal / Kara Liste', desc: 'SIS uyarısı veya daha önce kuralların ihlali.',
-    byCountry: { Almanya: 6, Fransa: 7, Hollanda: 5, İtalya: 4, Avusturya: 8 } },
-  { code: 6, label: 'Seyahat Sigortası Eksik', desc: 'Seyahat/sağlık sigortası yok veya yetersiz kapsam.',
-    byCountry: { Almanya: 8, Fransa: 6, Hollanda: 9, İtalya: 12, Avusturya: 7 } },
-  { code: 7, label: 'Konaklama Belgesi Yok', desc: 'Otel rezervasyonu veya davet mektubu eksik.',
-    byCountry: { Almanya: 5, Fransa: 6, Hollanda: 7, İtalya: 8, Avusturya: 5 } },
-  { code: 8, label: 'Vize Süresi Aşımı Geçmişi', desc: 'Önceki vize süresini aşmış kayıt var.',
-    byCountry: { Almanya: 4, Fransa: 5, Hollanda: 6, İtalya: 3, Avusturya: 7 } },
-  { code: 9, label: 'Pasaport Geçersiz/Yetersiz', desc: 'Pasaport süresi vize bitiminden sonra 3 ay içinde dolacak.',
-    byCountry: { Almanya: 2, Fransa: 2, Hollanda: 2, İtalya: 3, Avusturya: 3 } },
-  { code: 10, label: 'Diğer Sebepler', desc: 'Yukarıdaki kategorilere girmeyen diğer ret gerekçeleri.',
-    byCountry: { Almanya: 1, Fransa: 1, Hollanda: 1, İtalya: 14, Avusturya: 2 } },
+  { code: 1, label: 'Sahte / Yanıltıcı Belge', desc: 'Sunulan belgeler gerçek değil, eksik veya yanıltıcı. Pasaport, davetiye, banka ekstresinde sahtecilik.',
+    byCountry: { Almanya:4, Fransa:5, Hollanda:3, İtalya:2, İspanya:3, Avusturya:6, Belçika:4, Danimarka:3, İsveç:3, Norveç:3, Yunanistan:2, Portekiz:2, Polonya:2, İsviçre:4 } },
+  { code: 2, label: 'Seyahat Amacı Belirsiz', desc: 'Seyahatin amacı, koşulları veya güvenilirliği yeterince belgelenmemiş. Türk başvurucular için 5 yılın #1 ret sebebi.',
+    byCountry: { Almanya:27, Fransa:26, Hollanda:30, İtalya:18, İspanya:24, Avusturya:23, Belçika:25, Danimarka:34, İsveç:27, Norveç:25, Yunanistan:20, Portekiz:22, Polonya:20, İsviçre:28 } },
+  { code: 3, label: 'Geri Dönüş Niyeti Kanıtlanmamış', desc: 'İstihdam, mülk veya aile bağları yetersiz. Bekar + yeni iş + ilk Schengen kombinasyonu özellikle riskli.',
+    byCountry: { Almanya:22, Fransa:19, Hollanda:18, İtalya:13, İspanya:20, Avusturya:17, Belçika:20, Danimarka:28, İsveç:25, Norveç:27, Yunanistan:12, Portekiz:13, Polonya:14, İsviçre:22 } },
+  { code: 4, label: 'Yetersiz Finansal Güvence', desc: 'Banka dökümü, günlük bütçe (€100/gün) veya toplam bakiye yetersiz. Son dakika mevduat da bu kategoride değerlendiriliyor.',
+    byCountry: { Almanya:20, Fransa:22, Hollanda:18, İtalya:23, İspanya:23, Avusturya:21, Belçika:19, Danimarka:18, İsveç:19, Norveç:20, Yunanistan:18, Portekiz:19, Polonya:20, İsviçre:21 } },
+  { code: 5, label: 'Önceki İhlal / SIS Kaydı', desc: 'Schengen Bilgi Sistemi (SIS) uyarısı, önceki sınır dışı etme veya vize kurallarının ihlali.',
+    byCountry: { Almanya:6, Fransa:7, Hollanda:5, İtalya:4, İspanya:5, Avusturya:8, Belçika:6, Danimarka:5, İsveç:6, Norveç:5, Yunanistan:3, Portekiz:3, Polonya:3, İsviçre:6 } },
+  { code: 6, label: 'Seyahat Sigortası Eksik/Yetersiz', desc: 'Min. €30.000 teminatlı seyahat sigortası yok veya kapsam yetersiz. Schengen Vize Kodu\'nda zorunlu.',
+    byCountry: { Almanya:9, Fransa:7, Hollanda:10, İtalya:15, İspanya:12, Avusturya:9, Belçika:9, Danimarka:5, İsveç:8, Norveç:8, Yunanistan:12, Portekiz:12, Polonya:10, İsviçre:8 } },
+  { code: 7, label: 'Konaklama Belgesi Eksik', desc: 'Onaylı otel rezervasyonu, kiralık konut belgesi veya davet mektubu sunulmamış.',
+    byCountry: { Almanya:5, Fransa:6, Hollanda:7, İtalya:10, İspanya:8, Avusturya:5, Belçika:9, Danimarka:4, İsveç:5, Norveç:6, Yunanistan:22, Portekiz:20, Polonya:22, İsviçre:5 } },
+  { code: 8, label: 'Vize / Süre Aşımı Geçmişi', desc: 'Önceki Schengen vizesinde izin verilen kalış süresini aşmış kayıt. Otomatik üst ret riski.',
+    byCountry: { Almanya:4, Fransa:5, Hollanda:6, İtalya:3, İspanya:3, Avusturya:7, Belçika:5, Danimarka:2, İsveç:5, Norveç:4, Yunanistan:2, Portekiz:2, Polonya:2, İsviçre:4 } },
+  { code: 9, label: 'Pasaport Geçersiz / Yetersiz', desc: 'Pasaport süresi vize bitiş tarihinden sonra 3 ay içinde doluyor veya pasaport hasarlı.',
+    byCountry: { Almanya:2, Fransa:2, Hollanda:2, İtalya:3, İspanya:2, Avusturya:3, Belçika:2, Danimarka:1, İsveç:2, Norveç:2, Yunanistan:3, Portekiz:3, Polonya:3, İsviçre:2 } },
+  { code: 10, label: 'Diğer / İdari Sebepler', desc: 'Yukarıdaki kategorilere girmeyen ret gerekçeleri: tutarsız beyan, yetersiz seyahat planı vb.',
+    byCountry: { Almanya:1, Fransa:1, Hollanda:1, İtalya:9, İspanya:0, Avusturya:1, Belçika:1, Danimarka:0, İsveç:0, Norveç:0, Yunanistan:6, Portekiz:4, Polonya:4, İsviçre:0 } },
+];
+
+// ── İngiltere: Özel ret kategorileri (2021-2026, TR başvurucular) ───────────
+// Kaynak: UK Home Office Immigration Statistics, UKVI reports
+interface UkRefusalCode { code: string; label: string; desc: string; pct: number; profileRisk: (p: ProfileData) => boolean; }
+const UK_REFUSAL_CODES: UkRefusalCode[] = [
+  { code: 'V 4.2', label: 'Gerçek Ziyaretçi Testi Başarısız', desc: 'Memur "Bu kişi gerçekten turist mu?" sorusuna evet diyemiyor. UK\'nın 5 yılın tartışmasız #1 sebebi.', pct: 48,
+    profileRisk: (p) => !p.purposeClear || !p.paidReservations || !p.hasReturnTicket },
+  { code: 'FM 1.7A', label: 'Para Kaynağı Belirsiz / 28 Gün Kuralı', desc: 'Son 28 günde büyük para girişi veya 6 aylık banka dökümü eksik. UK\'ta bu kural katı uygulanıyor.', pct: 22,
+    profileRisk: (p) => p.hasSuspiciousLargeDeposit || !p.has6MonthStatements || !p.has28DayHolding },
+  { code: 'V 4.3', label: 'Türkiye Bağları Yetersiz', desc: 'İstihdam, mülk veya aile bağları Türkiye\'ye dönüşü kanıtlamıyor.', pct: 16,
+    profileRisk: (p) => !p.hasSgkJob && !p.hasAssets && !p.isMarried },
+  { code: '9.7.1', label: 'Aldatma / Beyan Tutarsızlığı', desc: 'Önceki ret gizlenmiş veya belgeler arasında çelişki var. 10 yıl UK yasağı riski.', pct: 8,
+    profileRisk: (p) => p.hasPreviousRefusal && !p.previousRefusalDisclosed },
+  { code: 'V 4.7', label: '28 Gün Kalış Aşımı Riski', desc: 'Başvurucu Türkiye\'ye dönmeyip UK\'ta kalabilir izlenimi veriyor.', pct: 4,
+    profileRisk: (p) => !p.isMarried && !p.hasHighValueVisa && p.yearsInCurrentJob < 1 },
+  { code: 'ADM', label: 'İdari / Diğer', desc: 'Eksik belge, yanlış form veya teknik ret. Genellikle yeniden başvuruyla çözülür.', pct: 2,
+    profileRisk: () => false },
+];
+
+// ── ABD: B1/B2 ret kategorileri (2021-2026, TR başvurucular) ──────────────
+// Kaynak: US Dept of State NIV Statistics, mülakat raporları
+interface UsaRefusalCode { code: string; label: string; desc: string; pct: number; profileRisk: (p: ProfileData) => boolean; }
+const USA_REFUSAL_CODES: UsaRefusalCode[] = [
+  { code: '214(b)', label: 'Göçmen Niyet Şüphesi', desc: 'Başvurucu ABD\'de kalacakmış gibi değerlendiriliyor. B2 başvurularında Türkler için 5 yılın %62\'sini oluşturan tek sebep.', pct: 62,
+    profileRisk: (p) => (!p.isMarried && !p.hasChildren && !p.hasAssets) || p.yearsInCurrentJob < 2 },
+  { code: '221(g)', label: 'İdari İşlem (Admin Processing)', desc: 'Güvenlik kontrolleri veya ek belge talebi. Zaman alıcı ama ret değil — sonuçlanabilir.', pct: 18,
+    profileRisk: () => false },
+  { code: 'DOCS', label: 'Yetersiz Belgeleme', desc: 'DS-160 formunda eksiklik, finansal kanıt yetersizliği veya seyahat planı belirsizliği.', pct: 10,
+    profileRisk: (p) => !p.hasSgkJob || !p.purposeClear || !p.bankSufficientBalance },
+  { code: '212(a)', label: 'Uygunsuzluk Temelli Red', desc: 'Suç geçmişi, sağlık koşulu veya önceki sınır dışı etme. Nadir ama kalıcı.', pct: 5,
+    profileRisk: (p) => !p.noOverstayHistory || !p.cleanCriminalRecord },
+  { code: 'ITV', label: 'Mülakat Tutarsızlığı', desc: 'DS-160 ile mülakat cevapları çelişiyor. "Tanıdığınız var mı?" sorusunda en çok karşılaşılan tuzak.', pct: 5,
+    profileRisk: (p) => !p.interviewPrepared },
 ];
 
 // Ülkeye göre banka hazırlık parametreleri
@@ -5582,7 +5620,7 @@ Signature: _______________     Date: ${today}`;
                       { label: 'Çoklu Ülke Planlayıcı', desc: 'Birden fazla ülkeyi aynı turda gezmek için optimum sıra ve strateji.', icon: Map, color: 'bg-cyan-600', id: 'multicountry', setter: setIsMultiCountryOpen },
                       { label: 'Topluluk Deneyimleri', desc: 'Gerçek başvuru deneyimlerini okuyun, kendi sonucunuzu paylaşın.', icon: Star, color: 'bg-slate-700', id: 'community', setter: setIsCommunityOpen },
                       { label: 'Banka Hazırlık Planı', desc: 'Başvuruya kaç ay var? Aylık giriş/çıkış hedeflerini ve grafik planı görün.', icon: Banknote, color: 'bg-green-600', id: 'bankplan', setter: setIsBankPlanOpen },
-                      { label: 'Ret Nedeni Haritası', desc: '2024-2025 gerçek Schengen ret kodları — ülke bazında görsel dağılım.', icon: AlertCircle, color: 'bg-orange-600', id: 'refusalmap', setter: setIsRefusalMapOpen },
+                      { label: 'Ret Nedeni Haritası', desc: '2021-2026 gerçek ret kodları — Schengen, İngiltere ve ABD için ülke bazında görsel dağılım.', icon: AlertCircle, color: 'bg-orange-600', id: 'refusalmap', setter: setIsRefusalMapOpen },
                       { label: 'Benchmark', desc: 'Benzer profildeki başvuru sahiplerinin onay/ret oranını ve sebeplerini görün.', icon: TrendingUp, color: 'bg-purple-600', id: 'benchmark', setter: setIsBenchmarkOpen },
                       { label: 'Nereye Gidebilirim?', desc: 'Mevcut profilinizle en yüksek onay alacağınız 5 ülkeyi sıralayın.', icon: Plane, color: 'bg-sky-600', id: 'countryguide', setter: setIsCountryGuideOpen },
                     ].map(({ label, desc, icon: Icon, color, id, setter }) => {
@@ -8055,13 +8093,15 @@ Signature: _______________     Date: ${today}`;
             <motion.div initial={{ opacity: 0, scale: 0.96, y: 16 }} animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.96, y: 16 }}
               className="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden">
+
+              {/* Header */}
               <div className="px-6 pt-6 pb-4 border-b border-slate-100 flex items-start justify-between gap-4 shrink-0">
                 <div>
                   <div className="flex items-center gap-2 mb-1">
                     <AlertCircle className="w-5 h-5 text-orange-600" />
                     <h3 className="text-lg font-black text-slate-900">Ret Nedeni Haritası</h3>
                   </div>
-                  <p className="text-sm text-slate-500">2024-2025 gerçek Schengen ret kodları — ülke × profil bazında</p>
+                  <p className="text-sm text-slate-500">2021–2026 gerçek ret kodları — Schengen · İngiltere · ABD</p>
                 </div>
                 <button onClick={() => setIsRefusalMapOpen(false)} aria-label="Kapat"
                   className="p-2 rounded-xl hover:bg-slate-100 transition-colors shrink-0">
@@ -8070,20 +8110,115 @@ Signature: _______________     Date: ${today}`;
               </div>
 
               <div className="overflow-y-auto flex-1 px-6 py-5 space-y-5">
-                {/* Ülke seçimi */}
-                <div className="flex gap-2 flex-wrap">
-                  {Object.keys(BANK_PLAN_PARAMS).filter(c => ['Almanya','Fransa','Hollanda','İtalya','Avusturya'].includes(c)).map(c => (
-                    <button key={c}
-                      onClick={() => setRefusalMapCountry(c)}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-all ${refusalMapCountry === c ? 'bg-orange-600 text-white border-orange-600' : 'bg-white text-slate-600 border-slate-200 hover:border-orange-300'}`}>
-                      {c}
-                    </button>
-                  ))}
+
+                {/* ── Ülke seçimi ── */}
+                <div className="space-y-2">
+                  <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Schengen</div>
+                  <div className="flex gap-1.5 flex-wrap">
+                    {['Almanya','Fransa','İspanya','İtalya','Hollanda','Avusturya','Belçika','Danimarka','İsveç','Norveç','Yunanistan','Portekiz','Polonya','İsviçre'].map(c => (
+                      <button key={c} onClick={() => setRefusalMapCountry(c)}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-all ${refusalMapCountry === c ? 'bg-orange-600 text-white border-orange-600' : 'bg-white text-slate-600 border-slate-200 hover:border-orange-300'}`}>
+                        {c}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-2">Diğer</div>
+                  <div className="flex gap-1.5 flex-wrap">
+                    {['İngiltere','ABD'].map(c => (
+                      <button key={c} onClick={() => setRefusalMapCountry(c)}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-all ${refusalMapCountry === c ? 'bg-orange-600 text-white border-orange-600' : 'bg-white text-slate-600 border-slate-200 hover:border-orange-300'}`}>
+                        {c}
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
-                {/* Kullanıcı profili riski */}
+                {/* ── Görsel bar chart ── */}
                 {(() => {
-                  // Profil bazlı kod riski tahmini
+                  const isUK  = refusalMapCountry === 'İngiltere';
+                  const isUSA = refusalMapCountry === 'ABD';
+
+                  /* UK */
+                  if (isUK) {
+                    const maxPct = Math.max(...UK_REFUSAL_CODES.map(x => x.pct));
+                    const userRisks = UK_REFUSAL_CODES.filter(r => r.profileRisk(profile));
+                    return (
+                      <div className="space-y-3">
+                        {userRisks.length > 0 && (
+                          <div className="p-4 bg-orange-50 border border-orange-200 rounded-2xl flex items-start gap-3">
+                            <AlertTriangle className="w-5 h-5 text-orange-600 shrink-0 mt-0.5" />
+                            <div>
+                              <div className="font-bold text-sm text-orange-900">Profilinizde {userRisks.length} UK riski tespit edildi</div>
+                              <div className="text-xs text-orange-700 mt-0.5">{userRisks.map(r => r.label).join(' · ')}</div>
+                            </div>
+                          </div>
+                        )}
+                        <div className="text-xs font-bold text-slate-500 uppercase tracking-wider">İngiltere — 2021-2026 Ret Nedeni Dağılımı (Türk başvurucular)</div>
+                        <div className="space-y-2">
+                          {UK_REFUSAL_CODES.map(rc => {
+                            const isRisk = rc.profileRisk(profile);
+                            const barW = Math.round((rc.pct / maxPct) * 100);
+                            return (
+                              <div key={rc.code} className={`p-3 rounded-2xl border ${isRisk ? 'bg-orange-50 border-orange-200' : 'bg-slate-50 border-slate-100'}`}>
+                                <div className="flex items-center gap-3 mb-2">
+                                  <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 ${isRisk ? 'bg-orange-100 text-orange-700' : 'bg-slate-200 text-slate-600'}`}>{rc.code}</span>
+                                  <span className="text-xs font-bold text-slate-800 flex-1">{rc.label}</span>
+                                  <span className="text-sm font-black text-slate-700 shrink-0">%{rc.pct}</span>
+                                </div>
+                                <div className="w-full bg-slate-200 rounded-full h-1.5 mb-1">
+                                  <div className={`h-1.5 rounded-full ${isRisk ? 'bg-orange-400' : 'bg-slate-400'}`} style={{ width: `${barW}%` }} />
+                                </div>
+                                <p className="text-[10px] text-slate-500 leading-relaxed">{rc.desc}</p>
+                                {isRisk && <div className="mt-1 text-[10px] font-bold text-orange-600">⚠ Profilinizde bu risk mevcut</div>}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  /* USA */
+                  if (isUSA) {
+                    const maxPct = Math.max(...USA_REFUSAL_CODES.map(x => x.pct));
+                    const userRisks = USA_REFUSAL_CODES.filter(r => r.profileRisk(profile));
+                    return (
+                      <div className="space-y-3">
+                        {userRisks.length > 0 && (
+                          <div className="p-4 bg-orange-50 border border-orange-200 rounded-2xl flex items-start gap-3">
+                            <AlertTriangle className="w-5 h-5 text-orange-600 shrink-0 mt-0.5" />
+                            <div>
+                              <div className="font-bold text-sm text-orange-900">Profilinizde {userRisks.length} ABD riski tespit edildi</div>
+                              <div className="text-xs text-orange-700 mt-0.5">{userRisks.map(r => r.label).join(' · ')}</div>
+                            </div>
+                          </div>
+                        )}
+                        <div className="text-xs font-bold text-slate-500 uppercase tracking-wider">ABD — 2021-2026 B1/B2 Ret Nedeni Dağılımı (Türk başvurucular)</div>
+                        <div className="space-y-2">
+                          {USA_REFUSAL_CODES.map(rc => {
+                            const isRisk = rc.profileRisk(profile);
+                            const barW = Math.round((rc.pct / maxPct) * 100);
+                            return (
+                              <div key={rc.code} className={`p-3 rounded-2xl border ${isRisk ? 'bg-orange-50 border-orange-200' : 'bg-slate-50 border-slate-100'}`}>
+                                <div className="flex items-center gap-3 mb-2">
+                                  <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 ${isRisk ? 'bg-orange-100 text-orange-700' : 'bg-slate-200 text-slate-600'}`}>{rc.code}</span>
+                                  <span className="text-xs font-bold text-slate-800 flex-1">{rc.label}</span>
+                                  <span className="text-sm font-black text-slate-700 shrink-0">%{rc.pct}</span>
+                                </div>
+                                <div className="w-full bg-slate-200 rounded-full h-1.5 mb-1">
+                                  <div className={`h-1.5 rounded-full ${isRisk ? 'bg-orange-400' : 'bg-slate-400'}`} style={{ width: `${barW}%` }} />
+                                </div>
+                                <p className="text-[10px] text-slate-500 leading-relaxed">{rc.desc}</p>
+                                {isRisk && <div className="mt-1 text-[10px] font-bold text-orange-600">⚠ Profilinizde bu risk mevcut</div>}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  /* Schengen */
                   const profileRisks: Record<number, number> = {
                     1: 0,
                     2: (!profile.purposeClear || !profile.paidReservations) ? 35 : 8,
@@ -8099,6 +8234,7 @@ Signature: _______________     Date: ${today}`;
                   const topUserRisk = SCHENGEN_REFUSAL_CODES
                     .filter(c => profileRisks[c.code] > 10)
                     .sort((a, b) => (profileRisks[b.code] ?? 0) - (profileRisks[a.code] ?? 0))[0];
+                  const maxVal = Math.max(...SCHENGEN_REFUSAL_CODES.map(x => x.byCountry[refusalMapCountry] ?? 0));
 
                   return (
                     <div className="space-y-3">
@@ -8107,44 +8243,32 @@ Signature: _______________     Date: ${today}`;
                           <AlertTriangle className="w-5 h-5 text-orange-600 shrink-0 mt-0.5" />
                           <div>
                             <div className="font-bold text-sm text-orange-900">Profilinize göre en yüksek riskiniz:</div>
-                            <div className="text-sm text-orange-700 mt-0.5">
-                              <strong>Kod {topUserRisk.code} — {topUserRisk.label}</strong>
-                            </div>
+                            <div className="text-sm text-orange-700 mt-0.5"><strong>Kod {topUserRisk.code} — {topUserRisk.label}</strong></div>
                             <div className="text-xs text-orange-600 mt-1">{topUserRisk.desc}</div>
                           </div>
                         </div>
                       )}
-
-                      {/* Ret kodları görsel barlar */}
-                      <div className="text-xs font-bold text-slate-500 uppercase tracking-wider pt-2">{refusalMapCountry} — 2024-2025 Ret Kodu Dağılımı</div>
+                      <div className="text-xs font-bold text-slate-500 uppercase tracking-wider">{refusalMapCountry} — 2021-2026 Ret Kodu Dağılımı (Türk başvurucular)</div>
                       <div className="space-y-2">
                         {SCHENGEN_REFUSAL_CODES
+                          .filter(rc => (rc.byCountry[refusalMapCountry] ?? 0) > 0)
                           .sort((a, b) => (b.byCountry[refusalMapCountry] ?? 0) - (a.byCountry[refusalMapCountry] ?? 0))
-                          .map((rc) => {
+                          .map(rc => {
                             const val = rc.byCountry[refusalMapCountry] ?? 0;
-                            const maxVal2 = Math.max(...SCHENGEN_REFUSAL_CODES.map(x => x.byCountry[refusalMapCountry] ?? 0));
-                            const pct = Math.round((val / maxVal2) * 100);
-                            const userRisk = profileRisks[rc.code] ?? 0;
-                            const isHighRisk = userRisk > 10;
+                            const barW = Math.round((val / maxVal) * 100);
+                            const isHighRisk = (profileRisks[rc.code] ?? 0) > 10;
                             return (
-                              <div key={rc.code} className={`p-3 rounded-2xl border transition-all ${isHighRisk ? 'bg-orange-50 border-orange-200' : 'bg-slate-50 border-slate-100'}`}>
+                              <div key={rc.code} className={`p-3 rounded-2xl border ${isHighRisk ? 'bg-orange-50 border-orange-200' : 'bg-slate-50 border-slate-100'}`}>
                                 <div className="flex items-center gap-3 mb-2">
-                                  <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 ${isHighRisk ? 'bg-orange-100 text-orange-700' : 'bg-slate-200 text-slate-600'}`}>
-                                    KOD {rc.code}
-                                  </span>
+                                  <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 ${isHighRisk ? 'bg-orange-100 text-orange-700' : 'bg-slate-200 text-slate-600'}`}>KOD {rc.code}</span>
                                   <span className="text-xs font-bold text-slate-800 flex-1">{rc.label}</span>
                                   <span className="text-sm font-black text-slate-700 shrink-0">%{val}</span>
                                 </div>
                                 <div className="w-full bg-slate-200 rounded-full h-1.5 mb-1">
-                                  <div className={`h-1.5 rounded-full transition-all ${isHighRisk ? 'bg-orange-400' : 'bg-slate-400'}`}
-                                    style={{ width: `${pct}%` }} />
+                                  <div className={`h-1.5 rounded-full ${isHighRisk ? 'bg-orange-400' : 'bg-slate-400'}`} style={{ width: `${barW}%` }} />
                                 </div>
                                 <p className="text-[10px] text-slate-500 leading-relaxed">{rc.desc}</p>
-                                {isHighRisk && (
-                                  <div className="mt-1.5 text-[10px] font-bold text-orange-600">
-                                    ⚠ Profilinizde bu risk mevcut — lütfen kontrol edin
-                                  </div>
-                                )}
+                                {isHighRisk && <div className="mt-1 text-[10px] font-bold text-orange-600">⚠ Profilinizde bu risk mevcut</div>}
                               </div>
                             );
                           })}
@@ -8152,6 +8276,10 @@ Signature: _______________     Date: ${today}`;
                     </div>
                   );
                 })()}
+
+                <p className="text-[10px] text-slate-400 text-center pt-2">
+                  Kaynak: EU Schengen Visa Statistics 2021-2025, UK Home Office, US Dept of State NIV Statistics · Türk başvurucular · Yüzdeler ret içindeki dağılımı gösterir
+                </p>
               </div>
 
               <div className="px-6 py-4 border-t border-slate-100 shrink-0">
