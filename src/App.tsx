@@ -809,7 +809,7 @@ const socialMediaChecklist: SocialMediaItem[] = [
 ];
 
 // Premium tool IDs
-const PREMIUM_TOOLS = ['copilot', 'comparator', 'refusal', 'aibank', 'socialmedia'];
+const PREMIUM_TOOLS = ['copilot', 'comparator', 'refusal', 'aibank', 'socialmedia', 'redflag'];
 
 export default function App() {
   const [step, setStep] = useState<'hero' | 'onboarding' | 'assessment' | 'dashboard' | 'letter' | 'tactics'>('hero');
@@ -839,6 +839,33 @@ export default function App() {
   const [isAppointmentOpen, setIsAppointmentOpen] = useState(false);
   const [travelDate, setTravelDate] = useState('');
   const [selectedConsulate, setSelectedConsulate] = useState('ABD');
+
+  // Özellik 9: Red Flag Checker — Başvuru Risk Tarayıcısı
+  const [isRedFlagOpen, setIsRedFlagOpen] = useState(false);
+  const [rfBalance, setRfBalance] = useState('');
+  const [rfFlight, setRfFlight] = useState('');
+  const [rfHotel, setRfHotel] = useState('');
+  const [rfDays, setRfDays] = useState('');
+  const [rfDailyBudgetEur, setRfDailyBudgetEur] = useState('60');
+  const [rfHasInsurance, setRfHasInsurance] = useState(false);
+  const [rfInsuranceCoversAll, setRfInsuranceCoversAll] = useState(false);
+  const [rfHasReturn, setRfHasReturn] = useState(false);
+  const [rfFirstTrip, setRfFirstTrip] = useState(false);
+  const [rfHasProperty, setRfHasProperty] = useState(false);
+  const [rfHasSgk, setRfHasSgk] = useState(true);
+  const [redFlagResult, setRedFlagResult] = useState<{severity:'critical'|'warn'|'ok'; msg: string}[]>([]);
+  const [rfAnalyzed, setRfAnalyzed] = useState(false);
+
+  // Özellik 10: Kişiye Özel Evrak Sihirbazı
+  const [wizardCountry, setWizardCountry] = useState<'schengen'|'uk'|'usa'>('schengen');
+  const [wizardEmployment, setWizardEmployment] = useState<'employee'|'freelance'|'student'|'retired'|'unemployed'>('employee');
+  const [wizardFirstTrip, setWizardFirstTrip] = useState(false);
+  const [wizardHasProperty, setWizardHasProperty] = useState(false);
+  const [wizardHasCar, setWizardHasCar] = useState(false);
+  const [wizardHasSponsor, setWizardHasSponsor] = useState(false);
+  const [wizardHasChild, setWizardHasChild] = useState(false);
+  const [wizardResult, setWizardResult] = useState<string[]>([]);
+  const [wizardDone, setWizardDone] = useState(false);
 
   // Özellik 6: Belge Tutarlılık Matrisi
   const [isConsistencyOpen, setIsConsistencyOpen] = useState(false);
@@ -1679,6 +1706,168 @@ export default function App() {
     analyzeWithRules(file.name);
   };
 
+  // ── Özellik 9: Red Flag Checker ─────────────────────────
+  const analyzeRedFlags = () => {
+    const balance = parseInt(rfBalance) || 0;
+    const flight = parseInt(rfFlight) || 0;
+    const hotel = parseInt(rfHotel) || 0;
+    const days = parseInt(rfDays) || 0;
+    const dailyEur = parseInt(rfDailyBudgetEur) || 60;
+    const eurToTry = 40; // yaklaşık kur
+    const totalTripTry = flight + hotel + (days * dailyEur * eurToTry);
+
+    const flags: {severity:'critical'|'warn'|'ok'; msg:string}[] = [];
+
+    // 1. Bakiye vs seyahat maliyeti
+    if (balance > 0 && totalTripTry > 0) {
+      if (balance < totalTripTry) {
+        flags.push({ severity: 'critical', msg: `Hesabındaki ${balance.toLocaleString('tr-TR')} TL, tahmini seyahat maliyetini (${totalTripTry.toLocaleString('tr-TR')} TL) karşılamıyor. Konsolosluk bu tutarsızlığı %95 reddeder — bakiyeni artır veya maliyetleri düşür.` });
+      } else if (balance < totalTripTry * 1.5) {
+        flags.push({ severity: 'warn', msg: `Bakiyeniz masrafları karşılıyor ama konsolosluklar minimum 1.5x buffer ister. Mevcut: ${balance.toLocaleString('tr-TR')} TL → Önerilen: ${Math.round(totalTripTry * 1.5).toLocaleString('tr-TR')} TL` });
+      } else {
+        flags.push({ severity: 'ok', msg: `Banka bakiyeniz (${balance.toLocaleString('tr-TR')} TL) toplam seyahat maliyetini rahatça karşılıyor.` });
+      }
+    } else if (balance === 0) {
+      flags.push({ severity: 'critical', msg: 'Bakiye bilgisi girilmedi — bu alan zorunlu, konsolosluk ekstrenizi mutlaka inceleyecek.' });
+    }
+
+    // 2. Günlük bütçe (Schengen min. €50/gün)
+    if (days > 0) {
+      if (dailyEur < 50) {
+        flags.push({ severity: 'critical', msg: `Schengen kuralı: kişi başı minimum €50/gün. Girilen bütçe: €${dailyEur}/gün — bu eksiklik tek başına ret sebebi olabilir.` });
+      } else if (dailyEur < 80) {
+        flags.push({ severity: 'warn', msg: `Günlük bütçeniz €${dailyEur} — Schengen minimumunu (€50) karşılıyor ama konsolosluklar €80+ gördüğünde daha güvende hisseder.` });
+      } else {
+        flags.push({ severity: 'ok', msg: `Günlük bütçeniz €${dailyEur} — konsolosluk standartlarının üzerinde.` });
+      }
+    }
+
+    // 3. Seyahat sigortası
+    if (!rfHasInsurance) {
+      flags.push({ severity: 'critical', msg: 'Seyahat sağlık sigortası yok! Schengen/UK için zorunlu belgedir, sigortasız başvuru işleme bile alınmaz.' });
+    } else if (!rfInsuranceCoversAll) {
+      flags.push({ severity: 'critical', msg: `Sigorta poliçeniz tüm seyahat süresini (${days} gün) kapsamıyor. Konsolosluk tarihleri gün gün kontrol eder.` });
+    } else {
+      flags.push({ severity: 'ok', msg: 'Seyahat sigortası var ve tüm seyahat süresini kapsıyor.' });
+    }
+
+    // 4. Dönüş bileti
+    if (!rfHasReturn) {
+      flags.push({ severity: 'critical', msg: 'Dönüş bileti veya rezervasyonu yok. Bu durum "kalma niyeti" olarak yorumlanır — ret oranı dramatik artar.' });
+    } else {
+      flags.push({ severity: 'ok', msg: 'Dönüş bileti/rezervasyonu mevcut — güçlü geri dönüş kanıtı.' });
+    }
+
+    // 5. İlk yurt dışı çıkışı
+    if (rfFirstTrip) {
+      flags.push({ severity: 'warn', msg: 'İlk yurt dışı çıkışı: Konsolosluk seyahat geçmişiniz olmadığı için ekstra bağ belgesi ister. Tapu, araç ruhsatı veya iş sözleşmesi mutlaka ekleyin.' });
+      if (!rfHasProperty && !rfHasSgk) {
+        flags.push({ severity: 'critical', msg: 'İlk çıkış + mülk yok + SGK kaydı yok: Bu kombinasyon çok yüksek ret riski taşıyor. En az birini belgeleyin.' });
+      }
+    }
+
+    // 6. SGK / istihdam
+    if (!rfHasSgk) {
+      flags.push({ severity: 'warn', msg: 'SGK kaydı yok: Çalışma kanıtı eksik. Serbest meslek vergi levhası + son 3 aylık Bağ-Kur dökümü veya gelir belgesi şart.' });
+    } else {
+      flags.push({ severity: 'ok', msg: 'SGK kaydı var — güçlü istihdam ve geri dönüş kanıtı.' });
+    }
+
+    // 7. Mülkiyet bonusu
+    if (rfHasProperty) {
+      flags.push({ severity: 'ok', msg: 'Tapu/mülkiyet belgesi var — konsolosluk için güçlü "bağ" kanıtı. Mutlaka ekleyin.' });
+    }
+
+    setRedFlagResult(flags);
+    setRfAnalyzed(true);
+  };
+
+  // ── Özellik 10: Kişiye Özel Evrak Sihirbazı ─────────────────────
+  const generateCustomDocList = () => {
+    const docs: string[] = [];
+    // Temel belgeler — hepsi için
+    docs.push('Geçerli pasaport (son 6 ayda sona ermeyecek, minimum 2 boş sayfa)');
+    docs.push('Pasaport fotokopisi (tüm dolu sayfalar dahil)');
+    docs.push('Biyometrik fotoğraf (son 6 ay içinde, mat fon, 3.5x4.5cm)');
+    docs.push(`${wizardCountry === 'schengen' ? 'Schengen vize' : wizardCountry === 'uk' ? 'UK vize' : 'ABD vize (DS-160)'} başvuru formu (eksiksiz doldurulmuş ve imzalı)`);
+    docs.push('Seyahat sigortası poliçesi (tüm seyahat süresini kapsayan, min. €30.000 teminat)');
+    docs.push('Uçuş rezervasyonu (bilet veya onaylı rezervasyon)');
+    docs.push('Konaklama belgesi (otel rezervasyonu veya ev sahibi daveti)');
+    docs.push('Banka ekstresi — son 3-6 ay (tüm sayfalar, banka mühürlü)');
+
+    // İstihdam durumuna göre
+    if (wizardEmployment === 'employee') {
+      docs.push('İşe giriş bildirgesi veya SGK hizmet dökümü');
+      docs.push('İşyerinden onaylı çalışma izni mektubu (izin tarihleri, maaş bilgisi, iade garantisi)');
+      docs.push('Son 3 aylık maaş bordrosu (mühürlü)');
+    } else if (wizardEmployment === 'freelance') {
+      docs.push('Vergi levhası veya ticaret sicil belgesi');
+      docs.push('Son 3 aylık Bağ-Kur prim dökümü (e-Devlet\'ten alınabilir)');
+      docs.push('Son 3 aylık muhasebe kaydı veya gelir beyanı');
+      docs.push('Serbest meslek sahibi olduğunuzu gösteren fatura/sözleşme örnekleri');
+    } else if (wizardEmployment === 'student') {
+      docs.push('Öğrenci belgesi (güncel, Türkçe + apostilli İngilizce/Almanca)');
+      docs.push('Okul harç ödeme makbuzu');
+      docs.push('Burs belgesi (varsa)');
+      docs.push('Veli izin mektubu + veli gelir belgesi (18 yaş altı)');
+    } else if (wizardEmployment === 'retired') {
+      docs.push('Emekli maaşı belgesi (son ay, SGK onaylı)');
+      docs.push('SGK emeklilik kararı');
+    } else {
+      docs.push('İşsizlik ödeneği belgesi veya emekli aylığı (varsa)');
+      docs.push('Geçimini sağlayan kişinin sponsor mektubu ve gelir belgesi');
+      docs.push('UYARI: İşsiz başvurucular için çok güçlü banka bakiyesi ve mülk belgesi kritik.');
+    }
+
+    // İlk yurt dışı çıkışı
+    if (wizardFirstTrip) {
+      docs.push('⚠️ İlk yurt dışı çıkışı: Seyahat geçmişiniz olmadığından ekstra bağ belgesi zorunlu');
+      docs.push('Tapu senedi / araç ruhsatı / kira sözleşmesi (Türkiye\'ye bağlılığı ispat)');
+      docs.push('Aile nüfus kayıt örneği (Türkiye\'de aile bağları için)');
+    }
+
+    // Mülk sahibi
+    if (wizardHasProperty) {
+      docs.push('Tapu senedi fotokopisi — güçlü "geri dönüş" kanıtı, mutlaka ekleyin');
+    }
+
+    // Araç sahibi
+    if (wizardHasCar) {
+      docs.push('Araç ruhsatı fotokopisi — destekleyici bağ belgesi');
+    }
+
+    // Sponsor
+    if (wizardHasSponsor) {
+      if (wizardCountry === 'schengen') {
+        docs.push('Sponsor davet mektubu (noter onaylı veya yerel belediyece onaylı)');
+        docs.push('Sponsorun oturma izni veya vatandaşlık belgesi fotokopisi');
+        docs.push('Sponsorun banka dökümü veya gelir belgesi');
+      } else {
+        docs.push('Sponsor\'un davet mektubu (imzalı, iletişim bilgili)');
+        docs.push('Sponsor\'un pasaport/vatandaşlık fotokopisi');
+      }
+    }
+
+    // Çocuk
+    if (wizardHasChild) {
+      docs.push('Çocuğun doğum belgesi (apostilli)');
+      docs.push('Diğer ebeveynin noter onaylı muvafakatnamesi (birlikte seyahat edilmiyorsa)');
+    }
+
+    // Ülke bazlı ekstralar
+    if (wizardCountry === 'uk') {
+      docs.push('İngiltere: TB testi sonucu (6 ay içinde, onaylı klinik)');
+      docs.push('İngiltere: Parmak izi randevusu onayı (VFS Global)');
+    } else if (wizardCountry === 'usa') {
+      docs.push('ABD: DS-160 formu (online doldurulup kaydedilmiş)');
+      docs.push('ABD: SEVIS ücret makbuzu (öğrenci vizesi için)');
+      docs.push('ABD: Mülakat hazırlığı — konsolosata "geri dönüş niyetinizi" somut kanıtlarla anlatın');
+    }
+
+    setWizardResult(docs);
+    setWizardDone(true);
+  };
+
   const handleOcrUpload = (files: FileList | null) => {
     if (!files) return;
     setIsOcrScanning(true);
@@ -2075,10 +2264,11 @@ ${d.fullName}
                 <div className="p-8 space-y-6">
                   <div className="space-y-3">
                     {[
+                      { icon: XCircle, label: 'Başvuru Risk Tarayıcısı', desc: 'Dosyanızdaki mantıksal tutarsızlıkları konsolosluktan önce siz görün' },
                       { icon: MessageSquare, label: 'Visa Copilot — AI Strateji Asistanı', desc: 'Sınırsız yapay zeka danışmanlığı' },
                       { icon: AlertTriangle, label: 'Ret Mektubu Analizi', desc: 'Geçmiş reddi anlayın ve strateji kurun' },
-                      { icon: Globe, label: 'Ülke Kıyaslayıcısı', desc: 'Hangi konsoloslukta şansınız daha yüksek?' },
-                      { icon: Sparkles, label: 'AI Banka Dökümü Analizi', desc: 'Banka ekstrenizi yapay zeka ile analiz edin' },
+                      { icon: Globe, label: 'Ülke Kıyaslayıcısı + 2026 Trendleri', desc: 'Hangi konsoloslukta şansınız daha yüksek? Güncel içgörüler.' },
+                      { icon: Sparkles, label: 'Banka Dökümü Vize Analizi', desc: 'Bakiye, 28-gün kuralı, gelir kalıbı — anında rapor' },
                       { icon: ShieldCheck, label: 'Sosyal Medya Denetim Rehberi', desc: 'Sosyal medyanızı vize-safe hale getirin' },
                       { icon: Download, label: 'Sınırsız PDF Raporu', desc: 'Her analizi PDF olarak indirin' },
                     ].map(({ icon: Icon, label, desc }) => (
@@ -2128,12 +2318,12 @@ ${d.fullName}
                   <div>
                     <h3 className="text-2xl font-black text-slate-900 flex items-center gap-2">
                       <FileCheck className="w-6 h-6 text-emerald-600" />
-                      İngiltere Vizesi Evrak Listesi
+                      Evrak Listesi & Kişiye Özel Sihirbaz
                     </h3>
-                    <p className="text-slate-500 mt-1">Başvuru tipinize göre hazırlamanız gereken evraklar ve ücretlendirme.</p>
+                    <p className="text-slate-500 mt-1">Profilinize göre nokta atışı evrak listesi — internette bulamazsınız.</p>
                   </div>
-                  <button 
-                    onClick={() => setIsDocumentListOpen(false)}
+                  <button
+                    onClick={() => { setIsDocumentListOpen(false); setWizardDone(false); setWizardResult([]); }}
                     className="p-2 hover:bg-slate-200 rounded-full transition-colors"
                   >
                     <X className="w-6 h-6 text-slate-500" />
@@ -2141,6 +2331,82 @@ ${d.fullName}
                 </div>
 
                 <div className="p-8 overflow-y-auto flex-1">
+
+                  {/* ── Kişiye Özel Sihirbaz ── */}
+                  <div className="mb-8 p-6 bg-gradient-to-br from-emerald-50 to-teal-50 border-2 border-emerald-200 rounded-3xl">
+                    <div className="flex items-center gap-2 mb-4">
+                      <Target className="w-5 h-5 text-emerald-700"/>
+                      <h4 className="font-black text-emerald-900">Kişiye Özel Evrak Sihirbazı</h4>
+                      <span className="ml-auto text-xs font-bold bg-emerald-700 text-white px-2 py-0.5 rounded-lg">Niş Analiz</span>
+                    </div>
+                    {!wizardDone ? (
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-3 gap-2">
+                          {([['schengen','🇪🇺 Schengen'],['uk','🇬🇧 İngiltere'],['usa','🇺🇸 ABD']] as const).map(([v,l])=>(
+                            <button key={v} onClick={()=>setWizardCountry(v)}
+                              className={`py-2 rounded-xl text-xs font-bold border transition-all ${wizardCountry===v ? 'bg-emerald-700 text-white border-emerald-700' : 'bg-white text-slate-600 border-slate-200 hover:border-emerald-400'}`}>
+                              {l}
+                            </button>
+                          ))}
+                        </div>
+                        <div>
+                          <label className="text-xs font-bold text-slate-600 block mb-1">İstihdam Durumu</label>
+                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                            {([['employee','👔 Çalışan'],['freelance','💼 Serbest Meslek'],['student','🎓 Öğrenci'],['retired','🏖️ Emekli'],['unemployed','⚠️ İşsiz']] as const).map(([v,l])=>(
+                              <button key={v} onClick={()=>setWizardEmployment(v)}
+                                className={`py-2 px-3 rounded-xl text-xs font-bold border transition-all ${wizardEmployment===v ? 'bg-emerald-700 text-white border-emerald-700' : 'bg-white text-slate-600 border-slate-200 hover:border-emerald-400'}`}>
+                                {l}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                          {[
+                            [wizardFirstTrip, setWizardFirstTrip, 'İlk yurt dışı çıkışım'],
+                            [wizardHasProperty, setWizardHasProperty, 'Tapu/mülk sahibiyim'],
+                            [wizardHasCar, setWizardHasCar, 'Araç sahibiyim'],
+                            [wizardHasSponsor, setWizardHasSponsor, 'Sponsor/davetçim var'],
+                            [wizardHasChild, setWizardHasChild, 'Çocukla seyahat ediyorum'],
+                          ].map(([val, setter, label], i) => (
+                            <label key={i} className="flex items-center gap-2 text-xs font-bold text-slate-600 cursor-pointer">
+                              <input type="checkbox" checked={val as boolean} onChange={e=>(setter as (v:boolean)=>void)(e.target.checked)} className="w-4 h-4 accent-emerald-600"/>
+                              {label as string}
+                            </label>
+                          ))}
+                        </div>
+                        <button type="button" onClick={generateCustomDocList}
+                          className="w-full py-3 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-2xl text-sm transition-colors">
+                          Kişiye Özel Evrak Listemi Oluştur
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2 mb-3">
+                          <CheckCircle2 className="w-5 h-5 text-emerald-700"/>
+                          <span className="font-bold text-emerald-900 text-sm">{wizardResult.length} belge — profilinize özel liste</span>
+                          <button onClick={()=>{setWizardDone(false);setWizardResult([]);}}
+                            className="ml-auto text-xs font-bold text-emerald-700 hover:underline flex items-center gap-1">
+                            <RefreshCw className="w-3.5 h-3.5"/> Yeniden Oluştur
+                          </button>
+                        </div>
+                        {wizardResult.map((doc, i) => (
+                          <div key={i} className={`flex items-start gap-3 p-3 rounded-xl ${doc.startsWith('⚠️') || doc.startsWith('UYARI') ? 'bg-amber-50 border border-amber-200' : 'bg-white border border-emerald-100'}`}>
+                            {doc.startsWith('⚠️') || doc.startsWith('UYARI') ?
+                              <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5"/> :
+                              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5"/>}
+                            <p className="text-xs text-slate-700 leading-relaxed">{doc.replace(/^⚠️ /, '')}</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="border-t border-slate-100 pt-6 mb-4">
+                    <h4 className="font-bold text-slate-700 text-sm mb-4 flex items-center gap-2">
+                      <FileCheck className="w-4 h-4 text-emerald-600"/> İngiltere Genel Evrak Listesi
+                    </h4>
+                  </div>
+
                   <div className="flex flex-wrap gap-2 mb-8">
                     <button
                       onClick={() => setApplicantType('employer')}
@@ -2878,6 +3144,140 @@ ${d.fullName}
         </AnimatePresence>
 
         {/* ═══════════════════════════════════════════════════
+            ÖZELLİK 9: BAŞVURU RİSK TARAYICISI (RED FLAG CHECKER)
+            ═══════════════════════════════════════════════════ */}
+        <AnimatePresence>
+          {isRedFlagOpen && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+              <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}
+                onClick={() => { setIsRedFlagOpen(false); setRfAnalyzed(false); setRedFlagResult([]); }}
+                className="absolute inset-0 bg-slate-950/60 backdrop-blur-md" />
+              <motion.div initial={{opacity:0,scale:0.95,y:20}} animate={{opacity:1,scale:1,y:0}}
+                exit={{opacity:0,scale:0.95,y:20}}
+                className="relative w-full max-w-2xl bg-white rounded-[2.5rem] shadow-2xl border border-slate-100 flex flex-col max-h-[92vh] overflow-hidden">
+
+                {/* Header */}
+                <div className="p-8 bg-gradient-to-r from-rose-700 to-red-800 text-white rounded-t-[2.5rem] shrink-0">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <div className="flex items-center gap-2 text-rose-200 text-xs font-bold uppercase tracking-widest mb-2">
+                        <XCircle className="w-4 h-4" /> Mantıksal Tutarsızlık Dedektörü
+                      </div>
+                      <h3 className="text-2xl font-black">Başvuru Risk Tarayıcısı</h3>
+                      <p className="text-rose-100 text-sm mt-1">ChatGPT'nin yapamadığı şey: dosyanızdaki mantıksal çelişkileri bulur, konsolosluğun göreceği kırmızı bayrakları işaretler.</p>
+                    </div>
+                    <button onClick={() => { setIsRedFlagOpen(false); setRfAnalyzed(false); setRedFlagResult([]); }}
+                      className="p-2 hover:bg-white/10 rounded-full transition-colors"><X className="w-6 h-6"/></button>
+                  </div>
+                </div>
+
+                <div className="flex-1 overflow-y-auto p-8 space-y-5">
+                  {!rfAnalyzed ? (
+                    <>
+                      <h4 className="font-bold text-slate-800 flex items-center gap-2"><Info className="w-4 h-4 text-rose-600"/>Seyahat bilgilerinizi girin</h4>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs font-bold text-slate-600 mb-1">Banka Bakiyesi (TL)</label>
+                          <input type="number" placeholder="ör. 75000" value={rfBalance} onChange={e=>setRfBalance(e.target.value)}
+                            className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400"/>
+                        </div>
+                        <div>
+                          <label className="block text-xs font-bold text-slate-600 mb-1">Uçak Bileti (TL)</label>
+                          <input type="number" placeholder="ör. 12000" value={rfFlight} onChange={e=>setRfFlight(e.target.value)}
+                            className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400"/>
+                        </div>
+                        <div>
+                          <label className="block text-xs font-bold text-slate-600 mb-1">Otel Toplam (TL)</label>
+                          <input type="number" placeholder="ör. 20000" value={rfHotel} onChange={e=>setRfHotel(e.target.value)}
+                            className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400"/>
+                        </div>
+                        <div>
+                          <label className="block text-xs font-bold text-slate-600 mb-1">Kaç Gün?</label>
+                          <input type="number" placeholder="ör. 10" value={rfDays} onChange={e=>setRfDays(e.target.value)}
+                            className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400"/>
+                        </div>
+                        <div>
+                          <label className="block text-xs font-bold text-slate-600 mb-1">Günlük Bütçe (€/gün)</label>
+                          <input type="number" placeholder="ör. 60" value={rfDailyBudgetEur} onChange={e=>setRfDailyBudgetEur(e.target.value)}
+                            className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400"/>
+                        </div>
+                        <div className="flex flex-col gap-2 pt-1">
+                          <label className="flex items-center gap-2 text-xs font-bold text-slate-600 cursor-pointer">
+                            <input type="checkbox" checked={rfHasInsurance} onChange={e=>setRfHasInsurance(e.target.checked)} className="w-4 h-4 accent-rose-600"/>
+                            Seyahat sigortası var
+                          </label>
+                          {rfHasInsurance && (
+                            <label className="flex items-center gap-2 text-xs font-bold text-slate-600 cursor-pointer ml-4">
+                              <input type="checkbox" checked={rfInsuranceCoversAll} onChange={e=>setRfInsuranceCoversAll(e.target.checked)} className="w-4 h-4 accent-rose-600"/>
+                              Tüm seyahati kapsıyor
+                            </label>
+                          )}
+                          <label className="flex items-center gap-2 text-xs font-bold text-slate-600 cursor-pointer">
+                            <input type="checkbox" checked={rfHasReturn} onChange={e=>setRfHasReturn(e.target.checked)} className="w-4 h-4 accent-rose-600"/>
+                            Dönüş bileti/rezervasyonu var
+                          </label>
+                          <label className="flex items-center gap-2 text-xs font-bold text-slate-600 cursor-pointer">
+                            <input type="checkbox" checked={rfFirstTrip} onChange={e=>setRfFirstTrip(e.target.checked)} className="w-4 h-4 accent-amber-500"/>
+                            İlk yurt dışı çıkışım
+                          </label>
+                          <label className="flex items-center gap-2 text-xs font-bold text-slate-600 cursor-pointer">
+                            <input type="checkbox" checked={rfHasSgk} onChange={e=>setRfHasSgk(e.target.checked)} className="w-4 h-4 accent-emerald-500"/>
+                            SGK / aktif istihdam kaydım var
+                          </label>
+                          <label className="flex items-center gap-2 text-xs font-bold text-slate-600 cursor-pointer">
+                            <input type="checkbox" checked={rfHasProperty} onChange={e=>setRfHasProperty(e.target.checked)} className="w-4 h-4 accent-emerald-500"/>
+                            Tapu/mülk sahibiyim
+                          </label>
+                        </div>
+                      </div>
+                      <button type="button" onClick={analyzeRedFlags}
+                        className="w-full py-3 bg-rose-700 hover:bg-rose-800 text-white font-bold rounded-2xl transition-colors text-sm">
+                        Kırmızı Bayrakları Tara
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex items-center gap-2 mb-2">
+                        <XCircle className="w-5 h-5 text-rose-600"/>
+                        <h4 className="font-bold text-slate-900">Risk Analizi Raporu</h4>
+                        <button onClick={()=>{setRfAnalyzed(false);setRedFlagResult([]);}}
+                          className="ml-auto flex items-center gap-1 text-sm font-bold text-rose-600 hover:underline">
+                          <RefreshCw className="w-4 h-4"/> Yeniden Tara
+                        </button>
+                      </div>
+                      <div className="space-y-3">
+                        {redFlagResult.map((f, i) => (
+                          <div key={i} className={`p-4 rounded-2xl border flex items-start gap-3 ${
+                            f.severity === 'critical' ? 'bg-rose-50 border-rose-200' :
+                            f.severity === 'warn' ? 'bg-amber-50 border-amber-200' :
+                            'bg-emerald-50 border-emerald-200'
+                          }`}>
+                            {f.severity === 'critical' && <XCircle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5"/>}
+                            {f.severity === 'warn' && <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5"/>}
+                            {f.severity === 'ok' && <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5"/>}
+                            <p className={`text-sm leading-relaxed ${
+                              f.severity === 'critical' ? 'text-rose-800' :
+                              f.severity === 'warn' ? 'text-amber-800' : 'text-emerald-800'
+                            }`}>{f.msg}</p>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl">
+                        <p className="text-xs text-slate-500">
+                          {redFlagResult.filter(f=>f.severity==='critical').length === 0
+                            ? '✅ Kritik kırmızı bayrak bulunamadı. Uyarıları da dikkate alarak başvurunuzu hazırlayın.'
+                            : `🔴 ${redFlagResult.filter(f=>f.severity==='critical').length} kritik sorun tespit edildi. Başvurudan önce bunları mutlaka giderin.`}
+                        </p>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
+        {/* ═══════════════════════════════════════════════════
             ÖZELLİK 7: SCHENGEN ÜLKE KARŞILAŞTIRICI MODALI
             ═══════════════════════════════════════════════════ */}
         <AnimatePresence>
@@ -3026,11 +3426,22 @@ ${d.fullName}
                             💡 {country.tip}
                           </div>
 
-                          {/* Günlük bütçe */}
+                          {/* Günlük bütçe + onay oranı */}
                           <div className="mt-3 flex items-center justify-between">
                             <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Günlük Bütçe Kriteri</div>
                             <div className="text-sm font-black text-slate-700">€{country.dailyBudgetReq}/gün</div>
                           </div>
+
+                          {/* 2026 Trend notu */}
+                          {'update2026' in country && (country as {update2026?: string}).update2026 && (
+                            <div className="mt-3 p-2.5 bg-blue-50 border border-blue-200 rounded-xl flex items-start gap-2">
+                              <TrendingUp className="w-3.5 h-3.5 text-blue-600 shrink-0 mt-0.5"/>
+                              <p className="text-[11px] text-blue-800 leading-snug font-medium">
+                                <span className="font-black text-blue-700">2026 Trendi: </span>
+                                {(country as {update2026?: string}).update2026}
+                              </p>
+                            </div>
+                          )}
                         </div>
                       );
                     })}
@@ -3039,7 +3450,7 @@ ${d.fullName}
 
                 <div className="p-6 border-t border-slate-100 bg-slate-50 shrink-0 rounded-b-[2.5rem]">
                   <p className="text-xs text-slate-400 text-center">
-                    * Veriler 2024-2025 Schengen istatistiklerine dayanmaktadır. Ret oranları Türk başvurucuları için hesaplanmıştır.
+                    * Veriler 2024-2026 Schengen istatistiklerine dayanmaktadır. Ret oranları Türk başvurucuları için hesaplanmıştır. Trendler 2026 konsolosluk raporlarına göre güncellenmiştir.
                   </p>
                 </div>
               </motion.div>
@@ -3478,6 +3889,7 @@ ${d.fullName}
                     { icon: CheckCircle2, label: 'Belge Matrisi', color: 'slate', id: 'consistency', setter: setIsConsistencyOpen },
                     { icon: Plane, label: 'Vizesiz Ülkeler', color: 'emerald', id: 'visafree', setter: setIsVisaFreeOpen },
                     { icon: Sparkles, label: 'AI Banka', color: 'blue', id: 'aibank', setter: setIsAiBankOpen },
+                    { icon: XCircle, label: 'Risk Tarayıcı', color: 'red', id: 'redflag', setter: setIsRedFlagOpen },
                   ].map(({ icon: Icon, label, color, id, setter }) => {
                     const locked = PREMIUM_TOOLS.includes(id) && !isPremium;
                     return (
@@ -3785,6 +4197,7 @@ ${d.fullName}
                       { label: 'Belge Matrisi', icon: CheckCircle2, color: 'bg-slate-600', id: 'consistency', setter: setIsConsistencyOpen },
                       { label: 'Vizesiz Ülkeler', icon: Plane, color: 'bg-emerald-600', id: 'visafree', setter: setIsVisaFreeOpen },
                       { label: 'AI Banka', icon: Sparkles, color: 'bg-blue-700', id: 'aibank', setter: setIsAiBankOpen },
+                      { label: 'Risk Tarayıcı', icon: XCircle, color: 'bg-red-600', id: 'redflag', setter: setIsRedFlagOpen },
                     ].map(({ label, icon: Icon, color, id, setter }) => {
                       const locked = PREMIUM_TOOLS.includes(id) && !isPremium;
                       return (
