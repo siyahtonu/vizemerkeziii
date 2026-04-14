@@ -4638,7 +4638,7 @@ Signature: _______________     Date: ${today}`;
               <div className="flex flex-wrap justify-center gap-6 sm:gap-8 px-4">
                 {[
                   { value: '%93', label: 'Ortalama Onay Oranı' },
-                  { value: '10+', label: 'Analiz Aracı' },
+                  { value: '14', label: 'Analiz Aracı' },
                   { value: '2026', label: 'Güncel Konsolosluk Verisi' },
                   { value: 'AI', label: 'Yapay Zeka Destekli' },
                 ].map(s => (
@@ -4669,8 +4669,8 @@ Signature: _______________     Date: ${today}`;
               {/* Tools showcase strip — clickable */}
               <div className="bg-white border border-slate-100 rounded-[2rem] p-6 shadow-sm">
                 <div className="flex items-center justify-between mb-5">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">10 Uzman Aracı — Tıklayarak Kullan</p>
-                  <span className="text-[10px] bg-amber-50 text-amber-600 border border-amber-100 font-black px-2 py-1 rounded-lg uppercase tracking-widest">3 Premium</span>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">14 Uzman Aracı — Tıklayarak Kullan</p>
+                  <span className="text-[10px] bg-amber-50 text-amber-600 border border-amber-100 font-black px-2 py-1 rounded-lg uppercase tracking-widest">5 Premium</span>
                 </div>
                 <div className="flex flex-wrap justify-center gap-3">
                   {[
@@ -5153,6 +5153,9 @@ Signature: _______________     Date: ${today}`;
                       { label: 'Vizesiz Ülkeler', icon: Plane, color: 'bg-emerald-600', id: 'visafree', setter: setIsVisaFreeOpen },
                       { label: 'AI Banka', icon: Sparkles, color: 'bg-blue-700', id: 'aibank', setter: setIsAiBankOpen },
                       { label: 'Risk Tarayıcı', icon: XCircle, color: 'bg-red-600', id: 'redflag', setter: setIsRedFlagOpen },
+                      { label: 'Mülakat Sim.', icon: Brain, color: 'bg-amber-500', id: 'interview', setter: setIsInterviewSimOpen },
+                      { label: 'Çoklu Ülke', icon: Map, color: 'bg-cyan-600', id: 'multicountry', setter: setIsMultiCountryOpen },
+                      { label: 'Topluluk', icon: Star, color: 'bg-slate-700', id: 'community', setter: setIsCommunityOpen },
                     ].map(({ label, icon: Icon, color, id, setter }) => {
                       const locked = PREMIUM_TOOLS.includes(id) && !isPremium;
                       return (
