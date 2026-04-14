@@ -57,6 +57,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { jsPDF } from 'jspdf';
 import Footer from './components/Footer';
+import { buildCountryWarning, CountryWarning } from './lib/scoringV2';
 
 // Types
 interface ProfileData {
@@ -1482,6 +1483,30 @@ export default function App() {
   };
 
   const currentScore = useMemo(() => calculateScore(profile, simulatorValue), [profile, simulatorValue]);
+
+  // ── Ülke Zorluk Uyarısı ──────────────────────────────────────────
+  const countryNameToCode: Record<string, string> = {
+    'Almanya': 'DE',
+    'Fransa': 'FR',
+    'İngiltere': 'GB',
+    'ABD': 'US',
+    'İtalya': 'IT',
+    'İspanya': 'ES',
+    'Hollanda': 'NL',
+    'Danimarka': 'DK',
+    'İsveç': 'SE',
+    'Norveç': 'NO',
+    'Polonya': 'PL',
+    'Yunanistan': 'GR',
+    'Portekiz': 'PT',
+    'Avusturya': 'AT',
+    'Macaristan': 'HU',
+  };
+  const countryWarning = useMemo<CountryWarning>(() => {
+    const code = countryNameToCode[profile.targetCountry];
+    if (!code) return { show: false, level: 'info', message: '', alternatives: [] };
+    return buildCountryWarning(code, currentScore);
+  }, [profile.targetCountry, currentScore]);
 
   // ── Schengen Profil Bazlı Ülke Eşleşme Algoritması ──────────────
   const computeCountryMatchScore = (country: SchengenCountry): number => {
@@ -5463,6 +5488,15 @@ Signature: _______________     Date: ${today}`;
                       <option value="ABD">Amerika Birleşik Devletleri</option>
                       <option value="Fransa">Fransa (Schengen)</option>
                       <option value="İtalya">İtalya (Schengen)</option>
+                      <option value="İspanya">İspanya (Schengen)</option>
+                      <option value="Yunanistan">Yunanistan (Schengen)</option>
+                      <option value="Portekiz">Portekiz (Schengen)</option>
+                      <option value="Hollanda">Hollanda (Schengen)</option>
+                      <option value="Polonya">Polonya (Schengen)</option>
+                      <option value="Macaristan">Macaristan (Schengen)</option>
+                      <option value="Danimarka">Danimarka (Schengen)</option>
+                      <option value="İsveç">İsveç (Schengen)</option>
+                      <option value="Norveç">Norveç (Schengen)</option>
                       <option value="İngiltere">Birleşik Krallık</option>
                     </select>
                   </div>
@@ -5479,6 +5513,71 @@ Signature: _______________     Date: ${today}`;
                   </div>
                 </div>
               </div>
+
+              {/* ── Ülke Zorluk Uyarısı ─────────────────────────────────── */}
+              <AnimatePresence>
+                {countryWarning.show && (
+                  <motion.div
+                    key="country-warning"
+                    initial={{ opacity: 0, y: -8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    transition={{ duration: 0.25 }}
+                    className={`rounded-3xl border p-6 ${
+                      countryWarning.level === 'danger'
+                        ? 'bg-rose-50 border-rose-200'
+                        : 'bg-amber-50 border-amber-200'
+                    }`}
+                  >
+                    <div className="flex items-start gap-4">
+                      <div className={`mt-0.5 w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 ${
+                        countryWarning.level === 'danger' ? 'bg-rose-100 text-rose-600' : 'bg-amber-100 text-amber-700'
+                      }`}>
+                        <AlertTriangle className="w-5 h-5" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className={`text-xs font-black uppercase tracking-widest mb-1 ${
+                          countryWarning.level === 'danger' ? 'text-rose-500' : 'text-amber-600'
+                        }`}>
+                          {countryWarning.level === 'danger' ? 'Yüksek Ret Riski' : 'Dikkat — Zorlu Ülke'}
+                        </div>
+                        <p className={`text-sm font-medium leading-relaxed ${
+                          countryWarning.level === 'danger' ? 'text-rose-800' : 'text-amber-900'
+                        }`}>
+                          {countryWarning.message}
+                        </p>
+
+                        {countryWarning.alternatives.length > 0 && (
+                          <div className="mt-4">
+                            <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">
+                              Profilinize göre daha yüksek başarı şansı olan alternatifler:
+                            </div>
+                            <div className="flex flex-wrap gap-3">
+                              {countryWarning.alternatives.map(alt => (
+                                <button
+                                  key={alt.code}
+                                  onClick={() => setProfile(prev => ({
+                                    ...prev,
+                                    targetCountry: alt.name
+                                  }))}
+                                  className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 rounded-2xl hover:border-brand-400 hover:bg-brand-50 transition-all group shadow-sm"
+                                >
+                                  <span className="text-sm font-bold text-slate-800 group-hover:text-brand-700">
+                                    {alt.name}
+                                  </span>
+                                  <span className="text-xs font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-xl">
+                                    ~%{alt.approvalEstimate} onay
+                                  </span>
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                 {/* Main Content - 8 Columns */}
