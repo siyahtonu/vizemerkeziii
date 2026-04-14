@@ -33,16 +33,165 @@
   .glass-card {
     @apply bg-white/80 backdrop-blur-md border border-white/20 shadow-sm;
   }
-  
+
   .bento-grid {
     @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4;
   }
-  
+
   .btn-primary {
     @apply px-6 py-3 bg-brand-600 hover:bg-brand-700 text-white rounded-xl font-medium transition-all active:scale-95 shadow-lg shadow-brand-500/20;
   }
-  
+
   .btn-secondary {
     @apply px-6 py-3 bg-white hover:bg-slate-50 text-slate-900 border border-slate-200 rounded-xl font-medium transition-all active:scale-95;
   }
+}
+
+/* ═══════════════════════════════════════════════
+   CUSTOM CURSOR & HOVER EFFECTS — VizeAkıl
+   ═══════════════════════════════════════════════ */
+
+/* Hide default cursor sitewide — custom cursor replaces it */
+*, *::before, *::after {
+  cursor: none !important;
+}
+
+/* Custom cursor root element */
+#vize-cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 99999;
+  transform: translate(-50%, -50%);
+  transition: transform 0.08s ease, opacity 0.2s ease;
+}
+
+/* Main cursor dot */
+#vize-cursor .cursor-dot {
+  width: 10px;
+  height: 10px;
+  background: #0284c7;
+  border-radius: 50%;
+  transition: width 0.15s ease, height 0.15s ease, background 0.15s ease, transform 0.15s ease;
+}
+
+/* Outer ring */
+#vize-cursor .cursor-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 36px;
+  height: 36px;
+  border: 2px solid rgba(2, 132, 199, 0.35);
+  border-radius: 50%;
+  transition: width 0.2s ease, height 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+/* ── Hover states via JS data attributes ── */
+
+/* Button / interactive element */
+body.cursor-hover #vize-cursor .cursor-dot {
+  width: 14px;
+  height: 14px;
+  background: #0369a1;
+  transform: scale(1.2);
+}
+body.cursor-hover #vize-cursor .cursor-ring {
+  width: 52px;
+  height: 52px;
+  border-color: rgba(2, 132, 199, 0.5);
+}
+
+/* Premium / locked element */
+body.cursor-premium #vize-cursor .cursor-dot {
+  background: #7c3aed;
+  width: 12px;
+  height: 12px;
+}
+body.cursor-premium #vize-cursor .cursor-ring {
+  width: 48px;
+  height: 48px;
+  border-color: rgba(124, 58, 237, 0.4);
+}
+
+/* Danger / red element */
+body.cursor-danger #vize-cursor .cursor-dot {
+  background: #dc2626;
+  width: 12px;
+  height: 12px;
+}
+body.cursor-danger #vize-cursor .cursor-ring {
+  border-color: rgba(220, 38, 38, 0.4);
+}
+
+/* Text / input cursor */
+body.cursor-text #vize-cursor .cursor-dot {
+  width: 3px;
+  height: 20px;
+  border-radius: 2px;
+  background: #0284c7;
+}
+body.cursor-text #vize-cursor .cursor-ring {
+  opacity: 0;
+}
+
+/* Click press */
+body.cursor-click #vize-cursor .cursor-dot {
+  transform: scale(0.7);
+  background: #0369a1;
+}
+body.cursor-click #vize-cursor .cursor-ring {
+  transform: translate(-50%, -50%) scale(0.8);
+}
+
+/* ═══════════════════════════════════════════════
+   GLOBAL HOVER EFFECTS
+   ═══════════════════════════════════════════════ */
+
+/* All buttons */
+button, [role="button"], label[for], a {
+  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+}
+
+button:hover:not(:disabled), [role="button"]:hover {
+  transform: translateY(-1px);
+}
+
+button:active:not(:disabled) {
+  transform: translateY(0) scale(0.97);
+}
+
+/* Smooth focus rings */
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline: 2px solid #0284c7;
+  outline-offset: 2px;
+}
+
+/* Modal card hover lift */
+.hover-lift {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px -8px rgba(0,0,0,0.12);
+}
+
+/* Score card / tool card shine on hover */
+.card-shine {
+  position: relative;
+  overflow: hidden;
+}
+.card-shine::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.12) 50%, transparent 60%);
+  transform: translateX(-100%);
+  transition: transform 0.5s ease;
+  pointer-events: none;
+}
+.card-shine:hover::after {
+  transform: translateX(100%);
 }

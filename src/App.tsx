@@ -468,6 +468,19 @@ const visaFreeCountries: VisaFreeCountry[] = [
 // AB Vize İstatistikleri Raporu + IKV + SchengenVisaInfo + Atlys
 // SIRALAMA: En fazla vize veren (en düşük ret) → en az veren (en yüksek ret)
 // ============================================================
+// Banka Analizi Yapılandırılmış Sonuç
+interface BankAnalysisResult {
+  fileName: string;
+  country: string;
+  score: number;
+  grade: string;
+  gradeEmoji: string;
+  positives: string[];
+  negatives: string[];
+  tips: string[];
+  summary: string;
+}
+
 interface SchengenCountry {
   name: string;
   flag: string;
@@ -880,7 +893,7 @@ export default function App() {
   // Özellik 8: AI Banka Dökümü
   const [isAiBankOpen, setIsAiBankOpen] = useState(false);
   const [aiBankLoading, setAiBankLoading] = useState(false);
-  const [aiBankResult, setAiBankResult] = useState<string>('');
+  const [aiBankResult, setAiBankResult] = useState<BankAnalysisResult | null>(null);
   const [aiBankFile, setAiBankFile] = useState<string>('');
   const [applicantType, setApplicantType] = useState<'employer' | 'unemployed' | 'minor'>('employer');
   const [aiBankIncome, setAiBankIncome] = useState('');
@@ -1161,6 +1174,49 @@ export default function App() {
   };
 
   const currentScore = useMemo(() => calculateScore(profile, simulatorValue), [profile, simulatorValue]);
+
+  // ── Schengen Profil Bazlı Ülke Eşleşme Algoritması ──────────────
+  const computeCountryMatchScore = (country: SchengenCountry): number => {
+    let ms = 0;
+
+    // 1. Temel onay oranı ağırlığı (0–35 puan)
+    ms += country.approvalRate * 0.35;
+
+    // 2. Kullanıcı skoru ile ülke zorluğu uyumu (0–25 puan)
+    const diffThreshold: Record<string, number> = { 'Kolay': 40, 'Orta': 55, 'Zor': 70, 'Çok Zor': 85 };
+    const threshold = diffThreshold[country.difficulty] ?? 55;
+    if (currentScore >= threshold + 15) ms += 25;
+    else if (currentScore >= threshold) ms += 18;
+    else if (currentScore >= threshold - 15) ms += 8;
+    else ms += 0;
+
+    // 3. Finansal uyumluluk (0–20 puan)
+    const balance = parseInt(aiBankBalance || profile.bankBalance || '0') || 0;
+    const income = parseInt(aiBankIncome || profile.monthlyIncome || '0') || 0;
+    const eurRate = 40;
+    const userDailyEst = balance > 0 ? (balance / 90 / eurRate) : (income * 0.3 / 30 / eurRate);
+    if (userDailyEst >= country.dailyBudgetReq * 1.5) ms += 20;
+    else if (userDailyEst >= country.dailyBudgetReq) ms += 12;
+    else if (userDailyEst >= country.dailyBudgetReq * 0.7) ms += 5;
+
+    // 4. SGK / İstihdam faktörü (0–10 puan)
+    const employmentHeavy = ['Almanya', 'Avusturya', 'Hollanda', 'İsveç', 'Norveç', 'Danimarka', 'Finlandiya'];
+    if (profile.hasSgkJob) {
+      ms += employmentHeavy.includes(country.name) ? 10 : 6;
+    } else {
+      ms += employmentHeavy.includes(country.name) ? -5 : 0;
+    }
+
+    // 5. Vize geçmişi bonusu (0–10 puan)
+    if (profile.hasHighValueVisa) ms += 10;
+    else if (profile.hasOtherVisa) ms += 6;
+
+    // 6. Trend bonusu (–5 / 0 / +3)
+    if (country.trend === 'İyileşiyor') ms += 3;
+    else if (country.trend === 'Kötüleşiyor') ms -= 5;
+
+    return Math.max(0, Math.min(100, Math.round(ms)));
+  };
 
   const intelligence = useMemo(() => {
     // ─────────────────────────────────────────────────────────
@@ -1605,7 +1661,7 @@ export default function App() {
   // ── Özellik 8: Banka Dökümü Kural Bazlı Analizi ─────────────────────
   const analyzeWithRules = (fileName: string) => {
     setAiBankLoading(true);
-    setAiBankResult('');
+    setAiBankResult(null);
 
     setTimeout(() => {
       const income = parseInt(aiBankIncome || profile.monthlyIncome || '0') || 0;
@@ -1674,27 +1730,17 @@ export default function App() {
         ? 'Mali profil sınırda. Ek destek belgeleri (tapu, araç, mevduat hesabı, sigorta) kritik önem taşıyor.'
         : 'Mali profil yetersiz görünüyor. Başvuru öncesinde en az 3 ay bakiye oluşturun veya sponsor mektubu alın.';
 
-      const result = [
-        `${gradeEmoji} BANKA EKSTRESİ VİZE UYUMLULUK RAPORU`,
-        `Dosya: ${fileName || '(dosyasız analiz)'}`,
-        `Hedef Ülke: ${country}   |   Puan: ${score}/100 — ${grade}`,
-        `────────────────────────────────────`,
-        ``,
-        `✅ GÜÇLÜ YÖNLER`,
-        positives.length ? positives.map(p => `• ${p}`).join('\n') : '• Bilgi eksik — formu doldurunca güçlü yönler burada görünecek',
-        ``,
-        negatives.length ? `⚠️ RİSKLİ ALANLAR\n${negatives.map(n => `• ${n}`).join('\n')}` : '',
-        tips.length ? `\n💡 ÖNERİLER\n${tips.map(t => `• ${t}`).join('\n')}` : '',
-        ``,
-        `────────────────────────────────────`,
-        `📋 GENEL DEĞERLENDİRME`,
-        ``,
-        summaryText,
-        ``,
-        `Bu rapor VizeAkıl kural motoru tarafından oluşturulmuştur. Konsolosluk kararı nihai yetkidir.`,
-      ].filter(l => l !== '').join('\n');
-
-      setAiBankResult(result);
+      setAiBankResult({
+        fileName: fileName || '(dosyasız analiz)',
+        country,
+        score,
+        grade,
+        gradeEmoji,
+        positives: positives.length ? positives : ['Bilgi eksik — formu doldurunca güçlü yönler burada görünecek'],
+        negatives,
+        tips,
+        summary: summaryText,
+      });
       setAiBankLoading(false);
     }, 1800);
   };
@@ -2477,7 +2523,64 @@ Signature: _______________     Date: ${today}`;
     }
   };
 
+  // ── Custom Cursor ────────────────────────────────────────
+  React.useEffect(() => {
+    const dot = document.querySelector('#vize-cursor') as HTMLElement | null;
+    if (!dot) return;
+
+    let raf = 0;
+    let mx = -100, my = -100;
+
+    const onMove = (e: MouseEvent) => {
+      mx = e.clientX;
+      my = e.clientY;
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        dot.style.left = mx + 'px';
+        dot.style.top = my + 'px';
+      });
+    };
+
+    const onDown = () => document.body.classList.add('cursor-click');
+    const onUp = () => document.body.classList.remove('cursor-click');
+
+    const getType = (el: Element | null): string => {
+      if (!el) return '';
+      if (el.closest('input, textarea, select, [contenteditable]')) return 'text';
+      const locked = el.closest('[data-locked="true"]');
+      if (locked) return 'premium';
+      const danger = el.closest('[data-cursor="danger"]');
+      if (danger) return 'danger';
+      if (el.closest('button, a, label, [role="button"], [tabindex]')) return 'hover';
+      return '';
+    };
+
+    const onOver = (e: MouseEvent) => {
+      const type = getType(e.target as Element);
+      document.body.classList.remove('cursor-hover', 'cursor-premium', 'cursor-text', 'cursor-danger');
+      if (type) document.body.classList.add('cursor-' + type);
+    };
+
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseover', onOver);
+    document.addEventListener('mousedown', onDown);
+    document.addEventListener('mouseup', onUp);
+
+    return () => {
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseover', onOver);
+      document.removeEventListener('mousedown', onDown);
+      document.removeEventListener('mouseup', onUp);
+    };
+  }, []);
+
   return (
+    <>
+    {/* Custom Cursor */}
+    <div id="vize-cursor" aria-hidden="true">
+      <div className="cursor-ring"/>
+      <div className="cursor-dot"/>
+    </div>
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans selection:bg-brand-100 selection:text-brand-900">
       {/* Navigation */}
       <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur-xl border-b border-slate-200/60 px-4 sm:px-6 py-3 sm:py-4">
@@ -3401,22 +3504,101 @@ Signature: _______________     Date: ${today}`;
                   </label>
                   )}
 
-                  {/* Analiz sonucu */}
+                  {/* Analiz sonucu — Yapılandırılmış görünüm */}
                   {aiBankResult && (
-                    <div className="space-y-3">
+                    <div className="space-y-4">
+                      {/* Başlık + Yeni Analiz */}
                       <div className="flex items-center gap-2">
-                        <Sparkles className="w-5 h-5 text-blue-600" />
-                        <h4 className="font-bold text-slate-900">Vize Uyumluluk Raporu</h4>
-                        <button onClick={() => { setAiBankResult(''); setAiBankFile(''); setAiBankIncome(''); setAiBankBalance(''); setAiBankMonths('3'); setAiBankSalaryRegular(true); setAiBankLargeDeposit(false); }}
+                        <Sparkles className="w-5 h-5 text-blue-600"/>
+                        <h4 className="font-black text-slate-900">Vize Uyumluluk Raporu</h4>
+                        <button onClick={() => { setAiBankResult(null); setAiBankFile(''); setAiBankIncome(''); setAiBankBalance(''); setAiBankMonths('3'); setAiBankSalaryRegular(true); setAiBankLargeDeposit(false); }}
                           className="ml-auto flex items-center gap-1 text-sm font-bold text-blue-600 hover:underline">
-                          <RefreshCw className="w-4 h-4" /> Yeni Analiz
+                          <RefreshCw className="w-4 h-4"/> Yeni Analiz
                         </button>
                       </div>
-                      <div className="p-6 bg-slate-50 rounded-2xl border border-slate-200 text-sm text-slate-700 leading-relaxed whitespace-pre-wrap font-mono">
-                        {aiBankResult}
+
+                      {/* Skor Kartı */}
+                      <div className={`p-5 rounded-2xl border-2 ${aiBankResult.score >= 80 ? 'bg-emerald-50 border-emerald-300' : aiBankResult.score >= 65 ? 'bg-blue-50 border-blue-300' : aiBankResult.score >= 50 ? 'bg-amber-50 border-amber-300' : 'bg-rose-50 border-rose-300'}`}>
+                        <div className="flex items-center justify-between mb-2">
+                          <div>
+                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Hedef Ülke</p>
+                            <p className="font-black text-slate-900 text-lg">{aiBankResult.country}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Vize Uyum Puanı</p>
+                            <p className={`text-3xl font-black ${aiBankResult.score >= 80 ? 'text-emerald-700' : aiBankResult.score >= 65 ? 'text-blue-700' : aiBankResult.score >= 50 ? 'text-amber-700' : 'text-rose-700'}`}>
+                              {aiBankResult.score}<span className="text-base font-bold text-slate-400">/100</span>
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-lg">{aiBankResult.gradeEmoji}</span>
+                          <span className={`font-black text-sm px-3 py-1 rounded-lg ${aiBankResult.score >= 80 ? 'bg-emerald-200 text-emerald-800' : aiBankResult.score >= 65 ? 'bg-blue-200 text-blue-800' : aiBankResult.score >= 50 ? 'bg-amber-200 text-amber-800' : 'bg-rose-200 text-rose-800'}`}>
+                            {aiBankResult.grade}
+                          </span>
+                          <span className="text-xs text-slate-500 ml-1">— {aiBankResult.fileName}</span>
+                        </div>
+                        {/* Progress bar */}
+                        <div className="mt-3 h-2 bg-white/60 rounded-full overflow-hidden">
+                          <div className={`h-full rounded-full transition-all ${aiBankResult.score >= 80 ? 'bg-emerald-500' : aiBankResult.score >= 65 ? 'bg-blue-500' : aiBankResult.score >= 50 ? 'bg-amber-500' : 'bg-rose-500'}`}
+                            style={{width: `${aiBankResult.score}%`}}/>
+                        </div>
                       </div>
-                      <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl flex gap-3">
-                        <Info className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+
+                      {/* Güçlü Yönler */}
+                      <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-200">
+                        <h5 className="font-black text-emerald-800 text-sm mb-3 flex items-center gap-2">
+                          <CheckCircle2 className="w-4 h-4"/> Güçlü Yönler
+                        </h5>
+                        <ul className="space-y-1.5">
+                          {aiBankResult.positives.map((p, i) => (
+                            <li key={i} className="flex items-start gap-2 text-sm text-emerald-800">
+                              <span className="text-emerald-500 mt-0.5 shrink-0">•</span> {p}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+
+                      {/* Riskli Alanlar */}
+                      {aiBankResult.negatives.length > 0 && (
+                        <div className="p-4 bg-rose-50 rounded-2xl border border-rose-200">
+                          <h5 className="font-black text-rose-800 text-sm mb-3 flex items-center gap-2">
+                            <AlertTriangle className="w-4 h-4"/> Riskli Alanlar
+                          </h5>
+                          <ul className="space-y-1.5">
+                            {aiBankResult.negatives.map((n, i) => (
+                              <li key={i} className="flex items-start gap-2 text-sm text-rose-800">
+                                <span className="text-rose-500 mt-0.5 shrink-0">•</span> {n}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      {/* Öneriler */}
+                      {aiBankResult.tips.length > 0 && (
+                        <div className="p-4 bg-blue-50 rounded-2xl border border-blue-200">
+                          <h5 className="font-black text-blue-800 text-sm mb-3 flex items-center gap-2">
+                            <Info className="w-4 h-4"/> Öneriler
+                          </h5>
+                          <ul className="space-y-1.5">
+                            {aiBankResult.tips.map((t, i) => (
+                              <li key={i} className="flex items-start gap-2 text-sm text-blue-800">
+                                <span className="text-blue-500 mt-0.5 shrink-0">→</span> {t}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      {/* Genel Değerlendirme */}
+                      <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200">
+                        <h5 className="font-black text-slate-800 text-sm mb-2">Genel Değerlendirme</h5>
+                        <p className="text-sm text-slate-700 leading-relaxed">{aiBankResult.summary}</p>
+                      </div>
+
+                      <div className="p-3 bg-amber-50 border border-amber-200 rounded-2xl flex gap-2">
+                        <Info className="w-4 h-4 text-amber-600 shrink-0 mt-0.5"/>
                         <p className="text-xs text-amber-800">Bu rapor VizeAkıl kural motoru tarafından oluşturulmuştur. Son karar konsolosluk memuruna aittir.</p>
                       </div>
                     </div>
@@ -3587,7 +3769,7 @@ Signature: _______________     Date: ${today}`;
                       </div>
                       <h3 className="text-2xl font-black">Schengen Ülke Kıyaslayıcısı</h3>
                       <p className="text-blue-100 text-sm mt-1">
-                        Profilinize göre hangi konsoloslukta onay şansınız en yüksek? 2024-2025 ret oranları.
+                        Profilinize göre onay şansınız en yüksek ülkeler — 2026 ret oranları ile sıralanmış.
                       </p>
                     </div>
                     <button onClick={() => setIsSchengenComparatorOpen(false)}
@@ -3612,27 +3794,41 @@ Signature: _______________     Date: ${today}`;
 
                 {/* Ülke listesi */}
                 <div className="overflow-y-auto flex-1 p-6 space-y-4">
-                  {/* Öneri bandı */}
+                  {/* Profil bazlı öneri bandı */}
                   {(() => {
-                    const best = [...schengenCountries]
-                      .filter(c => c.difficulty === 'Kolay' || (currentScore >= 65 && c.difficulty === 'Orta'))
-                      .sort((a, b) => a.rejectionRate - b.rejectionRate)[0];
+                    const ranked = [...schengenCountries]
+                      .map(c => ({ ...c, matchScore: computeCountryMatchScore(c) }))
+                      .sort((a, b) => b.matchScore - a.matchScore);
+                    const best = ranked[0];
                     return best ? (
-                      <div className="p-5 bg-emerald-50 border-2 border-emerald-200 rounded-2xl flex items-start gap-4 mb-2">
+                      <div className="p-5 bg-emerald-50 border-2 border-emerald-300 rounded-2xl flex items-start gap-4 mb-2">
                         <div className="text-3xl">{best.flag}</div>
-                        <div>
+                        <div className="flex-1">
                           <div className="text-xs font-black text-emerald-600 uppercase tracking-widest mb-1">
-                            🎯 Profiliniz İçin En Uygun Seçim
+                            🎯 Profiliniz İçin #1 Öneri — Algoritma Seçimi
                           </div>
-                          <div className="font-bold text-slate-900 text-lg">{best.name} — Ret Oranı %{best.rejectionRate}</div>
-                          <p className="text-sm text-slate-600 mt-1">{best.tip}</p>
+                          <div className="font-black text-slate-900 text-lg">{best.name}</div>
+                          <div className="flex items-center gap-3 mt-1">
+                            <span className="text-xs bg-emerald-200 text-emerald-800 font-black px-2 py-0.5 rounded-lg">Profil Uyumu: %{best.matchScore}</span>
+                            <span className="text-xs bg-rose-100 text-rose-700 font-bold px-2 py-0.5 rounded-lg">2026 Ret: %{best.rejectionRate}</span>
+                            <span className="text-xs bg-blue-100 text-blue-700 font-bold px-2 py-0.5 rounded-lg">{best.trend}</span>
+                          </div>
+                          <p className="text-sm text-slate-600 mt-2">{best.tip}</p>
                         </div>
                       </div>
                     ) : null;
                   })()}
 
+                  <div className="flex items-center gap-2 px-1">
+                    <TrendingUp className="w-4 h-4 text-blue-600"/>
+                    <p className="text-xs font-bold text-slate-500">Profilinize göre en uyumlu ülkeler üstte — algoritma: onay oranı × skor uyumu × finansal kapasite × SGK × vize geçmişi</p>
+                  </div>
+
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                    {schengenCountries.map((country) => {
+                    {[...schengenCountries]
+                      .map(c => ({ ...c, matchScore: computeCountryMatchScore(c) }))
+                      .sort((a, b) => b.matchScore - a.matchScore)
+                      .map((country) => {
                       const diffColors: Record<string, string> = {
                         emerald: 'bg-emerald-50 border-emerald-200',
                         amber: 'bg-amber-50 border-amber-200',
@@ -3660,7 +3856,15 @@ Signature: _______________     Date: ${today}`;
                               <span className="text-3xl">{country.flag}</span>
                               <div>
                                 <div className="font-black text-slate-900 text-base">{country.name}</div>
-                                <div className="text-xs text-slate-500">{country.consulate}</div>
+                                <div className="flex items-center gap-1.5 mt-0.5">
+                                  <span className={`text-[10px] font-black px-2 py-0.5 rounded-md ${'matchScore' in country && (country as {matchScore:number}).matchScore >= 70 ? 'bg-emerald-100 text-emerald-700' : 'matchScore' in country && (country as {matchScore:number}).matchScore >= 50 ? 'bg-amber-100 text-amber-700' : 'bg-rose-100 text-rose-700'}`}>
+                                    Uyum {'matchScore' in country ? `%${(country as {matchScore:number}).matchScore}` : '—'}
+                                  </span>
+                                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md ${country.trend === 'İyileşiyor' ? 'bg-emerald-50 text-emerald-600' : country.trend === 'Kötüleşiyor' ? 'bg-rose-50 text-rose-600' : 'bg-slate-100 text-slate-500'}`}>
+                                    {country.trend}
+                                  </span>
+                                </div>
+                                <div className="text-xs text-slate-400 mt-0.5">{country.consulate}</div>
                               </div>
                             </div>
                             <div className="text-right">
@@ -3676,7 +3880,7 @@ Signature: _______________     Date: ${today}`;
                           {/* Ret oranı çubuğu */}
                           <div className="mb-3">
                             <div className="flex justify-between text-xs font-bold text-slate-500 mb-1">
-                              <span>Türk Başvurucular — Ret Oranı</span>
+                              <span>2026 Ret Oranı (Türk Başvurucular)</span>
                               <span className={`font-black ${country.rejectionRate > 30 ? 'text-rose-600' : country.rejectionRate > 20 ? 'text-orange-600' : country.rejectionRate > 12 ? 'text-amber-600' : 'text-emerald-600'}`}>
                                 %{country.rejectionRate}
                               </span>
@@ -5795,5 +5999,6 @@ Signature: _______________     Date: ${today}`;
         )}
       </AnimatePresence>
     </div>
+    </>
   );
 }
