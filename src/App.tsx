@@ -1054,35 +1054,8 @@ export default function App() {
     setStepRaw(urlToStep(location.pathname));
   }, [location.pathname]);
 
-  // Premium durum: localStorage'daki JWT token ile doğrulanır
-  const [isPremium, setIsPremium] = useState<boolean>(() => {
-    try {
-      // URL query'den payment status, fragment'tan token oku
-      // Fragment (#) sunucu log'larına düşmez — daha güvenli iletim
-      const params = new URLSearchParams(window.location.search);
-      const paymentStatus = params.get('payment');
-      const fragment = window.location.hash; // #token=eyJ...
-      const urlToken = fragment.startsWith('#token=') ? fragment.slice(7) : null;
-      if (urlToken && paymentStatus === 'success') {
-        localStorage.setItem('va_premium_token', urlToken);
-        // Token'ı URL'den temizle (tarayıcı geçmişine düşmesin)
-        window.history.replaceState({}, '', window.location.pathname);
-        return true;
-      }
-      // Mevcut token var mı?
-      const stored = localStorage.getItem('va_premium_token');
-      if (!stored) return false;
-      // Token süresi dolmuş mu? (JWT payload decode — doğrulama sunucu tarafında)
-      const payload = JSON.parse(atob(stored.split('.')[1]));
-      if (payload.exp && payload.exp < Date.now() / 1000) {
-        localStorage.removeItem('va_premium_token');
-        return false;
-      }
-      return payload.paid === true;
-    } catch {
-      return false;
-    }
-  });
+  // TEST MODU: Tüm premium araçlar açık — ödeme entegrasyonu tamamlanınca false yapılacak
+  const [isPremium, setIsPremium] = useState(true);
   const [isUpgradeOpen, setIsUpgradeOpen] = useState(false);
   const [onboardingStep, setOnboardingStep] = useState(0);
   const [onboardingCountry, setOnboardingCountry] = useState('Almanya');
