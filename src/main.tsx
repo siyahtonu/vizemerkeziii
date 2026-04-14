@@ -4,11 +4,14 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import './index.css';
 
 // ── Code splitting: sayfalar lazy yüklenir ──────────────────────────────
-const App      = lazy(() => import('./App'));
-const KVKK     = lazy(() => import('./pages/KVKK'));
-const Gizlilik = lazy(() => import('./pages/Gizlilik'));
-const Iletisim = lazy(() => import('./pages/Iletisim'));
-const Hakkimizda = lazy(() => import('./pages/Hakkimizda'));
+const App             = lazy(() => import('./App'));
+const KVKK            = lazy(() => import('./pages/KVKK'));
+const Gizlilik        = lazy(() => import('./pages/Gizlilik'));
+const Iletisim        = lazy(() => import('./pages/Iletisim'));
+const Hakkimizda      = lazy(() => import('./pages/Hakkimizda'));
+const KullanimKosullari = lazy(() => import('./pages/KullanimKosullari'));
+const MesafeliSatis   = lazy(() => import('./pages/MesafeliSatis'));
+const CerezPolitikasi = lazy(() => import('./pages/CerezPolitikasi'));
 
 const LoadingSpinner = () => (
   <div className="min-h-screen flex items-center justify-center bg-slate-50">
@@ -31,6 +34,9 @@ createRoot(document.getElementById('root')!).render(
           <Route path="/gizlilik-politikasi" element={<Gizlilik />} />
           <Route path="/iletisim"            element={<Iletisim />} />
           <Route path="/hakkimizda"          element={<Hakkimizda />} />
+          <Route path="/kullanim-kosullari"  element={<KullanimKosullari />} />
+          <Route path="/mesafeli-satis"      element={<MesafeliSatis />} />
+          <Route path="/cerez-politikasi"    element={<CerezPolitikasi />} />
           <Route path="*"                    element={<App />} />
         </Routes>
       </Suspense>

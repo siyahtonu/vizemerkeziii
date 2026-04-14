@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { ShieldCheck, Mail } from 'lucide-react';
 
 const Footer: React.FC = () => {
@@ -41,9 +42,9 @@ const Footer: React.FC = () => {
                 { label: 'Çerez Politikası', href: '/cerez-politikasi' },
               ].map(({ label, href }) => (
                 <li key={href}>
-                  <a href={href} className="text-slate-400 hover:text-white transition-colors">
+                  <Link to={href} className="text-slate-400 hover:text-white transition-colors">
                     {label}
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>
