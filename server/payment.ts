@@ -17,6 +17,13 @@ import rateLimit from 'express-rate-limit';
 
 const router = express.Router();
 
+// ── Güvenlik: JWT_SECRET zorunlu — eksikse sunucu başlamaz ───────────────
+const jwtSecret = process.env.JWT_SECRET;
+if (!jwtSecret || jwtSecret.length < 32) {
+  console.error('[HATA] JWT_SECRET .env.local dosyasında tanımlanmamış veya çok kısa (min 32 karakter). Sunucu durduruluyor.');
+  process.exit(1);
+}
+
 // ── iyzico istemcisi (test modu) ──────────────────────────────────────────
 const iyzipay = new Iyzipay({
   apiKey:     process.env.IYZICO_API_KEY    ?? '',
@@ -117,15 +124,15 @@ router.post('/callback', express.urlencoded({ extended: true }), async (req, res
       }
 
       // ── JWT premium token oluştur ─────────────────────────────────────
-      const jwtSecret = process.env.JWT_SECRET ?? 'change_me_in_production';
       const premiumToken = jwt.sign(
         { email: result.buyer?.email ?? '', plan: result.basketId, paid: true },
         jwtSecret,
         { expiresIn: '90d' }
       );
 
-      // Başarı — frontend'e token ile yönlendir
-      res.redirect(`${process.env.APP_URL}/?payment=success&token=${premiumToken}`);
+      // Token fragment (#) üzerinden iletilir — sunucu log'larına ve
+      // HTTP Referer header'ına düşmez (fragment sunucuya gönderilmez)
+      res.redirect(`${process.env.APP_URL}/?payment=success#token=${premiumToken}`);
       resolve();
     });
   });
@@ -139,7 +146,6 @@ router.get('/verify', (req, res) => {
   if (!token) return res.json({ premium: false });
 
   try {
-    const jwtSecret = process.env.JWT_SECRET ?? 'change_me_in_production';
     const decoded = jwt.verify(token, jwtSecret) as { paid: boolean };
     return res.json({ premium: decoded.paid === true });
   } catch {
