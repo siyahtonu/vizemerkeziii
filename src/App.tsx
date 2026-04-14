@@ -57,7 +57,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { jsPDF } from 'jspdf';
 import Footer from './components/Footer';
-import { buildCountryWarning, CountryWarning } from './lib/scoringV2';
+import type { CountryWarning } from './lib/scoringV2';
 
 // Types
 interface ProfileData {
@@ -1020,6 +1020,140 @@ const BANK_PLAN_PARAMS: Record<string, { dailyEur: number; minDays: number; curr
 // Premium tool IDs
 const PREMIUM_TOOLS = ['copilot', 'comparator', 'refusal', 'aibank', 'socialmedia', 'redflag', 'interview', 'multicountry', 'bankplan', 'refusalmap'];
 
+// ── Türk başvurucular için ülke ret oranları (2024 gerçek veri) ──────────
+const TR_REJECTION_RATES: Record<string, number> = {
+  'Yunanistan': 0.06,
+  'Macaristan': 0.08,
+  'İtalya':     0.087,
+  'Portekiz':   0.09,
+  'Polonya':    0.09,
+  'İspanya':    0.10,
+  'Hollanda':   0.14,
+  'Avusturya':  0.14,
+  'Norveç':     0.20,
+  'Fransa':     0.21,
+  'ABD':        0.22,
+  'İsveç':      0.22,
+  'Almanya':    0.23,
+  'İngiltere':  0.30,
+  'Danimarka':  0.66,
+};
+
+const DIFFICULT_COUNTRIES = new Set(['Almanya', 'Fransa', 'İngiltere', 'ABD', 'Danimarka', 'İsveç', 'Norveç']);
+
+// ── Ret Taksonomisi: Forum verisinden çıkarılmış gerçek ret kalıpları ────
+interface RejectionPattern {
+  id: string;
+  name: string;
+  country: 'schengen' | 'uk' | 'usa' | 'all';
+  legalCode?: string;
+  frequency: number;   // 0-100, forum'da görülme sıklığı
+  trigger: (p: ProfileData) => boolean;
+  explanation: string;
+  mitigation: string;
+}
+
+const REJECTION_TAXONOMY: RejectionPattern[] = [
+  {
+    id: 'schengen-article-10',
+    name: 'Seyahat amacı inandırıcı bulunmadı',
+    country: 'schengen',
+    legalCode: 'Madde 10',
+    frequency: 45,
+    trigger: (p) => !p.purposeClear || !p.paidReservations,
+    explanation: 'Schengen\'deki en yaygın ret sebebi (%45). Güçlü finans ve profil bile net seyahat gerekçesi olmadan yetmez.',
+    mitigation: 'Günlük plan yazın, spesifik müze/etkinlik adı verin. "Neden şimdi, neden bu ülke" sorusuna 3 cümle cevabınız olsun.',
+  },
+  {
+    id: 'schengen-article-3',
+    name: 'Finansal kanıt yetersiz/şüpheli',
+    country: 'schengen',
+    legalCode: 'Madde 3',
+    frequency: 30,
+    trigger: (p) => p.hasSuspiciousLargeDeposit || !p.bankSufficientBalance || !p.bankRegularity,
+    explanation: 'Son 28 gün içinde büyük para girişi, statik hesap veya yetersiz bakiye — hepsi aynı maddeden ret.',
+    mitigation: '3-6 ay düzenli maaş girişi, organik harcama deseni, başvurudan en az 30 gün önce bakiyeye dokunmama.',
+  },
+  {
+    id: 'schengen-article-13',
+    name: 'Geri dönüş şüphesi',
+    country: 'schengen',
+    legalCode: 'Madde 13',
+    frequency: 25,
+    trigger: (p) => !p.isMarried && !p.hasHighValueVisa && p.yearsInCurrentJob < 1,
+    explanation: 'Bekar + ilk Schengen + yeni iş kombinasyonu. Profil güçlü olsa bile bu üçlü otomatik risk sayılır.',
+    mitigation: 'Mülk/araç bağını vurgulayın. Aile üyesi Türkiye\'de kalacak mı belirtin. 5-7 günlük kısa seyahat önerin.',
+  },
+  {
+    id: 'all-sgk-missing',
+    name: 'SGK/İstihdam kanıtı eksik',
+    country: 'schengen',
+    legalCode: 'Madde 14',
+    frequency: 26,
+    trigger: (p) => !p.hasSgkJob,
+    explanation: 'Kayıt dışı çalışma veya SGK yokluğu. "İşimi kanıtlayamıyorum" şikayeti forumlarda çok sık.',
+    mitigation: 'SGK kaydı veya noter onaylı çalışma belgesi edinin. Serbest meslek varsa vergi levhası şart.',
+  },
+  {
+    id: 'uk-genuine-visitor',
+    name: 'Gerçek Ziyaretçi testi başarısız',
+    country: 'uk',
+    legalCode: 'Appendix V 4.2',
+    frequency: 50,
+    trigger: (p) => !p.purposeClear || !p.paidReservations || !p.hasReturnTicket,
+    explanation: 'UK\'nın en sık ret sebebi. Memur "gerçekten turist mi yoksa kalmak mı istiyor?" sorusuna kesin evet demezse ret.',
+    mitigation: 'Cover letter detaylı yazın (ne kadar, nerede, ne yapacaksınız). Türkiye\'ye dönüş bağlarını sayılarla gösterin.',
+  },
+  {
+    id: 'uk-source-of-funds',
+    name: 'Para kaynağı belirsiz',
+    country: 'uk',
+    legalCode: 'Appendix FM 1.7A',
+    frequency: 35,
+    trigger: (p) => p.hasSuspiciousLargeDeposit || !p.has6MonthStatements,
+    explanation: 'UK 28 gün kuralını katı uyguluyor. Son 6 ay hesap hareketi ve paranın kaynağı doğrulanmalı.',
+    mitigation: 'Son 6 ay banka ekstresini hazırlayın. Büyük girişler için kaynak belgesi (satış, miras, ikramiye) ekleyin.',
+  },
+  {
+    id: 'uk-deception',
+    name: 'Beyan tutarsızlığı — 10 yıl ban riski',
+    country: 'uk',
+    legalCode: 'Paragraph 9.7.1',
+    frequency: 5,
+    trigger: (p) => p.hasPreviousRefusal && !p.previousRefusalDisclosed,
+    explanation: 'Önceki ret formda bildirilmezse "Deception" sayılır → 10 yıl UK yasağı. En ağır yaptırım.',
+    mitigation: 'Tüm önceki retleri dürüstçe bildirin. Belgeler ile form arasında tek tutarsızlık olmasın.',
+  },
+  {
+    id: 'usa-214b',
+    name: '214(b) — Zayıf Türkiye bağları',
+    country: 'usa',
+    legalCode: 'INA 214(b)',
+    frequency: 65,
+    trigger: (p) => (!p.isMarried && !p.hasChildren && !p.hasAssets) || p.yearsInCurrentJob < 2,
+    explanation: 'ABD\'nin en sık ret sebebi (%65). Türkiye\'ye bağlayan somut unsurlar yoksa "potansiyel göçmen" sayılıyor.',
+    mitigation: 'Tapu, araç, SGK, aile fotoğrafları — bağları somutlaştırın. Kariyer planınızı mülakatta anlatın.',
+  },
+  {
+    id: 'usa-recent-job',
+    name: 'Yakın iş değişikliği',
+    country: 'usa',
+    frequency: 20,
+    trigger: (p) => p.yearsInCurrentJob < 1,
+    explanation: 'Son 6 ayda iş değişikliği istikrarsızlık sinyali. B1/B2 mülakat için ciddi risk.',
+    mitigation: 'Başvurudan önce yeni işte en az 6-12 ay kalın. Mümkünse öncekiyle aynı sektör/pozisyon.',
+  },
+  {
+    id: 'all-fake-booking',
+    name: 'Sahte rezervasyon tespiti',
+    country: 'all',
+    frequency: 25,
+    trigger: (p) => !p.noFakeBooking,
+    explanation: 'İptal edilebilir ücretli otel/uçuş PDF\'i konsoloslukça biliniyor. Almanya ve UK özellikle kontrol ediyor.',
+    mitigation: 'Gerçek rezervasyon yapın veya Booking.com\'un ücretsiz iptalli seçeneğini kullanın (fake PDF değil).',
+  },
+];
+
 export default function App() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -1318,10 +1452,10 @@ export default function App() {
   // Hedef: Danışmanlık müşterilerinde %90+ başarı oranı
   // ============================================================
   // Skorlama Algoritması v2.5 — MOD B Kalibrasyon
-  // Gerçek Türk başvuru vakalarına dayalı (Ekşi Sözlük, şikayetvar.com,
-  // forum/blog, Instagram grupları, EU Schengen Statistics 2024-2025)
+  // calculateRawScore: ülke kalibrasyonu öncesi ham skor (0-100)
+  // calculateScore:    Bayes blending ile kalibre edilmiş final skor
   // ============================================================
-  const calculateScore = (data: ProfileData, simValue: number = 0) => {
+  const calculateRawScore = (data: ProfileData, simValue: number = 0): number => {
     let score = 10; // Temel başlangıç puanı
 
     // ─────────────────────────────────────────────────────────
@@ -1458,63 +1592,67 @@ export default function App() {
     }
 
     score = Math.min(score, vetoCap);
+    return Math.max(0, Math.min(score, 100));
+  };
 
-    // ─────────────────────────────────────────────────────────
-    // BÖLÜM 9: ÜLKE KALİBRASYONU — Bayes blending
-    // v2.5: Sadece +/- puan değil, gerçek Türk ret oranlarıyla
-    // profil skoru %65 + ülke başarı oranı %35 karışımı
-    // ─────────────────────────────────────────────────────────
-    const trRejectionRates: Record<string, number> = {
-      'Yunanistan': 0.06,
-      'Macaristan': 0.08,
-      'İtalya':     0.087,
-      'Portekiz':   0.09,
-      'Polonya':    0.09,
-      'İspanya':    0.10,
-      'Hollanda':   0.14,
-      'Avusturya':  0.14,
-      'Fransa':     0.21,
-      'Norveç':     0.20,
-      'İsveç':      0.22,
-      'Almanya':    0.23,
-      'ABD':        0.22,
-      'İngiltere':  0.30,
-      'Danimarka':  0.66,
-    };
-    const trRejRate = trRejectionRates[data.targetCountry] ?? 0.15;
-    const trSuccessRate = 1 - trRejRate;
-
-    const clamped = Math.max(0, Math.min(score, 100));
-    const blended = (clamped / 100) * 0.65 + trSuccessRate * 0.35;
-
+  // Bayes blending: profil %65 + ülke TR başarı oranı %35
+  const calculateScore = (data: ProfileData, simValue: number = 0): number => {
+    const raw = calculateRawScore(data, simValue);
+    const trRejRate = TR_REJECTION_RATES[data.targetCountry] ?? 0.15;
+    const blended = (raw / 100) * 0.65 + (1 - trRejRate) * 0.35;
     return Math.max(0, Math.min(100, Math.round(blended * 100)));
   };
 
   const currentScore = useMemo(() => calculateScore(profile, simulatorValue), [profile, simulatorValue]);
 
-  // ── Ülke Zorluk Uyarısı ──────────────────────────────────────────
-  const countryNameToCode: Record<string, string> = {
-    'Almanya': 'DE',
-    'Fransa': 'FR',
-    'İngiltere': 'GB',
-    'ABD': 'US',
-    'İtalya': 'IT',
-    'İspanya': 'ES',
-    'Hollanda': 'NL',
-    'Danimarka': 'DK',
-    'İsveç': 'SE',
-    'Norveç': 'NO',
-    'Polonya': 'PL',
-    'Yunanistan': 'GR',
-    'Portekiz': 'PT',
-    'Avusturya': 'AT',
-    'Macaristan': 'HU',
-  };
+  // ── Dinamik ülke uyarısı: tüm ülkeleri rawScore üzerinden puanla ─────────
   const countryWarning = useMemo<CountryWarning>(() => {
-    const code = countryNameToCode[profile.targetCountry];
-    if (!code) return { show: false, level: 'info', message: '', alternatives: [] };
-    return buildCountryWarning(code, currentScore);
-  }, [profile.targetCountry, currentScore]);
+    if (!DIFFICULT_COUNTRIES.has(profile.targetCountry)) {
+      return { show: false, level: 'info', message: '', alternatives: [] };
+    }
+
+    // Ham profil skoru — ülke kalibrasyonu olmadan
+    const raw = calculateRawScore(profile, simulatorValue);
+
+    // Tüm non-difficult ülkeleri dinamik olarak puanla
+    const alternatives = Object.entries(TR_REJECTION_RATES)
+      .filter(([name]) => !DIFFICULT_COUNTRIES.has(name))
+      .map(([name, rejRate]) => {
+        const blended = Math.round(((raw / 100) * 0.65 + (1 - rejRate) * 0.35) * 100);
+        return { code: name, name, approvalEstimate: Math.min(99, blended) };
+      })
+      .sort((a, b) => b.approvalEstimate - a.approvalEstimate)
+      .slice(0, 3);
+
+    const messages: Record<string, string> = {
+      'Almanya':   'Almanya, Türk başvurucular için ~%23 ret oranıyla en zorlu Schengen ülkelerinden biridir (2024). İstanbul %21.5, Ankara %27.1. En sık ret: seyahat amacı belirsizliği ve son dakika mevduat.',
+      'Fransa':    'Fransa, TLScontact süreci ve sıkı amaç belgesi gereklilikleriyle Türkler için ~%21 ret oranına sahip.',
+      'İngiltere': 'İngiltere, 28-gün bakiye kuralı ve 6-aylık döküm zorunluluğuyla Türkler için ~%30 ret oranında. Schengen\'den tamamen farklı kurallar geçerli.',
+      'ABD':       'ABD, 188 günlük randevu bekleme süresi ve mülakat zorunluluğuyla süreç çok uzun. Güçlü Türkiye bağı kanıtı şart.',
+      'İsveç':     'İsveç, seyahat geçmişi olmayan Türkler için %22 ret oranıyla riskli.',
+      'Norveç':    'Norveç, Türkler için %20 ret oranıyla zor bir Schengen ülkesidir.',
+      'Danimarka': 'Danimarka, Türk başvurucular için ~%66 ret oranıyla Schengen\'in en zor ülkesidir.',
+    };
+
+    const isDanger = profile.targetCountry === 'Danimarka' || profile.targetCountry === 'ABD';
+    return {
+      show: true,
+      level: isDanger ? 'danger' : 'warning',
+      message: messages[profile.targetCountry] ?? `${profile.targetCountry}, Türk başvurucular için yüksek ret oranıyla zorlu bir ülkedir.`,
+      alternatives,
+    };
+  }, [profile, simulatorValue]);
+
+  // ── Ret Taksonomisi: Profile uyan kalıpları tespit et ────────────────────
+  const rejectionMatches = useMemo(() => {
+    const countryKind = profile.targetCountry === 'İngiltere' ? 'uk'
+                      : profile.targetCountry === 'ABD'       ? 'usa'
+                      : 'schengen';
+    return REJECTION_TAXONOMY.filter(p => {
+      if (p.country !== 'all' && p.country !== countryKind) return false;
+      return p.trigger(profile);
+    });
+  }, [profile]);
 
   // ── Schengen Profil Bazlı Ülke Eşleşme Algoritması ──────────────
   const computeCountryMatchScore = (country: SchengenCountry): number => {
@@ -5650,6 +5788,78 @@ Signature: _______________     Date: ${today}`;
                         </div>
                       </div>
                     </div>
+                  </div>
+
+                  {/* ── Ret Risk Analizi ─────────────────────────────── */}
+                  <div className="bg-white rounded-[3rem] border border-slate-100 shadow-sm overflow-hidden">
+                    <div className="px-8 pt-8 pb-4 flex items-center justify-between">
+                      <div>
+                        <h3 className="text-lg font-bold text-slate-900">Ret Risk Analizi</h3>
+                        <p className="text-xs text-slate-400 mt-0.5">Profilinizle eşleşen gerçek ret kalıpları</p>
+                      </div>
+                      {rejectionMatches.length === 0 ? (
+                        <span className="text-xs font-black px-3 py-1.5 bg-emerald-50 text-emerald-600 rounded-xl border border-emerald-100">
+                          Risk Tespit Edilmedi
+                        </span>
+                      ) : (
+                        <span className="text-xs font-black px-3 py-1.5 bg-rose-50 text-rose-600 rounded-xl border border-rose-100">
+                          {rejectionMatches.length} Risk Var
+                        </span>
+                      )}
+                    </div>
+
+                    {rejectionMatches.length === 0 ? (
+                      <div className="px-8 pb-8">
+                        <div className="flex items-center gap-3 p-4 bg-emerald-50 rounded-2xl border border-emerald-100">
+                          <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
+                          <p className="text-sm text-emerald-700 font-medium">
+                            Seçilen ülke için profilinizde bilinen ret kalıplarıyla eşleşen kritik risk bulunamadı.
+                          </p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="divide-y divide-slate-50">
+                        {rejectionMatches.map((match) => {
+                          const severity = match.frequency >= 40 ? 'critical'
+                                         : match.frequency >= 20 ? 'warning' : 'info';
+                          return (
+                            <div key={match.id} className="px-8 py-5">
+                              <div className="flex items-start gap-3">
+                                <div className={`mt-0.5 w-8 h-8 rounded-xl flex items-center justify-center shrink-0 text-xs font-black ${
+                                  severity === 'critical' ? 'bg-rose-100 text-rose-600'
+                                  : severity === 'warning' ? 'bg-amber-100 text-amber-700'
+                                  : 'bg-blue-100 text-blue-600'
+                                }`}>
+                                  {match.frequency}%
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2 flex-wrap mb-1">
+                                    <span className="text-sm font-bold text-slate-900">{match.name}</span>
+                                    {match.legalCode && (
+                                      <span className="text-[10px] font-black px-2 py-0.5 bg-slate-100 text-slate-500 rounded-lg">
+                                        {match.legalCode}
+                                      </span>
+                                    )}
+                                    <span className={`text-[10px] font-black px-2 py-0.5 rounded-lg ${
+                                      severity === 'critical' ? 'bg-rose-100 text-rose-600'
+                                      : severity === 'warning' ? 'bg-amber-100 text-amber-700'
+                                      : 'bg-blue-100 text-blue-600'
+                                    }`}>
+                                      {severity === 'critical' ? 'KRİTİK' : severity === 'warning' ? 'UYARI' : 'BİLGİ'}
+                                    </span>
+                                  </div>
+                                  <p className="text-xs text-slate-500 leading-relaxed mb-2">{match.explanation}</p>
+                                  <div className="flex items-start gap-1.5">
+                                    <Zap className="w-3 h-3 text-brand-500 shrink-0 mt-0.5" />
+                                    <p className="text-xs text-brand-700 font-medium leading-relaxed">{match.mitigation}</p>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
 
                   {/* Intelligence Bento Grid */}
