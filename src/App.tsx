@@ -979,7 +979,8 @@ const PREMIUM_TOOLS = ['copilot', 'comparator', 'refusal', 'aibank', 'socialmedi
 
 export default function App() {
   const [step, setStep] = useState<'hero' | 'onboarding' | 'assessment' | 'dashboard' | 'letter' | 'tactics'>('hero');
-  const [isPremium, setIsPremium] = useState(false);
+  // TODO: Ödeme sistemi hazır olduğunda false yap ve iyzico JWT ile kontrol et
+  const [isPremium, setIsPremium] = useState(true);
   const [isUpgradeOpen, setIsUpgradeOpen] = useState(false);
   const [onboardingStep, setOnboardingStep] = useState(0);
   const [onboardingCountry, setOnboardingCountry] = useState('Almanya');
