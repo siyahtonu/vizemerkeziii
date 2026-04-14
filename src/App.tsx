@@ -7976,7 +7976,7 @@ Signature: _______________     Date: ${today}`;
                   const months = parseInt(bankPlanMonthsLeft) || 3;
                   const params = BANK_PLAN_PARAMS[bankPlanCountry] ?? BANK_PLAN_PARAMS['Almanya'];
                   const eurRate = params.multiplier;
-                  const requiredEur = params.dailyEur * Math.max(days, params.minDays);
+                  const requiredEur = params.dailyEur * days;
                   const requiredTL  = requiredEur * eurRate;
                   const gap = Math.max(0, requiredTL - bal);
                   const monthlyDeposit = gap > 0 ? Math.ceil(gap / months) : 0;
@@ -8024,8 +8024,8 @@ Signature: _______________     Date: ${today}`;
                           <div className="text-[10px] text-slate-500 font-bold uppercase mt-0.5">Aylık Max. Çıkış</div>
                         </div>
                         <div className="bg-slate-50 rounded-xl p-3 border border-slate-100">
-                          <div className="text-base font-black text-slate-800">28 gün</div>
-                          <div className="text-[10px] text-slate-500 font-bold uppercase mt-0.5">Ani Yatırım Yasak</div>
+                          <div className="text-base font-black text-slate-800">{params.minDays} gün</div>
+                          <div className="text-[10px] text-slate-500 font-bold uppercase mt-0.5">Min. Hesap Özeti</div>
                         </div>
                       </div>
 
