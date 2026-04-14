@@ -2100,6 +2100,78 @@ export default function App() {
 
     setRedFlagResult(flags);
     setRfAnalyzed(true);
+
+    // ── Sonuçları profile'a yansıt → currentScore otomatik güncellenir ──
+    const criticalFlags = flags.filter(f => f.severity === 'critical');
+    setProfile(prev => {
+      const updates: Partial<ProfileData> = {};
+
+      // Banka bakiyesi yetersizse
+      const balanceFlag = flags[0]; // ilk flag her zaman bakiye
+      if (balanceFlag?.severity === 'critical' && balance > 0) {
+        updates.bankSufficientBalance = false;
+        updates.dailyBudgetSufficient = false;
+      } else if (balanceFlag?.severity === 'ok') {
+        updates.bankSufficientBalance = true;
+      }
+
+      // Günlük bütçe (Schengen €50 min)
+      if (days > 0) {
+        if (dailyEur < 50) {
+          updates.dailyBudgetSufficient = false;
+        } else if (dailyEur >= 80) {
+          updates.dailyBudgetSufficient = true;
+        }
+      }
+
+      // Seyahat sigortası
+      if (!rfHasInsurance || !rfInsuranceCoversAll) {
+        updates.hasTravelInsurance = false;
+        updates.hasHealthInsurance = false;
+      } else {
+        updates.hasTravelInsurance = true;
+        updates.hasHealthInsurance = true;
+      }
+
+      // Dönüş bileti
+      if (!rfHasReturn) {
+        updates.hasReturnTicket = false;
+        updates.paidReservations = false;
+      } else {
+        updates.hasReturnTicket = true;
+        updates.paidReservations = true;
+      }
+
+      // SGK / istihdam
+      if (!rfHasSgk) {
+        updates.hasSgkJob = false;
+        updates.tieCategories = { ...prev.tieCategories, employment: false };
+      } else {
+        updates.hasSgkJob = true;
+        updates.tieCategories = { ...prev.tieCategories, employment: true };
+      }
+
+      // Mülkiyet
+      if (rfHasProperty) {
+        updates.tieCategories = { ...(updates.tieCategories ?? prev.tieCategories), property: true };
+        updates.hasAssets = true;
+      }
+
+      // İlk çıkış + bağ yok → çok riskli
+      if (rfFirstTrip && !rfHasProperty && !rfHasSgk) {
+        updates.strongFamilyTies = false;
+        updates.multiTieStrength = Math.max(0, (prev.multiTieStrength ?? 2) - 1);
+      }
+
+      // Kritik flag sayısına göre genel güven skoru
+      if (criticalFlags.length >= 3) {
+        updates.documentConsistency = false;
+      } else if (criticalFlags.length === 0) {
+        updates.documentConsistency = true;
+      }
+
+      return { ...prev, ...updates };
+    });
   };
 
   // ── Özellik 10: Kişiye Özel Evrak Sihirbazı ─────────────────────
@@ -4171,19 +4243,56 @@ Signature: _______________     Date: ${today}`;
                           </div>
 
                           {/* Ret oranı çubuğu */}
-                          <div className="mb-3">
-                            <div className="flex justify-between text-xs font-bold text-slate-500 mb-1">
-                              <span>2026 Ret Oranı (Türk Başvurucular)</span>
-                              <span className={`font-black ${country.rejectionRate > 30 ? 'text-rose-600' : country.rejectionRate > 20 ? 'text-orange-600' : country.rejectionRate > 12 ? 'text-amber-600' : 'text-emerald-600'}`}>
-                                %{country.rejectionRate}
-                              </span>
+                          <div className="mb-3 space-y-2">
+                            {/* 🇹🇷 Genel Türk ret oranı */}
+                            <div>
+                              <div className="flex justify-between text-xs font-bold text-slate-500 mb-1">
+                                <span className="flex items-center gap-1">🇹🇷 Türklerin ret oranı (2025-2026)</span>
+                                <span className={`font-black ${country.rejectionRate > 30 ? 'text-rose-600' : country.rejectionRate > 20 ? 'text-orange-600' : country.rejectionRate > 12 ? 'text-amber-600' : 'text-emerald-600'}`}>
+                                  %{country.rejectionRate}
+                                </span>
+                              </div>
+                              <div className="w-full bg-white/60 rounded-full h-2">
+                                <div
+                                  className={`h-2 rounded-full transition-all ${country.rejectionRate > 30 ? 'bg-rose-500' : country.rejectionRate > 20 ? 'bg-orange-500' : country.rejectionRate > 12 ? 'bg-amber-500' : 'bg-emerald-500'}`}
+                                  style={{ width: `${Math.min(country.rejectionRate * 2, 100)}%` }}
+                                />
+                              </div>
                             </div>
-                            <div className="w-full bg-white/60 rounded-full h-2">
-                              <div
-                                className={`h-2 rounded-full transition-all ${country.rejectionRate > 30 ? 'bg-rose-500' : country.rejectionRate > 20 ? 'bg-orange-500' : country.rejectionRate > 12 ? 'bg-amber-500' : 'bg-emerald-500'}`}
-                                style={{ width: `${Math.min(country.rejectionRate * 2, 100)}%` }}
-                              />
-                            </div>
+
+                            {/* 👤 Kullanıcının kişisel tahmini ret oranı */}
+                            {(() => {
+                              const mult = currentScore >= 82 ? 0.25 : currentScore >= 72 ? 0.5 : currentScore >= 60 ? 0.85 : currentScore >= 50 ? 1.2 : 1.8;
+                              const personalRate = Math.round(country.rejectionRate * mult);
+                              const isBetter = personalRate < country.rejectionRate;
+                              const isWorse = personalRate > country.rejectionRate;
+                              return (
+                                <div>
+                                  <div className="flex justify-between text-xs font-bold mb-1">
+                                    <span className="flex items-center gap-1 text-slate-500">👤 Sizin tahmini riskiniz</span>
+                                    <div className="flex items-center gap-1.5">
+                                      <span className={`font-black ${isBetter ? 'text-emerald-600' : isWorse ? 'text-rose-600' : 'text-slate-600'}`}>
+                                        %{personalRate}
+                                      </span>
+                                      {isBetter && <span className="text-[9px] font-black bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-md">Ortalamadan İyi</span>}
+                                      {isWorse && <span className="text-[9px] font-black bg-rose-100 text-rose-700 px-1.5 py-0.5 rounded-md">Ortalamadan Yüksek</span>}
+                                      {!isBetter && !isWorse && <span className="text-[9px] font-black bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded-md">Ortalama</span>}
+                                    </div>
+                                  </div>
+                                  <div className="w-full bg-white/60 rounded-full h-2">
+                                    <div
+                                      className={`h-2 rounded-full transition-all ${isBetter ? 'bg-emerald-400' : isWorse ? 'bg-rose-400' : 'bg-slate-400'}`}
+                                      style={{ width: `${Math.min(personalRate * 2, 100)}%` }}
+                                    />
+                                  </div>
+                                  <div className="text-[10px] text-slate-400 mt-0.5 leading-tight">
+                                    {isBetter ? `Profiliniz sayesinde ortalamadan ${country.rejectionRate - personalRate} puan daha iyi` :
+                                     isWorse ? `Profilinizi güçlendirerek riski azaltabilirsiniz (+${personalRate - country.rejectionRate} puan)` :
+                                     'Profiliniz Türk ortalamasıyla eşleşiyor'}
+                                  </div>
+                                </div>
+                              );
+                            })()}
                           </div>
 
                           {/* Güçlü yönler */}
@@ -6725,99 +6834,236 @@ Signature: _______________     Date: ${today}`;
             <motion.div initial={{opacity:0,scale:0.95,y:20}} animate={{opacity:1,scale:1,y:0}}
               exit={{opacity:0,scale:0.95,y:20}}
               className="relative w-full max-w-3xl bg-white rounded-[2.5rem] shadow-2xl flex flex-col max-h-[94vh] overflow-hidden">
+
+              {/* Header */}
               <div className="p-7 bg-gradient-to-r from-cyan-600 to-teal-600 text-white rounded-t-[2.5rem] shrink-0">
-                <div className="flex justify-between items-start">
+                <div className="flex justify-between items-start mb-4">
                   <div>
-                    <div className="text-cyan-200 text-xs font-black uppercase tracking-widest mb-1 flex items-center gap-2"><Map className="w-4 h-4"/> Türk Pasaportu Vize Rehberi</div>
-                    <h3 className="text-2xl font-black">Çoklu Ülke Planlayıcı</h3>
-                    <p className="text-cyan-100 text-sm mt-1">Gitmek istediğiniz ülkeleri seçin — vize gereksinimlerini karşılaştırın</p>
+                    <div className="text-cyan-200 text-xs font-black uppercase tracking-widest mb-1 flex items-center gap-2">
+                      <Plane className="w-4 h-4"/> Seyahat Planlayıcı
+                    </div>
+                    <h3 className="text-2xl font-black">Kaç Vize Lazım?</h3>
+                    <p className="text-cyan-100 text-sm mt-1">Gitmek istediğin ülkeleri seç → kaç başvuru gerektiğini anında hesapla</p>
                   </div>
                   <button onClick={() => setIsMultiCountryOpen(false)} className="p-2 hover:bg-white/10 rounded-full"><X className="w-6 h-6"/></button>
                 </div>
-                <div className="mt-4 flex items-center gap-3">
-                  <div className="flex gap-2 flex-wrap">
-                    {['Tümü','Yakın Çevre','Avrupa','Schengen','Orta Doğu','Uzak Doğu','Kuzey Amerika'].map(r => (
-                      <button key={r} onClick={() => setMcRegionFilter(r)}
-                        className={`px-3 py-1 rounded-xl text-xs font-bold transition-all ${mcRegionFilter===r?'bg-white text-cyan-700':'bg-white/20 text-white hover:bg-white/30'}`}>{r}</button>
-                    ))}
+                {/* Schengen bilgi kartı */}
+                <div className="p-3 bg-white/15 rounded-2xl border border-white/20 flex items-start gap-3 mb-4">
+                  <span className="text-2xl shrink-0">🇪🇺</span>
+                  <div>
+                    <div className="font-black text-white text-sm">Schengen = 27 Ülke, 1 Vize!</div>
+                    <div className="text-cyan-100 text-xs mt-0.5 leading-relaxed">Almanya, Fransa, İtalya, İspanya ve daha 23 ülkeye TEK bir Schengen vizesiyle girebilirsin. Ayrı ayrı başvurman gerekmez.</div>
                   </div>
+                </div>
+                {/* Bölge filtresi */}
+                <div className="flex gap-2 flex-wrap">
+                  {['Tümü','Yakın Çevre','Avrupa','Schengen','Orta Doğu','Uzak Doğu','Kuzey Amerika'].map(r => (
+                    <button key={r} onClick={() => setMcRegionFilter(r)}
+                      className={`px-3 py-1 rounded-xl text-xs font-bold transition-all ${mcRegionFilter===r?'bg-white text-cyan-700':'bg-white/20 text-white hover:bg-white/30'}`}>{r}</button>
+                  ))}
                 </div>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-7 space-y-6">
-                {/* Seçili ülkeler özeti */}
-                {mcSelected.length > 0 && (
-                  <div className="p-5 bg-slate-900 rounded-2xl text-white">
-                    <div className="text-xs font-black uppercase tracking-widest text-slate-400 mb-3">Seçili Güzergâhınız ({mcSelected.length} ülke)</div>
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      {mcSelected.map(c => {
-                        const d = multiCountryVisaData[c];
-                        const typeColors = { vizsiz:'bg-emerald-500', evisa:'bg-blue-500', kapida:'bg-amber-500', tam_vize:'bg-rose-500' };
-                        return (
-                          <div key={c} className="flex items-center gap-2 bg-white/10 rounded-xl px-3 py-2">
-                            <span>{d?.flag}</span>
-                            <span className="text-sm font-bold">{c}</span>
-                            <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-lg text-white ${typeColors[d?.visaType||'tam_vize']}`}>
-                              {d?.visaType === 'vizsiz'?'Vizesiz':d?.visaType==='evisa'?'e-Vize':d?.visaType==='kapida'?'Kapıda':'Tam Vize'}
-                            </span>
-                            <button onClick={() => setMcSelected(p=>p.filter(x=>x!==c))} className="text-slate-400 hover:text-white"><X className="w-3 h-3"/></button>
-                          </div>
-                        );
-                      })}
-                    </div>
-                    {/* Vize gereken ülkeler varsa uyarı */}
-                    {mcSelected.some(c => multiCountryVisaData[c]?.visaType === 'tam_vize') && (
-                      <div className="p-3 bg-rose-900/40 border border-rose-700/40 rounded-xl text-xs text-rose-200">
-                        ⚠️ <strong>{mcSelected.filter(c=>multiCountryVisaData[c]?.visaType==='tam_vize').join(', ')}</strong> için ayrı vize başvurusu gerekiyor.
-                        {mcSelected.filter(c=>['Almanya','Fransa','İtalya','İspanya','Hollanda'].includes(c)).length > 1 && (
-                          <span className="ml-1 text-emerald-300">Schengen bölgesi için <strong>tek vize</strong> yeterli.</span>
-                        )}
-                      </div>
-                    )}
-                    <button onClick={() => setMcSelected([])} className="mt-3 text-xs text-slate-400 hover:text-white font-bold flex items-center gap-1">
-                      <RefreshCw className="w-3.5 h-3.5"/> Sıfırla
-                    </button>
-                  </div>
-                )}
-
-                {/* Ülke grid */}
+              <div className="flex-1 overflow-y-auto p-6 space-y-5">
+                {/* ADIM 1: Ülke seçimi */}
                 <div>
-                  <h4 className="font-black text-slate-900 text-sm mb-3">
-                    {mcRegionFilter === 'Tümü' ? 'Tüm Ülkeler' : mcRegionFilter} — Türk Pasaportuna Göre Vize Durumu
-                  </h4>
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="font-black text-slate-900 text-base flex items-center gap-2">
+                      <span className="w-6 h-6 bg-cyan-600 text-white rounded-full flex items-center justify-center text-xs font-black">1</span>
+                      Gitmek istediğin ülkeleri seç
+                    </h4>
+                    {mcSelected.length > 0 && (
+                      <button onClick={() => setMcSelected([])} className="text-xs text-slate-400 hover:text-rose-500 font-bold flex items-center gap-1">
+                        <RefreshCw className="w-3 h-3"/> Sıfırla
+                      </button>
+                    )}
+                  </div>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     {Object.entries(multiCountryVisaData)
                       .filter(([, d]) => mcRegionFilter === 'Tümü' || d.region === mcRegionFilter)
                       .map(([name, d]) => {
                         const isSelected = mcSelected.includes(name);
-                        const typeLabel = d.visaType === 'vizsiz' ? 'Vizesiz' : d.visaType === 'evisa' ? 'e-Vize' : d.visaType === 'kapida' ? 'Kapıda Vize' : 'Konsolosluk Vizesi';
+                        const typeLabel = d.visaType === 'vizsiz' ? '✅ Vizesiz' : d.visaType === 'evisa' ? '🖥 Online Başvur' : d.visaType === 'kapida' ? '🛂 Kapıda Vize' : '📋 Konsolosluk';
                         const bgColors = { vizsiz:'bg-emerald-50 border-emerald-200', evisa:'bg-blue-50 border-blue-200', kapida:'bg-amber-50 border-amber-200', tam_vize:'bg-rose-50 border-rose-200' };
                         const textColors = { vizsiz:'text-emerald-700', evisa:'text-blue-700', kapida:'text-amber-700', tam_vize:'text-rose-700' };
                         return (
                           <button key={name} onClick={() => setMcSelected(p => isSelected ? p.filter(x=>x!==name) : [...p, name])}
-                            className={`p-3 rounded-2xl border-2 text-left transition-all hover:scale-[1.02] ${isSelected ? 'border-slate-900 bg-slate-900 text-white shadow-lg' : `${bgColors[d.visaType]} hover:border-slate-300`}`}>
+                            className={`p-3 rounded-2xl border-2 text-left transition-all hover:scale-[1.02] ${isSelected ? 'border-cyan-600 bg-cyan-600 text-white shadow-lg' : `${bgColors[d.visaType]} hover:border-slate-300`}`}>
                             <div className="flex items-center justify-between mb-1">
                               <span className="text-xl">{d.flag}</span>
-                              {isSelected && <CheckCircle2 className="w-4 h-4 text-emerald-400"/>}
+                              {isSelected && <CheckCircle2 className="w-4 h-4 text-white"/>}
                             </div>
                             <div className={`font-black text-sm ${isSelected ? 'text-white' : 'text-slate-900'}`}>{name}</div>
-                            <div className={`text-[10px] font-bold mt-0.5 ${isSelected ? 'text-slate-300' : textColors[d.visaType]}`}>{typeLabel}</div>
-                            <div className={`text-[10px] mt-1 ${isSelected ? 'text-slate-400' : 'text-slate-500'}`}>Maks. {d.maxDays} gün</div>
+                            <div className={`text-[10px] font-bold mt-0.5 ${isSelected ? 'text-cyan-100' : textColors[d.visaType]}`}>{typeLabel}</div>
+                            <div className={`text-[10px] mt-1 ${isSelected ? 'text-cyan-200' : 'text-slate-500'}`}>Max {d.maxDays} gün</div>
                           </button>
                         );
                       })}
                   </div>
                 </div>
 
-                {/* Legend */}
+                {/* ADIM 2 & 3: Analiz — sadece seçim varsa */}
+                {mcSelected.length > 0 && (() => {
+                  const schengenPool = ['Almanya','Fransa','İtalya','İspanya','Hollanda','Belçika','Avusturya','Yunanistan','Portekiz','İsveç','Norveç','Danimarka','Finlandiya','İsviçre','Polonya','Çekya','Macaristan','Slovakya','Slovenya','Hırvatistan','Estonya','Letonya','Litvanya','Lüksemburg','Malta'];
+                  const selectedSchengen = mcSelected.filter(c => schengenPool.includes(c));
+                  const needsConsulatVisa = mcSelected.filter(c => multiCountryVisaData[c]?.visaType === 'tam_vize' && !schengenPool.includes(c));
+                  const needsEvisa = mcSelected.filter(c => multiCountryVisaData[c]?.visaType === 'evisa');
+                  const kapida = mcSelected.filter(c => multiCountryVisaData[c]?.visaType === 'kapida');
+                  const vizsiz = mcSelected.filter(c => multiCountryVisaData[c]?.visaType === 'vizsiz');
+                  const totalApplications = (selectedSchengen.length > 0 ? 1 : 0) + needsConsulatVisa.length + needsEvisa.length;
+
+                  return (
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2">
+                        <span className="w-6 h-6 bg-cyan-600 text-white rounded-full flex items-center justify-center text-xs font-black">2</span>
+                        <h4 className="font-black text-slate-900 text-base">Senin Planın</h4>
+                      </div>
+
+                      {/* Seçilen ülkeler etiketleri */}
+                      <div className="flex flex-wrap gap-2">
+                        {mcSelected.map(c => {
+                          const d = multiCountryVisaData[c];
+                          const isSchengen = schengenPool.includes(c);
+                          return (
+                            <div key={c} className="flex items-center gap-1.5 bg-slate-100 rounded-xl px-2.5 py-1.5">
+                              <span className="text-sm">{d?.flag}</span>
+                              <span className="text-xs font-bold text-slate-800">{c}</span>
+                              {isSchengen && <span className="text-[9px] text-cyan-600 font-black bg-cyan-50 px-1 rounded">Schengen</span>}
+                              <button onClick={() => setMcSelected(p=>p.filter(x=>x!==c))} className="text-slate-400 hover:text-rose-500 ml-0.5"><X className="w-3 h-3"/></button>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {/* Sonuç kartı */}
+                      <div className="p-5 bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl text-white">
+                        <div className="text-slate-400 text-xs font-black uppercase tracking-widest mb-3">Toplam Başvuru Sayısı</div>
+                        <div className="flex items-baseline gap-3 mb-4">
+                          <div className="text-5xl font-black text-white">{totalApplications}</div>
+                          <div className="text-slate-300 text-sm leading-tight">{mcSelected.length} ülke için<br/><span className="text-white font-bold">{totalApplications} ayrı başvuru</span></div>
+                        </div>
+
+                        <div className="space-y-2">
+                          {selectedSchengen.length > 0 && (
+                            <div className="flex items-center justify-between p-3 bg-white/10 rounded-xl">
+                              <div>
+                                <div className="font-black text-white text-sm">🇪🇺 Schengen Vizesi</div>
+                                <div className="text-slate-300 text-xs mt-0.5">{selectedSchengen.map(c => `${multiCountryVisaData[c]?.flag} ${c}`).join(' · ')}</div>
+                                <div className="text-emerald-300 text-[11px] font-bold mt-1">✓ {selectedSchengen.length} ülke için TEK başvuru!</div>
+                              </div>
+                              <div className="text-right shrink-0 ml-3">
+                                <div className="text-2xl font-black text-white">1</div>
+                                <div className="text-slate-400 text-[10px]">başvuru</div>
+                              </div>
+                            </div>
+                          )}
+                          {needsConsulatVisa.map(c => (
+                            <div key={c} className="flex items-center justify-between p-3 bg-rose-900/40 border border-rose-700/30 rounded-xl">
+                              <div>
+                                <div className="font-black text-white text-sm">{multiCountryVisaData[c]?.flag} {c} Vizesi</div>
+                                <div className="text-rose-200 text-xs mt-0.5">📋 Konsolosluk başvurusu gerekli</div>
+                                <div className="text-slate-400 text-[10px] mt-0.5">{multiCountryVisaData[c]?.note}</div>
+                              </div>
+                              <div className="text-right shrink-0 ml-3">
+                                <div className="text-2xl font-black text-white">1</div>
+                                <div className="text-slate-400 text-[10px]">başvuru</div>
+                              </div>
+                            </div>
+                          ))}
+                          {needsEvisa.map(c => (
+                            <div key={c} className="flex items-center justify-between p-3 bg-blue-900/30 border border-blue-700/30 rounded-xl">
+                              <div>
+                                <div className="font-black text-white text-sm">{multiCountryVisaData[c]?.flag} {c}</div>
+                                <div className="text-blue-200 text-xs mt-0.5">🖥 Online e-Vize (kolay!)</div>
+                                <div className="text-slate-400 text-[10px] mt-0.5">{multiCountryVisaData[c]?.note}</div>
+                              </div>
+                              <div className="text-right shrink-0 ml-3">
+                                <div className="text-2xl font-black text-white">1</div>
+                                <div className="text-slate-400 text-[10px]">başvuru</div>
+                              </div>
+                            </div>
+                          ))}
+                          {kapida.length > 0 && (
+                            <div className="p-3 bg-amber-900/30 border border-amber-700/30 rounded-xl">
+                              <div className="font-black text-white text-sm">🛂 Kapıda Vize</div>
+                              <div className="text-amber-200 text-xs mt-0.5">{kapida.map(c=>`${multiCountryVisaData[c]?.flag} ${c}`).join(', ')} — havalimanında ödeme yap, geç!</div>
+                              <div className="text-emerald-300 text-[11px] font-bold mt-1">✓ Önceden başvuru gerekmez</div>
+                            </div>
+                          )}
+                          {vizsiz.length > 0 && (
+                            <div className="p-3 bg-emerald-900/30 border border-emerald-700/30 rounded-xl">
+                              <div className="font-black text-white text-sm">✅ Vizesiz</div>
+                              <div className="text-emerald-200 text-xs mt-0.5">{vizsiz.map(c=>`${multiCountryVisaData[c]?.flag} ${c}`).join(', ')} — pasaportunla direkt git!</div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* ADIM 3: Aksiyon planı */}
+                      {totalApplications > 0 && (
+                        <div>
+                          <div className="flex items-center gap-2 mb-3">
+                            <span className="w-6 h-6 bg-cyan-600 text-white rounded-full flex items-center justify-center text-xs font-black">3</span>
+                            <h4 className="font-black text-slate-900 text-base">Ne Yapmalısın?</h4>
+                          </div>
+                          <div className="space-y-2">
+                            {selectedSchengen.length > 0 && (
+                              <div className="flex items-start gap-3 p-4 bg-blue-50 border border-blue-200 rounded-2xl">
+                                <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-black text-sm shrink-0">1</div>
+                                <div>
+                                  <div className="font-black text-blue-900 text-sm">Schengen Vizesi Başvur</div>
+                                  <div className="text-blue-700 text-xs mt-1 leading-relaxed">
+                                    En çok gün geçireceğin ülkenin konsolosluğuna başvur.{' '}
+                                    <span className="font-bold">{selectedSchengen.length > 1 ? `${selectedSchengen[0]}'dan başvurabilirsin — geri kalan ${selectedSchengen.length-1} ülkeye de aynı vizeyle girersin.` : `${selectedSchengen[0]} konsolosluğuna başvur.`}</span>
+                                  </div>
+                                  <div className="flex items-center gap-2 mt-2 flex-wrap">
+                                    <span className="text-[10px] font-black bg-blue-100 text-blue-700 px-2 py-1 rounded-xl">⏱ 15 gün önceden başvur</span>
+                                    <span className="text-[10px] font-black bg-blue-100 text-blue-700 px-2 py-1 rounded-xl">💰 ~€80-120 vize ücreti</span>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                            {needsEvisa.map((c, i) => (
+                              <div key={c} className="flex items-start gap-3 p-4 bg-slate-50 border border-slate-200 rounded-2xl">
+                                <div className="w-8 h-8 bg-slate-700 text-white rounded-full flex items-center justify-center font-black text-sm shrink-0">{(selectedSchengen.length > 0 ? 1 : 0) + i + 1}</div>
+                                <div>
+                                  <div className="font-black text-slate-900 text-sm">{multiCountryVisaData[c]?.flag} {c} e-Vizesi</div>
+                                  <div className="text-slate-600 text-xs mt-1">Resmi e-devlet/konsolosluk sitesinden online başvur. 3-7 gün içinde onaylanır.</div>
+                                  <div className="flex items-center gap-2 mt-2 flex-wrap">
+                                    <span className="text-[10px] font-black bg-slate-100 text-slate-600 px-2 py-1 rounded-xl">⏱ Seyahatten 1 hafta önce</span>
+                                    <span className="text-[10px] font-black bg-slate-100 text-slate-600 px-2 py-1 rounded-xl">🖥 Online — evden çıkmadan</span>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                            {needsConsulatVisa.map((c, i) => (
+                              <div key={c} className="flex items-start gap-3 p-4 bg-rose-50 border border-rose-200 rounded-2xl">
+                                <div className="w-8 h-8 bg-rose-600 text-white rounded-full flex items-center justify-center font-black text-sm shrink-0">{(selectedSchengen.length > 0 ? 1 : 0) + needsEvisa.length + i + 1}</div>
+                                <div>
+                                  <div className="font-black text-rose-900 text-sm">{multiCountryVisaData[c]?.flag} {c} Vizesi</div>
+                                  <div className="text-rose-700 text-xs mt-1">{multiCountryVisaData[c]?.note} — Konsoloslukla randevu alman gerekiyor.</div>
+                                  <div className="flex items-center gap-2 mt-2 flex-wrap">
+                                    <span className="text-[10px] font-black bg-rose-100 text-rose-700 px-2 py-1 rounded-xl">⏱ 30+ gün önceden planla</span>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+
+                {/* Renk açıklaması */}
                 <div className="flex flex-wrap gap-3 p-4 bg-slate-50 rounded-2xl">
                   {[
-                    { type:'vizsiz', label:'Vizesiz', color:'bg-emerald-500' },
-                    { type:'evisa', label:'e-Vize (Online)', color:'bg-blue-500' },
-                    { type:'kapida', label:'Kapıda Vize', color:'bg-amber-500' },
-                    { type:'tam_vize', label:'Konsolosluk Vizesi', color:'bg-rose-500' },
+                    { label:'✅ Vizesiz', color:'bg-emerald-500' },
+                    { label:'🖥 e-Vize (Online)', color:'bg-blue-500' },
+                    { label:'🛂 Kapıda Vize', color:'bg-amber-500' },
+                    { label:'📋 Konsolosluk Vizesi', color:'bg-rose-500' },
                   ].map(l => (
-                    <div key={l.type} className="flex items-center gap-1.5 text-xs font-bold text-slate-600">
+                    <div key={l.label} className="flex items-center gap-1.5 text-xs font-bold text-slate-600">
                       <div className={`w-3 h-3 rounded-sm ${l.color}`}/>
                       {l.label}
                     </div>
