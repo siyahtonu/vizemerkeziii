@@ -5,6 +5,8 @@
 import express from 'express';
 import rateLimit from 'express-rate-limit';
 import * as dotenv from 'dotenv';
+import paymentRouter from './payment.js';
+import appointmentRouter from './appointmentWatcher.js';
 
 dotenv.config({ path: '.env.local' });
 
@@ -49,6 +51,12 @@ app.post('/api/gemini', apiLimiter, async (req, res) => {
     return res.status(500).json({ error: 'AI servisi yanıt vermedi.' });
   }
 });
+
+// ── Ödeme rotaları ────────────────────────────────────────
+app.use('/api/payment', paymentRouter);
+
+// ── Randevu takip rotaları ────────────────────────────────
+app.use('/api/appointments', appointmentRouter);
 
 // ── Sağlık kontrolü ───────────────────────────────────────
 app.get('/api/health', (_req, res) => {
