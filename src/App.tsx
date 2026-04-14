@@ -1317,79 +1317,64 @@ export default function App() {
   // 2025-2026 Konsolosluk Kriterleri + Çok Katmanlı Ağırlıklı Sistem
   // Hedef: Danışmanlık müşterilerinde %90+ başarı oranı
   // ============================================================
+  // Skorlama Algoritması v2.5 — MOD B Kalibrasyon
+  // Gerçek Türk başvuru vakalarına dayalı (Ekşi Sözlük, şikayetvar.com,
+  // forum/blog, Instagram grupları, EU Schengen Statistics 2024-2025)
+  // ============================================================
   const calculateScore = (data: ProfileData, simValue: number = 0) => {
     let score = 10; // Temel başlangıç puanı
 
     // ─────────────────────────────────────────────────────────
     // BÖLÜM 1: FİNANSAL GÜÇ (Maks 28 puan)
-    // Araştırma: Konsoloslukların en çok reddettiği alan (%25-30 ret)
     // ─────────────────────────────────────────────────────────
 
-    // Yeterli bakiye (simülatörle desteklenir)
     if (data.bankSufficientBalance || simValue > 150000) score += 7;
     else if (simValue > 75000) score += 3;
 
-    // Yüksek birikim → güçlü güvence
     if (data.highSavingsAmount || simValue > 350000) score += 5;
-
-    // Gelir düzenliliği (Konsolosluk: "süreklilik miktar kadar önemli")
     if (data.bankRegularity) score += 5;
-
-    // Gelir kaynağı banka dökümünde net görünüyor mu?
     if (data.incomeSourceClear) score += 4;
-
-    // Düzenli maaş tespiti
     if (data.salaryDetected) score += 3;
-
-    // Gayrimenkul/araç → geri dönüş güvencesi
     if (data.hasAssets) score += 3;
-
-    // Düzenli harcama kalıbı (aktif hesap)
     if (data.hasRegularSpending && data.recurringExpensesDetected) score += 3;
-
-    // Günlük bütçe yeterliliği (Schengen €100-120/gün kriteri)
     if (data.dailyBudgetSufficient) score += 4;
 
-    // CEZALAR - Finansal
-    if (!data.hasRegularSpending) score -= 8;      // "Ölü hesap" - emanet şüphesi
-    if (data.hasSuspiciousLargeDeposit) score -= 10; // Son dakika toplu para → kritik ret sebebi
-    if (data.unusualLargeTransactions) score -= 5;   // Açıklanamayan büyük hareketler
-    if (data.monthlyInflow < data.monthlyOutflow && data.monthlyInflow > 0) score -= 6; // Negatif nakit akışı
+    // Finansal cezalar
+    if (!data.hasRegularSpending) score -= 8;        // "Ölü hesap" — emanet şüphesi
+    if (data.unusualLargeTransactions) score -= 5;   // Açıklanamayan hareketler
+    if (data.monthlyInflow < data.monthlyOutflow && data.monthlyInflow > 0) score -= 6;
 
     // ─────────────────────────────────────────────────────────
-    // BÖLÜM 2: İNGİLTERE ÖZEL KURALLAR (UK Critical Rules)
-    // 28-Gün Kuralı + 6 Aylık Döküm → UK'te ret/onayın en net belirleyicisi
+    // BÖLÜM 2: İNGİLTERE ÖZEL KURALLAR
     // ─────────────────────────────────────────────────────────
     if (data.targetCountry === 'İngiltere') {
-      if (data.has28DayHolding) score += 8;   // Para 28 gün hesapta bekledi
-      else score -= 12;                        // Beklemedi → neredeyse kesin ret
+      if (data.has28DayHolding) score += 8;
+      else score -= 12;
 
-      if (data.has6MonthStatements) score += 6;  // 6 aylık döküm tam
-      else if (data.statementMonths >= 3) score += 2; // 3 aylık minimum
-      else score -= 8;                          // Eksik döküm → otomatik ret
+      if (data.has6MonthStatements) score += 6;
+      else if (data.statementMonths >= 3) score += 2;
+      else score -= 8;
     }
 
     // ─────────────────────────────────────────────────────────
     // BÖLÜM 3: MESLEKİ BAĞLILIK (Maks 22 puan)
-    // Araştırma: İstihdam + işveren mektubu en güçlü tek bağ kategorisi
     // ─────────────────────────────────────────────────────────
-    if (data.hasSgkJob) score += 12;           // SGK kaydı → en önemli profesyonel kanıt
-    if (data.isPublicSectorEmployee) score += 6; // Kamu çalışanı → en yüksek güven grubu
-    if (data.sgkEmployerLetterWithReturn) score += 5; // İşverenden dönüş garantili yazı
+    if (data.hasSgkJob) score += 12;
+    else score -= 5; // v2.5: SGK yok = açık negatif sinyal (#3 ret sebebi)
 
-    // Kıdem bonusu (araştırma: yeni işe girenler reddediliyor)
+    if (data.isPublicSectorEmployee) score += 6;
+    if (data.sgkEmployerLetterWithReturn) score += 5;
+
     if (data.yearsInCurrentJob >= 3) score += 5;
     else if (data.yearsInCurrentJob === 2) score += 4;
     else if (data.yearsInCurrentJob === 1) score += 2;
-    else score -= 4;  // <1 yıl kıdem: düşük güven
+    else score -= 4;
 
-    if (data.sgkAddressMatchesDs160) score += 2;  // Adres tutarlılığı
-    if (data.hasBarcodeSgk) score += 2;           // Barkodlu SGK → sahtecilik önleyici
+    if (data.sgkAddressMatchesDs160) score += 2;
+    if (data.hasBarcodeSgk) score += 2;
 
     // ─────────────────────────────────────────────────────────
-    // BÖLÜM 4: ÇOK KATMANLI BAĞLAR - "Multifaceted Ties" (Maks 20 puan)
-    // Araştırma: Tek bağ yeterli değil, konsolosluk memurunun
-    // "toplam hayat bağlantısını" değerlendirdiği kısım
+    // BÖLÜM 4: ÇOK KATMANLI BAĞLAR (Maks 20 puan)
     // ─────────────────────────────────────────────────────────
     const activeTieCount = [
       data.tieCategories?.employment,
@@ -1399,52 +1384,45 @@ export default function App() {
       data.tieCategories?.education,
     ].filter(Boolean).length;
 
-    // Her bağ kategorisi ayrı puan
-    if (data.tieCategories?.employment) score += 5;  // İstihdam bağı
-    if (data.tieCategories?.property) score += 5;   // Mülkiyet bağı
-    if (data.tieCategories?.family) score += 4;     // Aile bağı
-    if (data.tieCategories?.community) score += 3;  // Sosyal/topluluk bağı
-    if (data.tieCategories?.education) score += 3;  // Eğitim bağı
+    if (data.tieCategories?.employment) score += 5;
+    if (data.tieCategories?.property) score += 5;
+    if (data.tieCategories?.family) score += 4;
+    if (data.tieCategories?.community) score += 3;
+    if (data.tieCategories?.education) score += 3;
 
-    // Çok katmanlılık bonusu (3+ farklı kategoride bağ = güçlü profil)
     if (activeTieCount >= 4) score += 6;
     else if (activeTieCount === 3) score += 3;
 
-    // Legacy alanlarla da uyum
     if (data.isMarried) score += 3;
     if (data.hasChildren) score += 3;
     if (data.isStudent) score += 2;
     if (data.strongFamilyTies) score += 1;
-    if (data.hasSocialMediaFootprint) score += 2;  // 2025: Dijital ayak izi güven faktörü
+    if (data.hasSocialMediaFootprint) score += 2;
 
     // ─────────────────────────────────────────────────────────
     // BÖLÜM 5: SEYAHAT GEÇMİŞİ (Maks 20 puan)
-    // Araştırma: Önceki güçlü vize → en hızlı onay yolu
     // ─────────────────────────────────────────────────────────
-    if (data.hasHighValueVisa) score += 20;      // ABD/UK/Schengen geçmişi → altın kart
+    if (data.hasHighValueVisa) score += 20;
     else if (data.hasOtherVisa) score += 12;
     else if (data.travelHistoryNonVisa) score += 6;
 
-    if (!data.noOverstayHistory) score -= 45;   // Süre aşımı → 2025'te hemen hemen kesin ret
+    if (!data.noOverstayHistory) score -= 45; // Süre aşımı → neredeyse kesin ret
 
-    // Önceki ret yönetimi (araştırma: gizlemek, retten daha kötü)
-    if (data.hasPreviousRefusal && !data.previousRefusalDisclosed) score -= 20; // Beyan etmemek = dolandırıcılık
-    if (data.hasPreviousRefusal && data.previousRefusalDisclosed) score -= 5;   // Beyan edilmiş ret → küçük ceza
+    if (data.hasPreviousRefusal && !data.previousRefusalDisclosed) score -= 20;
+    if (data.hasPreviousRefusal && data.previousRefusalDisclosed) score -= 5;
 
     // ─────────────────────────────────────────────────────────
     // BÖLÜM 6: BAŞVURU KALİTESİ & NİYET KANITI (Maks 15 puan)
-    // Araştırma: Belge organizasyonu memur kararını doğrudan etkiliyor
     // ─────────────────────────────────────────────────────────
-    if (data.useOurTemplate) score += 5;         // Profesyonel niyet mektubu şablonu
-    if (data.hasInvitation) score += 3;          // Davetiye → güçlü amaç kanıtı
+    if (data.useOurTemplate) score += 5;
+    if (data.hasInvitation) score += 3;
     if (data.paidReservations) score += 3;
     if (data.addressMatchSgk) score += 2;
-    if (data.datesMatchReservations) score += 2; // Tarih tutarlılığı
-    if (data.purposeClear) score += 2;
-    if (data.hasReturnTicket) score += 3;        // Dönüş bileti = geri dönüş niyeti
-    if (!data.noFakeBooking) score -= 15;        // SAHTE rezervasyon = yasak listesi riski
+    if (data.datesMatchReservations) score += 2;
+    if (data.purposeClear) score += 6; // v2.5: +2 → +6 (Code 2 Türklerde #2 ret sebebi)
+    if (data.hasReturnTicket) score += 3;
+    if (!data.noFakeBooking) score -= 15; // Sahte rezervasyon = yasak listesi
 
-    // ABD Mülakatı hazırlığı
     if (data.targetCountry === 'ABD') {
       if (data.interviewPrepared) score += 4;
       if (data.interviewConfidence === 'high') score += 3;
@@ -1456,30 +1434,60 @@ export default function App() {
     // BÖLÜM 7: GÜVEN & BELGE KALİTESİ (Maks 12 puan)
     // ─────────────────────────────────────────────────────────
     if (data.hasValidPassport && data.passportConditionGood) score += 3;
-    if (data.passportValidityLong) score += 3;   // Vize bitişinden 6+ ay geçerlilik
-    if (data.documentConsistency) score += 3;    // Tüm belgeler arası tutarlılık
+    if (data.passportValidityLong) score += 3;
+    if (data.documentConsistency) score += 3;
     if (data.cleanCriminalRecord) score += 3;
 
-    // Sigorta (Schengen'de zorunlu - eksikse ret)
-    if (data.hasHealthInsurance || data.hasTravelInsurance) score += 4;
-    if (data.targetCountry !== 'ABD' && data.targetCountry !== 'İngiltere' &&
-        !data.hasHealthInsurance && !data.hasTravelInsurance) score -= 10; // Schengen zorunlu
+    // v2.5: Sigorta ağırlığı güncellendi (+4→+7, -10→-5)
+    // Türk vakalarında %15 ret sebebi — min €30.000 teminat şartı
+    if (data.hasHealthInsurance || data.hasTravelInsurance) score += 7;
+    else if (data.targetCountry !== 'ABD' && data.targetCountry !== 'İngiltere') score -= 5;
 
     // ─────────────────────────────────────────────────────────
-    // BÖLÜM 8: ÜLKEYE ÖZEL DÜZELTMELER
-    // Araştırma: Türk vatandaşlarına göre ülke zorluk çarpanları
+    // BÖLÜM 8: VETO — Kritik eşik aşıldığında skoru zorla kırp
+    // v2.5: Son dakika mevduat Türklerde #1 ret sebebi (%43)
     // ─────────────────────────────────────────────────────────
-    const countryDifficulty: Record<string, number> = {
-      'İtalya': +3,     // %8.7 ret oranı - en kolay Schengen
-      'İspanya': +2,    // Orta kolaylık
-      'Fransa': 0,      // Ortalama
-      'Almanya': -3,    // Ankara %27.1, İstanbul %21.5 ret oranı
-      'İngiltere': -2,  // ETA sonrası sıkılaştı
-      'ABD': -5,        // B2 ret oranı %20.6 - İstanbul 188 gün bekleme
+    let vetoCap = 100;
+
+    if (data.hasSuspiciousLargeDeposit) {
+      // Eski: -10 ceza. v2.5: skor 30'un üzerine çıkamaz
+      vetoCap = Math.min(vetoCap, 30);
+    }
+    if (!data.noOverstayHistory) {
+      vetoCap = Math.min(vetoCap, 10);
+    }
+
+    score = Math.min(score, vetoCap);
+
+    // ─────────────────────────────────────────────────────────
+    // BÖLÜM 9: ÜLKE KALİBRASYONU — Bayes blending
+    // v2.5: Sadece +/- puan değil, gerçek Türk ret oranlarıyla
+    // profil skoru %65 + ülke başarı oranı %35 karışımı
+    // ─────────────────────────────────────────────────────────
+    const trRejectionRates: Record<string, number> = {
+      'Yunanistan': 0.06,
+      'Macaristan': 0.08,
+      'İtalya':     0.087,
+      'Portekiz':   0.09,
+      'Polonya':    0.09,
+      'İspanya':    0.10,
+      'Hollanda':   0.14,
+      'Avusturya':  0.14,
+      'Fransa':     0.21,
+      'Norveç':     0.20,
+      'İsveç':      0.22,
+      'Almanya':    0.23,
+      'ABD':        0.22,
+      'İngiltere':  0.30,
+      'Danimarka':  0.66,
     };
-    score += (countryDifficulty[data.targetCountry] ?? 0);
+    const trRejRate = trRejectionRates[data.targetCountry] ?? 0.15;
+    const trSuccessRate = 1 - trRejRate;
 
-    return Math.max(0, Math.min(score, 100));
+    const clamped = Math.max(0, Math.min(score, 100));
+    const blended = (clamped / 100) * 0.65 + trSuccessRate * 0.35;
+
+    return Math.max(0, Math.min(100, Math.round(blended * 100)));
   };
 
   const currentScore = useMemo(() => calculateScore(profile, simulatorValue), [profile, simulatorValue]);
