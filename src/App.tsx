@@ -821,8 +821,159 @@ const socialMediaChecklist: SocialMediaItem[] = [
   },
 ];
 
+// ── Mülakat Simülatörü Soru Bankası ─────────────────────────────────────────
+interface InterviewQ {
+  id: number; category: string; q: string; hint: string;
+  keywords: string[]; weakPatterns: string[];
+  feedback: { strong: string; weak: string; tips: string[] };
+}
+const interviewQuestions: Record<'schengen'|'uk'|'usa', InterviewQ[]> = {
+  schengen: [
+    { id:1, category:'Amaç & Planlama', q:'Bu seyahatin temel amacı nedir? Neden bu ülkeyi seçtiniz, başka ülkeler yerine?', hint:'Spesifik aktiviteler (müze, etkinlik, aile ziyareti) ve bu ülkenin özel cazibesini belirtin.', keywords:['müze','kültür','tarihi','festival','aile','iş','konferans','fuar','tedavi','sergi','galeri','manzara','mutfak','mimari'], weakPatterns:['bilmiyorum','sadece gezmek','gezdim','tatil'], feedback:{ strong:'Harika! Spesifik ve ikna edici bir amaç belirttiniz. Vize memuru bu tür detaylı cevapları positif değerlendirir.', weak:'Çok genel bir cevap. "Tatil" veya "gezeyim dedim" gibi ifadeler yetersizdir.', tips:['Gitmek istediğiniz müze veya etkinlikleri ismiyle belirtin','Bu ülkeyi başkalarına tercih etme nedeninizi açıklayın','Tarih, kültür veya gastronomi gibi spesifik ilgi alanlarına bağlayın'] }},
+    { id:2, category:'Amaç & Planlama', q:'Kaç gün kalacaksınız ve bu sürede hangi şehirleri ziyaret edeceksiniz?', hint:'Günlük plan veya şehir rotanızı kısaca açıklayın.', keywords:['berlin','paris','amsterdam','roma','viyana','prag','barselona','münih','gün','hafta','şehir','rota'], weakPatterns:['bilmiyorum','belki','düşünmedim'], feedback:{ strong:'Net bir rota planı belirttiniz, bu güven verir.', weak:'Somut şehir ve süre bilmemek, seyahat niyeti hakkında şüphe doğurur.', tips:['Gideceğiniz şehirleri ve her şehirde kaç gün kalacağınızı bilin','Rezervasyonlarınızla tutarlı olun','Toplam vize süresini aşmayın'] }},
+    { id:3, category:'Amaç & Planlama', q:'Bu seyahati kim ile birlikte yapıyorsunuz? Grubunuz hakkında bilgi verir misiniz?', hint:'Yalnız, eş/arkadaşla veya aile ile gitme bilgisini paylaşın.', keywords:['eşim','arkadaşım','ailem','çocuğum','yalnız','grup','iş arkadaşım'], weakPatterns:[], feedback:{ strong:'Yolculuk arkadaşları hakkında net bilgi verdiniz.', weak:'Bu soruya net cevap verilmesi gerekir.', tips:['Birlikte gittiğiniz kişilerin ilişkisini açıklayın','Eğer yalnız gidiyorsanız, bunun nedenini kısaca belirtin'] }},
+    { id:4, category:'Amaç & Planlama', q:'Orada tanıdığınız biri var mı? Davet mektubu aldınız mı?', hint:'Davet varsa kim davet etti, ne zaman tanıştınız bilgisi.', keywords:['hayır','arkadaşım var','akrabam','iş bağlantım','eski okul arkadaşım','davetiye'], weakPatterns:[], feedback:{ strong:'Davet durumunu net açıkladınız.', weak:'Bu soruya net cevap verin; kararsız görünmek şüphe yaratabilir.', tips:['Varsa davet mektubunu pasaportunuzla birlikte götürün','Yoksa "Hayır, bağımsız tatil/iş seyahati" deyin — bu da tamamen normaldir'] }},
+    { id:5, category:'Amaç & Planlama', q:'Günlük programınız nasıl? Hangi aktiviteleri planladınız?', hint:'En az 2-3 somut aktivite veya yer belirtin.', keywords:['müze','gezi','restoran','konser','yürüyüş','katedrali','pazar','park','tiyatro','opera','köy','şehir turu'], weakPatterns:['bilmiyorum','orada anlarım','planlamadım'], feedback:{ strong:'Somut aktiviteler belirttiniz — bu seyahat planlamanızın ciddiyetini gösterir.', weak:'Günlük plan bilmemek, seyahat niyetini zayıflatır.', tips:['Booking yaptırdığınız tur veya etkinlikleri belirtin','En az 2-3 spesifik aktivite ya da yer adı söyleyin','"Listim var, ancak esnek kalmayı planlıyorum" cevabı da makuldür'] }},
+    { id:6, category:'Amaç & Planlama', q:'Bu seyahati neden şimdi yapmak istediniz? Zamanlamayı nasıl seçtiniz?', hint:'Mevsim, özel etkinlik, tatil fırsatı veya özel neden belirtin.', keywords:['yaz','kış','etkinlik','festival','doğum günü','yıldönümü','tatil','izin','mevsim','ucuz'], weakPatterns:['bilmiyorum','aklıma geldi'], feedback:{ strong:'Zamanlama için mantıklı bir neden belirttiniz.', weak:'Zamanlamayı açıklayamamak, planlı bir seyahat yapmadığı izlenimi verir.', tips:['Mevsimi veya özel bir etkinliği referans alın','Tatil günlerinizle seyahat tarihlerinin örtüştüğünü belirtin','Bilet fiyatı, hava durumu gibi pratik nedenler de kabul edilebilir'] }},
+    { id:7, category:'Amaç & Planlama', q:'Bu ülkede daha önce bulundunuz mu? Schengen bölgesine daha önce giriş yaptınız mı?', hint:'Varsa önceki seyahatlerinizi ve geçerliliğini paylaşın.', keywords:['evet','hayır','daha önce','gittim','ilk kez','pasaportumda','visa geçmişi'], weakPatterns:[], feedback:{ strong:'Seyahat geçmişi hakkında net bilgi verdiniz.', weak:'Bu soruya net ve dürüst cevap verin; vize memuru pasaportunuzu kontrol edecektir.', tips:['Daha önce gittiyseniz, ne zaman ve ne amaçla gittiğinizi kısaca söyleyin','İlk kez gidiyorsanız, bu normal — hazırlıklı olduğunuzu vurgulayın'] }},
+    // FİNANSAL
+    { id:8, category:'Finansal', q:'Bu seyahatin masraflarını nasıl karşılayacaksınız? Finansal durumunuz hakkında bilgi verir misiniz?', hint:'Birikimleriniz, maaşınız veya sponsorunuzu belirtin.', keywords:['maaş','birikim','banka','hesap','kredi kartı','sponsor','şirket karşılıyor','tasarruf','gelir'], weakPatterns:['bilmiyorum','borcum var','kredi çektim'], feedback:{ strong:'Finansal kaynağınızı net olarak açıkladınız — bu vize memuruna güven verir.', weak:'Finansal kaynak belirsizliği en sık ret nedenidir.', tips:['Aylık gelirinizi TL olarak bilin','3 aylık banka ekstrenizi hazırda bulundurun','Birikimlerinizin uzun süredir hesapta durduğunu vurgulayın'] }},
+    { id:9, category:'Finansal', q:'Aylık geliriniz ne kadar? Ne iş yapıyorsunuz?', hint:'Net maaş + çalıştığınız sektör/şirket türü.', keywords:['tl','euro','maaş','serbest','şirket','kamu','özel','öğretmen','mühendis','doktor','memur'], weakPatterns:['değişiyor','bazen','az'], feedback:{ strong:'Net gelir bilgisi verdiniz — bu somut ve doğrulanabilir bir cevap.', weak:'Gelir miktarını bilmemek veya muğlak bırakmak endişe vericidir.', tips:['Maaşınızı net rakam olarak bilin','SGK kaydınız varsa bunu vurgulayın','Kamu sektörü çalışanıysanız bunu mutlaka belirtin'] }},
+    { id:10, category:'Finansal', q:'Banka hesabınızda bu seyahat için yeterli birikim var mı? Günlük ne kadar harcama planlıyorsunuz?', hint:'Schengen standartı: kişi başı günlük en az €50-120.', keywords:['€','euro','lira','yeterli','günlük','bütçe','nakit','kart'], weakPatterns:['az','yetmez','bilmiyorum'], feedback:{ strong:'Günlük bütçenizi planladınız, bu somut bir finansal hazırlık göstergesi.', weak:'Schengen ülkelerine başvuranlarda minimum günlük €50-100 bütçe istenebilir.', tips:['Günlük €80-100 EUR bütçe belirleyin','Toplam kalış × günlük bütçe × 1.5 kadar banka bakiyesi bulundurun','Nakit + kart kombinasyonu kullanacaksanız belirtin'] }},
+    { id:11, category:'Finansal', q:'Bu seyahat sırasında beklenmedik bir masrafla karşılaşsanız ne yaparsınız?', hint:'Acil durum planınızı, rezerv fonunuzu veya sigorta planınızı açıklayın.', keywords:['sigorta','birikim','kredi kartı','acil','aile','rezerv'], weakPatterns:['bilmiyorum','zor olur'], feedback:{ strong:'Acil durum planınız var — bu olgunluk göstergesidir.', weak:'Acil duruma hazırlıksız görünmek endişe vericidir.', tips:['Seyahat sigortanız varsa kapsamını söyleyin','Acil için ayrı bir miktar ayırdıysanız belirtin','Güvenilir acil iletişim kişiniz olduğunu söyleyin'] }},
+    { id:12, category:'Finansal', q:'Seyahat sigortanız var mı? Hangi şirket, ne kadar teminat?', hint:'Schengen için minimum €30.000 seyahat/sağlık sigortası zorunludur.', keywords:['sigorta','ereğli','allianz','axa','eureko','generali','30000','teminat','poliçe'], weakPatterns:['yok','almadım','bilmiyorum'], feedback:{ strong:'Sigortanız var ve teminatını biliyorsunuz — bu zorunlu bir şarttır.', weak:'Schengen vizesi için €30.000 teminatlı seyahat sigortası zorunludur! Bu olmadan başvurunuz geçersiz sayılabilir.', tips:['Başvurmadan önce mutlaka seyahat sigortası yaptırın','Poliçede tüm seyahat tarihlerinin kapsandığından emin olun','Sigortanın Schengen bölgesinin tamamını kapsaması gerekir'] }},
+    // GERİ DÖNÜŞ BAĞLARI
+    { id:13, category:'Geri Dönüş Bağları', q:'Türkiye\'ye neden geri döneceğinizi açıklar mısınız? Türkiye\'ye sizi bağlayan en güçlü neden nedir?', hint:'İş, aile, mülk veya sosyal bağlarınızı açıklayın.', keywords:['iş','işim','ailem','eşim','çocuğum','annem','babam','mülk','ev','tapu','şirket','öğrenci','okul','sözleşme'], weakPatterns:['bilmiyorum','yok','zor'], feedback:{ strong:'Güçlü geri dönüş bağları belirttiniz — bu vize memuru açısından en kritik faktördür.', weak:'Türkiye\'ye geri dönüş motivasyonu belirsiz — bu ret nedeni olabilir.', tips:['Somut bağları sıralayın: iş sözleşmesi, aile, mülk','SGK kaydınız devam ediyorsa bunu vurgulayın','"İşim, evim, ailem burada" cevabı çok etkilidir'] }},
+    { id:14, category:'Geri Dönüş Bağları', q:'Çalışıyorsanız, işvereninizden izin mektubu aldınız mı? İzin tarihleri vizenizdeki sürelerle uyuşuyor mu?', hint:'İzin onayını ve seyahat tarihlerinin örtüşmesini açıklayın.', keywords:['izin','mektup','işveren','onay','uyuşuyor','tarihler','sözleşme'], weakPatterns:['almadım','gerekmez','unuttum'], feedback:{ strong:'İşveren izin mektubu aldınız — bu profesyonellik ve geri dönüş taahhüdünü kanıtlar.', weak:'İşveren mektubu eksikse bu önemli bir zaaftır.', tips:['Türkçe + İngilizce işveren mektubu hazırlayın','Mektupta dönüş tarihi ve geri işe başlama tarihi yazsın','Şirket antetli kağıdında imzalı ve kaşeli olmalı'] }},
+    { id:15, category:'Geri Dönüş Bağları', q:'Türkiye\'de mülk (ev, arsa, işyeri) veya araç sahibi misiniz?', hint:'Varsa tapu veya ruhsat bilgisini paylaşın.', keywords:['evet','ev','tapu','arsa','daire','araç','ruhsat','mülk'], weakPatterns:['hayır','yok'], feedback:{ strong:'Mülk sahipliği güçlü bir geri dönüş kanıtıdır.', weak:'Mülkünüz olmasa da bu yeterince açıklanabilir; başka bağları ön plana çıkarın.', tips:['Mülkünüz varsa tapu fotokopisini hazırlayın','Yoksa iş sözleşmesi ve SGK\'yı ön plana çıkarın'] }},
+    { id:16, category:'Geri Dönüş Bağları', q:'Aileniz Türkiye\'de mi? Seyahat süresince onlarla nasıl iletişim kuracaksınız?', hint:'Eş, çocuk, ebeveyn gibi yakınlarınızdan bahsedin.', keywords:['eşim','çocuğum','annem','babam','kardeşim','ailem','kalıyor','bekliyor'], weakPatterns:['yok','hepsi yurt dışında'], feedback:{ strong:'Güçlü aile bağları Türkiye\'ye geri dönüşü güçlü motive eder.', weak:'Türkiye\'de aile bağı olmayışı zayıflık olarak değerlendirilebilir; iş veya mülk bağlarını ön plana çıkarın.', tips:['Eş veya çocuk gibi yakın aile Türkiye\'de kalıyorsa bunu vurgulayın','Ebeveynlerinizin Türkiye\'de olduğunu belirtin'] }},
+    { id:17, category:'Geri Dönüş Bağları', q:'SGK kaydınız var mı? Sosyal güvenceniz devam ediyor mu?', hint:'Aktif SGK kaydı güçlü istihdam ve geri dönüş kanıtıdır.', keywords:['evet','sgk','sigorta','4a','4b','emekli','kamu','devlet'], weakPatterns:['yok','hayır','kayıt yok'], feedback:{ strong:'Aktif SGK kaydı geri dönüş motivasyonunuzu çok güçlü destekler.', weak:'SGK kaydı yoksa, başka finansal veya sosyal güvence kanıtları hazırlayın.', tips:['E-devlet\'ten barkodlu SGK döküm belgesi alın','Kamu çalışanıysanız maaş bordrosu ile belirtiniz'] }},
+    { id:18, category:'Geri Dönüş Bağları', q:'Türkiye\'de bir işletmeniz veya şirketiniz var mı?', hint:'Varsa şirket adını ve ne iş yaptığını paylaşın.', keywords:['evet','şirket','işletme','esnaf','vergi','ticaret odası','kendi işim'], weakPatterns:['hayır'], feedback:{ strong:'Kendi işinizin olması geri dönüş taahhüdünü kuvvetlendirir.', weak:'Şirket yoksa sorun değil; iş sözleşmesi ve SGK\'yı vurgulayın.', tips:['Şirketiniz varsa vergi levhasını hazırlayın','Türkiye\'deki ticari bağlantılarınızdan bahsedin'] }},
+    { id:19, category:'Geri Dönüş Bağları', q:'Yurt dışında daha önce yaşama veya çalışma planınız oldu mu? Şu an böyle bir planınız var mı?', hint:'Dürüst ama net olun; "hayır" cevabını somut nedenlerle destekleyin.', keywords:['hayır','planım yok','Türkiye\'de çalışıyorum','kariyer','burada','geri dönmek'], weakPatterns:['belki','düşünüyorum','ileride'], feedback:{ strong:'Net ve somut bir cevap verdiniz.', weak:'"Belki" veya "düşünüyorum" gibi belirsiz cevaplar vize memurunda kötü izlenim bırakır.', tips:['Bu konuda net olun','Türkiye\'deki kariyer veya yaşam planlarınızdan bahsedin','Yurt dışı planı varsa dürüstçe ama bağlarla dengeleyerek anlatın'] }},
+    // SEYAHAT DETAYLARI
+    { id:20, category:'Seyahat Detayları', q:'Nerede kalacaksınız? Otel veya konaklama rezervasyonunuz var mı?', hint:'Otel adı ve adresi, ya da konakladığınız kişinin bilgisi.', keywords:['otel','airbnb','hostel','akrabam','arkadaşım','rezervasyon','booking','numarası'], weakPatterns:['bilmiyorum','henüz almadım','düşünmedim'], feedback:{ strong:'Konaklama rezervasyonunuz hazır — bu somut bir seyahat planlaması göstergesi.', weak:'Konaklama yeri belirli değilse bu ciddi bir eksik.', tips:['Otel rezervasyonunuzu başvurudan önce alın (iade edilebilir olabilir)','Otel adı ve adresini ezberlemeye çalışın','Birinin evinde kalıyorsanız ev sahibinin davet mektubunu hazırlayın'] }},
+    { id:21, category:'Seyahat Detayları', q:'Dönüş biletiniz var mı? Kesin dönüş tarihiniz nedir?', hint:'Dönüş bileti ve tarihi net olmalı; vize süresini aşmamalı.', keywords:['evet','biletim var','dönüş','tayyare','thy','lufthansa','tarih'], weakPatterns:['almadım','henüz yok','vize çıkınca alacağım'], feedback:{ strong:'Dönüş biletiniz var — bu seyahat bitimine dair somut kanıt.', weak:'Dönüş bileti olmadan vize mülakatında ciddi sorun yaşayabilirsiniz.', tips:['Tam olmasa bile değişiklik/iptal politikası esnek bir rezervasyon yapın','Bilet tarihi vize bitişinden önce olmalı','"Uçuş rezervasyonu var, sadece bilet düzenlenmedi" formatı da kabul görebilir'] }},
+    { id:22, category:'Seyahat Detayları', q:'Seyahat boyunca iletişim bilgileriniz nasıl? Türkiye\'deki bir yakınınız sizi takip edebiliyor mu?', hint:'Acil durumda ulaşılabilecek Türkiye\'deki kişiyi belirtin.', keywords:['telefon','numara','aile','arkadaş','eşim','annem','babam'], weakPatterns:[], feedback:{ strong:'Acil iletişim ağınız hazır, bu sorumluluk göstergesidir.', weak:'', tips:['Türkiye\'deki acil iletişim kişinizin adı ve numarasını bilin','Bu konsolosluğun sizi takip edebileceği bir kişidir'] }},
+    { id:23, category:'Seyahat Detayları', q:'Pasaportunuzun geçerlilik süresi ne zaman bitiyor? Seyahat süreniyle uyumlu mu?', hint:'Pasaport, seyahat bitişinden en az 3-6 ay sonrasına kadar geçerli olmalı.', keywords:['2025','2026','2027','2028','geçerli','ay','yıl'], weakPatterns:['bilmiyorum','kontrol etmedim'], feedback:{ strong:'Pasaport geçerlilik durumunu biliyorsunuz — temel bir hazırlık.', weak:'Pasaport geçerliliğini bilmemek ciddiyetsizlik izlenimi verir.', tips:['Pasaportunuzun bitiş tarihini öğrenin','Seyahat bitiş tarihinden en az 3 ay sonrasına geçerli olmalı','Süre yetmiyorsa başvurmadan önce yenileyin'] }},
+    { id:24, category:'Seyahat Detayları', q:'Yanınızda ne kadar nakit para götürüyorsunuz? Kredi kartınız var mı?', hint:'Nakit miktarı ve uluslararası geçerli kart bilgisi.', keywords:['nakit','kart','euro','dolar','visa','mastercard','banka kartı'], weakPatterns:['bilmiyorum','az'], feedback:{ strong:'Finansal araçlarınız hazır.', weak:'', tips:['En az €300-500 nakit bulundurun','Yabancı işlemlere açık uluslararası kartınızın olması önemli','Seyahat sigortanız acil nakit desteği içeriyorsa bunu bilin'] }},
+    // GEÇMİŞ
+    { id:25, category:'Geçmiş & Diğer', q:'Daha önce vize reddiniz oldu mu? Olduysa neden reddedildiğinizi biliyor musunuz?', hint:'Dürüst olun. Ret varsa, ne değiştiğinizi açıklayın.', keywords:['hayır','hiç','olmadı','evet','geçen yıl','neden','düzelttim'], weakPatterns:[], feedback:{ strong:'Vize geçmişi hakkında dürüst ve net cevap verdiniz.', weak:'', tips:['Ret olduysa saklamayın — konsolosluk kayıtlarda görür','Önceki reti düzelten faktörleri ön plana çıkarın','"Geçen sefer eksik evraktan reddedildim, bu sefer tamamım" gibi cevaplar kabul görebilir'] }},
+    { id:26, category:'Geçmiş & Diğer', q:'Daha önce ABD, Kanada, İngiltere veya başka Schengen ülkelerine vize aldınız mı?', hint:'Güçlü vize geçmişi büyük avantajdır.', keywords:['evet','abd','ingiltere','kanada','almanya','fransa','hollanda','vize'], weakPatterns:['hayır','ilk kez'], feedback:{ strong:'Güçlü vize geçmişiniz var — bu inandırıcılığı artırır.', weak:'İlk kez başvuruyorsanız bu normal; başka güçlü faktörleri ön plana çıkarın.', tips:['Önceki vize kullandıysanız bunu belgeleyin','İlk başvuruysa kuvvetli finansal ve sosyal bağlar daha da önemli'] }},
+    { id:27, category:'Geçmiş & Diğer', q:'Türkiye\'de yaşayan yabancı bir eşiniz veya çocuğunuz var mı? Çift vatandaşlığınız var mı?', hint:'Varsa durumu net açıklayın.', keywords:['hayır','evet','türk vatandaşı','çift','yabancı uyruklu'], weakPatterns:[], feedback:{ strong:'Net bir cevap verdiniz.', weak:'', tips:['Çift vatandaşlık varsa hangi pasaportla seyahat ettiğinizi bilin','Yabancı eş varsa, Türkiye bağlarınızı daha da güçlü göstermeniz gerekebilir'] }},
+    { id:28, category:'Geçmiş & Diğer', q:'Türkiye\'den çıkış-giriş kaydınız var mı? Son 5 yılda hangi ülkelere gittiniz?', hint:'E-devlet\'ten yurt içi/dışı giriş-çıkış kaydını gözden geçirin.', keywords:['evet','2022','2023','2024','dubai','kuzey kıbrıs','almanya','ingiltere','kayıt'], weakPatterns:['bilmiyorum'], feedback:{ strong:'Seyahat geçmişinizi iyi biliyorsunuz.', weak:'Seyahat kayıtlarınızı bilmemek hazırlıksızlık izlenimi verebilir.', tips:['E-devlet\'ten "Yurda Giriş Çıkış Bilgisi" belgenizi indirin','Pasaportunuzdaki damgaları inceleyin','Geçmiş seyahatler vize inandırıcılığını artırır'] }},
+  ],
+  uk: [
+    { id:1, category:'Amaç & Planlama', q:'İngiltere\'ye neden gitmek istiyorsunuz? Seyahatinizin amacı nedir?', hint:'Turizm, iş, aile veya tedavi gibi spesifik amaç belirtin.', keywords:['turizm','iş','aile','tedavi','müze','konferans','fuar','arkadaş','akraba','eğitim'], weakPatterns:['bilmiyorum','sadece gezmek'], feedback:{ strong:'Net ve spesifik bir amaç belirttiniz.', weak:'Çok genel. İngiltere konsolosluğu özellikle "neden İngiltere?" sorusunu sıkça sorar.', tips:['Buckingham, British Museum, Shakespeare gibi spesifik yerleri belirtin','İş ziyaretiyse şirket ve toplantı bilgisi ekleyin'] }},
+    { id:2, category:'Amaç & Planlama', q:'İngiltere\'de kaç gün kalacaksınız ve hangi şehirleri ziyaret edeceksiniz?', hint:'Londra dışında Edinburgh, Manchester, Oxford gibi yerler varsa belirtin.', keywords:['londra','edinburgh','manchester','oxford','cambridge','liverpool','bristol','gün','hafta'], weakPatterns:['bilmiyorum','belki'], feedback:{ strong:'Net bir seyahat planı var.', weak:'Somut gün ve şehir bilmemek hazırlıksız görünmenize neden olur.', tips:['Kaç gün, hangi şehirler, nerede kalacağınızı netleştirin'] }},
+    { id:3, category:'Finansal', q:'İngiltere\'deki harcamalarınızı nasıl karşılayacaksınız?', hint:'Birikim, maaş veya sponsor bilgisi paylaşın.', keywords:['birikim','maaş','sponsor','banka','hesap','kart','kredi'], weakPatterns:['bilmiyorum','az'], feedback:{ strong:'Finansal kaynağınızı net belirttiniz.', weak:'Finansal belirsizlik İngiltere vizesinde çok sık ret nedenidir.', tips:['Son 6 aylık banka ekstresi zorunludur UK vizesi için','Günlük en az £100-150 bütçe planı yapın'] }},
+    { id:4, category:'Finansal', q:'Son 6 aylık banka dökümanınız hazır mı? Ortalama bakiyeniz nedir?', hint:'UK vizesi için 6 aylık ektre standart gerekliliktir.', keywords:['evet','hazır','banka','6 ay','bakiye','ekstra'], weakPatterns:['hayır','3 ay','bilmiyorum'], feedback:{ strong:'6 aylık ekstreniz hazır, bu UK standardını karşılar.', weak:'UK vizesi için 6 aylık banka ekstresi zorunludur.', tips:['Son 6 aylık ekstreyi banka kaşeli ve imzalı alın','İmza sirküleri de gerekebilir'] }},
+    { id:5, category:'Finansal', q:'Hesabınıza son 28 günde büyük miktarda para yatırıldı mı?', hint:'UK son 28 gün öncesinden yatırılan para transferlerine özellikle dikkat eder.', keywords:['hayır','yok','düzenli','maaş','uzun süredir'], weakPatterns:['evet','yattı','birisi yattı'], feedback:{ strong:'Son 28 günde anormal transfer yok, bu güçlü bir finansal sağlık göstergesi.', weak:'Son 28 günde ani büyük transferler UK konsolosluğunda ciddi şüphe uyandırır.', tips:['28 günden eski birikimler güvenlidir','Son anda yapılan transferler "sahte bakiye" şüphesi yaratır','Uzun süreli düzenli maaş girişleri en güvenli seçenektir'] }},
+    { id:6, category:'Geri Dönüş Bağları', q:'Türkiye\'ye neden döneceğinizi açıklar mısınız?', hint:'İş, aile, mülk veya sosyal bağlarınızı sıralayın.', keywords:['iş','ailem','ev','mülk','okul','sözleşme','sgk'], weakPatterns:['bilmiyorum','zor'], feedback:{ strong:'Güçlü geri dönüş bağları belirttiniz.', weak:'Geri dönüş motivasyonu belirsiz — bu ret nedeni olabilir.', tips:['İşini, evini, ailesini Türkiye\'de olan kişiler avantajlı konumdadır','Sözleşmeli çalışıyorsanız sözleşme bitiş tarihini belirtin'] }},
+    { id:7, category:'Geri Dönüş Bağları', q:'SGK kaydınız, çalışma durumunuz veya işvereniniz hakkında bilgi verir misiniz?', hint:'Aktif iş kaydı UK için kritik bir güven unsurudur.', keywords:['sgk','işverem','şirket','kamu','özel','sözleşme','maaş'], weakPatterns:['yok','çalışmıyorum'], feedback:{ strong:'İstihdam durumunuz güçlü ve belgelenebilir.', weak:'İstihdam kaydı olmadan UK vizesi çok zorlaşır.', tips:['SGK + işveren mektubu mutlaka hazırlayın','Emekliyseniz emekli maaş belgenizi getirin'] }},
+    { id:8, category:'Konaklama', q:'İngiltere\'de nerede kalacaksınız? Otel veya davet mektubu var mı?', hint:'Otel rezervasyon numarası veya ev sahibinin pasaport kopyası.', keywords:['otel','airbnb','arkadaşım','akrabam','rezervasyon','davet mektubu'], weakPatterns:['bilmiyorum','henüz almadım'], feedback:{ strong:'Konaklama planınız netleştirilmiş.', weak:'Konaklama yeri belirsiz bırakılmamalıdır.', tips:['Otel rezervasyonu veya davet mektubu mutlaka hazırlayın','Rezervasyon iade edilebilir türden olabilir'] }},
+    { id:9, category:'Konaklama', q:'İngiltere\'deki bir akrabınız veya arkadaşınız sizi davet etti mi?', hint:'Davet varsa ilişki, ne zamandan beri tanışıyorsunuz, davetiyenin içeriği.', keywords:['evet','hayır','akrabam','arkadaşım','mektup','pasaport','davet'], weakPatterns:[], feedback:{ strong:'Davet durumunu net açıkladınız.', weak:'', tips:['Varsa davet mektubunu daveten kişinin pasaport kopyasıyla birlikte sunun','Yoksa otel rezervasyonu ile devam edin'] }},
+    { id:10, category:'Seyahat Detayları', q:'Dönüş biletiniz var mı? Kesin dönüş tarihiniz nedir?', hint:'UK vizesi için dönüş bileti en kritik belgelerden biridir.', keywords:['evet','biletim var','tarihi','thy','pegasus','british airways'], weakPatterns:['yok','almadım'], feedback:{ strong:'Dönüş biletiniz hazır.', weak:'Dönüş bileti olmadan UK vizesi neredeyse imkânsızdır.', tips:['Mutlaka dönüş bileti alın','Tarih vize süresiyle uyumlu olmalı'] }},
+    { id:11, category:'Seyahat Detayları', q:'Seyahat sigortanız var mı? Hangi şirket, ne kadar teminat?', hint:'UK\'da zorunlu değil ama çok önerilir; özellikle sağlık için.', keywords:['evet','sigorta','allianz','axa','teminat','poliçe'], weakPatterns:['yok','almadım'], feedback:{ strong:'Sigortanız hazır.', weak:'UK\'da sigorta zorunlu değil ama NHS dışı sağlık hizmetleri çok pahalı olabilir.', tips:['Seyahat sigortası almak vize başvurusuna güven katıyor','En az £100.000 sağlık + bagaj teminatı önerilir'] }},
+    { id:12, category:'Geçmiş', q:'Daha önce İngiltere\'ye gittiniz mi veya UK vizesi aldınız mı?', hint:'Olumlu vize geçmişi büyük avantaj.', keywords:['evet','gittim','aldım','vizem vardı'], weakPatterns:['hayır','hiç'], feedback:{ strong:'Vize geçmişiniz var, bu inandırıcılığı artırır.', weak:'İlk başvuruysa sorun değil; güçlü evraklarla başvurun.', tips:['Önceki UK vize kullanımınızı belgeleyin','İlk kez gidiyorsanız çok daha eksiksiz evrak hazırlayın'] }},
+    { id:13, category:'Geçmiş', q:'Daha önce UK veya başka bir ülkeden vize reddiniz oldu mu?', hint:'Dürüst olun; konsolosluk kayıtları kontrol eder.', keywords:['hayır','olmadı','hiç','evet','oldu'], weakPatterns:[], feedback:{ strong:'Vize geçmişi hakkında dürüst ve net cevap verdiniz.', weak:'', tips:['Ret varsa saklamayın','Önceki reddi geçersiz kılan değişikliklerinizi açıklayın'] }},
+    { id:14, category:'Geçmiş', q:'Türkiye\'de son 5 yılda adli bir suç veya ceza aldınız mı?', hint:'"Hayır" cevabı beklenir ve belgelenebilir olmalı.', keywords:['hayır','hiç','temiz','sicil'], weakPatterns:['evet'], feedback:{ strong:'Temiz sicil vize güvenilirliğini artırır.', weak:'', tips:['Adli sicil belgesi gerekebilir, önceden temin edin'] }},
+    { id:15, category:'Geçmiş', q:'Türkiye\'den çıkış-giriş geçmişiniz var mı? Son seyahatleriniz hangi ülkelerdi?', hint:'Düzenli seyahat geçmişi güvenilirlik kanıtıdır.', keywords:['evet','dubai','kuzey kıbrıs','almanya','kayıt'], weakPatterns:['bilmiyorum'], feedback:{ strong:'Seyahat geçmişinizi iyi biliyorsunuz.', weak:'', tips:['Pasaportunuzdaki damgaları gözden geçirin','E-devlet\'ten giriş-çıkış kaydınızı alın'] }},
+    { id:16, category:'Aile & Sosyal', q:'Türkiye\'de aile üyeleriniz var mı? Kim sizinle ilgilenecek siz yokken?', hint:'Eş, çocuk, ebeveyn gibi yakınları belirtin.', keywords:['eşim','çocuğum','annem','babam','kardeşim','ailem'], weakPatterns:[], feedback:{ strong:'Türkiye\'deki aile bağları geri dönüş güvencenizi pekiştiriyor.', weak:'', tips:['Çocuğunuz varsa ve Türkiye\'de kalıyorsa bu güçlü bir bağdır'] }},
+    { id:17, category:'Aile & Sosyal', q:'Türkiye\'de sosyal veya topluluk bağlantılarınız var mı? Dernek, meslek odası gibi?', hint:'Profesyonel veya sivil toplum bağları da geri dönüş motivasyonu gösterir.', keywords:['dernek','baro','oda','meslek','gönüllü','topluluk','spor kulübü'], weakPatterns:['yok'], feedback:{ strong:'Sosyal ağınız Türkiye\'deki entegrasyonunuzu gösteriyor.', weak:'', tips:['Meslek odası üyeliği veya dernek kaydı bir güven unsuru olabilir'] }},
+    { id:18, category:'İstihdam', q:'Türkiye\'deki işiniz veya mesleğiniz hakkında bilgi verir misiniz?', hint:'Şirket adı, pozisyon ve ne kadar süredir çalıştığınızı belirtin.', keywords:['şirket','firma','kamu','özel','mühendis','doktor','öğretmen','müdür'], weakPatterns:['bilmiyorum','çalışmıyorum'], feedback:{ strong:'İstihdam bilginiz net ve doğrulanabilir.', weak:'İstihdam yoksa diğer bağları (mülk, aile) daha güçlü vurgulayın.', tips:['Şirket adı ve sektörünü bilin','Kaç yıldır aynı işyerinde olduğunuzu belirtin'] }},
+    { id:19, category:'İstihdam', q:'İşvereniniz bu seyahat için izin mektubu verdi mi?', hint:'İşveren mektubu UK konsolosluğu tarafından çok önem verilir.', keywords:['evet','mektup','antetli','imzalı','kaşeli','onay'], weakPatterns:['almadım','gerekmez'], feedback:{ strong:'İşveren mektubu hazır — bu kritik bir belgedir.', weak:'İşveren mektubu olmadan UK başvurusu zayıf kalır.', tips:['Şirket antetli, imzalı, kaşeli İngilizce mektup hazırlayın','Mektupta dönüş tarihi ve iş pozisyonunuz belirtilmeli'] }},
+    { id:20, category:'İstihdam', q:'Serbest meslek veya kendi işiniz varsa, vergi belgeleriniz mevcut mu?', hint:'Serbest çalışanlar için vergi levhası ve dönem bildirgeleri gereklidir.', keywords:['evet','vergi','levha','bildirgem','muhasebe','mükellefiyet'], weakPatterns:['yok','almadım'], feedback:{ strong:'Vergi belgeleriniz hazır.', weak:'Serbest çalışanlar için vergi kaydı çok önemlidir.', tips:['Vergi levhası + son 2 yıl yıllık beyanname hazırlayın','Muhasebeciden onaylı gelir belgesi alın'] }},
+    { id:21, category:'Nüfus & Aile Durumu', q:'Medeni haliniz nedir? Eşiniz ve çocuklarınız bu seyahatte sizinle mi?', hint:'Aile beraberliği veya Türkiye\'de kalma durumunu açıklayın.', keywords:['evli','bekâr','eşim geliyor','eşim Türkiye\'de kalıyor','çocuklarım'], weakPatterns:[], feedback:{ strong:'Aile durumunu net açıkladınız.', weak:'', tips:['Evliyseniz ve eşiniz Türkiye\'de kalıyorsa bu güçlü bir bağdır','Nüfus kayıt örneği belgenizi hazırlayın'] }},
+    { id:22, category:'Nüfus & Aile Durumu', q:'Türkiye\'de adresiniz neresi? Yerleşim yeri belgeniz var mı?', hint:'E-devlet\'ten barkodlu Yerleşim Yeri Belgesi zorunludur.', keywords:['istanbul','ankara','izmir','e-devlet','barkodlu','adres'], weakPatterns:['bilmiyorum'], feedback:{ strong:'Adres bilginiz net ve belgeli.', weak:'Yerleşim yeri belgesi hazır olmalı.', tips:['E-devlet\'ten barkodlu Yerleşim Yeri Belgesi alın','Bu belge son 3 aydan eski olmamalı'] }},
+    { id:23, category:'Seyahat Planı', q:'İngiltere\'deyken kimlerle görüşeceksiniz? Bir toplantı veya etkinliğe katılıyor musunuz?', hint:'İş ziyaretiyse toplantı davetiyesi; turizm ise aktivite listesi.', keywords:['toplantı','konferans','fuar','müşteri','arkadaş','akraba','müze','turizm','tiyatro'], weakPatterns:['bilmiyorum'], feedback:{ strong:'Spesifik bir program planınız var.', weak:'', tips:['İş seyahatiyse davetiye veya toplantı onayı hazırlayın','Turizm ise tur rezervasyonu veya bilet spesifik olur'] }},
+    { id:24, category:'Seyahat Planı', q:'Pasaportunuz ne zaman bitiyor? Seyahat bitiş tarihinizden sonra en az 6 ay geçerli mi?', hint:'UK pasaport geçerliliği için 6 aylık kural uygulayabilir.', keywords:['2026','2027','2028','geçerli','6 ay'], weakPatterns:['bilmiyorum','belki'], feedback:{ strong:'Pasaportunuz geçerli.', weak:'Pasaport geçerliliğini mutlaka kontrol edin.', tips:['UK için seyahat sonrasında 6 ay ek geçerlilik ideal','Süre yetmiyorsa önce pasaport yenileyin'] }},
+    { id:25, category:'Son Sorular', q:'Bu başvuru için tüm gerekli belgeleri hazırladınız mı? Eksik belge var mı?', hint:'Eksikleri şimdi dürüstçe belirtin ki danışman yardım edebilsin.', keywords:['evet','hazır','tamamım','eksik','almadım'], weakPatterns:[], feedback:{ strong:'Belgeleriniz hazır. Son kez kontrol listesiyle gözden geçirin.', weak:'', tips:['Checklist yapın ve her belgeyi tek tek işaret edin','Kopya yetersizliği çok sık ret nedenidir'] }},
+  ],
+  usa: [
+    { id:1, category:'Amaç & Planlama', q:'ABD\'ye neden gitmek istiyorsunuz? Seyahatinizin amacı nedir?', hint:'Turizm, iş, aile, konferans gibi net amaç belirtin.', keywords:['turizm','iş','aile','konferans','fuar','tedavi','arkadaş','ziyaret','kongre'], weakPatterns:['bilmiyorum','sadece gezmek'], feedback:{ strong:'Spesifik ve ikna edici bir amaç belirttiniz.', weak:'ABD elçilik mülakatında genel cevaplar ret ile sonuçlanabilir.', tips:['Gideceğiniz şehir ve aktiviteleri somut belirtin','İş seyahatiyse şirket/toplantı bilgisi ekleyin'] }},
+    { id:2, category:'Amaç & Planlama', q:'ABD\'de kaç gün kalacaksınız? Hangi eyaletleri veya şehirleri ziyaret edeceksiniz?', hint:'New York, Los Angeles, Miami gibi spesifik şehir ve kaç gün.', keywords:['new york','los angeles','miami','chicago','lasvegas','san francisco','gün','hafta','ay'], weakPatterns:['bilmiyorum','belki'], feedback:{ strong:'Net bir seyahat planı var.', weak:'ABD mülakatında somut plan bilmemek büyük zayıflıktır.', tips:['Kaç gün, hangi şehirler, nerede kalacağınızı netleştirin'] }},
+    { id:3, category:'Amaç & Planlama', q:'ABD\'de sizi davet eden biri var mı? Kimle görüşeceksiniz?', hint:'Varsa ilişki ve davetiye detayları, yoksa bağımsız turizm planı.', keywords:['arkadaşım','akrabam','şirket','davet','mektup','hayır'], weakPatterns:[], feedback:{ strong:'Davet durumunu net açıkladınız.', weak:'', tips:['Davet varsa resmi davetiye mektubu hazırlayın','Yoksa otel rezervasyonu ile bağımsız turizm planı gösterin'] }},
+    { id:4, category:'Amaç & Planlama', q:'Bu seyahatin amacı sadece turizm mi, yoksa başka bir plan da var mı?', hint:'Çalışma, yerleşme veya okuma niyetiniz DS-160\'ta belirtilmeli.', keywords:['sadece turizm','sadece iş','yok','kesinlikle'], weakPatterns:['belki','ileride','düşünüyorum'], feedback:{ strong:'Net ve tutarlı bir niyet belirttiniz.', weak:'Belirsiz niyet ifadeleri ABD mülakatında hemen ret sebebidir.', tips:['B1/B2 vizesiyle çalışmak kesinlikle yasaktır','"Sadece turizm/iş, kesinlikle çalışmıyorum" deyin'] }},
+    { id:5, category:'Finansal', q:'Bu seyahatin masraflarını nasıl karşılayacaksınız?', hint:'Birikim, maaş veya sponsor bilgisi net olmalı.', keywords:['birikim','maaş','sponsor','banka','hesap','kart','şirket karşılıyor'], weakPatterns:['bilmiyorum','az','zor'], feedback:{ strong:'Finansal kaynağınız net.', weak:'ABD vizesinde finansal kanıt son derece önemlidir.', tips:['Banka dökümü + son 3 aylık maaş bordrosu hazırlayın','Günlük en az $100 harcama planı yapın'] }},
+    { id:6, category:'Finansal', q:'Aylık geliriniz ne kadar? Ne iş yapıyorsunuz?', hint:'Meslek ve net maaş rakamı verin.', keywords:['tl','dolar','maaş','şirket','kamu','özel','mühendis','doktor','öğretmen','işletme'], weakPatterns:['değişiyor','az','bazen'], feedback:{ strong:'Net gelir ve meslek bilgisi verdiniz.', weak:'', tips:['Mesleğinizi ve maaşınızı net rakamla belirtin','Vergi levhası ve maaş bordrosu hazırlayın'] }},
+    { id:7, category:'Finansal', q:'ABD\'deyken bütçeniz ne olacak? Günlük tahmini harcamanız?', hint:'ABD\'de pahalı bir ülke; günlük $100-200+ bütçe planı yapın.', keywords:['dolar','$','günlük','bütçe','nakit','kart','150','200'], weakPatterns:['az','bilmiyorum'], feedback:{ strong:'Gerçekçi bir bütçe planınız var.', weak:'ABD\'de yaşam pahalıdır; yetersiz bütçe planı ret nedeni olabilir.', tips:['Günlük en az $150-200 bütçe hesaplayın','Konaklama, yemek ve ulaşımı ayrı ayrı tahmin edin'] }},
+    { id:8, category:'Geri Dönüş', q:'Türkiye\'ye neden geri döneceğinizi açıklar mısınız? En güçlü geri dönüş nedeniniz nedir?', hint:'ABD B1/B2\'de "nonimmigrant intent" kanıtı kritik.', keywords:['iş','ailem','ev','mülk','okul','sözleşme','sgk','şirketim'], weakPatterns:['bilmiyorum','zor','yok'], feedback:{ strong:'Güçlü geri dönüş bağları belirttiniz — ABD için en kritik faktör bu.', weak:'Türkiye\'ye geri dönüş motivasyonu zayıf — büyük ihtimalle reddedilirsiniz.', tips:['"İşim, evim, ailem Türkiye\'de" en etkili cevaptır','SGK, sözleşme ve mülk bilgileri somut kanıttır'] }},
+    { id:9, category:'Geri Dönüş', q:'ABD\'de çalışma veya yerleşme niyetiniz var mı?', hint:'"Kesinlikle hayır" net cevabını somut nedenlerle destekleyin.', keywords:['hayır','kesinlikle yok','Türkiye\'de','dönüyorum'], weakPatterns:['belki','ileride','istiyorum','düşündüm'], feedback:{ strong:'Net ve inandırıcı cevap.', weak:'Bu soruya "belki" veya belirsiz cevap vermek neredeyse kesin ret sebebidir.', tips:['Kesinlikle "Hayır" deyin','Türkiye\'deki kariyer ve aile planlarınızla destekleyin'] }},
+    { id:10, category:'Geri Dönüş', q:'SGK veya sosyal güvence kaydınız devam ediyor mu? Türkiye\'de aktif çalışıyor musunuz?', hint:'Aktif SGK ve iş sözleşmesi geri dönüş güvencesidir.', keywords:['evet','sgk','aktif','çalışıyorum','sözleşme'], weakPatterns:['hayır','yok'], feedback:{ strong:'Aktif istihdam geri dönüşünüzü güçlü kanıtlar.', weak:'SGK veya aktif iş kaydı olmadan ABD B1/B2 çok zorlaşır.', tips:['SGK hizmet dökümü + işveren mektubu hazırlayın'] }},
+    { id:11, category:'Geri Dönüş', q:'Türkiye\'de mülk (ev, arsa) sahibi misiniz?', hint:'Mülk sahipliği güçlü geri dönüş kanıtı.', keywords:['evet','ev','tapu','arsa','daire','mülkünüm'], weakPatterns:['hayır','yok'], feedback:{ strong:'Mülk sahipliği ABD için güçlü bağ kanıtı.', weak:'Mülk yoksa iş ve aile bağları daha önemli hale gelir.', tips:['Tapu fotokopisi hazırlayın','Mülk yoksa iş sözleşmesi ve SGK\'yı güçlü gösterin'] }},
+    { id:12, category:'Geri Dönüş', q:'Aileniz Türkiye\'de mi? Siz ABD\'deyken nerede olacaklar?', hint:'Eş ve çocuk Türkiye\'de kalıyorsa bu çok güçlü bir bağ.', keywords:['eşim','çocuğum','annem','babam','kalıyor','Türkiye\'de'], weakPatterns:['hepsi yanımda'], feedback:{ strong:'Aile bağları geri dönüş taahhüdünü somut kılıyor.', weak:'Ailenin tamamı da gidiyorsa başka bağları daha güçlü vurgulayın.', tips:['Eş ve çocuk Türkiye\'de kalıyorsa bunu açıkça belirtin'] }},
+    { id:13, category:'Konaklama', q:'ABD\'de nerede kalacaksınız? Otel rezervasyonunuz var mı?', hint:'Otel adı ve rezervasyon numarası veya ev sahibinin bilgisi.', keywords:['otel','airbnb','akrabam','arkadaşım','rezervasyon','hilton','marriott'], weakPatterns:['bilmiyorum','henüz yok'], feedback:{ strong:'Konaklama netleştirilmiş.', weak:'Konaklama yeri belirsiz bırakılmamalı.', tips:['Otel rezervasyonu veya ev sahibi davetiyesi hazırlayın'] }},
+    { id:14, category:'Konaklama', q:'Dönüş biletiniz var mı? Kesin dönüş tarihiniz nedir?', hint:'ABD B1/B2 vizesinde dönüş bileti kritik belgedir.', keywords:['evet','biletim var','tarihi','thy','united','american airlines'], weakPatterns:['yok','almadım'], feedback:{ strong:'Dönüş biletiniz var.', weak:'Dönüş bileti olmadan ABD vizesi neredeyse imkânsız.', tips:['Mutlaka dönüş bileti alın','DS-160 ile tutarlı tarihler olmalı'] }},
+    { id:15, category:'Geçmiş', q:'Daha önce ABD\'de bulundunuz mu? ABD vizesi aldınız mı?', hint:'Güçlü vize geçmişi inandırıcılığı artırır.', keywords:['evet','gittim','aldım','vizem vardı','b1','b2'], weakPatterns:['hayır','hiç'], feedback:{ strong:'ABD vize geçmişiniz var, bu avantajlıdır.', weak:'İlk kez başvuruyorsanız güçlü evraklarla başvurun.', tips:['Önceki ABD vizesini belgeleyin','İlk kez gidiyorsanız diğer ülke vizelerini vurgulayın'] }},
+    { id:16, category:'Geçmiş', q:'Daha önce herhangi bir ülkeden vize reddiniz oldu mu?', hint:'Dürüst olun; DS-160\'ta bu soru var ve yanlış yanıt suç sayılır.', keywords:['hayır','olmadı','hiç'], weakPatterns:[], feedback:{ strong:'Net ve dürüst cevap verdiniz.', weak:'', tips:['DS-160 formunda yanlış bilgi vermek hukuki suçtur','Ret olduysa bunu beyan edip durumu açıklayın'] }},
+    { id:17, category:'Geçmiş', q:'Herhangi bir suç mahkûmiyetiniz veya ABD\'den deport işleminiz var mı?', hint:'"Hayır" net cevabı beklenir ve doğrulanabilir olmalı.', keywords:['hayır','hiç','yok','temiz'], weakPatterns:['evet'], feedback:{ strong:'Temiz adli sicil vize inandırıcılığını artırır.', weak:'', tips:['Adli sicil belgesi hazırlayın','Varsa durumu dürüstçe beyan edin'] }},
+    { id:18, category:'Geçmiş', q:'ABD dışında başka ülkelere vize aldınız mı? (İngiltere, Schengen, Kanada gibi)', hint:'Güçlü çoklu vize geçmişi ABD başvurusunu olumlu etkiler.', keywords:['ingiltere','schengen','kanada','almanya','fransa','evet','vizem var'], weakPatterns:['hayır','yok'], feedback:{ strong:'Çoklu vize geçmişiniz ABD\'de güven oluşturur.', weak:'Başka ülke vizesi yoksa, finansal ve sosyal bağlar daha kritik.', tips:['Önceki vizeli seyahatlerinizi belgeleyin','Pasaport damgalarınızı bilmeniz önemli'] }},
+    { id:19, category:'Sosyal Medya', q:'Sosyal medya hesaplarınız var mı? DS-160\'ta belirtmeniz gerekiyor.', hint:'2026 itibarıyla DS-160\'a sosyal medya eklenmesi zorunlu hale geldi.', keywords:['instagram','twitter','linkedin','facebook','tiktok','evet','hesabım var'], weakPatterns:['yok','kullanmıyorum'], feedback:{ strong:'Sosyal medya hesaplarınızı biliyorsunuz.', weak:'', tips:['DS-160 formuna aktif sosyal medya hesaplarınızı ekleyin','Hesaplarınızda hassas içerik varsa başvurudan önce temizleyin','LinkedIn hesabının profesyonel görünmesi avantajdır'] }},
+    { id:20, category:'Sosyal Medya', q:'Sosyal medyada paylaştığınız siyasi veya hassas içerik var mı?', hint:'ABD elçiliği sosyal medyayı taramaktadır.', keywords:['hayır','yok','siyasi içerik yok','temiz'], weakPatterns:['evet','bazen','protesto'], feedback:{ strong:'Sosyal medya içerikleriniz temiz.', weak:'Hassas siyasi içerikler ABD vizesinde ciddi sorun yaratabilir.', tips:['Başvurudan önce hesaplarınızı gözden geçirin','Silinmesi gereken içerikleri kaldırın veya gizleyin','ABD politikasına veya kurumlarına yönelik eleştirel paylaşımlar risk yaratır'] }},
+    { id:21, category:'İstihdam', q:'Şu anda çalışıyorsanız, işvereniniz bu seyahate onay verdi mi?', hint:'İşveren mektubu ve izin onayı.', keywords:['evet','onay','mektup','izin','imzaladı'], weakPatterns:['almadım','gerek yok'], feedback:{ strong:'İşveren onayı alındı.', weak:'İşveren mektubu olmadan istihdam durumunuzu kanıtlamak zorlaşır.', tips:['İngilizce işveren mektubu hazırlayın','Mektupta pozisyon, süre ve dönüş tarihi belirtilmeli'] }},
+    { id:22, category:'İstihdam', q:'Şu anda öğrenciyseniz, okul izni aldınız mı?', hint:'Öğrenci vizesi yerine B2 vizesiyle gidiyorsa okul izni gerekebilir.', keywords:['evet','okul','izin','belge','öğrenciyim'], weakPatterns:['almadım'], feedback:{ strong:'Okul onayı alındı.', weak:'', tips:['Üniversitenizden tatil dönemi olduğunu belgeleyin','Okul belgesi ve transkript yardımcı olabilir'] }},
+    { id:23, category:'Mülakat Hazırlığı', q:'DS-160 formunu doldurdunuz mu? MRV ücretini ödeduniz mi?', hint:'Bu adımlar tamamlanmadan randevu alınamaz.', keywords:['evet','doldurdum','ödedim','onay','kodu','barkod'], weakPatterns:['hayır','henüz','doldurmadım'], feedback:{ strong:'DS-160 tamamlanmış.', weak:'DS-160 doldurulmadan mülakata giremezsiniz.', tips:['DS-160\'ı dikkatlice ve dürüstçe doldurun','Kayıt kodu yazdırın, mülakata getirin'] }},
+    { id:24, category:'Mülakat Hazırlığı', q:'Mülakata hangi belgelerle geleceksiniz? Listeyi biliyor musunuz?', hint:'Pasaport, DS-160, fotoğraf, randevu kâğıdı, banka ekstresi, işveren mektubu.', keywords:['pasaport','ds160','fotoğraf','banka','mektup','randevu'], weakPatterns:['bilmiyorum','hepsini almadım'], feedback:{ strong:'Gerekli belgeleri biliyorsunuz.', weak:'Eksik belgeyle mülakata girmek kesin ret ile sonuçlanabilir.', tips:['Kontrol listesi yapın: pasaport, DS-160, fotoğraf, banka ekstresi, işveren mektubu','Kopya olarak da ekstra bir set hazırlayın'] }},
+    { id:25, category:'Mülakat Hazırlığı', q:'Bu seyahatle ilgili herhangi bir endişeniz veya risk faktörünüz olduğunu düşünüyor musunuz?', hint:'Dürüst olun; güçlü yanlarınızı da belirtin.', keywords:['hayır','endişem yok','güçlü','hazırlıklıyım'], weakPatterns:['evet','endişeleniyorum','zayıf'], feedback:{ strong:'Kendinize güveniyorsunuz — bu iyi bir tutum.', weak:'Endişelerinizi bilmek önemli; eksikleri şimdi giderin.', tips:['Zayıf yanlarınızı güçlü faktörlerle dengeleyin','Mülakata olumlu ve hazırlıklı girin'] }},
+  ]
+};
+
+// ── Çoklu Ülke Vize Verisi (Türk Pasaportu) ─────────────────────────────────
+const multiCountryVisaData: Record<string, { flag: string; region: string; visaType: 'vizsiz'|'evisa'|'kapida'|'tam_vize'; note: string; maxDays: number }> = {
+  'Azerbaycan': { flag:'🇦🇿', region:'Yakın Çevre', visaType:'vizsiz', note:'Kimlikle girilebilir', maxDays:90 },
+  'Gürcistan': { flag:'🇬🇪', region:'Yakın Çevre', visaType:'vizsiz', note:'90 gün vizesiz', maxDays:90 },
+  'Kuzey Kıbrıs': { flag:'🇨🇾', region:'Yakın Çevre', visaType:'vizsiz', note:'Kimlikle girilebilir', maxDays:90 },
+  'Bosna Hersek': { flag:'🇧🇦', region:'Avrupa', visaType:'vizsiz', note:'90/180 gün', maxDays:90 },
+  'Sırbistan': { flag:'🇷🇸', region:'Avrupa', visaType:'vizsiz', note:'90 gün vizesiz', maxDays:90 },
+  'Arnavutluk': { flag:'🇦🇱', region:'Avrupa', visaType:'vizsiz', note:'90 gün vizesiz', maxDays:90 },
+  'Kuzey Makedonya': { flag:'🇲🇰', region:'Avrupa', visaType:'vizsiz', note:'90 gün vizesiz', maxDays:90 },
+  'Karadağ': { flag:'🇲🇪', region:'Avrupa', visaType:'vizsiz', note:'90 gün vizesiz', maxDays:90 },
+  'Moldova': { flag:'🇲🇩', region:'Avrupa', visaType:'vizsiz', note:'90 gün vizesiz', maxDays:90 },
+  'Ürdün': { flag:'🇯🇴', region:'Orta Doğu', visaType:'kapida', note:'Kapıda vize alınır', maxDays:30 },
+  'Lübnan': { flag:'🇱🇧', region:'Orta Doğu', visaType:'vizsiz', note:'Mütekabiliyet bazlı', maxDays:30 },
+  'Kazakistan': { flag:'🇰🇿', region:'Orta Asya', visaType:'vizsiz', note:'30 gün vizesiz', maxDays:30 },
+  'Kırgızistan': { flag:'🇰🇬', region:'Orta Asya', visaType:'vizsiz', note:'Kimlikle girilebilir', maxDays:30 },
+  'Özbekistan': { flag:'🇺🇿', region:'Orta Asya', visaType:'vizsiz', note:'30 gün vizesiz', maxDays:30 },
+  'Mısır': { flag:'🇪🇬', region:'Afrika', visaType:'evisa', note:'e-Vize veya kapıda', maxDays:30 },
+  'Fas': { flag:'🇲🇦', region:'Afrika', visaType:'vizsiz', note:'90 gün vizesiz', maxDays:90 },
+  'Tunus': { flag:'🇹🇳', region:'Afrika', visaType:'vizsiz', note:'90 gün vizesiz', maxDays:90 },
+  'Tayland': { flag:'🇹🇭', region:'Uzak Doğu', visaType:'kapida', note:'30 gün kapıda vize', maxDays:30 },
+  'Endonezya': { flag:'🇮🇩', region:'Uzak Doğu', visaType:'evisa', note:'e-Vize zorunlu', maxDays:30 },
+  'Vietnam': { flag:'🇻🇳', region:'Uzak Doğu', visaType:'evisa', note:'e-Vize gerekli', maxDays:30 },
+  'Hindistan': { flag:'🇮🇳', region:'Güney Asya', visaType:'evisa', note:'e-Vize zorunlu', maxDays:60 },
+  'Sri Lanka': { flag:'🇱🇰', region:'Güney Asya', visaType:'evisa', note:'e-Vize alınır', maxDays:30 },
+  'Japonya': { flag:'🇯🇵', region:'Uzak Doğu', visaType:'tam_vize', note:'Konsolosluk vizesi', maxDays:90 },
+  'Almanya': { flag:'🇩🇪', region:'Schengen', visaType:'tam_vize', note:'Schengen vizesi', maxDays:90 },
+  'Fransa': { flag:'🇫🇷', region:'Schengen', visaType:'tam_vize', note:'Schengen vizesi', maxDays:90 },
+  'İtalya': { flag:'🇮🇹', region:'Schengen', visaType:'tam_vize', note:'Schengen vizesi', maxDays:90 },
+  'İspanya': { flag:'🇪🇸', region:'Schengen', visaType:'tam_vize', note:'Schengen vizesi', maxDays:90 },
+  'Hollanda': { flag:'🇳🇱', region:'Schengen', visaType:'tam_vize', note:'Schengen vizesi', maxDays:90 },
+  'İngiltere': { flag:'🇬🇧', region:'Avrupa', visaType:'tam_vize', note:'UK Standard Visitor', maxDays:180 },
+  'ABD': { flag:'🇺🇸', region:'Kuzey Amerika', visaType:'tam_vize', note:'B1/B2 vizesi', maxDays:180 },
+  'Kanada': { flag:'🇨🇦', region:'Kuzey Amerika', visaType:'tam_vize', note:'Visitor Visa', maxDays:180 },
+  'Dubai/BAE': { flag:'🇦🇪', region:'Orta Doğu', visaType:'vizsiz', note:'90 gün vizesiz', maxDays:90 },
+  'Katar': { flag:'🇶🇦', region:'Orta Doğu', visaType:'kapida', note:'Kapıda vize alınır', maxDays:30 },
+  'Arjantin': { flag:'🇦🇷', region:'Güney Amerika', visaType:'vizsiz', note:'90 gün vizesiz', maxDays:90 },
+};
+
+// ── Topluluk Deneyimleri Tipi ────────────────────────────────────────────────
+interface CommunityEntry {
+  id: string; consulate: string; city: string; visaType: string;
+  result: 'onaylandi'|'reddedildi'|'ek_evrak'; waitDays: number;
+  notes: string; date: string; profile: string;
+}
+const COMMUNITY_STORAGE_KEY = 'vizeakil_community_v1';
+const defaultCommunityEntries: CommunityEntry[] = [
+  { id:'c1', consulate:'Almanya', city:'İstanbul', visaType:'Turizm (Schengen)', result:'onaylandi', waitDays:18, notes:'SGK + banka ekstresi + işveren mektubu ile onaylandı. Randevu almak 3 hafta sürdü.', date:'2026-02-14', profile:'Çalışan' },
+  { id:'c2', consulate:'Hollanda', city:'İstanbul', visaType:'Turizm (Schengen)', result:'onaylandi', waitDays:12, notes:'6 aylık banka ekstresi ve otel rezervasyonu yeterliydi. Mülk tapu kopyasını da aldım yanıma.', date:'2026-01-28', profile:'Emekli' },
+  { id:'c3', consulate:'Fransa', city:'Ankara', visaType:'Turizm (Schengen)', result:'reddedildi', waitDays:25, notes:'Sigorta poliçesi yeterince kapsamlı değilmiş. Min. €30.000 teminat olmadan ret alıyorsunuz.', date:'2025-12-10', profile:'Öğrenci' },
+  { id:'c4', consulate:'ABD', city:'İstanbul', visaType:'B2 Turizm', result:'onaylandi', waitDays:42, notes:'Mülakat 3 dakika sürdü. "Türkiye\'de ne işiniz var?" sorusu çok kritik. SGK + ev tapusu + aile burada diyince onayladılar.', date:'2026-03-05', profile:'Çalışan' },
+  { id:'c5', consulate:'İngiltere', city:'İstanbul', visaType:'Standard Visitor', result:'ek_evrak', waitDays:30, notes:'6 aylık banka ekstresi yetersiz bulundu, ek olarak kira sözleşmesi ve T. Sicil Gazetesi istediler.', date:'2026-01-15', profile:'Çalışan' },
+  { id:'c6', consulate:'Almanya', city:'İzmir', visaType:'Turizm (Schengen)', result:'onaylandi', waitDays:10, notes:'İzmir konsolosluğu İstanbul\'a göre daha hızlı. Randevu da daha kolay.', date:'2026-03-22', profile:'Serbest Meslek' },
+];
+
 // Premium tool IDs
-const PREMIUM_TOOLS = ['copilot', 'comparator', 'refusal', 'aibank', 'socialmedia', 'redflag'];
+const PREMIUM_TOOLS = ['copilot', 'comparator', 'refusal', 'aibank', 'socialmedia', 'redflag', 'interview', 'multicountry'];
 
 export default function App() {
   const [step, setStep] = useState<'hero' | 'onboarding' | 'assessment' | 'dashboard' | 'letter' | 'tactics'>('hero');
@@ -902,6 +1053,32 @@ export default function App() {
   const [aiBankMonths, setAiBankMonths] = useState('3');
   const [aiBankSalaryRegular, setAiBankSalaryRegular] = useState(true);
   const [aiBankLargeDeposit, setAiBankLargeDeposit] = useState(false);
+
+  // ── Mülakat Simülatörü ──────────────────────────────────────────────────────
+  const [isInterviewSimOpen, setIsInterviewSimOpen] = useState(false);
+  const [interviewPhase, setInterviewPhase] = useState<'setup'|'question'|'result'>('setup');
+  const [interviewVisaType, setInterviewVisaType] = useState<'schengen'|'uk'|'usa'>('schengen');
+  const [interviewCurrentQ, setInterviewCurrentQ] = useState(0);
+  const [interviewAnswer, setInterviewAnswer] = useState('');
+  const [interviewAnswers, setInterviewAnswers] = useState<{q:string; a:string; score:number; grade:string; feedback:string; tips:string[]}[]>([]);
+  const [interviewHintShown, setInterviewHintShown] = useState(false);
+
+  // ── Çoklu Ülke Planlayıcı ──────────────────────────────────────────────────
+  const [isMultiCountryOpen, setIsMultiCountryOpen] = useState(false);
+  const [mcSelected, setMcSelected] = useState<string[]>([]);
+  const [mcRegionFilter, setMcRegionFilter] = useState('Tümü');
+
+  // ── Topluluk Deneyimleri ────────────────────────────────────────────────────
+  const [isCommunityOpen, setIsCommunityOpen] = useState(false);
+  const [communityPhase, setCommunityPhase] = useState<'feed'|'submit'>('feed');
+  const [communityFilter, setCommunityFilter] = useState('Tümü');
+  const [communityForm, setCommunityForm] = useState({ consulate:'', city:'İstanbul', visaType:'Turizm (Schengen)', result:'onaylandi' as const, waitDays:'', notes:'', profile:'Çalışan' });
+  const [communityEntries, setCommunityEntries] = useState<CommunityEntry[]>(() => {
+    try {
+      const stored = localStorage.getItem(COMMUNITY_STORAGE_KEY);
+      return stored ? [...defaultCommunityEntries, ...JSON.parse(stored)] : defaultCommunityEntries;
+    } catch { return defaultCommunityEntries; }
+  });
   
   const [profile, setProfile] = useState<ProfileData>({
     bankRegularity: false,
@@ -1599,6 +1776,74 @@ export default function App() {
 
     return items.slice(0, 6); // Maksimum 6 madde göster
   }, [currentScore, profile]);
+
+  // ── Mülakat Cevap Değerlendirme ─────────────────────────────
+  const evaluateInterviewAnswer = (q: InterviewQ, answer: string): {score:number; grade:string; feedback:string; tips:string[]} => {
+    const a = answer.trim().toLowerCase();
+    const words = a.split(/\s+/).filter(Boolean).length;
+    // Uzunluk bazlı temel skor
+    let score = words < 4 ? 1 : words < 10 ? 3 : words < 20 ? 5 : words < 40 ? 7 : 8;
+    // Pozitif anahtar kelime bonusu
+    const kwHits = q.keywords.filter(kw => a.includes(kw.toLowerCase())).length;
+    score += Math.min(kwHits * 0.8, 2);
+    // Zayıf kalıp cezası
+    const weakHit = q.weakPatterns.some(p => p && a.includes(p.toLowerCase()));
+    if (weakHit) score = Math.max(1, score - 2);
+    // Rakam içeriyorsa (finansal sorularda güçlü)
+    if (/\d/.test(a) && ['Finansal','Seyahat Detayları','Geri Dönüş Bağları'].includes(q.category)) score += 0.5;
+    score = Math.max(1, Math.min(10, Math.round(score * 10) / 10));
+    const grade = score >= 8.5 ? 'Mükemmel' : score >= 6.5 ? 'İyi' : score >= 4.5 ? 'Ortalama' : 'Zayıf';
+    const feedback = score >= 6.5 ? q.feedback.strong : q.feedback.weak;
+    return { score, grade, feedback, tips: q.feedback.tips };
+  };
+
+  const submitInterviewAnswer = () => {
+    const questions = interviewQuestions[interviewVisaType];
+    const q = questions[interviewCurrentQ];
+    const evaluation = evaluateInterviewAnswer(q, interviewAnswer);
+    const newAnswers = [...interviewAnswers, { q: q.q, a: interviewAnswer, ...evaluation }];
+    setInterviewAnswers(newAnswers);
+    setInterviewAnswer('');
+    setInterviewHintShown(false);
+    if (interviewCurrentQ + 1 >= questions.length) {
+      setInterviewPhase('result');
+    } else {
+      setInterviewCurrentQ(prev => prev + 1);
+    }
+  };
+
+  const resetInterviewSim = () => {
+    setInterviewPhase('setup');
+    setInterviewCurrentQ(0);
+    setInterviewAnswer('');
+    setInterviewAnswers([]);
+    setInterviewHintShown(false);
+  };
+
+  // ── Topluluk Deneyimi Gönder ─────────────────────────────────
+  const submitCommunityEntry = () => {
+    if (!communityForm.consulate || !communityForm.notes || !communityForm.waitDays) return;
+    const entry: CommunityEntry = {
+      id: `u${Date.now()}`,
+      consulate: communityForm.consulate,
+      city: communityForm.city,
+      visaType: communityForm.visaType,
+      result: communityForm.result,
+      waitDays: parseInt(communityForm.waitDays) || 0,
+      notes: communityForm.notes,
+      date: new Date().toISOString().split('T')[0],
+      profile: communityForm.profile,
+    };
+    const newEntries = [entry, ...communityEntries];
+    setCommunityEntries(newEntries);
+    // localStorage'a sadece kullanıcı eklediklerini kaydet
+    try {
+      const userEntries = newEntries.filter(e => e.id.startsWith('u'));
+      localStorage.setItem(COMMUNITY_STORAGE_KEY, JSON.stringify(userEntries));
+    } catch { /* storage full */ }
+    setCommunityForm({ consulate:'', city:'İstanbul', visaType:'Turizm (Schengen)', result:'onaylandi', waitDays:'', notes:'', profile:'Çalışan' });
+    setCommunityPhase('feed');
+  };
 
   // ── Roadmap → Araç Eşleştirme ─────────────────────────────
   const actionItems = useMemo(() => {
@@ -4028,20 +4273,34 @@ Signature: _______________     Date: ${today}`;
                       <X className="w-6 h-6" />
                     </button>
                   </div>
-                  {/* İlerleme */}
+                  {/* Risk Skoru + İlerleme */}
                   {(() => {
                     const total = socialMediaChecklist.length;
                     const checked = Object.values(socialMediaChecked).filter(Boolean).length;
                     const pct = Math.round((checked / total) * 100);
+                    const riskItems = socialMediaChecklist.filter(i => i.category === 'risk');
+                    const riskChecked = riskItems.filter(i => socialMediaChecked[i.id]).length;
+                    const riskScore = Math.max(0, 100 - (riskChecked * 25));
+                    const riskLabel = riskScore >= 75 ? 'Düşük Risk' : riskScore >= 50 ? 'Orta Risk' : 'Yüksek Risk';
+                    const riskColor = riskScore >= 75 ? 'text-emerald-300' : riskScore >= 50 ? 'text-amber-300' : 'text-rose-300';
                     return (
-                      <div className="mt-6">
-                        <div className="flex justify-between text-xs font-bold text-violet-200 mb-2">
-                          <span>Tamamlanan Adımlar</span>
-                          <span>{checked}/{total} — %{pct}</span>
+                      <div className="mt-6 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="text-xs font-bold text-violet-200 mb-0.5">Sosyal Medya Risk Skoru</div>
+                            <div className={`text-2xl font-black ${riskColor}`}>{riskScore}/100 — {riskLabel}</div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-xs font-bold text-violet-200 mb-0.5">Adımlar</div>
+                            <div className="text-sm font-black text-white">{checked}/{total} tamamlandı</div>
+                          </div>
                         </div>
                         <div className="w-full bg-white/20 rounded-full h-2">
-                          <div className="bg-white h-2 rounded-full transition-all duration-500"
-                            style={{ width: `${pct}%` }} />
+                          <div className={`h-2 rounded-full transition-all duration-500 ${riskScore >= 75 ? 'bg-emerald-400' : riskScore >= 50 ? 'bg-amber-400' : 'bg-rose-400'}`}
+                            style={{ width: `${riskScore}%` }} />
+                        </div>
+                        <div className="text-[10px] text-violet-200 font-medium">
+                          {riskScore < 75 ? `${riskItems.length - riskChecked} kritik riski temizleyin — skor otomatik yükselir.` : 'Sosyal medyanız temiz görünüyor!'}
                         </div>
                       </div>
                     );
@@ -4426,6 +4685,9 @@ Signature: _______________     Date: ${today}`;
                     { icon: Plane, label: 'Vizesiz Ülkeler', color: 'emerald', id: 'visafree', setter: setIsVisaFreeOpen },
                     { icon: Sparkles, label: 'AI Banka', color: 'blue', id: 'aibank', setter: setIsAiBankOpen },
                     { icon: XCircle, label: 'Risk Tarayıcı', color: 'red', id: 'redflag', setter: setIsRedFlagOpen },
+                    { icon: Brain, label: 'Mülakat Sim.', color: 'amber', id: 'interview', setter: setIsInterviewSimOpen },
+                    { icon: Map, label: 'Çoklu Ülke', color: 'cyan', id: 'multicountry', setter: setIsMultiCountryOpen },
+                    { icon: Star, label: 'Topluluk', color: 'orange', id: 'community', setter: setIsCommunityOpen },
                   ].map(({ icon: Icon, label, color, id, setter }) => {
                     const locked = PREMIUM_TOOLS.includes(id) && !isPremium;
                     return (
@@ -4450,10 +4712,28 @@ Signature: _______________     Date: ${today}`;
               exit={{ opacity: 0, y: -20 }}
               className="max-w-2xl mx-auto py-16 space-y-10"
             >
-              {/* Step indicator */}
-              <div className="flex items-center justify-center gap-2">
-                {[0, 1, 2].map(i => (
-                  <div key={i} className={`h-1.5 rounded-full transition-all duration-300 ${i === onboardingStep ? 'w-8 bg-brand-600' : i < onboardingStep ? 'w-4 bg-brand-300' : 'w-4 bg-slate-200'}`} />
+              {/* Stepper */}
+              <div className="flex items-center justify-center gap-0">
+                {[
+                  { label: 'Ülke', icon: '🌍' },
+                  { label: 'Profil', icon: '👤' },
+                  { label: 'Skor', icon: '📊' },
+                ].map((s, i) => (
+                  <React.Fragment key={i}>
+                    <div className="flex flex-col items-center gap-1">
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg font-black border-2 transition-all duration-300 ${
+                        i < onboardingStep ? 'bg-brand-600 border-brand-600 text-white' :
+                        i === onboardingStep ? 'bg-white border-brand-600 text-brand-600 shadow-lg shadow-brand-200' :
+                        'bg-white border-slate-200 text-slate-300'
+                      }`}>
+                        {i < onboardingStep ? '✓' : s.icon}
+                      </div>
+                      <span className={`text-[10px] font-black uppercase tracking-wider transition-colors ${i === onboardingStep ? 'text-brand-600' : i < onboardingStep ? 'text-brand-400' : 'text-slate-300'}`}>{s.label}</span>
+                    </div>
+                    {i < 2 && (
+                      <div className={`w-16 h-0.5 mb-5 transition-all duration-500 ${i < onboardingStep ? 'bg-brand-400' : 'bg-slate-200'}`} />
+                    )}
+                  </React.Fragment>
                 ))}
               </div>
 
@@ -6180,6 +6460,516 @@ Signature: _______________     Date: ${today}`;
                   className="w-full py-4 bg-gradient-to-r from-brand-600 to-indigo-600 text-white font-black rounded-2xl flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
                   Hemen Başla <ChevronRight className="w-5 h-5" />
                 </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ═══════════════════════════════════════════════════════
+          MÜLAKAT SİMÜLATÖRÜ MODALI — Permito.ai Tarzı
+          ═══════════════════════════════════════════════════════ */}
+      <AnimatePresence>
+        {isInterviewSimOpen && (
+          <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
+            <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}
+              onClick={() => setIsInterviewSimOpen(false)}
+              className="absolute inset-0 bg-slate-950/70 backdrop-blur-lg" />
+            <motion.div initial={{opacity:0,scale:0.95,y:20}} animate={{opacity:1,scale:1,y:0}}
+              exit={{opacity:0,scale:0.95,y:20}}
+              className="relative w-full max-w-2xl bg-white rounded-[2.5rem] shadow-2xl flex flex-col max-h-[94vh] overflow-hidden">
+
+              {/* Header */}
+              <div className="p-7 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-t-[2.5rem] shrink-0">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <div className="text-amber-200 text-xs font-black uppercase tracking-widest mb-1 flex items-center gap-2">
+                      <Brain className="w-4 h-4"/> Mülakat Simülatörü — Gerçek Konsolosluk Soruları
+                    </div>
+                    <h3 className="text-2xl font-black">Vize Mülakatına Hazırlan</h3>
+                    {interviewPhase === 'question' && (
+                      <p className="text-amber-100 text-sm mt-1">
+                        Soru {interviewCurrentQ + 1} / {interviewQuestions[interviewVisaType].length}
+                      </p>
+                    )}
+                  </div>
+                  <button onClick={() => setIsInterviewSimOpen(false)} className="p-2 hover:bg-white/10 rounded-full"><X className="w-6 h-6"/></button>
+                </div>
+                {interviewPhase === 'question' && (
+                  <div className="mt-4">
+                    <div className="flex justify-between text-xs text-amber-200 font-bold mb-1.5">
+                      <span>İlerleme</span>
+                      <span>%{Math.round((interviewCurrentQ / interviewQuestions[interviewVisaType].length) * 100)}</span>
+                    </div>
+                    <div className="w-full bg-white/20 rounded-full h-2">
+                      <div className="bg-white h-2 rounded-full transition-all duration-500"
+                        style={{width:`${(interviewCurrentQ / interviewQuestions[interviewVisaType].length) * 100}%`}}/>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5 mt-3">
+                      {interviewQuestions[interviewVisaType].map((_, i) => (
+                        <div key={i} className={`w-5 h-1.5 rounded-full transition-all ${
+                          i < interviewCurrentQ ? (interviewAnswers[i]?.score >= 6.5 ? 'bg-emerald-300' : interviewAnswers[i]?.score >= 4.5 ? 'bg-amber-300' : 'bg-rose-300') :
+                          i === interviewCurrentQ ? 'bg-white' : 'bg-white/20'
+                        }`}/>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex-1 overflow-y-auto">
+                {/* SETUP */}
+                {interviewPhase === 'setup' && (
+                  <div className="p-8 space-y-6">
+                    <div className="text-center space-y-3">
+                      <div className="text-5xl">🎯</div>
+                      <h4 className="text-xl font-black text-slate-900">Gerçek konsolosluk soruları, anında geri bildirim</h4>
+                      <p className="text-slate-500 text-sm leading-relaxed">Ex-konsolosluk görevlilerinin sorduğu sorularla pratik yapın. Her cevabınız analiz edilir, zayıf noktalarınız için spesifik tavsiye alırsınız.</p>
+                    </div>
+                    <div className="grid grid-cols-3 gap-3">
+                      {([
+                        { id:'schengen' as const, flag:'🇪🇺', label:'Schengen', count: interviewQuestions.schengen.length, color:'blue' },
+                        { id:'uk' as const, flag:'🇬🇧', label:'İngiltere', count: interviewQuestions.uk.length, color:'rose' },
+                        { id:'usa' as const, flag:'🇺🇸', label:'ABD B1/B2', count: interviewQuestions.usa.length, color:'indigo' },
+                      ]).map(v => (
+                        <button key={v.id} onClick={() => setInterviewVisaType(v.id)}
+                          className={`p-4 rounded-2xl border-2 text-center transition-all ${interviewVisaType === v.id ? `border-${v.color}-500 bg-${v.color}-50` : 'border-slate-100 bg-white hover:border-slate-200'}`}>
+                          <div className="text-3xl mb-2">{v.flag}</div>
+                          <div className="font-black text-slate-900 text-sm">{v.label}</div>
+                          <div className="text-xs text-slate-400 mt-0.5">{v.count} soru</div>
+                        </button>
+                      ))}
+                    </div>
+                    <div className="p-4 bg-amber-50 border border-amber-100 rounded-2xl text-xs text-amber-800 leading-relaxed">
+                      <strong>Nasıl çalışır?</strong> Her soruya gerçek mülakata gibi cevap yazın. Sistem Türkçe cevabınızı analiz eder, not verir ve güçlendirilmesi gereken alanları gösterir. Mülakata gitmeden önce tüm soru kategorilerini pratiğe yapın.
+                    </div>
+                    <button onClick={() => { resetInterviewSim(); setInterviewPhase('question'); }}
+                      className="w-full py-4 bg-gradient-to-r from-amber-500 to-orange-600 text-white font-black rounded-2xl hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
+                      Mülakata Başla ({interviewQuestions[interviewVisaType].length} Soru) <ChevronRight className="w-5 h-5"/>
+                    </button>
+                  </div>
+                )}
+
+                {/* SORU EKRANI */}
+                {interviewPhase === 'question' && (() => {
+                  const q = interviewQuestions[interviewVisaType][interviewCurrentQ];
+                  const prevAns = interviewAnswers[interviewCurrentQ - 1];
+                  return (
+                    <div className="p-8 space-y-5">
+                      {/* Kategori badge */}
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-black uppercase tracking-widest bg-amber-100 text-amber-700 px-3 py-1 rounded-xl">{q.category}</span>
+                        {interviewCurrentQ > 0 && prevAns && (
+                          <span className={`text-[10px] font-black px-2 py-1 rounded-xl ${prevAns.score >= 6.5 ? 'bg-emerald-100 text-emerald-700' : prevAns.score >= 4.5 ? 'bg-amber-100 text-amber-700' : 'bg-rose-100 text-rose-700'}`}>
+                            Önceki: {prevAns.grade} ({prevAns.score.toFixed(1)}/10)
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Soru */}
+                      <div className="p-5 bg-slate-900 rounded-2xl">
+                        <div className="text-xs text-slate-400 font-bold mb-2">🎙 Konsolosluk Görevlisi:</div>
+                        <p className="text-white font-bold leading-relaxed">{q.q}</p>
+                      </div>
+
+                      {/* Hint */}
+                      {!interviewHintShown ? (
+                        <button onClick={() => setInterviewHintShown(true)}
+                          className="text-xs text-amber-600 font-bold hover:underline flex items-center gap-1">
+                          <Sparkles className="w-3.5 h-3.5"/> İpucu göster
+                        </button>
+                      ) : (
+                        <div className="p-3 bg-amber-50 border border-amber-100 rounded-xl text-xs text-amber-800 leading-relaxed">
+                          <strong>💡 İpucu:</strong> {q.hint}
+                        </div>
+                      )}
+
+                      {/* Cevap alanı */}
+                      <div className="space-y-3">
+                        <label className="text-xs font-black text-slate-500 uppercase tracking-widest">Cevabınız:</label>
+                        <textarea
+                          value={interviewAnswer}
+                          onChange={e => setInterviewAnswer(e.target.value)}
+                          placeholder="Gerçek mülakata gibi cevap yazın..."
+                          rows={5}
+                          className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-400/30 resize-none leading-relaxed"
+                        />
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-slate-400">{interviewAnswer.trim().split(/\s+/).filter(Boolean).length} kelime</span>
+                          <span className="text-xs text-slate-400">Önerilen: 30-80 kelime</span>
+                        </div>
+                      </div>
+
+                      <div className="flex gap-3">
+                        <button onClick={() => { if (interviewCurrentQ > 0) { setInterviewCurrentQ(p=>p-1); setInterviewAnswer(interviewAnswers[interviewCurrentQ-1]?.a || ''); setInterviewAnswers(p=>p.slice(0,-1)); }}}
+                          disabled={interviewCurrentQ === 0}
+                          className="px-4 py-3 bg-slate-100 text-slate-600 rounded-2xl font-bold text-sm disabled:opacity-30">
+                          ← Geri
+                        </button>
+                        <button onClick={submitInterviewAnswer}
+                          disabled={interviewAnswer.trim().length < 5}
+                          className="flex-1 py-3 bg-gradient-to-r from-amber-500 to-orange-600 text-white font-black rounded-2xl hover:opacity-90 transition-opacity disabled:opacity-40">
+                          {interviewCurrentQ + 1 === interviewQuestions[interviewVisaType].length ? 'Testi Bitir & Sonuçları Gör' : 'Cevapla & İlerle →'}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* SONUÇ EKRANI */}
+                {interviewPhase === 'result' && (() => {
+                  const totalScore = interviewAnswers.reduce((s,a) => s + a.score, 0);
+                  const maxScore = interviewQuestions[interviewVisaType].length * 10;
+                  const pct = Math.round((totalScore / maxScore) * 100);
+                  const grade = pct >= 80 ? 'Hazır' : pct >= 60 ? 'Geliştirilebilir' : 'Pratik Gerekli';
+                  const gradeColor = pct >= 80 ? 'text-emerald-600' : pct >= 60 ? 'text-amber-600' : 'text-rose-600';
+                  const weakAnswers = interviewAnswers.filter(a => a.score < 6.5).sort((a,b) => a.score - b.score).slice(0, 5);
+                  const strongAnswers = interviewAnswers.filter(a => a.score >= 8).slice(0, 3);
+                  return (
+                    <div className="p-8 space-y-6">
+                      {/* Genel Skor */}
+                      <div className="p-6 bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl text-center text-white">
+                        <div className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-2">Mülakat Hazırlık Skoru</div>
+                        <div className={`text-6xl font-black mb-1 ${gradeColor}`}>%{pct}</div>
+                        <div className="text-xl font-bold text-white">{grade}</div>
+                        <div className="text-slate-400 text-xs mt-2">{totalScore.toFixed(1)} / {maxScore} puan</div>
+                        {/* Soru kartları */}
+                        <div className="flex flex-wrap justify-center gap-1 mt-4">
+                          {interviewAnswers.map((a,i) => (
+                            <div key={i} className={`w-5 h-5 rounded-md text-[10px] font-black flex items-center justify-center ${a.score>=8?'bg-emerald-500':a.score>=6.5?'bg-amber-500':a.score>=4.5?'bg-orange-500':'bg-rose-500'}`}>
+                              {i+1}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Güçlü cevaplar */}
+                      {strongAnswers.length > 0 && (
+                        <div>
+                          <h4 className="font-black text-slate-900 text-sm flex items-center gap-2 mb-3">
+                            <CheckCircle2 className="w-4 h-4 text-emerald-500"/> Güçlü Cevaplarınız
+                          </h4>
+                          <div className="space-y-2">
+                            {strongAnswers.map((a,i) => (
+                              <div key={i} className="p-3 bg-emerald-50 border border-emerald-100 rounded-xl">
+                                <div className="text-xs font-bold text-emerald-700 mb-1">{a.q.substring(0,60)}...</div>
+                                <div className="text-xs text-emerald-600">{a.feedback}</div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Geliştirme alanları */}
+                      {weakAnswers.length > 0 && (
+                        <div>
+                          <h4 className="font-black text-slate-900 text-sm flex items-center gap-2 mb-3">
+                            <AlertTriangle className="w-4 h-4 text-amber-500"/> Geliştirmeniz Gereken Alanlar
+                          </h4>
+                          <div className="space-y-3">
+                            {weakAnswers.map((a,i) => (
+                              <div key={i} className="p-4 bg-amber-50 border border-amber-100 rounded-2xl space-y-2">
+                                <div className="flex items-center gap-2">
+                                  <span className={`text-xs font-black px-2 py-0.5 rounded-lg ${a.score<4.5?'bg-rose-100 text-rose-700':'bg-amber-100 text-amber-700'}`}>{a.grade} • {a.score.toFixed(1)}/10</span>
+                                </div>
+                                <p className="text-xs font-bold text-slate-700">❓ {a.q}</p>
+                                <p className="text-xs text-slate-500 italic">📝 Sizin cevabınız: "{a.a.substring(0,100)}{a.a.length>100?'...':''}"</p>
+                                <p className="text-xs text-amber-800">{a.feedback}</p>
+                                {a.tips.length > 0 && (
+                                  <div className="space-y-1">
+                                    {a.tips.map((tip,ti) => (
+                                      <div key={ti} className="flex items-start gap-1.5 text-xs text-slate-600">
+                                        <span className="text-amber-500 font-bold shrink-0">→</span>{tip}
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Aksiyonlar */}
+                      <div className="flex gap-3">
+                        <button onClick={resetInterviewSim}
+                          className="flex-1 py-3 bg-slate-100 text-slate-700 font-black rounded-2xl hover:bg-slate-200 transition-colors flex items-center justify-center gap-2">
+                          <RefreshCw className="w-4 h-4"/> Tekrar Dene
+                        </button>
+                        <button onClick={() => setIsInterviewSimOpen(false)}
+                          className="flex-1 py-3 bg-gradient-to-r from-amber-500 to-orange-600 text-white font-black rounded-2xl hover:opacity-90 transition-opacity">
+                          Tamamlandı ✓
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ═══════════════════════════════════════════════════════
+          ÇOKLU ÜLKE SEYAHAT VİZE PLANLAYCISI
+          ═══════════════════════════════════════════════════════ */}
+      <AnimatePresence>
+        {isMultiCountryOpen && (
+          <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
+            <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}
+              onClick={() => setIsMultiCountryOpen(false)}
+              className="absolute inset-0 bg-slate-950/60 backdrop-blur-lg" />
+            <motion.div initial={{opacity:0,scale:0.95,y:20}} animate={{opacity:1,scale:1,y:0}}
+              exit={{opacity:0,scale:0.95,y:20}}
+              className="relative w-full max-w-3xl bg-white rounded-[2.5rem] shadow-2xl flex flex-col max-h-[94vh] overflow-hidden">
+              <div className="p-7 bg-gradient-to-r from-cyan-600 to-teal-600 text-white rounded-t-[2.5rem] shrink-0">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <div className="text-cyan-200 text-xs font-black uppercase tracking-widest mb-1 flex items-center gap-2"><Map className="w-4 h-4"/> Türk Pasaportu Vize Rehberi</div>
+                    <h3 className="text-2xl font-black">Çoklu Ülke Planlayıcı</h3>
+                    <p className="text-cyan-100 text-sm mt-1">Gitmek istediğiniz ülkeleri seçin — vize gereksinimlerini karşılaştırın</p>
+                  </div>
+                  <button onClick={() => setIsMultiCountryOpen(false)} className="p-2 hover:bg-white/10 rounded-full"><X className="w-6 h-6"/></button>
+                </div>
+                <div className="mt-4 flex items-center gap-3">
+                  <div className="flex gap-2 flex-wrap">
+                    {['Tümü','Yakın Çevre','Avrupa','Schengen','Orta Doğu','Uzak Doğu','Kuzey Amerika'].map(r => (
+                      <button key={r} onClick={() => setMcRegionFilter(r)}
+                        className={`px-3 py-1 rounded-xl text-xs font-bold transition-all ${mcRegionFilter===r?'bg-white text-cyan-700':'bg-white/20 text-white hover:bg-white/30'}`}>{r}</button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-7 space-y-6">
+                {/* Seçili ülkeler özeti */}
+                {mcSelected.length > 0 && (
+                  <div className="p-5 bg-slate-900 rounded-2xl text-white">
+                    <div className="text-xs font-black uppercase tracking-widest text-slate-400 mb-3">Seçili Güzergâhınız ({mcSelected.length} ülke)</div>
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {mcSelected.map(c => {
+                        const d = multiCountryVisaData[c];
+                        const typeColors = { vizsiz:'bg-emerald-500', evisa:'bg-blue-500', kapida:'bg-amber-500', tam_vize:'bg-rose-500' };
+                        return (
+                          <div key={c} className="flex items-center gap-2 bg-white/10 rounded-xl px-3 py-2">
+                            <span>{d?.flag}</span>
+                            <span className="text-sm font-bold">{c}</span>
+                            <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-lg text-white ${typeColors[d?.visaType||'tam_vize']}`}>
+                              {d?.visaType === 'vizsiz'?'Vizesiz':d?.visaType==='evisa'?'e-Vize':d?.visaType==='kapida'?'Kapıda':'Tam Vize'}
+                            </span>
+                            <button onClick={() => setMcSelected(p=>p.filter(x=>x!==c))} className="text-slate-400 hover:text-white"><X className="w-3 h-3"/></button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    {/* Vize gereken ülkeler varsa uyarı */}
+                    {mcSelected.some(c => multiCountryVisaData[c]?.visaType === 'tam_vize') && (
+                      <div className="p-3 bg-rose-900/40 border border-rose-700/40 rounded-xl text-xs text-rose-200">
+                        ⚠️ <strong>{mcSelected.filter(c=>multiCountryVisaData[c]?.visaType==='tam_vize').join(', ')}</strong> için ayrı vize başvurusu gerekiyor.
+                        {mcSelected.filter(c=>['Almanya','Fransa','İtalya','İspanya','Hollanda'].includes(c)).length > 1 && (
+                          <span className="ml-1 text-emerald-300">Schengen bölgesi için <strong>tek vize</strong> yeterli.</span>
+                        )}
+                      </div>
+                    )}
+                    <button onClick={() => setMcSelected([])} className="mt-3 text-xs text-slate-400 hover:text-white font-bold flex items-center gap-1">
+                      <RefreshCw className="w-3.5 h-3.5"/> Sıfırla
+                    </button>
+                  </div>
+                )}
+
+                {/* Ülke grid */}
+                <div>
+                  <h4 className="font-black text-slate-900 text-sm mb-3">
+                    {mcRegionFilter === 'Tümü' ? 'Tüm Ülkeler' : mcRegionFilter} — Türk Pasaportuna Göre Vize Durumu
+                  </h4>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {Object.entries(multiCountryVisaData)
+                      .filter(([, d]) => mcRegionFilter === 'Tümü' || d.region === mcRegionFilter)
+                      .map(([name, d]) => {
+                        const isSelected = mcSelected.includes(name);
+                        const typeLabel = d.visaType === 'vizsiz' ? 'Vizesiz' : d.visaType === 'evisa' ? 'e-Vize' : d.visaType === 'kapida' ? 'Kapıda Vize' : 'Konsolosluk Vizesi';
+                        const bgColors = { vizsiz:'bg-emerald-50 border-emerald-200', evisa:'bg-blue-50 border-blue-200', kapida:'bg-amber-50 border-amber-200', tam_vize:'bg-rose-50 border-rose-200' };
+                        const textColors = { vizsiz:'text-emerald-700', evisa:'text-blue-700', kapida:'text-amber-700', tam_vize:'text-rose-700' };
+                        return (
+                          <button key={name} onClick={() => setMcSelected(p => isSelected ? p.filter(x=>x!==name) : [...p, name])}
+                            className={`p-3 rounded-2xl border-2 text-left transition-all hover:scale-[1.02] ${isSelected ? 'border-slate-900 bg-slate-900 text-white shadow-lg' : `${bgColors[d.visaType]} hover:border-slate-300`}`}>
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-xl">{d.flag}</span>
+                              {isSelected && <CheckCircle2 className="w-4 h-4 text-emerald-400"/>}
+                            </div>
+                            <div className={`font-black text-sm ${isSelected ? 'text-white' : 'text-slate-900'}`}>{name}</div>
+                            <div className={`text-[10px] font-bold mt-0.5 ${isSelected ? 'text-slate-300' : textColors[d.visaType]}`}>{typeLabel}</div>
+                            <div className={`text-[10px] mt-1 ${isSelected ? 'text-slate-400' : 'text-slate-500'}`}>Maks. {d.maxDays} gün</div>
+                          </button>
+                        );
+                      })}
+                  </div>
+                </div>
+
+                {/* Legend */}
+                <div className="flex flex-wrap gap-3 p-4 bg-slate-50 rounded-2xl">
+                  {[
+                    { type:'vizsiz', label:'Vizesiz', color:'bg-emerald-500' },
+                    { type:'evisa', label:'e-Vize (Online)', color:'bg-blue-500' },
+                    { type:'kapida', label:'Kapıda Vize', color:'bg-amber-500' },
+                    { type:'tam_vize', label:'Konsolosluk Vizesi', color:'bg-rose-500' },
+                  ].map(l => (
+                    <div key={l.type} className="flex items-center gap-1.5 text-xs font-bold text-slate-600">
+                      <div className={`w-3 h-3 rounded-sm ${l.color}`}/>
+                      {l.label}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ═══════════════════════════════════════════════════════
+          TOPLULUK DENEYİM VERİTABANI — Crowdsourced
+          ═══════════════════════════════════════════════════════ */}
+      <AnimatePresence>
+        {isCommunityOpen && (
+          <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
+            <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}
+              onClick={() => setIsCommunityOpen(false)}
+              className="absolute inset-0 bg-slate-950/60 backdrop-blur-lg" />
+            <motion.div initial={{opacity:0,scale:0.95,y:20}} animate={{opacity:1,scale:1,y:0}}
+              exit={{opacity:0,scale:0.95,y:20}}
+              className="relative w-full max-w-2xl bg-white rounded-[2.5rem] shadow-2xl flex flex-col max-h-[94vh] overflow-hidden">
+              <div className="p-7 bg-gradient-to-r from-slate-800 to-slate-900 text-white rounded-t-[2.5rem] shrink-0">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <div className="text-slate-400 text-xs font-black uppercase tracking-widest mb-1 flex items-center gap-2"><Star className="w-4 h-4"/> Topluluk Deneyimleri</div>
+                    <h3 className="text-2xl font-black">Gerçek Başvuru Deneyimleri</h3>
+                    <p className="text-slate-400 text-sm mt-1">VizeAkıl kullanıcılarının gerçek başvuru sonuçları</p>
+                  </div>
+                  <button onClick={() => setIsCommunityOpen(false)} className="p-2 hover:bg-white/10 rounded-full"><X className="w-6 h-6"/></button>
+                </div>
+                <div className="mt-4 flex items-center gap-3 flex-wrap">
+                  <div className="flex gap-2 flex-wrap">
+                    {['Tümü','Almanya','Fransa','İngiltere','ABD','Hollanda'].map(f => (
+                      <button key={f} onClick={() => setCommunityFilter(f)}
+                        className={`px-3 py-1 rounded-xl text-xs font-bold transition-all ${communityFilter===f?'bg-white text-slate-900':'bg-white/10 text-white hover:bg-white/20'}`}>{f}</button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex-1 overflow-y-auto">
+                {communityPhase === 'feed' && (
+                  <div className="p-6 space-y-4">
+                    {/* İstatistikler */}
+                    <div className="grid grid-cols-3 gap-3 mb-2">
+                      {[
+                        { label:'Toplam Deneyim', value: communityEntries.length },
+                        { label:'Onaylanan', value: communityEntries.filter(e=>e.result==='onaylandi').length },
+                        { label:'Ort. Bekleme', value: `${Math.round(communityEntries.reduce((s,e)=>s+e.waitDays,0)/communityEntries.length)} gün` },
+                      ].map(s => (
+                        <div key={s.label} className="p-3 bg-slate-50 rounded-2xl text-center">
+                          <div className="text-xl font-black text-slate-900">{s.value}</div>
+                          <div className="text-[10px] font-bold text-slate-400">{s.label}</div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Deneyim listesi */}
+                    {communityEntries
+                      .filter(e => communityFilter === 'Tümü' || e.consulate === communityFilter)
+                      .map(e => (
+                        <div key={e.id} className={`p-5 rounded-2xl border-2 ${e.result==='onaylandi'?'bg-emerald-50 border-emerald-100':e.result==='reddedildi'?'bg-rose-50 border-rose-100':'bg-amber-50 border-amber-100'}`}>
+                          <div className="flex items-start justify-between mb-2">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="font-black text-slate-900 text-sm">{e.consulate} — {e.city}</span>
+                              <span className={`text-[10px] font-black px-2 py-0.5 rounded-xl ${e.result==='onaylandi'?'bg-emerald-100 text-emerald-700':e.result==='reddedildi'?'bg-rose-100 text-rose-700':'bg-amber-100 text-amber-700'}`}>
+                                {e.result==='onaylandi'?'✓ Onaylandı':e.result==='reddedildi'?'✗ Reddedildi':'📋 Ek Evrak'}
+                              </span>
+                              <span className="text-[10px] text-slate-400 font-bold">{e.visaType}</span>
+                            </div>
+                            <span className="text-[10px] text-slate-400 font-bold shrink-0">{e.date}</span>
+                          </div>
+                          <div className="flex items-center gap-3 mb-2 text-xs font-bold text-slate-500">
+                            <span>⏱ {e.waitDays} gün bekleme</span>
+                            <span>👤 {e.profile}</span>
+                          </div>
+                          <p className="text-xs text-slate-700 leading-relaxed">{e.notes}</p>
+                        </div>
+                      ))}
+
+                    <button onClick={() => setCommunityPhase('submit')}
+                      className="w-full py-3 bg-slate-900 text-white font-black rounded-2xl hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
+                      + Deneyimimi Paylaş
+                    </button>
+
+                    {/* Mimari notu — şeffaflık */}
+                    <div className="p-4 bg-blue-50 border border-blue-100 rounded-2xl text-xs text-blue-700 leading-relaxed">
+                      <strong>Nasıl çalışır?</strong> Deneyimleriniz tarayıcınızda (localStorage) saklanır ve bu cihazda görünür. Gelecekte topluluk verisi anonim ve güvenli şekilde paylaşılabilecek.
+                    </div>
+                  </div>
+                )}
+
+                {communityPhase === 'submit' && (
+                  <div className="p-6 space-y-5">
+                    <h4 className="font-black text-slate-900">Başvuru Deneyiminizi Paylaşın</h4>
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="text-xs font-bold text-slate-500 uppercase tracking-widest block mb-1">Konsolosluk</label>
+                          <input value={communityForm.consulate} onChange={e=>setCommunityForm(p=>({...p,consulate:e.target.value}))}
+                            placeholder="Almanya, Fransa..."
+                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-brand-400/30"/>
+                        </div>
+                        <div>
+                          <label className="text-xs font-bold text-slate-500 uppercase tracking-widest block mb-1">Şehir</label>
+                          <select value={communityForm.city} onChange={e=>setCommunityForm(p=>({...p,city:e.target.value}))}
+                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold focus:outline-none">
+                            {['İstanbul','Ankara','İzmir','Antalya'].map(c=><option key={c}>{c}</option>)}
+                          </select>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="text-xs font-bold text-slate-500 uppercase tracking-widest block mb-1">Sonuç</label>
+                          <select value={communityForm.result} onChange={e=>setCommunityForm(p=>({...p,result:e.target.value as 'onaylandi'|'reddedildi'|'ek_evrak'}))}
+                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold focus:outline-none">
+                            <option value="onaylandi">✓ Onaylandı</option>
+                            <option value="reddedildi">✗ Reddedildi</option>
+                            <option value="ek_evrak">📋 Ek Evrak İstendi</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="text-xs font-bold text-slate-500 uppercase tracking-widest block mb-1">Bekleme Süresi (gün)</label>
+                          <input type="number" value={communityForm.waitDays} onChange={e=>setCommunityForm(p=>({...p,waitDays:e.target.value}))}
+                            placeholder="Örn: 15"
+                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold focus:outline-none"/>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="text-xs font-bold text-slate-500 uppercase tracking-widest block mb-1">Profil Tipi</label>
+                        <select value={communityForm.profile} onChange={e=>setCommunityForm(p=>({...p,profile:e.target.value}))}
+                          className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold focus:outline-none">
+                          {['Çalışan','Emekli','Öğrenci','Serbest Meslek','Çalışmıyor'].map(p=><option key={p}>{p}</option>)}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="text-xs font-bold text-slate-500 uppercase tracking-widest block mb-1">Deneyiminiz (ne işe yaradı / nerede hata yaptınız?)</label>
+                        <textarea value={communityForm.notes} onChange={e=>setCommunityForm(p=>({...p,notes:e.target.value}))}
+                          placeholder="Başvuru sürecinizi kısaca anlatın — hangi belgeler fark yarattı, ne sorun çıktı..."
+                          rows={4}
+                          className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-medium leading-relaxed focus:outline-none resize-none"/>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <button onClick={() => setCommunityPhase('feed')} className="px-5 py-3 bg-slate-100 text-slate-700 font-bold rounded-2xl hover:bg-slate-200 transition-colors">İptal</button>
+                      <button onClick={submitCommunityEntry}
+                        disabled={!communityForm.consulate || !communityForm.notes || !communityForm.waitDays}
+                        className="flex-1 py-3 bg-slate-900 text-white font-black rounded-2xl hover:opacity-90 disabled:opacity-40 transition-opacity">
+                        Deneyimi Paylaş →
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             </motion.div>
           </div>
