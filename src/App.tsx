@@ -6954,7 +6954,7 @@ Signature: _______________     Date: ${today}`;
                 {[
                   {
                     q: 'Başarı skorum neden düşük çıktı?',
-                    a: '"Puanınızı Nasıl Artırırsınız?" bölümündeki adımları takip edin. Her maddenin yanında "Yaptım ✓" butonu var — tıkladığınızda profil güncellenir ve skor anlık olarak yükselir. Banka düzenliliği, SGK belgesi ve seyahat sigortası en çok puan getiren 3 faktördür.'
+                    a: '"Puanınızı Nasıl Artırırsınız?" bölümündeki adımları takip edin. Her maddenin yanında "Yaptım ✓" butonu var — tıkladığınızda profil güncellenir ve skor anlık olarak yükselir. Banka düzenliliği, SGK belgesi ve seyahat sigortası en çok puan getiren 3 faktördür. Skorunuz aynı zamanda hedef ülkenin Türk başvurucularına uyguladığı tarihsel ret oranını da yansıtır — bu nedenle ülke seçimi kritiktir.'
                   },
                   {
                     q: 'Bilgilerimi girmek güvenli mi? Verilerim nereye gidiyor?',
@@ -6966,11 +6966,11 @@ Signature: _______________     Date: ${today}`;
                   },
                   {
                     q: 'Ücretsiz araçlar neler? Premium ne kazandırıyor?',
-                    a: 'Evrak Listesi, Senaryo Oluşturucu, Randevu Takvim, Belge Tutarlılık Matrisi ve Vizesiz Ülkeler araçları tamamen ücretsizdir. Premium ile Vize Danışmanım (yapay zeka danışman), Ret Mektubu Analizi, Ülke Kıyaslayıcısı, AI Banka Dökümü Analizi, Kırmızı Bayrak Tarayıcı ve Sosyal Medya Rehberi açılır.'
+                    a: 'Platform toplamda 18 araç sunar. Evrak Listesi, Senaryo Simülatörü, Randevu Takvimi, Belge Tutarlılık Matrisi ve Vizesiz Ülkeler araçları tamamen ücretsizdir. Premium ile şu araçlar açılır: Vize Danışmanım (yapay zeka danışman), Ret Mektubu Analizi, Schengen Ülke Kıyaslayıcısı, AI Banka Dökümü Analizi, Kırmızı Bayrak Tarayıcı, Sosyal Medya Rehberi, Ret Nedeni Haritası (Schengen + İngiltere + ABD, 2021–2026 verileri) ve Banka Hazırlık Planı.'
                   },
                   {
                     q: 'Daha önce vize reddettim. Tekrar başvurabilir miyim?',
-                    a: 'Evet, önceki red başvurunuzu beyan ederek sisteme girdiğinizde size özel strateji oluşturulur. "Ret Mektubu Analizi" aracımız ret gerekçesini analiz ederek bir sonraki başvuruyu nasıl güçlendireceğinizi adım adım gösterir. Premium "Kırmızı Bayrak Tarayıcı" ile dosyanızdaki mantıksal çelişkiler de tespit edilir.'
+                    a: 'Evet. Önceki ret bilgilerinizi profil ekranında işaretlediğinizde Dashboard\'daki "Ret Risk Analizi" kartı devreye girer; dosyanızdaki en yüksek riskli 3 kalıbı (örn. finansal tutarsızlık, bağ eksikliği) yasal kodlarıyla birlikte gösterir ve her biri için somut önlem önerir. "Ret Nedeni Haritası" ise seçtiğiniz ülkenin 2021–2026 ret istatistiklerini ve başvurucularınızla örtüşen risk faktörlerini vurgular. Premium "Ret Mektubu Analizi" ve "Kırmızı Bayrak Tarayıcı" ile de desteklenebilirsiniz.'
                   },
                   {
                     q: 'Niyet mektubunu Türkçe ve İngilizce indirebiliyor muyum?',
@@ -6978,7 +6978,19 @@ Signature: _______________     Date: ${today}`;
                   },
                   {
                     q: 'Schengen Ülke Kıyaslayıcısı nasıl çalışıyor?',
-                    a: 'Profil bilgilerinize dayanarak her Schengen ülkesini 6 faktörde (onay oranı, finansal uyum, SGK/çalışma durumu, vize geçmişi, trend) puanlar ve en uygun ülkeleri en üste sıralar. "Ülke Seç" veya "Ülke Kıyasla" butonuna tıklayınca bu analiz açılır.'
+                    a: 'Profil bilgilerinize dayanarak her Schengen ülkesini 6 faktörde (onay oranı, finansal uyum, SGK/çalışma durumu, vize geçmişi, trend) puanlar ve en uygun ülkeleri en üste sıralar. "Ülke Seç" veya "Ülke Kıyasla" butonuna tıklayınca bu analiz açılır. Almanya veya Fransa gibi yüksek ret oranlı ülkeleri seçtiyseniz Dashboard\'da dinamik ülke alternatif önerisi de görünür — profilinize göre daha yüksek onay tahmini sunan 3 alternatif otomatik hesaplanır.'
+                  },
+                  {
+                    q: 'Ret Nedeni Haritası nasıl çalışıyor?',
+                    a: '"Ret Nedeni Haritası" 2021–2026 yılları arasındaki verilere dayanır ve üç bölge için ayrı istatistikler sunar: 14 Schengen ülkesi (finansal yetersizlik, bağ eksikliği, sahte belge vb. kategorilerde), İngiltere (V 4.2, V 4.3, FM 1.7A gibi resmi ret kodlarıyla) ve ABD (214(b), 221(g), 212(a) gibi yasal maddelerle). Profilinizle örtüşen ret kategorileri turuncu renkle vurgulanır; böylece en riskli noktalarınıza odaklanabilirsiniz.'
+                  },
+                  {
+                    q: 'Ülke zorluk uyarısı (sarı/turuncu banner) ne anlama geliyor?',
+                    a: 'Almanya, Fransa, İngiltere, ABD, Danimarka, İsveç veya Norveç seçtiğinizde Dashboard\'ın üstünde otomatik bir uyarı banner\'ı belirir. Bu ülkeler Türk başvurucularına uyguladığı ret oranı yüksek (örn. Danimarka %66, İngiltere %30) ülkelerdir. Banner, profilinize göre daha elverişli alternatif ülkeleri onay tahminleriyle birlikte gösterir. Bu bir engel değil, bilgilendirme amaçlı bir rehberdir; isterseniz seçiminizi değiştirmeden devam edebilirsiniz.'
+                  },
+                  {
+                    q: 'Başarı skorum nasıl hesaplanıyor?',
+                    a: 'Algoritma iki aşamalıdır. İlk aşamada finansal durum, SGK, seyahat sigortası, vize geçmişi, seyahat amacı netliği ve bağ faktörleri gibi 15+ kritere göre ham skor hesaplanır. İkinci aşamada bu ham skor, hedef ülkenin Türk başvurucularına ait tarihsel ret oranıyla Bayes yöntemiyle harmanlanır (%65 ham skor + %35 ülke onay istatistiği). Ayrıca şüpheli büyük para yatırma gibi veto koşulları skoru 30\'a kadar kısıtlayabilir.'
                   },
                   {
                     q: 'Türkçe destek var mı?',
@@ -7016,7 +7028,7 @@ Signature: _______________     Date: ${today}`;
                   <div>
                     <div className="text-brand-200 text-xs font-bold uppercase tracking-widest mb-1">Başlangıç Rehberi</div>
                     <h3 className="text-xl font-black">VizeAkıl Nasıl Kullanılır?</h3>
-                    <p className="text-brand-100 text-xs mt-1">3 adımda profesyonel başvuru hazırlığı</p>
+                    <p className="text-brand-100 text-xs mt-1">18 araçla profesyonel başvuru hazırlığı — 3 adımda</p>
                   </div>
                   <button type="button" onClick={() => setIsHowToOpen(false)} className="p-2 hover:bg-white/10 rounded-full"><X className="w-5 h-5" /></button>
                 </div>
@@ -7032,28 +7044,29 @@ Signature: _______________     Date: ${today}`;
                       '"Ücretsiz Analiz Başlat" butonuna tıklayın.',
                       'Hangi ülkeye başvuracağınızı seçin — Schengen, İngiltere veya ABD.',
                       'Çalışma durumunuzu, mali profilinizi ve vize geçmişinizi işaretleyin.',
-                      'Anlık başarı skorunuzu görün; "Tam Analizi Gör" ile devam edin.',
+                      'Anlık başarı skorunuzu görün; "Tam Analizi Gör" ile Dashboard\'a geçin.',
+                      'Almanya/Fransa gibi zor ülkeler için sarı uyarı banner\'ı görünürse önerilen alternatifleri değerlendirin.',
                     ]
                   },
                   {
                     step: '02',
-                    title: 'Aksiyon Merkezini Takip Edin',
+                    title: 'Dashboard\'ı Okuyun ve Aksiyona Geçin',
                     color: 'indigo',
                     items: [
-                      '"Puanınızı Nasıl Artırırsınız?" bölümündeki önerileri sırayla inceleyin.',
-                      'Her maddenin araç butonuna tıklayın — ilgili analiz otomatik açılır.',
-                      'Tamamladığınız adımı "Yaptım ✓" ile onaylayın — skor anlık güncellenir.',
-                      '"Evrak Sihirbazı" ile profilinize özel belge listesi alın; tamamladıklarınızı tıklayarak işaretleyin.',
-                      '"Ülke Seç" ile Schengen ülkelerini profil uyumuna göre kıyaslayın.',
+                      '"Ret Risk Analizi" kartını inceleyin — profilinizle örtüşen ret kalıplarını yasal kodlarıyla görün, her biri için öneri alın.',
+                      '"Puanınızı Nasıl Artırırsınız?" bölümündeki önerileri sırayla uygulayın; "Yaptım ✓" ile skor anlık güncellenir.',
+                      '"Evrak Sihirbazı" ile profilinize özel belge listesi alın; hazırladıklarınızı tıklayarak işaretleyin.',
+                      '"Ülke Seç" veya "Kıyasla" ile Schengen ülkelerini profil uyumuna göre karşılaştırın.',
+                      'Premium "Ret Nedeni Haritası" ile hedef ülkenin 2021–2026 ret istatistiklerini ve risk profilinizi görün.',
                     ]
                   },
                   {
                     step: '03',
-                    title: 'Başvuruyu Tamamlayın',
+                    title: 'Dosyanızı Güçlendirin ve Başvurun',
                     color: 'violet',
                     items: [
-                      '"Kırmızı Bayrak Tarayıcı" ile dosyanızdaki mantıksal çelişkileri kontrol edin.',
-                      '"Niyet Mektubu" bölümünden 🇹🇷 Türkçe veya 🇬🇧 İngilizce PDF indirin.',
+                      '"Kırmızı Bayrak Tarayıcı" ile dosyanızdaki mantıksal çelişkileri tespit edin.',
+                      '"Niyet Mektubu" bölümünden 🇹🇷 Türkçe veya 🇬🇧 İngilizce PDF indirin (4 mektup türü).',
                       'Skorunuz %82\'nin üstüne çıktığında başvuru için güçlü bir profil demektir.',
                       'Premium "Vize Danışmanım" ile yapay zekaya son sorularınızı sorun.',
                     ]
@@ -7083,7 +7096,7 @@ Signature: _______________     Date: ${today}`;
                     <Star className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
                     <div>
                       <div className="font-bold text-amber-900 text-sm mb-1">Pro İpucu</div>
-                      <p className="text-xs text-amber-800 leading-relaxed">Başvurunuzdan <strong>en az 8 hafta önce</strong> sisteme girin. Bu süre; eksik evrakları tamamlamanıza, banka hesabınızı düzenlemenize ve randevu almanıza yetecektir. Son dakika başvuruları ret riskini %40 artırır.</p>
+                      <p className="text-xs text-amber-800 leading-relaxed">Başvurunuzdan <strong>en az 8 hafta önce</strong> sisteme girin. Bu süre; eksik evrakları tamamlamanıza, banka hesabınızı düzenlemenize ve randevu almanıza yetecektir. "Ret Risk Analizi" kartındaki uyarıları başvuru öncesinde sıfırlamayı hedefleyin — bu tek adım ret riskini önemli ölçüde azaltır.</p>
                     </div>
                   </div>
                 </div>
