@@ -1599,6 +1599,34 @@ export default function App() {
     return items.slice(0, 6); // Maksimum 6 madde göster
   }, [currentScore, profile]);
 
+  // ── Roadmap → Araç Eşleştirme ─────────────────────────────
+  const actionItems = useMemo(() => {
+    const items: { gain: string; title: string; desc: string; toolLabel: string; toolFn: () => void; priority: number }[] = [];
+
+    if (!profile.bankRegularity || !profile.incomeSourceClear) {
+      items.push({ gain: '+9', title: 'Banka Düzenliliğini Kanıtla', desc: 'Maaş/kira girişleri + 3 aylık ektre — en yüksek puan kazanımı.', toolLabel: 'AI Banka Analizi', toolFn: () => { setStep('dashboard'); setTimeout(() => { setIsAiBankOpen(true); }, 200); }, priority: 1 });
+    }
+    if (!profile.hasSgkJob) {
+      items.push({ gain: '+8', title: 'SGK / İstihdam Belgesi Ekle', desc: 'E-Devlet\'ten barkodlu SGK dökümü — en güçlü geri dönüş kanıtı.', toolLabel: 'Evrak Rehberi', toolFn: () => { setStep('dashboard'); setTimeout(() => setIsDocumentListOpen(true), 200); }, priority: 2 });
+    }
+    if (!profile.hasHighValueVisa && !profile.hasOtherVisa) {
+      items.push({ gain: '+6', title: 'Doğru Ülkeyi Seç', desc: 'İlk başvuruda red oranı düşük ülkelerden başla — profil uyumu hesaplandı.', toolLabel: 'Ülke Kıyaslayıcı', toolFn: () => { setStep('dashboard'); setTimeout(() => setIsSchengenComparatorOpen(true), 200); }, priority: 3 });
+    }
+    if (!profile.hasHealthInsurance && !profile.hasTravelInsurance) {
+      items.push({ gain: '+4', title: 'Seyahat Sigortası Al', desc: '€30.000 teminatlı sigorta olmadan başvuru kabul edilmez.', toolLabel: 'Evrak Sihirbazı', toolFn: () => { setStep('dashboard'); setTimeout(() => setIsDocumentListOpen(true), 200); }, priority: 4 });
+    }
+    if (!profile.useOurTemplate) {
+      items.push({ gain: '+5', title: 'Profesyonel Niyet Mektubu Yaz', desc: '2026 konsolosluk standartlarına uygun resmi şablon kullan.', toolLabel: 'Belge Oluşturucu', toolFn: () => setStep('letter'), priority: 5 });
+    }
+    if (!profile.hasSocialMediaFootprint) {
+      items.push({ gain: '+2', title: 'Sosyal Medyayı Vize-Safe Yap', desc: 'LinkedIn + Instagram profili — konsolosluk sosyal medyanıza bakıyor.', toolLabel: 'Sosyal Medya', toolFn: () => { setStep('dashboard'); setTimeout(() => setIsSocialMediaOpen(true), 200); }, priority: 6 });
+    }
+    // Risk kontrolü her zaman göster
+    items.push({ gain: '⚠️', title: 'Dosyanda Kırmızı Bayrak Var mı?', desc: 'Bakiye vs maliyet, sigorta, dönüş bileti — konsolosluk tutarsızlıkları reddeder.', toolLabel: 'Risk Tarayıcı', toolFn: () => { setStep('dashboard'); setTimeout(() => setIsRedFlagOpen(true), 200); }, priority: 7 });
+
+    return items.sort((a, b) => a.priority - b.priority).slice(0, 5);
+  }, [profile, currentScore]);
+
   // ── Özellik 1: Ret Mektubu Analizi ──────────────────────────
   const analyzeRefusal = () => {
     const text = refusalText.toLowerCase();
@@ -4295,7 +4323,7 @@ Signature: _______________     Date: ${today}`;
                 <div className="flex gap-3 overflow-x-auto pb-1 justify-start sm:justify-center scrollbar-hide -mx-4 px-4">
                   {[
                     { avatar: '👨‍💼', name: 'Mehmet K.', text: 'Almanya vizesi aldım!' },
-                    { avatar: '👩‍🎓', name: 'Selin A.', text: 'Ret sonrası tekrar başvurdum.' },
+                    { avatar: '👩‍🎓', name: 'Nilay İ.', text: 'Ret sonrası tekrar başvurdum.' },
                     { avatar: '🧑‍💻', name: 'Arda T.', text: 'UK vizesi için mükemmel.' },
                   ].map(({ avatar, name, text }) => (
                     <div key={name} className="flex items-center gap-2 bg-white border border-slate-100 rounded-full px-3 py-2 shadow-sm shrink-0">
@@ -4622,22 +4650,70 @@ Signature: _______________     Date: ${today}`;
                 </div>
               </div>
 
-              <div className="p-8 md:p-12 bg-slate-900 rounded-[2.5rem] text-white flex flex-col lg:flex-row items-center justify-between gap-8 relative overflow-hidden shadow-2xl">
+              {/* Puan Artırma Kılavuzu */}
+              {actionItems.length > 0 && (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Zap className="w-5 h-5 text-amber-500"/>
+                    <h3 className="font-black text-slate-900">Puanınızı Nasıl Artırırsınız?</h3>
+                    <span className="ml-auto text-xs font-bold text-slate-400">Toplam kazanım: +{actionItems.filter(a=>a.gain!=='⚠️').reduce((s,a)=>s+parseInt(a.gain),0)} puan</span>
+                  </div>
+                  <div className="space-y-2">
+                    {actionItems.map((item, i) => (
+                      <div key={i} className={`flex items-center gap-3 p-4 rounded-2xl border transition-all group ${item.gain === '⚠️' ? 'bg-rose-50 border-rose-200' : 'bg-white border-slate-100 hover:border-brand-200 hover:bg-brand-50/30'}`}>
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-sm shrink-0 ${item.gain === '⚠️' ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-700'}`}>
+                          {item.gain}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-bold text-slate-900 text-sm">{item.title}</p>
+                          <p className="text-xs text-slate-500 mt-0.5 line-clamp-1">{item.desc}</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={item.toolFn}
+                          className={`shrink-0 px-3 py-2 text-xs font-black rounded-xl transition-colors whitespace-nowrap ${item.gain === '⚠️' ? 'bg-rose-600 text-white hover:bg-rose-700' : 'bg-brand-600 text-white hover:bg-brand-700'}`}>
+                          {item.toolLabel} →
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Skor Kartı */}
+              <div className="p-8 md:p-10 bg-slate-900 rounded-[2.5rem] text-white flex flex-col lg:flex-row items-center justify-between gap-8 relative overflow-hidden shadow-2xl">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-brand-600/20 blur-[100px] rounded-full pointer-events-none" />
-                <div className="space-y-4 text-center lg:text-left relative z-10">
+                <div className="space-y-3 text-center lg:text-left relative z-10 w-full lg:w-auto">
                   <div className="text-brand-400 text-xs font-bold uppercase tracking-[0.2em]">Tahmini Başarı İhtimali</div>
-                  <div className="text-6xl md:text-8xl font-black text-white">%{currentScore}</div>
-                  <p className="text-slate-400 text-sm max-w-xs mx-auto lg:mx-0 font-medium">
-                    Detaylı kriterleri doldurun, skorunuzu maximize edin.
+                  <div className="flex items-end gap-3">
+                    <div className="text-6xl md:text-7xl font-black text-white">%{currentScore}</div>
+                    <div className="text-sm text-slate-400 pb-2">
+                      {currentScore < 82 ? `Hedef: %82 (+${82 - currentScore} puan)` : '✓ Başvuruya hazır'}
+                    </div>
+                  </div>
+                  {/* Mini progress bar */}
+                  <div className="w-full max-w-xs h-2 bg-white/10 rounded-full overflow-hidden">
+                    <div className={`h-full rounded-full transition-all ${currentScore >= 82 ? 'bg-emerald-400' : currentScore >= 65 ? 'bg-amber-400' : 'bg-rose-400'}`}
+                      style={{width:`${currentScore}%`}}/>
+                  </div>
+                  <p className="text-slate-400 text-xs font-medium">
+                    {currentScore >= 82 ? 'Profiliniz konsolosluk için hazır.' : `Yukarıdaki araçları kullanarak ${82-currentScore} puan daha kazanabilirsiniz.`}
                   </p>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setStep('dashboard')}
-                  className="btn-primary relative z-10 w-full lg:w-auto px-10 py-5 text-lg flex items-center justify-center gap-2 group"
-                >
-                  Dashboard'a Git <ChevronRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
-                </button>
+                <div className="flex flex-col gap-3 relative z-10 w-full lg:w-auto">
+                  <button
+                    type="button"
+                    onClick={() => setStep('dashboard')}
+                    className="btn-primary w-full lg:w-auto px-8 py-4 text-base flex items-center justify-center gap-2 group">
+                    Araçlarla Puanı Artır <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  </button>
+                  {currentScore >= 65 && (
+                    <button type="button" onClick={() => setStep('letter')}
+                      className="w-full lg:w-auto px-8 py-4 text-base font-bold bg-white/10 hover:bg-white/20 rounded-xl flex items-center justify-center gap-2 transition-colors">
+                      Niyet Mektubu Oluştur →
+                    </button>
+                  )}
+                </div>
               </div>
             </motion.div>
           )}
@@ -4653,14 +4729,94 @@ Signature: _______________     Date: ${today}`;
               <div className="space-y-4">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                   <div>
-                    <h2 className="text-4xl font-black text-slate-900">Vize Yol Haritanız</h2>
-                    <p className="text-slate-500 text-lg">Başvurunuzu mükemmelleştirmek için kişisel analiziniz.</p>
+                    <h2 className="text-3xl font-black text-slate-900">Vize Yol Haritanız</h2>
+                    <p className="text-slate-500">Başvurunuzu mükemmelleştirmek için kişisel analiziniz.</p>
+                  </div>
+                  <button onClick={() => setStep('assessment')}
+                    className="text-xs font-bold text-brand-600 hover:underline flex items-center gap-1 shrink-0">
+                    <RefreshCw className="w-3.5 h-3.5"/> Profil Güncelle
+                  </button>
+                </div>
+
+                {/* ── AKSIYON MERKEZİ ── */}
+                <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-[2rem] p-6 text-white relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-48 h-48 bg-brand-600/20 blur-[80px] rounded-full pointer-events-none"/>
+                  <div className="relative z-10">
+                    {/* Üst satır: skor + hedef */}
+                    <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
+                      <div>
+                        <div className="text-[10px] font-black uppercase tracking-widest text-brand-400 mb-1">Güncel Başarı Skoru</div>
+                        <div className="flex items-end gap-2">
+                          <span className="text-4xl font-black">%{currentScore}</span>
+                          <span className={`text-sm font-bold pb-1 ${currentScore >= 82 ? 'text-emerald-400' : 'text-amber-400'}`}>
+                            {currentScore >= 82 ? '✓ Başvuruya Hazır' : `Hedef %82 — ${82-currentScore} puan eksik`}
+                          </span>
+                        </div>
+                        <div className="mt-2 w-48 h-1.5 bg-white/10 rounded-full overflow-hidden">
+                          <div className={`h-full rounded-full transition-all duration-500 ${currentScore >= 82 ? 'bg-emerald-400' : currentScore >= 65 ? 'bg-amber-400' : 'bg-rose-400'}`}
+                            style={{width:`${Math.min(currentScore,100)}%`}}/>
+                        </div>
+                      </div>
+                      <div className="flex gap-2 flex-wrap">
+                        <button onClick={() => setStep('letter')}
+                          className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white text-xs font-bold rounded-xl transition-colors flex items-center gap-1.5">
+                          <FileText className="w-3.5 h-3.5"/> Mektup Oluştur
+                        </button>
+                        <button onClick={() => setIsSchengenComparatorOpen(true)}
+                          className="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold rounded-xl transition-colors flex items-center gap-1.5">
+                          <Globe className="w-3.5 h-3.5"/> Ülke Seç
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Aksiyon listesi */}
+                    {actionItems.length > 0 && (
+                      <div className="space-y-2">
+                        <div className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">
+                          Şu an yapılacak en önemli {actionItems.length} adım:
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                          {actionItems.slice(0, 3).map((item, i) => (
+                            <button key={i} onClick={item.toolFn} type="button"
+                              className={`text-left p-3 rounded-xl border transition-all hover:scale-[1.02] ${item.gain === '⚠️' ? 'bg-rose-900/40 border-rose-700/50 hover:bg-rose-900/60' : 'bg-white/5 border-white/10 hover:bg-white/10'}`}>
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className={`text-[11px] font-black px-2 py-0.5 rounded-lg ${item.gain === '⚠️' ? 'bg-rose-600 text-white' : 'bg-amber-500 text-white'}`}>
+                                  {item.gain === '⚠️' ? '!' : item.gain + 'p'}
+                                </span>
+                                <span className="text-xs font-black text-white">{item.title}</span>
+                              </div>
+                              <div className="text-[10px] text-slate-400 leading-snug">{item.desc.substring(0, 60)}…</div>
+                              <div className="mt-2 text-[10px] font-black text-brand-300">{item.toolLabel} →</div>
+                            </button>
+                          ))}
+                        </div>
+                        {actionItems.length > 3 && (
+                          <button onClick={() => setStep('assessment')}
+                            className="text-xs text-slate-400 hover:text-white transition-colors font-bold mt-1">
+                            +{actionItems.length - 3} adım daha → Profil Güncelle
+                          </button>
+                        )}
+                      </div>
+                    )}
+                    {currentScore >= 82 && (
+                      <div className="flex items-center gap-3 p-3 bg-emerald-900/40 border border-emerald-700/50 rounded-xl">
+                        <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0"/>
+                        <p className="text-sm text-emerald-300 font-bold">Profiliniz güçlü. Belgeleri hazırlayın ve başvurun.</p>
+                        <button onClick={() => setStep('letter')} className="ml-auto text-xs bg-emerald-600 text-white px-3 py-1.5 rounded-lg font-bold shrink-0">
+                          Belge Oluştur →
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
+
                 {/* Araçlar Paneli */}
                 <div className="bg-white border border-slate-100 rounded-[2rem] p-5 shadow-sm">
                   <div className="flex items-center justify-between mb-4">
-                    <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Analiz Araçları</div>
+                    <div>
+                      <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Tüm Analiz Araçları</div>
+                      <div className="text-[9px] text-slate-400 mt-0.5">Her araç kullandığında skor güncellenir</div>
+                    </div>
                     {!isPremium && (
                       <button onClick={() => setIsUpgradeOpen(true)}
                         className="text-[10px] bg-amber-50 text-amber-600 border border-amber-100 font-black px-2 py-1 rounded-lg uppercase tracking-widest hover:bg-amber-100 transition-colors">
