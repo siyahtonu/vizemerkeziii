@@ -5,10 +5,14 @@
 import express from 'express';
 import rateLimit from 'express-rate-limit';
 import * as dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import paymentRouter from './payment.js';
 import appointmentRouter from './appointmentWatcher.js';
 
 dotenv.config({ path: '.env.local' });
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const app = express();
 app.use(express.json());
@@ -61,6 +65,19 @@ app.use('/api/appointments', appointmentRouter);
 // ── Sağlık kontrolü ───────────────────────────────────────
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', ts: Date.now() });
+});
+
+// ── Statik dosyalar (üretim) ──────────────────────────────
+// Express hem API hem frontend'i serve ediyorsa (VPS/Render/Railway):
+const distPath = path.join(__dirname, '..', 'dist');
+app.use(express.static(distPath));
+
+// SPA fallback — tüm API-dışı istekler index.html'e yönlenir
+// Bu sayede /panel, /basla, /sonuc gibi client-side route'lar
+// sayfayı yenilemede de çalışır.
+app.get('*', (req, res) => {
+  if (req.path.startsWith('/api/')) return res.status(404).json({ error: 'Not found' });
+  res.sendFile(path.join(distPath, 'index.html'));
 });
 
 const PORT = process.env.PORT ?? 3001;
