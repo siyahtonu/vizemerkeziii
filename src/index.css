@@ -48,16 +48,22 @@
 }
 
 /* ═══════════════════════════════════════════════
-   CUSTOM CURSOR & HOVER EFFECTS — VizeAkıl
+   CUSTOM CURSOR — Yalnızca body.use-custom-cursor varsa aktif
+   Default: KAPALI (native cursor kullanılır)
    ═══════════════════════════════════════════════ */
 
-/* Hide default cursor sitewide — custom cursor replaces it */
-*, *::before, *::after {
-  cursor: none !important;
+/* Yalnızca özel cursor tercih edildiğinde ve mouse destekli cihazda aktif */
+@media (hover: hover) and (pointer: fine) {
+  body.use-custom-cursor *,
+  body.use-custom-cursor *::before,
+  body.use-custom-cursor *::after {
+    cursor: none !important;
+  }
 }
 
 /* Custom cursor root element */
 #vize-cursor {
+  display: none; /* JS ile use-custom-cursor class'ı eklenince gösterilir */
   position: fixed;
   top: 0;
   left: 0;
@@ -65,6 +71,10 @@
   z-index: 99999;
   transform: translate(-50%, -50%);
   transition: transform 0.08s ease, opacity 0.2s ease;
+}
+
+body.use-custom-cursor #vize-cursor {
+  display: block;
 }
 
 /* Main cursor dot */
@@ -89,60 +99,50 @@
   transition: width 0.2s ease, height 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
 }
 
-/* ── Hover states via JS data attributes ── */
-
-/* Button / interactive element */
-body.cursor-hover #vize-cursor .cursor-dot {
+/* ── Hover states ── */
+body.use-custom-cursor.cursor-hover #vize-cursor .cursor-dot {
   width: 14px;
   height: 14px;
   background: #0369a1;
   transform: scale(1.2);
 }
-body.cursor-hover #vize-cursor .cursor-ring {
+body.use-custom-cursor.cursor-hover #vize-cursor .cursor-ring {
   width: 52px;
   height: 52px;
   border-color: rgba(2, 132, 199, 0.5);
 }
-
-/* Premium / locked element */
-body.cursor-premium #vize-cursor .cursor-dot {
+body.use-custom-cursor.cursor-premium #vize-cursor .cursor-dot {
   background: #7c3aed;
   width: 12px;
   height: 12px;
 }
-body.cursor-premium #vize-cursor .cursor-ring {
+body.use-custom-cursor.cursor-premium #vize-cursor .cursor-ring {
   width: 48px;
   height: 48px;
   border-color: rgba(124, 58, 237, 0.4);
 }
-
-/* Danger / red element */
-body.cursor-danger #vize-cursor .cursor-dot {
+body.use-custom-cursor.cursor-danger #vize-cursor .cursor-dot {
   background: #dc2626;
   width: 12px;
   height: 12px;
 }
-body.cursor-danger #vize-cursor .cursor-ring {
+body.use-custom-cursor.cursor-danger #vize-cursor .cursor-ring {
   border-color: rgba(220, 38, 38, 0.4);
 }
-
-/* Text / input cursor */
-body.cursor-text #vize-cursor .cursor-dot {
+body.use-custom-cursor.cursor-text #vize-cursor .cursor-dot {
   width: 3px;
   height: 20px;
   border-radius: 2px;
   background: #0284c7;
 }
-body.cursor-text #vize-cursor .cursor-ring {
+body.use-custom-cursor.cursor-text #vize-cursor .cursor-ring {
   opacity: 0;
 }
-
-/* Click press */
-body.cursor-click #vize-cursor .cursor-dot {
+body.use-custom-cursor.cursor-click #vize-cursor .cursor-dot {
   transform: scale(0.7);
   background: #0369a1;
 }
-body.cursor-click #vize-cursor .cursor-ring {
+body.use-custom-cursor.cursor-click #vize-cursor .cursor-ring {
   transform: translate(-50%, -50%) scale(0.8);
 }
 

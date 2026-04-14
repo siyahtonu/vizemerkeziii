@@ -54,6 +54,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { jsPDF } from 'jspdf';
+import Footer from './components/Footer';
 
 // Types
 interface ProfileData {
@@ -872,7 +873,7 @@ const interviewQuestions: Record<'schengen'|'uk'|'usa', InterviewQ[]> = {
     { id:7, category:'Geri Dönüş Bağları', q:'SGK kaydınız, çalışma durumunuz veya işvereniniz hakkında bilgi verir misiniz?', hint:'Aktif iş kaydı UK için kritik bir güven unsurudur.', keywords:['sgk','işverem','şirket','kamu','özel','sözleşme','maaş'], weakPatterns:['yok','çalışmıyorum'], feedback:{ strong:'İstihdam durumunuz güçlü ve belgelenebilir.', weak:'İstihdam kaydı olmadan UK vizesi çok zorlaşır.', tips:['SGK + işveren mektubu mutlaka hazırlayın','Emekliyseniz emekli maaş belgenizi getirin'] }},
     { id:8, category:'Konaklama', q:'İngiltere\'de nerede kalacaksınız? Otel veya davet mektubu var mı?', hint:'Otel rezervasyon numarası veya ev sahibinin pasaport kopyası.', keywords:['otel','airbnb','arkadaşım','akrabam','rezervasyon','davet mektubu'], weakPatterns:['bilmiyorum','henüz almadım'], feedback:{ strong:'Konaklama planınız netleştirilmiş.', weak:'Konaklama yeri belirsiz bırakılmamalıdır.', tips:['Otel rezervasyonu veya davet mektubu mutlaka hazırlayın','Rezervasyon iade edilebilir türden olabilir'] }},
     { id:9, category:'Konaklama', q:'İngiltere\'deki bir akrabınız veya arkadaşınız sizi davet etti mi?', hint:'Davet varsa ilişki, ne zamandan beri tanışıyorsunuz, davetiyenin içeriği.', keywords:['evet','hayır','akrabam','arkadaşım','mektup','pasaport','davet'], weakPatterns:[], feedback:{ strong:'Davet durumunu net açıkladınız.', weak:'', tips:['Varsa davet mektubunu daveten kişinin pasaport kopyasıyla birlikte sunun','Yoksa otel rezervasyonu ile devam edin'] }},
-    { id:10, category:'Seyahat Detayları', q:'Dönüş biletiniz var mı? Kesin dönüş tarihiniz nedir?', hint:'UK vizesi için dönüş bileti en kritik belgelerden biridir.', keywords:['evet','biletim var','tarihi','thy','pegasus','british airways'], weakPatterns:['yok','almadım'], feedback:{ strong:'Dönüş biletiniz hazır.', weak:'Dönüş bileti olmadan UK vizesi neredeyse imkânsızdır.', tips:['Mutlaka dönüş bileti alın','Tarih vize süresiyle uyumlu olmalı'] }},
+    { id:10, category:'Seyahat Detayları', q:'Dönüş biletiniz var mı? Kesin dönüş tarihiniz nedir?', hint:'UK vizesi için dönüş bileti en kritik belgelerden biridir.', keywords:['evet','biletim var','tarihi','thy','pegasus','british airways'], weakPatterns:['yok','almadım'], feedback:{ strong:'Dönüş biletiniz hazır.', weak:'Dönüş bileti olmadan UK vizesi geçmiş veride yüksek ret riskiyle ilişkilidir.', tips:['Mutlaka dönüş bileti alın','Tarih vize süresiyle uyumlu olmalı'] }},
     { id:11, category:'Seyahat Detayları', q:'Seyahat sigortanız var mı? Hangi şirket, ne kadar teminat?', hint:'UK\'da zorunlu değil ama çok önerilir; özellikle sağlık için.', keywords:['evet','sigorta','allianz','axa','teminat','poliçe'], weakPatterns:['yok','almadım'], feedback:{ strong:'Sigortanız hazır.', weak:'UK\'da sigorta zorunlu değil ama NHS dışı sağlık hizmetleri çok pahalı olabilir.', tips:['Seyahat sigortası almak vize başvurusuna güven katıyor','En az £100.000 sağlık + bagaj teminatı önerilir'] }},
     { id:12, category:'Geçmiş', q:'Daha önce İngiltere\'ye gittiniz mi veya UK vizesi aldınız mı?', hint:'Olumlu vize geçmişi büyük avantaj.', keywords:['evet','gittim','aldım','vizem vardı'], weakPatterns:['hayır','hiç'], feedback:{ strong:'Vize geçmişiniz var, bu inandırıcılığı artırır.', weak:'İlk başvuruysa sorun değil; güçlü evraklarla başvurun.', tips:['Önceki UK vize kullanımınızı belgeleyin','İlk kez gidiyorsanız çok daha eksiksiz evrak hazırlayın'] }},
     { id:13, category:'Geçmiş', q:'Daha önce UK veya başka bir ülkeden vize reddiniz oldu mu?', hint:'Dürüst olun; konsolosluk kayıtları kontrol eder.', keywords:['hayır','olmadı','hiç','evet','oldu'], weakPatterns:[], feedback:{ strong:'Vize geçmişi hakkında dürüst ve net cevap verdiniz.', weak:'', tips:['Ret varsa saklamayın','Önceki reddi geçersiz kılan değişikliklerinizi açıklayın'] }},
@@ -898,12 +899,12 @@ const interviewQuestions: Record<'schengen'|'uk'|'usa', InterviewQ[]> = {
     { id:6, category:'Finansal', q:'Aylık geliriniz ne kadar? Ne iş yapıyorsunuz?', hint:'Meslek ve net maaş rakamı verin.', keywords:['tl','dolar','maaş','şirket','kamu','özel','mühendis','doktor','öğretmen','işletme'], weakPatterns:['değişiyor','az','bazen'], feedback:{ strong:'Net gelir ve meslek bilgisi verdiniz.', weak:'', tips:['Mesleğinizi ve maaşınızı net rakamla belirtin','Vergi levhası ve maaş bordrosu hazırlayın'] }},
     { id:7, category:'Finansal', q:'ABD\'deyken bütçeniz ne olacak? Günlük tahmini harcamanız?', hint:'ABD\'de pahalı bir ülke; günlük $100-200+ bütçe planı yapın.', keywords:['dolar','$','günlük','bütçe','nakit','kart','150','200'], weakPatterns:['az','bilmiyorum'], feedback:{ strong:'Gerçekçi bir bütçe planınız var.', weak:'ABD\'de yaşam pahalıdır; yetersiz bütçe planı ret nedeni olabilir.', tips:['Günlük en az $150-200 bütçe hesaplayın','Konaklama, yemek ve ulaşımı ayrı ayrı tahmin edin'] }},
     { id:8, category:'Geri Dönüş', q:'Türkiye\'ye neden geri döneceğinizi açıklar mısınız? En güçlü geri dönüş nedeniniz nedir?', hint:'ABD B1/B2\'de "nonimmigrant intent" kanıtı kritik.', keywords:['iş','ailem','ev','mülk','okul','sözleşme','sgk','şirketim'], weakPatterns:['bilmiyorum','zor','yok'], feedback:{ strong:'Güçlü geri dönüş bağları belirttiniz — ABD için en kritik faktör bu.', weak:'Türkiye\'ye geri dönüş motivasyonu zayıf — büyük ihtimalle reddedilirsiniz.', tips:['"İşim, evim, ailem Türkiye\'de" en etkili cevaptır','SGK, sözleşme ve mülk bilgileri somut kanıttır'] }},
-    { id:9, category:'Geri Dönüş', q:'ABD\'de çalışma veya yerleşme niyetiniz var mı?', hint:'"Kesinlikle hayır" net cevabını somut nedenlerle destekleyin.', keywords:['hayır','kesinlikle yok','Türkiye\'de','dönüyorum'], weakPatterns:['belki','ileride','istiyorum','düşündüm'], feedback:{ strong:'Net ve inandırıcı cevap.', weak:'Bu soruya "belki" veya belirsiz cevap vermek neredeyse kesin ret sebebidir.', tips:['Kesinlikle "Hayır" deyin','Türkiye\'deki kariyer ve aile planlarınızla destekleyin'] }},
+    { id:9, category:'Geri Dönüş', q:'ABD\'de çalışma veya yerleşme niyetiniz var mı?', hint:'"Kesinlikle hayır" net cevabını somut nedenlerle destekleyin.', keywords:['hayır','kesinlikle yok','Türkiye\'de','dönüyorum'], weakPatterns:['belki','ileride','istiyorum','düşündüm'], feedback:{ strong:'Net ve inandırıcı cevap.', weak:'Bu soruya "belki" veya belirsiz cevap vermek geçmiş veride yüksek ret riskiyle ilişkilidir.', tips:['Kesinlikle "Hayır" deyin','Türkiye\'deki kariyer ve aile planlarınızla destekleyin'] }},
     { id:10, category:'Geri Dönüş', q:'SGK veya sosyal güvence kaydınız devam ediyor mu? Türkiye\'de aktif çalışıyor musunuz?', hint:'Aktif SGK ve iş sözleşmesi geri dönüş güvencesidir.', keywords:['evet','sgk','aktif','çalışıyorum','sözleşme'], weakPatterns:['hayır','yok'], feedback:{ strong:'Aktif istihdam geri dönüşünüzü güçlü kanıtlar.', weak:'SGK veya aktif iş kaydı olmadan ABD B1/B2 çok zorlaşır.', tips:['SGK hizmet dökümü + işveren mektubu hazırlayın'] }},
     { id:11, category:'Geri Dönüş', q:'Türkiye\'de mülk (ev, arsa) sahibi misiniz?', hint:'Mülk sahipliği güçlü geri dönüş kanıtı.', keywords:['evet','ev','tapu','arsa','daire','mülkünüm'], weakPatterns:['hayır','yok'], feedback:{ strong:'Mülk sahipliği ABD için güçlü bağ kanıtı.', weak:'Mülk yoksa iş ve aile bağları daha önemli hale gelir.', tips:['Tapu fotokopisi hazırlayın','Mülk yoksa iş sözleşmesi ve SGK\'yı güçlü gösterin'] }},
     { id:12, category:'Geri Dönüş', q:'Aileniz Türkiye\'de mi? Siz ABD\'deyken nerede olacaklar?', hint:'Eş ve çocuk Türkiye\'de kalıyorsa bu çok güçlü bir bağ.', keywords:['eşim','çocuğum','annem','babam','kalıyor','Türkiye\'de'], weakPatterns:['hepsi yanımda'], feedback:{ strong:'Aile bağları geri dönüş taahhüdünü somut kılıyor.', weak:'Ailenin tamamı da gidiyorsa başka bağları daha güçlü vurgulayın.', tips:['Eş ve çocuk Türkiye\'de kalıyorsa bunu açıkça belirtin'] }},
     { id:13, category:'Konaklama', q:'ABD\'de nerede kalacaksınız? Otel rezervasyonunuz var mı?', hint:'Otel adı ve rezervasyon numarası veya ev sahibinin bilgisi.', keywords:['otel','airbnb','akrabam','arkadaşım','rezervasyon','hilton','marriott'], weakPatterns:['bilmiyorum','henüz yok'], feedback:{ strong:'Konaklama netleştirilmiş.', weak:'Konaklama yeri belirsiz bırakılmamalı.', tips:['Otel rezervasyonu veya ev sahibi davetiyesi hazırlayın'] }},
-    { id:14, category:'Konaklama', q:'Dönüş biletiniz var mı? Kesin dönüş tarihiniz nedir?', hint:'ABD B1/B2 vizesinde dönüş bileti kritik belgedir.', keywords:['evet','biletim var','tarihi','thy','united','american airlines'], weakPatterns:['yok','almadım'], feedback:{ strong:'Dönüş biletiniz var.', weak:'Dönüş bileti olmadan ABD vizesi neredeyse imkânsız.', tips:['Mutlaka dönüş bileti alın','DS-160 ile tutarlı tarihler olmalı'] }},
+    { id:14, category:'Konaklama', q:'Dönüş biletiniz var mı? Kesin dönüş tarihiniz nedir?', hint:'ABD B1/B2 vizesinde dönüş bileti kritik belgedir.', keywords:['evet','biletim var','tarihi','thy','united','american airlines'], weakPatterns:['yok','almadım'], feedback:{ strong:'Dönüş biletiniz var.', weak:'Dönüş bileti olmadan ABD vizesi geçmiş veride yüksek ret riskiyle ilişkilidir.', tips:['Mutlaka dönüş bileti alın','DS-160 ile tutarlı tarihler olmalı'] }},
     { id:15, category:'Geçmiş', q:'Daha önce ABD\'de bulundunuz mu? ABD vizesi aldınız mı?', hint:'Güçlü vize geçmişi inandırıcılığı artırır.', keywords:['evet','gittim','aldım','vizem vardı','b1','b2'], weakPatterns:['hayır','hiç'], feedback:{ strong:'ABD vize geçmişiniz var, bu avantajlıdır.', weak:'İlk kez başvuruyorsanız güçlü evraklarla başvurun.', tips:['Önceki ABD vizesini belgeleyin','İlk kez gidiyorsanız diğer ülke vizelerini vurgulayın'] }},
     { id:16, category:'Geçmiş', q:'Daha önce herhangi bir ülkeden vize reddiniz oldu mu?', hint:'Dürüst olun; DS-160\'ta bu soru var ve yanlış yanıt suç sayılır.', keywords:['hayır','olmadı','hiç'], weakPatterns:[], feedback:{ strong:'Net ve dürüst cevap verdiniz.', weak:'', tips:['DS-160 formunda yanlış bilgi vermek hukuki suçtur','Ret olduysa bunu beyan edip durumu açıklayın'] }},
     { id:17, category:'Geçmiş', q:'Herhangi bir suç mahkûmiyetiniz veya ABD\'den deport işleminiz var mı?', hint:'"Hayır" net cevabı beklenir ve doğrulanabilir olmalı.', keywords:['hayır','hiç','yok','temiz'], weakPatterns:['evet'], feedback:{ strong:'Temiz adli sicil vize inandırıcılığını artırır.', weak:'', tips:['Adli sicil belgesi hazırlayın','Varsa durumu dürüstçe beyan edin'] }},
@@ -1414,7 +1415,7 @@ export default function App() {
 
     if (profile.isPublicSectorEmployee && profile.bankSufficientBalance) {
       persona = "Altın Profil: Kamu Güvencesi";
-      personaDestiny = "Konsoloslukların en hızlı onayladığı grup. Kamu çalışanlarında geri dönüş riski sıfıra yakın. İtalya/Almanya için onay neredeyse garantili.";
+      personaDestiny = "Konsoloslukların en hızlı onayladığı grup. Kamu çalışanlarında geri dönüş riski oldukça düşük. İtalya/Almanya için istatistiksel olarak yüksek onay oranı.";
     } else if (profile.hasSgkJob && profile.yearsInCurrentJob >= 3 && profile.bankSufficientBalance && activeTies >= 3) {
       persona = "Güçlü Profil: Stabil Profesyonel";
       personaDestiny = "Çok katmanlı bağları olan bu profil, konsolosluk gözünde en güvenilir özel sektör kategorisi. %90+ onay beklentisi.";
@@ -2073,7 +2074,7 @@ export default function App() {
 
     // 4. Dönüş bileti
     if (!rfHasReturn) {
-      flags.push({ severity: 'critical', msg: 'Dönüş bileti veya rezervasyonu yok. Bu durum "kalma niyeti" olarak yorumlanır — ret oranı dramatik artar.' });
+      flags.push({ severity: 'critical', msg: 'Dönüş bileti veya rezervasyonu yok. Bu durum "kalma niyeti" olarak yorumlanabilir — geçmiş veride ret riski önemli ölçüde artmaktadır.' });
     } else {
       flags.push({ severity: 'ok', msg: 'Dönüş bileti/rezervasyonu mevcut — güçlü geri dönüş kanıtı.' });
     }
@@ -2869,7 +2870,20 @@ Signature: _______________     Date: ${today}`;
     }
   };
 
-  // ── Custom Cursor ────────────────────────────────────────
+  // ── Custom Cursor (localStorage'dan tercih okunur, default KAPALI) ──────
+  const [customCursorEnabled, setCustomCursorEnabled] = React.useState<boolean>(() => {
+    try { return localStorage.getItem('vizeakil_custom_cursor') === 'true'; } catch { return false; }
+  });
+
+  React.useEffect(() => {
+    if (customCursorEnabled) {
+      document.body.classList.add('use-custom-cursor');
+    } else {
+      document.body.classList.remove('use-custom-cursor');
+    }
+    try { localStorage.setItem('vizeakil_custom_cursor', String(customCursorEnabled)); } catch { /* noop */ }
+  }, [customCursorEnabled]);
+
   React.useEffect(() => {
     const dot = document.querySelector('#vize-cursor') as HTMLElement | null;
     if (!dot) return;
@@ -2956,6 +2970,15 @@ Signature: _______________     Date: ${today}`;
               <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
               AI Aktif
             </div>
+            {/* Özel imleç toggle */}
+            <button
+              type="button"
+              title={customCursorEnabled ? 'Özel imleci kapat' : 'Özel imleci aç'}
+              onClick={() => setCustomCursorEnabled(v => !v)}
+              className={`hidden sm:flex p-2 rounded-xl transition-colors text-xs font-bold gap-1 items-center ${customCursorEnabled ? 'bg-brand-100 text-brand-700' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
+            >
+              <Target className="w-4 h-4"/>
+            </button>
             <button
               type="button"
               onClick={() => setIsCopilotOpen(true)}
@@ -2970,7 +2993,7 @@ Signature: _______________     Date: ${today}`;
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative">
 
-        {/* ═══ UPGRADE MODAL ═══ */}
+        {/* ═══ UPGRADE MODAL — 3 Katmanlı Fiyatlandırma ═══ */}
         <AnimatePresence>
           {isUpgradeOpen && (
             <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
@@ -2979,51 +3002,96 @@ Signature: _______________     Date: ${today}`;
                 className="absolute inset-0 bg-slate-950/70 backdrop-blur-lg" />
               <motion.div initial={{ opacity: 0, scale: 0.9, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.9, y: 30 }}
-                className="relative w-full max-w-lg bg-white rounded-[2.5rem] shadow-2xl overflow-hidden">
+                className="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl overflow-hidden max-h-[92vh] flex flex-col">
                 {/* Header */}
-                <div className="bg-gradient-to-br from-slate-900 to-indigo-900 p-8 text-white text-center">
+                <div className="bg-slate-900 p-7 text-white text-center shrink-0">
                   <button onClick={() => setIsUpgradeOpen(false)} className="absolute top-4 right-4 p-2 hover:bg-white/10 rounded-full"><X className="w-5 h-5" /></button>
-                  <div className="w-16 h-16 bg-amber-400/20 rounded-[1.5rem] flex items-center justify-center mx-auto mb-4">
-                    <Sparkles className="w-8 h-8 text-amber-300" />
+                  <div className="w-14 h-14 bg-amber-400/20 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                    <Sparkles className="w-7 h-7 text-amber-300" />
                   </div>
-                  <h3 className="text-2xl font-black">VizeAsistan Premium</h3>
-                  <p className="text-slate-300 text-sm mt-1">Tüm yapay zeka araçlarına sınırsız erişim</p>
-                  <div className="mt-4">
-                    <span className="text-5xl font-black text-white">₺499</span>
-                    <span className="text-slate-300 text-sm ml-2">/ tek seferlik</span>
-                  </div>
+                  <h3 className="text-2xl font-black">VizeAkıl — Plan Seç</h3>
+                  <p className="text-slate-400 text-sm mt-1">İhtiyacına göre ödeme yap. Sürpriz maliyet yok.</p>
                 </div>
-                {/* Features */}
-                <div className="p-8 space-y-6">
-                  <div className="space-y-3">
-                    {[
-                      { icon: XCircle, label: 'Başvuru Risk Tarayıcısı', desc: 'Dosyanızdaki mantıksal tutarsızlıkları konsolosluktan önce siz görün' },
-                      { icon: MessageSquare, label: 'Visa Copilot — AI Strateji Asistanı', desc: 'Sınırsız yapay zeka danışmanlığı' },
-                      { icon: AlertTriangle, label: 'Ret Mektubu Analizi', desc: 'Geçmiş reddi anlayın ve strateji kurun' },
-                      { icon: Globe, label: 'Ülke Kıyaslayıcısı + 2026 Trendleri', desc: 'Hangi konsoloslukta şansınız daha yüksek? Güncel içgörüler.' },
-                      { icon: Sparkles, label: 'Banka Dökümü Vize Analizi', desc: 'Bakiye, 28-gün kuralı, gelir kalıbı — anında rapor' },
-                      { icon: ShieldCheck, label: 'Sosyal Medya Denetim Rehberi', desc: 'Sosyal medyanızı vize-safe hale getirin' },
-                      { icon: Download, label: 'Sınırsız PDF Raporu', desc: 'Her analizi PDF olarak indirin' },
-                    ].map(({ icon: Icon, label, desc }) => (
-                      <div key={label} className="flex items-start gap-3">
-                        <div className="w-8 h-8 bg-brand-50 rounded-xl flex items-center justify-center shrink-0 mt-0.5">
-                          <Icon className="w-4 h-4 text-brand-600" />
-                        </div>
-                        <div>
-                          <div className="font-bold text-slate-900 text-sm">{label}</div>
-                          <div className="text-xs text-slate-400">{desc}</div>
-                        </div>
-                        <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0 ml-auto mt-0.5" />
+                {/* Planlar */}
+                <div className="p-6 overflow-y-auto flex-1 space-y-4">
+                  {/* Ücretsiz */}
+                  <div className="border-2 border-slate-200 rounded-2xl p-5">
+                    <div className="flex items-center justify-between mb-3">
+                      <div>
+                        <div className="font-black text-slate-900 text-base">Ücretsiz</div>
+                        <div className="text-xs text-slate-500 mt-0.5">Hemen başla, kayıt gerekmez</div>
                       </div>
-                    ))}
+                      <div className="text-2xl font-black text-slate-900">₺0</div>
+                    </div>
+                    <div className="space-y-1.5">
+                      {['Başarı profili analizi', 'Kişiye özel evrak listesi', 'Schengen ülke kıyaslayıcısı (görüntüleme)', 'SSS ve rehber içerikleri'].map(f => (
+                        <div key={f} className="flex items-center gap-2 text-xs text-slate-600">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0"/>{f}
+                        </div>
+                      ))}
+                    </div>
+                    <div className="mt-4 w-full py-2.5 bg-slate-100 text-slate-500 font-bold rounded-xl text-sm text-center">Mevcut Plan</div>
                   </div>
-                  <button
-                    onClick={() => { setIsPremium(true); setIsUpgradeOpen(false); }}
-                    className="w-full py-4 bg-gradient-to-r from-brand-600 to-indigo-600 text-white font-black rounded-2xl text-lg hover:opacity-90 transition-opacity shadow-xl shadow-brand-500/30 flex items-center justify-center gap-2">
-                    <Sparkles className="w-5 h-5 text-yellow-300" />
-                    Premium'u Aktifleştir
-                  </button>
-                  <p className="text-center text-xs text-slate-400">Demo modunda ödeme sistemi simüle edilmektedir. Gerçek ödeme entegrasyonu için bizimle iletişime geçin.</p>
+
+                  {/* Tek Başvuru */}
+                  <div className="border-2 border-brand-200 bg-brand-50 rounded-2xl p-5 relative">
+                    <div className="absolute -top-3 left-5 bg-brand-600 text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-wider">En Çok Tercih</div>
+                    <div className="flex items-center justify-between mb-3">
+                      <div>
+                        <div className="font-black text-slate-900 text-base">Tek Başvuru</div>
+                        <div className="text-xs text-slate-500 mt-0.5">90 gün / 1 ülke başvurusu</div>
+                      </div>
+                      <div>
+                        <span className="text-2xl font-black text-slate-900">₺499</span>
+                        <span className="text-xs text-slate-500 ml-1">/ 90 gün</span>
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      {['Tüm premium araçlar (Risk, Copilot, Ret Analizi)', 'Banka Dökümü AI Analizi', 'Sosyal Medya Denetim Rehberi', 'Mülakat Simülatörü (78 soru)', 'Sınırsız PDF raporu indirme'].map(f => (
+                        <div key={f} className="flex items-center gap-2 text-xs text-slate-700">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-brand-500 shrink-0"/>{f}
+                        </div>
+                      ))}
+                    </div>
+                    <button
+                      disabled
+                      className="mt-4 w-full py-3 bg-brand-600 text-white font-black rounded-xl text-sm flex items-center justify-center gap-2 opacity-70 cursor-not-allowed">
+                      <Clock className="w-4 h-4"/>
+                      Yakında — Ödeme Sistemi Hazırlanıyor
+                    </button>
+                  </div>
+
+                  {/* Yıllık Pro */}
+                  <div className="border-2 border-slate-800 bg-slate-900 rounded-2xl p-5">
+                    <div className="flex items-center justify-between mb-3">
+                      <div>
+                        <div className="font-black text-white text-base">Yıllık Pro</div>
+                        <div className="text-xs text-slate-400 mt-0.5">12 ay / sınırsız ülke</div>
+                      </div>
+                      <div>
+                        <span className="text-2xl font-black text-white">₺999</span>
+                        <span className="text-xs text-slate-400 ml-1">/ yıl</span>
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      {['Tek Başvuru planındaki her şey +', 'Sınırsız ülke & başvuru', 'Ret mektubu analizi & strateji', 'Öncelikli destek hattı', 'Yeni özellikler erken erişim'].map(f => (
+                        <div key={f} className="flex items-center gap-2 text-xs text-slate-300">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-amber-400 shrink-0"/>{f}
+                        </div>
+                      ))}
+                    </div>
+                    <button
+                      disabled
+                      className="mt-4 w-full py-3 bg-white/10 border border-white/20 text-white/60 font-black rounded-xl text-sm flex items-center justify-center gap-2 cursor-not-allowed">
+                      <Clock className="w-4 h-4"/>
+                      Yakında — Ödeme Sistemi Hazırlanıyor
+                    </button>
+                  </div>
+
+                  <p className="text-center text-xs text-slate-400 leading-relaxed">
+                    Ödeme sistemi yakında aktif olacak. Hazır olduğunda e-posta ile bildirileceksiniz.<br/>
+                    Sorularınız için: <span className="font-bold text-slate-600">destek@vizeakil.com</span>
+                  </p>
                 </div>
               </motion.div>
             </div>
@@ -4701,11 +4769,11 @@ Signature: _______________     Date: ${today}`;
                   2026 Güncel Konsolosluk Verileri ile Analiz
                 </motion.div>
                 <h1 className="text-4xl sm:text-5xl md:text-7xl font-black tracking-tight text-slate-900 leading-tight">
-                  Vize Başvurunuzda{' '}
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-600 to-indigo-600 block sm:inline">Sıfır Hata Payı</span>
+                  Vize memurundan önce{' '}
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-600 to-indigo-600 block sm:inline">başvurunuzu siz denetleyin</span>
                 </h1>
                 <p className="text-base md:text-xl text-slate-500 max-w-2xl mx-auto leading-relaxed font-medium">
-                  2 dakikada profilinizi analiz edin, hangi belgeler eksik öğrenin, niyet mektubunuzu otomatik oluşturun. <strong className="text-slate-700">Ücretsiz.</strong>
+                  Banka dökümünüzü, sosyal medyanızı ve ret mektubunuzu analiz eden tek AI asistanı. <strong className="text-slate-700">2 dakikada profil riskinizi öğrenin.</strong>
                 </p>
                 {/* Social proof row — horizontal scroll on mobile */}
                 <div className="flex gap-3 overflow-x-auto pb-1 justify-start sm:justify-center scrollbar-hide -mx-4 px-4">
@@ -7224,6 +7292,7 @@ Signature: _______________     Date: ${today}`;
           </div>
         )}
       </AnimatePresence>
+      <Footer />
     </div>
     </>
   );
