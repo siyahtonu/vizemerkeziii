@@ -972,7 +972,7 @@ export default function App() {
   });
 
   const [isOcrScanning, setIsOcrScanning] = useState(false);
-  const [ocrResults, setOcrResults] = useState<{file: string, status: string}[]>([]);
+  const [ocrResults, setOcrResults] = useState<{file: string; status: string; ok: boolean; warn?: boolean}[]>([]);
   const [simulatorValue, setSimulatorValue] = useState(0); // For dynamic balance simulation
 
   const [activeLetterType, setActiveLetterType] = useState<'cover' | 'sponsor' | 'employer' | 'itinerary'>('cover');
@@ -1869,49 +1869,104 @@ export default function App() {
   };
 
   const handleOcrUpload = (files: FileList | null) => {
-    if (!files) return;
+    if (!files || files.length === 0) return;
     setIsOcrScanning(true);
     setOcrResults([]);
-    
-    // Simulate OCR processing
+
     setTimeout(() => {
+      const results: {file: string; status: string; ok: boolean; warn?: boolean}[] = [];
+      const fileArr = Array.from(files);
+
+      fileArr.forEach(file => {
+        const n = file.name.toLowerCase();
+
+        // ── Pasaport ──
+        if (n.includes('pasaport') || n.includes('passport') || n.includes('pas_')) {
+          const hasPassportNo = !!letterData.passportNumber;
+          if (hasPassportNo) {
+            results.push({ file: file.name, ok: true, status: `Pasaport tespit edildi (No: ${letterData.passportNumber}). Geçerlilik tarihi en az 6 ay uzakta olmalı — manuel kontrol edin.` });
+          } else {
+            results.push({ file: file.name, ok: false, warn: true, status: 'Pasaport tespit edildi ama pasaport no sisteme girilmemiş. Belge Oluşturucu\'ya numarayı ekleyin.' });
+          }
+        }
+        // ── Banka ekstresi ──
+        else if (n.includes('banka') || n.includes('ekstre') || n.includes('bank') || n.includes('hesap') || n.includes('iban') || n.includes('account')) {
+          const bal = parseInt(aiBankBalance || profile.bankBalance || '0') || 0;
+          const inc = parseInt(aiBankIncome || profile.monthlyIncome || '0') || 0;
+          if (bal === 0 && inc === 0) {
+            results.push({ file: file.name, ok: false, warn: true, status: 'Banka ekstresi yüklendi ama gelir/bakiye bilgisi sisteme girilmemiş. AI Banka Analizi\'ni kullanarak verileri girin.' });
+          } else if (bal < 20000) {
+            results.push({ file: file.name, ok: false, status: `Banka ekstresi — Bakiye yetersiz görünüyor (${bal.toLocaleString('tr-TR')} TL). Konsolosluk minimum 30.000 TL+ bekler.` });
+          } else if (inc > 0 && bal >= 30000) {
+            results.push({ file: file.name, ok: true, status: `Banka ekstresi — Bakiye yeterli (${bal.toLocaleString('tr-TR')} TL). 28-gün kuralını ve ani para girişlerini manuel kontrol edin.` });
+          } else {
+            results.push({ file: file.name, ok: false, warn: true, status: `Banka ekstresi yüklendi. Risk Tarayıcı ile tutarsızlık kontrolü yapılması önerilir.` });
+          }
+        }
+        // ── SGK / İstihdam ──
+        else if (n.includes('sgk') || n.includes('hizmet') || n.includes('barkod') || n.includes('calisma') || n.includes('istihdam') || n.includes('sse')) {
+          const hasSgk = profile.hasSgkJob;
+          if (hasSgk) {
+            results.push({ file: file.name, ok: true, status: 'SGK hizmet dökümü tespit edildi. Barkod doğrulaması ve son 30 gün içinde alındığını kontrol edin.' });
+          } else {
+            results.push({ file: file.name, ok: false, warn: true, status: 'SGK belgesi yüklendi ama profilde SGK kaydı işaretlenmemiş. Profil analizinizi güncelleyin.' });
+          }
+        }
+        // ── Seyahat sigortası ──
+        else if (n.includes('sigorta') || n.includes('insurance') || n.includes('police') || n.includes('allianz') || n.includes('axa') || n.includes('mapfre') || n.includes('ergo')) {
+          const start = letterData.startDate;
+          const end = letterData.endDate;
+          if (start && end) {
+            results.push({ file: file.name, ok: true, status: `Seyahat sigortası tespit edildi. Tarihlerin ${start}–${end} arasını tam kapsadığını ve min. €30.000 teminat içerdiğini doğrulayın.` });
+          } else {
+            results.push({ file: file.name, ok: false, warn: true, status: 'Seyahat sigortası yüklendi ama seyahat tarihleri Belge Oluşturucu\'ya girilmemiş. Kapsam doğrulaması yapılamadı.' });
+          }
+        }
+        // ── Otel rezervasyonu ──
+        else if (n.includes('otel') || n.includes('hotel') || n.includes('rezerv') || n.includes('booking') || n.includes('hostel') || n.includes('accomm')) {
+          const hasHotel = !!letterData.hotelName;
+          results.push({ file: file.name, ok: hasHotel, warn: !hasHotel, status: hasHotel ? `Otel rezervasyonu tespit edildi (${letterData.hotelName}). Rezervasyon numarası ve tarihlerin pasaportla uyuştuğunu kontrol edin.` : 'Otel rezervasyonu yüklendi ama otel bilgisi sisteme girilmemiş. Belge Oluşturucu formunu doldurun.' });
+        }
+        // ── Uçak bileti ──
+        else if (n.includes('ucus') || n.includes('bilet') || n.includes('ticket') || n.includes('flight') || n.includes('ucak') || n.includes('turkish') || n.includes('pegasus') || n.includes('thy')) {
+          const hasReturn = !!letterData.flightInbound;
+          if (!hasReturn) {
+            results.push({ file: file.name, ok: false, status: 'Uçuş bileti yüklendi ama dönüş uçuşu sisteme girilmemiş! Tek yön bilet ret riskini ciddi artırır.' });
+          } else {
+            results.push({ file: file.name, ok: true, status: `Uçuş bileti tespit edildi. Gidiş (${letterData.flightOutbound || '?'}) ve dönüş (${letterData.flightInbound}) sefer numaralarının diğer belgelerle eşleştiğini doğrulayın.` });
+          }
+        }
+        // ── Tapu / Mülk ──
+        else if (n.includes('tapu') || n.includes('mulk') || n.includes('deed') || n.includes('property')) {
+          results.push({ file: file.name, ok: true, status: 'Tapu/Mülkiyet belgesi tespit edildi — güçlü bağ kanıtı. Noter onaylı suret ve fotokopi olarak ekleyin.' });
+        }
+        // ── Kimlik / TC ──
+        else if (n.includes('nufus') || n.includes('kimlik') || (n.includes('tc') && n.length < 15) || n.includes('national_id')) {
+          results.push({ file: file.name, ok: false, status: 'Kimlik kartı/Nüfus cüzdanı tespit edildi. Uyarı: Vize başvurularında TC kimlik yeterli değil — pasaport zorunludur.' });
+        }
+        // ── Tespit edilemeyen ──
+        else {
+          results.push({ file: file.name, ok: false, warn: true, status: `Belge türü tespit edilemedi. Dosya adını belirginleştirin (ör: "pasaport.pdf", "banka_ekstresi.pdf", "sgk_hizmet.pdf") ve yeniden yükleyin.` });
+        }
+      });
+
+      setOcrResults(results);
       setIsOcrScanning(false);
-      setOcrResults([
-        { file: 'pasaport.pdf', status: 'Pasaport Geçerli (2027) - OK' },
-        { file: 'banka_dokumu.pdf', status: 'Maaş, Kira ve 4 Abonelik Tespit Edildi - OK' },
-        { file: 'sgk_hizmet.pdf', status: '2 Yıl 1 Ay Kıdem Tespit Edildi - OK' }
-      ]);
+
+      // Profili tespit edilen doküman tiplerine göre güncelle
+      const detectedPassport = fileArr.some(f => { const n = f.name.toLowerCase(); return n.includes('pasaport') || n.includes('passport'); });
+      const detectedBank = fileArr.some(f => { const n = f.name.toLowerCase(); return n.includes('banka') || n.includes('ekstre') || n.includes('bank') || n.includes('hesap'); });
+      const detectedSgk = fileArr.some(f => { const n = f.name.toLowerCase(); return n.includes('sgk') || n.includes('hizmet') || n.includes('barkod'); });
+      const detectedProperty = fileArr.some(f => { const n = f.name.toLowerCase(); return n.includes('tapu') || n.includes('mulk'); });
+
       setProfile((prev: ProfileData) => ({
         ...prev,
-        hasValidPassport: true,
-        passportValidityLong: true,
-        bankRegularity: true,
-        hasSteadyIncome: true,
-        salaryDetected: true,
-        recurringExpensesDetected: true,
-        hasRegularSpending: true,
-        incomeSourceClear: true,
-        has6MonthStatements: false,
-        has28DayHolding: false,
-        lowSpendingActivity: false,
-        unusualLargeTransactions: false,
-        monthlyInflow: 65000,
-        monthlyOutflow: 42000,
-        transactionFrequency: 'high' as const,
-        recurringPaymentTypes: ['Maaş', 'Kira', 'Fatura', 'Netflix', 'Spor Salonu'],
-        hasSgkJob: true,
-        yearsInCurrentJob: 2,
-        hasBarcodeSgk: true,
-        documentConsistency: true,
-        tieCategories: {
-          employment: true,
-          property: false,
-          family: false,
-          community: false,
-          education: false,
-        }
+        ...(detectedPassport && { hasValidPassport: true }),
+        ...(detectedBank && { bankRegularity: true, hasSteadyIncome: true }),
+        ...(detectedSgk && { hasSgkJob: true, hasBarcodeSgk: true }),
+        ...(detectedProperty && { tieCategories: { ...prev.tieCategories, property: true } }),
       }));
-    }, 3000);
+    }, 2200);
   };
   const baseScoreWithoutUs = useMemo(() => {
     const tempProfile = { 
@@ -2132,6 +2187,235 @@ NOT: Tüm uçak rezervasyon onayları, otel voucher'ları ve seyahat sigortası 
 
 ${d.fullName}
 İmza: _______________     Tarih: ${today}`;
+  };
+
+  const buildLetterBodyEN = (type: 'cover' | 'sponsor' | 'employer' | 'itinerary'): string => {
+    const d = letterData;
+    const today = new Date().toLocaleDateString('en-GB');
+    const tripDays = d.startDate && d.endDate
+      ? Math.max(1, Math.round((new Date(d.endDate).getTime() - new Date(d.startDate).getTime()) / 86400000))
+      : '[NUMBER OF DAYS]';
+
+    if (type === 'cover') {
+      return `${d.address || '[Your Address]'}
+${today}
+
+Consulate of ${d.targetCountry}
+Visa Section
+
+Re: Application for Tourist Visa — ${d.fullName} (Passport No: ${d.passportNumber})
+
+Dear Consular Officer,
+
+I, ${d.fullName}, born on ${d.birthDate || '[Date of Birth]'}, a citizen of ${d.nationality || 'Turkey'}, respectfully submit this application for a tourist visa to ${d.targetCountry} for the period of ${d.startDate || '[Start Date]'} to ${d.endDate || '[End Date]'} (${tripDays} nights), for the purpose of ${d.purpose}.
+
+1. PERSONAL AND PROFESSIONAL BACKGROUND
+
+I am currently employed at ${d.companyEmployer || '[Company Name]'} as ${d.occupation || '[Position]'}. My monthly salary is ${d.monthlyIncome || '[Income]'} TRY, and my current savings amount to ${d.bankBalance || '[Bank Balance]'} TRY. Bank statements, payslips and employment documentation are enclosed with this application.
+
+2. PURPOSE AND PLANNED ACTIVITIES
+
+The purpose of this visit is entirely touristic and cultural. I intend to explore the historical landmarks, museums, and natural attractions of ${d.targetCountry}. During my stay, I will be accommodated at ${d.hotelName || '[Hotel Name]'} (Reservation No: ${d.hotelReservationNo || '[Res. No]'}). My outbound flight is ${d.flightOutbound || '[TK/PC XXXX]'}; my return flight is confirmed as ${d.flightInbound || '[TK/PC XXXX]'}.
+
+3. FINANCIAL CAPACITY
+
+All expenses during this trip — including accommodation, meals, local transportation and emergency healthcare — will be fully covered from my personal funds. My daily budget exceeds international standards. ${d.insuranceProvider ? `A travel health insurance policy issued by ${d.insuranceProvider} (Policy No: ${d.insurancePolicyNo || '-'}), with a minimum coverage of €30,000, is enclosed.` : 'Mandatory travel health insurance is enclosed with this application.'}
+
+4. TIES TO TURKEY AND COMMITMENT TO RETURN
+
+My established life in Turkey, professional career, and family obligations make it imperative that I return to Turkey. Due to ${d.tieDescription || 'my ongoing employment contract, property, and family responsibilities'}, I unconditionally commit to returning to Turkey before my visa expires. I hereby declare that this trip is strictly temporary and carries no intention of immigration or illegal employment.
+
+I kindly request that my application be viewed favourably. Should you require additional information or documentation, please contact me at ${d.phone || '[Phone]'} / ${d.email || '[Email]'}.
+
+Yours sincerely,
+
+${d.fullName}
+Passport No: ${d.passportNumber}
+Phone: ${d.phone || '_______________'}
+Email: ${d.email || '_______________'}
+Signature: _______________     Date: ${today}`;
+    }
+
+    if (type === 'sponsor') {
+      return `${d.sponsorAddress || '[Sponsor Address]'}
+${today}
+
+Consulate of ${d.targetCountry}
+Visa Section
+
+Re: Financial Sponsorship Declaration — ${d.fullName} (Passport No: ${d.passportNumber})
+
+Dear Consular Officer,
+
+I, ${d.sponsorFullName || '[Sponsor Full Name]'} (National ID: ${d.sponsorId || '[ID No]'}), hereby declare that I am the sole financial sponsor for the ${d.purpose} trip to ${d.targetCountry} of my ${d.sponsorRelation || '[Relationship: son/daughter/spouse]'}, ${d.fullName}, holder of passport No. ${d.passportNumber}, for the period ${d.startDate || '[Date]'} to ${d.endDate || '[Date]'}.
+
+1. SPONSOR IDENTITY AND FINANCIAL STATUS
+
+I am employed as ${d.sponsorOccupation || '[Occupation]'} with a monthly net income of ${d.sponsorIncome || '[Income]'} TRY. Bank statements, payslips and relevant income documents evidencing my financial capacity are enclosed herewith.
+
+2. SCOPE OF FINANCIAL COMMITMENT
+
+I undertake to cover all expenses of ${d.fullName} during the stated travel period, including:
+  - Return airfare
+  - ${d.hotelName || 'Hotel'} accommodation (${tripDays} nights)
+  - Daily living and meal expenses
+  - Local transportation
+  - Emergency medical costs
+  - Travel insurance premiums
+
+3. RETURN COMMITMENT
+
+I confirm that ${d.fullName} will comply fully with the conditions of the visa and will return to Turkey before the visa expiry date, no later than ${d.endDate || '[End Date]'}. I am fully aware of the applicant's obligation to reside in Turkey and declare that he/she will act accordingly.
+
+Yours faithfully,
+
+Sponsor: ${d.sponsorFullName || '_______________'}
+National ID: ${d.sponsorId || '_______________'}
+Phone: ${d.sponsorPhone || '_______________'}
+Signature: _______________     Date: ${today}`;
+    }
+
+    if (type === 'employer') {
+      return `[TO BE PRINTED ON COMPANY LETTERHEAD]
+${d.companyName || '[Company Name]'}
+${d.companyAddress || '[Company Address]'}
+Tel: ${d.companyPhone || '[Phone]'}
+
+${today}
+
+Consulate of ${d.targetCountry}
+Visa Section
+
+Re: Employment Verification, Paid Leave Approval and Return-to-Work Guarantee — ${d.fullName}
+
+Dear Consular Officer,
+
+This letter, issued on behalf of ${d.companyName || '[Company Name]'}, serves to officially verify the employment status of our employee ${d.fullName}, holder of passport No. ${d.passportNumber}.
+
+1. EMPLOYMENT DETAILS
+
+${d.fullName} has been employed with our company on a full-time, permanent basis as "${d.occupation || '[Position]'}" since ${d.jobStartDate || '[Start Date]'}. The employee's monthly net salary is ${d.monthlyIncome || '[Salary]'} TRY, paid directly into a bank account.
+
+2. APPROVED LEAVE OF ABSENCE
+
+${d.fullName} has requested annual paid leave to travel to ${d.targetCountry} for a tourist visit from ${d.startDate || '[Date]'} to ${d.endDate || '[Date]'}. This leave request has been formally approved by our Human Resources Department.
+
+3. RETURN-TO-WORK GUARANTEE
+
+We confirm that ${d.fullName} will return to his/her current position at our company no later than ${d.returnDate || '[Return Date]'}, under the same conditions and remuneration. The continuity of this employee's contract is guaranteed by this company.
+
+We kindly request that this visa application be approved, and we remain available for any verification or additional documentation requests.
+
+Yours sincerely,
+
+${d.authorizedName || '[Authorised Signatory]'}
+${d.authorizedTitle || 'Human Resources Manager'}
+${d.companyName || '[Company Name]'}
+Tel: ${d.companyPhone || '_______________'}
+Company Stamp & Signature: _______________
+Date: ${today}`;
+    }
+
+    // itinerary EN
+    const plan = d.dailyPlan
+      ? d.dailyPlan
+      : `Day 1 (${d.startDate || '[Date]'}): Arrival in ${d.targetCountry || '[Country]'}, airport transfer, hotel check-in. Rest and local area exploration.
+Day 2: City centre tour — historical landmarks, museums, monuments.
+Day 3: Cultural activities, local cuisine experience, local market visit.
+Day 4: Day trip to nearby natural or cultural attractions.
+Day 5 (${d.endDate || '[Date]'}): Hotel check-out, shopping, airport transfer, return to Turkey.`;
+
+    return `DETAILED TRAVEL ITINERARY
+${today}
+
+APPLICANT DETAILS
+Full Name         : ${d.fullName}
+Passport No       : ${d.passportNumber}
+Date of Birth     : ${d.birthDate || '[Date of Birth]'}
+Nationality       : ${d.nationality || 'Turkish'}
+Phone             : ${d.phone || '_______________'}
+Email             : ${d.email || '_______________'}
+
+TRAVEL OVERVIEW
+Destination       : ${d.targetCountry}
+Entry Date        : ${d.startDate || '[Entry Date]'}
+Exit Date         : ${d.endDate || '[Exit Date]'}
+Duration of Stay  : ${tripDays} nights
+Purpose of Visit  : ${d.purpose}
+
+TRANSPORTATION
+Outbound Flight   : ${d.flightOutbound || '[Flight No: TK/PC XXXX] — Istanbul → [Destination]'}
+Return Flight     : ${d.flightInbound || '[Flight No: TK/PC XXXX] — [Departure] → Istanbul'}
+
+ACCOMMODATION
+Hotel Name        : ${d.hotelName || '[Hotel Name]'}
+Hotel Address     : ${d.hotelAddress || '[Full Hotel Address]'}
+Reservation No    : ${d.hotelReservationNo || '[Reservation Number]'}
+
+INSURANCE (Schengen: min. €30,000 mandatory)
+Insurance Company : ${d.insuranceProvider || '[Insurance Company]'}
+Policy No         : ${d.insurancePolicyNo || '[Policy No]'}
+
+DAILY PROGRAMME
+${plan}
+
+BUDGET PLAN
+Estimated daily expenditure : ~€120-150
+Estimated total cost        : ~€${typeof tripDays === 'number' ? (tripDays * 135).toLocaleString('en-GB') : 'XXX'} (including €30,000 health insurance)
+Source of funds             : Personal bank savings
+
+NOTE: All flight confirmation documents, hotel vouchers and travel insurance policies are appended to this itinerary. All reservations are confirmed/ticketed.
+
+${d.fullName}
+Signature: _______________     Date: ${today}`;
+  };
+
+  const generatePDFEN = (type: 'cover' | 'sponsor' | 'employer' | 'itinerary' = 'cover') => {
+    const doc = new jsPDF();
+    const today = new Date().toLocaleDateString('en-GB');
+    const titles: Record<string, string> = {
+      cover: 'Cover Letter (Visa Application)',
+      sponsor: 'Financial Sponsorship Declaration',
+      employer: 'Employment & Leave Verification Letter',
+      itinerary: 'Detailed Travel Itinerary',
+    };
+
+    // Header band
+    doc.setFillColor(30, 58, 138);
+    doc.rect(0, 0, 220, 22, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.text('VizeAkil.com — Smart Document Generator 2.0 (EN)', 14, 10);
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Generated: ${today}`, 14, 17);
+
+    // Title
+    doc.setTextColor(30, 41, 59);
+    doc.setFontSize(13);
+    doc.setFont('helvetica', 'bold');
+    doc.text(titles[type], 14, 30);
+    doc.setDrawColor(229, 231, 235);
+    doc.line(14, 33, 196, 33);
+
+    // Body
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9.5);
+    doc.setTextColor(51, 65, 85);
+    const body = buildLetterBodyEN(type);
+    const splitText = doc.splitTextToSize(body, 180);
+    doc.text(splitText, 14, 40);
+
+    // Footer
+    const pageHeight = doc.internal.pageSize.height;
+    doc.setFillColor(248, 250, 252);
+    doc.rect(0, pageHeight - 12, 220, 12, 'F');
+    doc.setFontSize(6.5);
+    doc.setTextColor(148, 163, 184);
+    doc.text('This document was generated by VizeAkil.com Smart Document Generator 2.0. It does not constitute official legal advice or visa guarantee.', 14, pageHeight - 4);
+
+    doc.save(`VizeAkil_EN_${titles[type].replace(/\s+/g, '_')}_${(letterData.fullName || 'Document').replace(/\s+/g, '_')}.pdf`);
   };
 
   const generatePDF = (type: 'cover' | 'sponsor' | 'employer' | 'itinerary' = 'cover') => {
@@ -4419,18 +4703,39 @@ ${d.fullName}
                       </div>
 
                       {ocrResults.length > 0 && (
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                          {ocrResults.map((res, i) => (
-                            <div key={`ocr-res-${i}`} className="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex items-center gap-3">
-                              <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center text-emerald-600 shrink-0">
-                                <CheckCircle2 className="w-4 h-4" />
+                        <div className="space-y-3">
+                          {/* Özet banner */}
+                          <div className={`p-3 rounded-xl text-xs font-bold flex items-center gap-2 ${
+                            ocrResults.every(r => r.ok) ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' :
+                            ocrResults.some(r => !r.ok && !r.warn) ? 'bg-rose-50 text-rose-800 border border-rose-200' :
+                            'bg-amber-50 text-amber-800 border border-amber-200'
+                          }`}>
+                            {ocrResults.every(r => r.ok) ? <CheckCircle2 className="w-4 h-4 shrink-0"/> : ocrResults.some(r => !r.ok && !r.warn) ? <XCircle className="w-4 h-4 shrink-0"/> : <AlertTriangle className="w-4 h-4 shrink-0"/>}
+                            {ocrResults.filter(r => r.ok).length}/{ocrResults.length} belge geçerli —{' '}
+                            {ocrResults.filter(r => !r.ok && !r.warn).length > 0 && `${ocrResults.filter(r => !r.ok && !r.warn).length} kritik sorun, `}
+                            {ocrResults.filter(r => r.warn).length > 0 && `${ocrResults.filter(r => r.warn).length} uyarı`}
+                          </div>
+                          <div className="grid grid-cols-1 gap-3">
+                            {ocrResults.map((res, i) => (
+                              <div key={`ocr-res-${i}`} className={`p-4 rounded-2xl border flex items-start gap-3 ${
+                                res.ok ? 'bg-emerald-50 border-emerald-200' :
+                                res.warn ? 'bg-amber-50 border-amber-200' :
+                                'bg-rose-50 border-rose-200'
+                              }`}>
+                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                                  res.ok ? 'bg-emerald-100 text-emerald-600' :
+                                  res.warn ? 'bg-amber-100 text-amber-600' :
+                                  'bg-rose-100 text-rose-600'
+                                }`}>
+                                  {res.ok ? <CheckCircle2 className="w-4 h-4"/> : res.warn ? <AlertTriangle className="w-4 h-4"/> : <XCircle className="w-4 h-4"/>}
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <p className="text-xs font-black text-slate-900 mb-0.5 truncate">{res.file}</p>
+                                  <p className={`text-[11px] leading-relaxed ${res.ok ? 'text-emerald-800' : res.warn ? 'text-amber-800' : 'text-rose-800'}`}>{res.status}</p>
+                                </div>
                               </div>
-                              <div className="min-w-0">
-                                <p className="text-xs font-bold text-slate-900 truncate">{res.file}</p>
-                                <p className="text-[10px] text-slate-500 uppercase font-bold">{res.status}</p>
-                              </div>
-                            </div>
-                          ))}
+                            ))}
+                          </div>
                         </div>
                       )}
                     </div>
@@ -5116,23 +5421,39 @@ ${d.fullName}
                     </div>
                   </div>
 
-                  {/* İndir butonu */}
-                  <button type="button"
-                    onClick={() => generatePDF(activeLetterType)}
-                    className="w-full py-4 bg-gradient-to-r from-brand-600 to-indigo-600 text-white rounded-2xl font-black text-base flex items-center justify-center gap-3 hover:opacity-90 transition-opacity shadow-xl shadow-brand-500/30">
-                    <Download className="w-5 h-5" />
-                    PDF Olarak İndir
-                  </button>
+                  {/* İndir butonları — TR + EN */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <button type="button"
+                      onClick={() => generatePDF(activeLetterType)}
+                      className="py-3.5 bg-gradient-to-r from-brand-600 to-indigo-600 text-white rounded-2xl font-black text-sm flex items-center justify-center gap-2 hover:opacity-90 transition-opacity shadow-lg shadow-brand-500/30">
+                      <Download className="w-4 h-4" />
+                      🇹🇷 Türkçe PDF
+                    </button>
+                    <button type="button"
+                      onClick={() => generatePDFEN(activeLetterType)}
+                      className="py-3.5 bg-gradient-to-r from-slate-700 to-slate-900 text-white rounded-2xl font-black text-sm flex items-center justify-center gap-2 hover:opacity-90 transition-opacity shadow-lg">
+                      <Download className="w-4 h-4" />
+                      🇬🇧 English PDF
+                    </button>
+                  </div>
 
-                  {/* 4 belgeyi birden indir */}
-                  <div className="grid grid-cols-2 gap-2">
-                    {(['cover', 'sponsor', 'employer', 'itinerary'] as const).map(t => (
-                      <button key={t} type="button" onClick={() => generatePDF(t)}
-                        className="py-2.5 bg-white border border-slate-100 hover:bg-slate-50 rounded-xl text-xs font-bold text-slate-600 flex items-center justify-center gap-1.5 transition-colors">
-                        <Download className="w-3.5 h-3.5" />
-                        {t === 'cover' ? 'Niyet' : t === 'sponsor' ? 'Sponsor' : t === 'employer' ? 'İşveren' : 'Seyahat Planı'}
-                      </button>
-                    ))}
+                  {/* 4 belgeyi birden indir — TR + EN */}
+                  <div className="space-y-2">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">Tüm Belgeler</p>
+                    <div className="grid grid-cols-2 gap-1.5">
+                      {(['cover', 'sponsor', 'employer', 'itinerary'] as const).map(t => (
+                        <button key={`tr-${t}`} type="button" onClick={() => generatePDF(t)}
+                          className="py-2 bg-white border border-slate-100 hover:bg-slate-50 rounded-xl text-[10px] font-bold text-slate-600 flex items-center justify-center gap-1 transition-colors">
+                          🇹🇷 {t === 'cover' ? 'Niyet' : t === 'sponsor' ? 'Sponsor' : t === 'employer' ? 'İşveren' : 'Seyahat Planı'}
+                        </button>
+                      ))}
+                      {(['cover', 'sponsor', 'employer', 'itinerary'] as const).map(t => (
+                        <button key={`en-${t}`} type="button" onClick={() => generatePDFEN(t)}
+                          className="py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-[10px] font-bold flex items-center justify-center gap-1 transition-colors">
+                          🇬🇧 {t === 'cover' ? 'Cover' : t === 'sponsor' ? 'Sponsor' : t === 'employer' ? 'Employer' : 'Itinerary'}
+                        </button>
+                      ))}
+                    </div>
                   </div>
 
                   {/* Bilgi kutusu */}
