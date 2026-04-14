@@ -22,6 +22,11 @@ createRoot(document.getElementById('root')!).render(
       <Suspense fallback={<LoadingSpinner />}>
         <Routes>
           <Route path="/"                    element={<App />} />
+          <Route path="/basla"               element={<App />} />
+          <Route path="/sonuc"               element={<App />} />
+          <Route path="/panel"               element={<App />} />
+          <Route path="/mektup"              element={<App />} />
+          <Route path="/taktikler"           element={<App />} />
           <Route path="/kvkk"                element={<KVKK />} />
           <Route path="/gizlilik-politikasi" element={<Gizlilik />} />
           <Route path="/iletisim"            element={<Iletisim />} />

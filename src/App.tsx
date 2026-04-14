@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   CheckCircle2,
   Circle,
@@ -54,6 +54,7 @@ import {
   Bell
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { jsPDF } from 'jspdf';
 import Footer from './components/Footer';
 
@@ -978,7 +979,39 @@ const defaultCommunityEntries: CommunityEntry[] = [
 const PREMIUM_TOOLS = ['copilot', 'comparator', 'refusal', 'aibank', 'socialmedia', 'redflag', 'interview', 'multicountry'];
 
 export default function App() {
-  const [step, setStep] = useState<'hero' | 'onboarding' | 'assessment' | 'dashboard' | 'letter' | 'tactics'>('hero');
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // URL → step eşleştirmesi
+  const urlToStep = (path: string): 'hero' | 'onboarding' | 'assessment' | 'dashboard' | 'letter' | 'tactics' => {
+    if (path.startsWith('/basla')) return 'onboarding';
+    if (path.startsWith('/sonuc')) return 'assessment';
+    if (path.startsWith('/panel')) return 'dashboard';
+    if (path.startsWith('/mektup')) return 'letter';
+    if (path.startsWith('/taktikler')) return 'tactics';
+    return 'hero';
+  };
+
+  const [step, setStepRaw] = useState<'hero' | 'onboarding' | 'assessment' | 'dashboard' | 'letter' | 'tactics'>(
+    () => urlToStep(window.location.pathname)
+  );
+
+  // step değişimi + URL senkronizasyonu
+  const setStep = (s: 'hero' | 'onboarding' | 'assessment' | 'dashboard' | 'letter' | 'tactics') => {
+    setStepRaw(s);
+    const paths: Record<string, string> = {
+      hero: '/', onboarding: '/basla', assessment: '/sonuc',
+      dashboard: '/panel', letter: '/mektup', tactics: '/taktikler',
+    };
+    const target = paths[s] ?? '/';
+    if (window.location.pathname !== target) navigate(target);
+  };
+
+  // Tarayıcı geri/ileri tuşu desteği
+  useEffect(() => {
+    setStepRaw(urlToStep(location.pathname));
+  }, [location.pathname]);
+
   // TODO: Ödeme sistemi hazır olduğunda false yap ve iyzico JWT ile kontrol et
   const [isPremium, setIsPremium] = useState(true);
   const [isUpgradeOpen, setIsUpgradeOpen] = useState(false);
@@ -4683,7 +4716,7 @@ Signature: _______________     Date: ${today}`;
           )}
         </AnimatePresence>
 
-        {/* Visa Copilot Sidebar */}
+        {/* Vize Danışmanım Sidebar */}
         <AnimatePresence>
           {isCopilotOpen && (
             <div className="fixed inset-0 z-[200] flex justify-end">
@@ -4706,7 +4739,7 @@ Signature: _______________     Date: ${today}`;
                       <Brain className="w-6 h-6" />
                     </div>
                     <div>
-                      <h3 className="font-bold text-xl">Visa Copilot</h3>
+                      <h3 className="font-bold text-xl">Vize Danışmanım</h3>
                       <p className="text-xs text-blue-100 italic">Yapay Zeka Strateji Ortağınız</p>
                     </div>
                   </div>
@@ -4793,127 +4826,76 @@ Signature: _______________     Date: ${today}`;
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="text-center space-y-10 py-8 lg:py-16"
+              className="text-center space-y-10 py-12 lg:py-20"
             >
-              <div className="space-y-6 max-w-4xl mx-auto px-2">
-                {/* Trust badge */}
+              {/* Hero content */}
+              <div className="space-y-6 max-w-3xl mx-auto px-4">
                 <motion.div
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.2 }}
+                  transition={{ delay: 0.15 }}
                   className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-700 rounded-full text-xs font-bold tracking-widest uppercase border border-emerald-100"
                 >
                   <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
                   2026 Güncel Konsolosluk Verileri ile Analiz
                 </motion.div>
-                <h1 className="text-4xl sm:text-5xl md:text-7xl font-black tracking-tight text-slate-900 leading-tight">
-                  Vize memurundan önce{' '}
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-600 to-indigo-600 block sm:inline">başvurunuzu siz denetleyin</span>
+
+                <h1 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight text-slate-900 leading-tight">
+                  Vize başvurusunda{' '}
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-600 to-indigo-600">
+                    neyi yanlış yaptığınızı öğrenin
+                  </span>
                 </h1>
-                <p className="text-base md:text-xl text-slate-500 max-w-2xl mx-auto leading-relaxed font-medium">
-                  Banka dökümünüzü, sosyal medyanızı ve ret mektubunuzu analiz eden tek AI asistanı. <strong className="text-slate-700">2 dakikada profil riskinizi öğrenin.</strong>
+
+                <p className="text-lg text-slate-500 max-w-xl mx-auto leading-relaxed">
+                  Banka dökümünüzü, sosyal medyanızı ve belgelerinizi analiz eden AI sistemi.{' '}
+                  <strong className="text-slate-700">5 dakikada profil riskinizi görün.</strong>
                 </p>
-                {/* Social proof row — horizontal scroll on mobile */}
-                <div className="flex gap-3 overflow-x-auto pb-1 justify-start sm:justify-center scrollbar-hide -mx-4 px-4">
-                  {[
-                    { avatar: '👨‍💼', name: 'Mehmet K.', text: 'Almanya vizesi aldım!' },
-                    { avatar: '👩‍🎓', name: 'Nilay İ.', text: 'Ret sonrası tekrar başvurdum.' },
-                    { avatar: '🧑‍💻', name: 'Arda T.', text: 'UK vizesi için mükemmel.' },
-                  ].map(({ avatar, name, text }) => (
-                    <div key={name} className="flex items-center gap-2 bg-white border border-slate-100 rounded-full px-3 py-2 shadow-sm shrink-0">
-                      <span className="text-lg">{avatar}</span>
-                      <div className="text-left">
-                        <div className="text-xs font-bold text-slate-900 whitespace-nowrap">{name}</div>
-                        <div className="text-[10px] text-slate-400 whitespace-nowrap">{text}</div>
-                      </div>
-                      <div className="text-amber-400 text-[10px] ml-1">★★★★★</div>
-                    </div>
-                  ))}
-                </div>
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-3 justify-center px-4">
+              {/* 3 büyük aksiyon butonu */}
+              <div className="flex flex-col sm:flex-row gap-4 justify-center px-4 max-w-2xl mx-auto">
                 <button
                   type="button"
                   onClick={() => { setOnboardingStep(0); setStep('onboarding'); }}
-                  className="btn-primary text-base sm:text-lg px-8 py-4 sm:py-5 flex items-center justify-center gap-3 group"
+                  className="flex-1 btn-primary text-base sm:text-lg px-6 py-4 sm:py-5 flex items-center justify-center gap-3 group min-h-[56px]"
+                  aria-label="Ücretsiz analiz başlat"
                 >
-                  Ücretsiz Analiz Başlat
-                  <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  Ücretsiz Analizi Başlat
+                  <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" aria-hidden="true" />
                 </button>
-                <button type="button"
+                <button
+                  type="button"
+                  onClick={() => { setStep('dashboard'); }}
+                  className="flex-1 btn-secondary text-base sm:text-lg px-6 py-4 sm:py-5 flex items-center justify-center gap-2 min-h-[56px]"
+                  aria-label="Araçları doğrudan aç"
+                >
+                  <Zap className="w-4 h-4" aria-hidden="true" />
+                  Araçlara Git
+                </button>
+                <button
+                  type="button"
                   onClick={() => setIsUpgradeOpen(true)}
-                  className="btn-secondary text-base sm:text-lg px-8 py-4 sm:py-5 flex items-center justify-center gap-2"
+                  className="flex-1 text-base sm:text-lg px-6 py-4 sm:py-5 flex items-center justify-center gap-2 min-h-[56px] bg-amber-50 text-amber-700 border border-amber-200 rounded-2xl font-bold hover:bg-amber-100 transition-colors"
+                  aria-label="Premium planları incele"
                 >
-                  🔒 Premium Planlar
+                  Premium Planlar
                 </button>
               </div>
 
-              {/* Stats bar */}
-              <div className="flex flex-wrap justify-center gap-6 sm:gap-8 px-4">
-                {[
-                  { value: '%93', label: 'Ortalama Onay Oranı' },
-                  { value: '14', label: 'Analiz Aracı' },
-                  { value: '2026', label: 'Güncel Konsolosluk Verisi' },
-                  { value: 'AI', label: 'Yapay Zeka Destekli' },
-                ].map(s => (
-                  <div key={s.label} className="text-center">
-                    <div className="text-3xl font-black text-brand-600">{s.value}</div>
-                    <div className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-0.5">{s.label}</div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-8">
-                {[
-                  { icon: TrendingUp, title: "Akıllı Analiz", desc: "25+ kriter üzerinden vize memuru gözüyle profilinizi puanlıyoruz.", color: "brand" },
-                  { icon: FileText, title: "Evrak Optimizasyonu", desc: "Tüm belgeleriniz arasındaki tutarsızlıkları yapay zeka ile denetliyoruz.", color: "indigo" },
-                  { icon: PenTool, title: "İkna Edici Mektup", desc: "Konsolosluk standartlarında, kişiselleştirilmiş niyet mektubu oluşturuyoruz.", color: "violet" }
-                ].map((item, i) => (
-                  <div key={`hero-feature-${i}`} className="group p-8 bg-white rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-brand-500/5 transition-all text-left space-y-4 relative overflow-hidden">
-                    <div className={`w-12 h-12 bg-${item.color === 'brand' ? 'brand' : item.color}-50 rounded-xl flex items-center justify-center text-${item.color === 'brand' ? 'brand' : item.color}-600 group-hover:scale-110 transition-transform`}>
-                      <item.icon className="w-6 h-6" />
-                    </div>
-                    <h3 className="font-bold text-lg text-slate-900">{item.title}</h3>
-                    <p className="text-slate-500 text-sm leading-relaxed font-medium">{item.desc}</p>
-                    <div className={`absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-${item.color === 'brand' ? 'brand-500' : item.color + '-500'} to-transparent opacity-0 group-hover:opacity-100 transition-opacity`} />
-                  </div>
-                ))}
-              </div>
-
-              {/* Tools showcase strip — clickable */}
-              <div className="bg-white border border-slate-100 rounded-[2rem] p-6 shadow-sm">
-                <div className="flex items-center justify-between mb-5">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">14 Uzman Aracı — Tıklayarak Kullan</p>
-                  <span className="text-[10px] bg-amber-50 text-amber-600 border border-amber-100 font-black px-2 py-1 rounded-lg uppercase tracking-widest">5 Premium</span>
+              {/* Minimal güven göstergesi */}
+              <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-10 px-4 text-slate-400">
+                <div className="flex items-center gap-2 text-sm">
+                  <ShieldCheck className="w-4 h-4 text-emerald-500" aria-hidden="true" />
+                  <span>Kişisel veri saklanmaz</span>
                 </div>
-                <div className="flex flex-wrap justify-center gap-3">
-                  {[
-                    { icon: FileCheck, label: 'Evrak Listesi', color: 'emerald', id: 'docs', setter: setIsDocumentListOpen },
-                    { icon: MessageSquare, label: 'Visa Copilot', color: 'blue', id: 'copilot', setter: setIsCopilotOpen },
-                    { icon: Zap, label: 'Senaryo', color: 'slate', id: 'calculator', setter: setIsCalculatorOpen },
-                    { icon: Globe, label: 'Ülke Kıyasla', color: 'indigo', id: 'comparator', setter: setIsSchengenComparatorOpen },
-                    { icon: ShieldCheck, label: 'Sosyal Medya', color: 'violet', id: 'socialmedia', setter: setIsSocialMediaOpen },
-                    { icon: AlertTriangle, label: 'Ret Analizi', color: 'rose', id: 'refusal', setter: setIsRefusalOpen },
-                    { icon: Calendar, label: 'Randevu', color: 'teal', id: 'appointment', setter: setIsAppointmentOpen },
-                    { icon: CheckCircle2, label: 'Belge Matrisi', color: 'slate', id: 'consistency', setter: setIsConsistencyOpen },
-                    { icon: Plane, label: 'Vizesiz Ülkeler', color: 'emerald', id: 'visafree', setter: setIsVisaFreeOpen },
-                    { icon: Sparkles, label: 'AI Banka', color: 'blue', id: 'aibank', setter: setIsAiBankOpen },
-                    { icon: XCircle, label: 'Risk Tarayıcı', color: 'red', id: 'redflag', setter: setIsRedFlagOpen },
-                    { icon: Brain, label: 'Mülakat Sim.', color: 'amber', id: 'interview', setter: setIsInterviewSimOpen },
-                    { icon: Map, label: 'Çoklu Ülke', color: 'cyan', id: 'multicountry', setter: setIsMultiCountryOpen },
-                    { icon: Star, label: 'Topluluk', color: 'orange', id: 'community', setter: setIsCommunityOpen },
-                  ].map(({ icon: Icon, label, color, id, setter }) => {
-                    const locked = PREMIUM_TOOLS.includes(id) && !isPremium;
-                    return (
-                      <button key={label} onClick={() => openTool(id, setter)}
-                        className={`relative flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold border transition-all hover:scale-105 hover:shadow-md ${locked ? 'bg-slate-50 text-slate-400 border-slate-100' : `bg-${color}-50 text-${color}-700 border-${color}-100`}`}>
-                        <Icon className="w-3.5 h-3.5" />
-                        {label}
-                        {locked && <span className="ml-1 text-amber-500">🔒</span>}
-                      </button>
-                    );
-                  })}
+                <div className="flex items-center gap-2 text-sm">
+                  <FileCheck className="w-4 h-4 text-brand-500" aria-hidden="true" />
+                  <span>14 analiz aracı</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <Globe className="w-4 h-4 text-indigo-500" aria-hidden="true" />
+                  <span>2026 konsolosluk verisi</span>
                 </div>
               </div>
             </motion.div>
@@ -5358,7 +5340,7 @@ Signature: _______________     Date: ${today}`;
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
                     {[
                       { label: 'Evrak Listesi', icon: FileCheck, color: 'bg-emerald-500', id: 'docs', setter: setIsDocumentListOpen },
-                      { label: 'Visa Copilot', icon: MessageSquare, color: 'bg-blue-500', id: 'copilot', setter: setIsCopilotOpen },
+                      { label: 'Vize Danışmanım', icon: MessageSquare, color: 'bg-blue-500', id: 'copilot', setter: setIsCopilotOpen },
                       { label: 'Senaryo', icon: Zap, color: 'bg-slate-900', id: 'calculator', setter: setIsCalculatorOpen },
                       { label: 'Ülke Kıyasla', icon: Globe, color: 'bg-indigo-500', id: 'comparator', setter: setIsSchengenComparatorOpen },
                       { label: 'Sosyal Medya', icon: ShieldCheck, color: 'bg-violet-500', id: 'socialmedia', setter: setIsSocialMediaOpen },
@@ -5366,9 +5348,9 @@ Signature: _______________     Date: ${today}`;
                       { label: 'Randevu', icon: Calendar, color: 'bg-teal-500', id: 'appointment', setter: setIsAppointmentOpen },
                       { label: 'Belge Matrisi', icon: CheckCircle2, color: 'bg-slate-600', id: 'consistency', setter: setIsConsistencyOpen },
                       { label: 'Vizesiz Ülkeler', icon: Plane, color: 'bg-emerald-600', id: 'visafree', setter: setIsVisaFreeOpen },
-                      { label: 'AI Banka', icon: Sparkles, color: 'bg-blue-700', id: 'aibank', setter: setIsAiBankOpen },
+                      { label: 'Banka Analizi', icon: Sparkles, color: 'bg-blue-700', id: 'aibank', setter: setIsAiBankOpen },
                       { label: 'Risk Tarayıcı', icon: XCircle, color: 'bg-red-600', id: 'redflag', setter: setIsRedFlagOpen },
-                      { label: 'Mülakat Sim.', icon: Brain, color: 'bg-amber-500', id: 'interview', setter: setIsInterviewSimOpen },
+                      { label: 'Mülakat Pratiği', icon: Brain, color: 'bg-amber-500', id: 'interview', setter: setIsInterviewSimOpen },
                       { label: 'Çoklu Ülke', icon: Map, color: 'bg-cyan-600', id: 'multicountry', setter: setIsMultiCountryOpen },
                       { label: 'Topluluk', icon: Star, color: 'bg-slate-700', id: 'community', setter: setIsCommunityOpen },
                     ].map(({ label, icon: Icon, color, id, setter }) => {
@@ -6551,7 +6533,7 @@ Signature: _______________     Date: ${today}`;
                   },
                   {
                     q: 'Ücretsiz araçlar neler? Premium ne kazandırıyor?',
-                    a: 'Evrak Listesi, Senaryo Oluşturucu, Randevu Takvim, Belge Tutarlılık Matrisi ve Vizesiz Ülkeler araçları tamamen ücretsizdir. Premium ile Visa Copilot (yapay zeka danışman), Ret Mektubu Analizi, Ülke Kıyaslayıcısı, AI Banka Dökümü Analizi, Kırmızı Bayrak Tarayıcı ve Sosyal Medya Rehberi açılır.'
+                    a: 'Evrak Listesi, Senaryo Oluşturucu, Randevu Takvim, Belge Tutarlılık Matrisi ve Vizesiz Ülkeler araçları tamamen ücretsizdir. Premium ile Vize Danışmanım (yapay zeka danışman), Ret Mektubu Analizi, Ülke Kıyaslayıcısı, AI Banka Dökümü Analizi, Kırmızı Bayrak Tarayıcı ve Sosyal Medya Rehberi açılır.'
                   },
                   {
                     q: 'Daha önce vize reddettim. Tekrar başvurabilir miyim?',
@@ -6640,7 +6622,7 @@ Signature: _______________     Date: ${today}`;
                       '"Kırmızı Bayrak Tarayıcı" ile dosyanızdaki mantıksal çelişkileri kontrol edin.',
                       '"Niyet Mektubu" bölümünden 🇹🇷 Türkçe veya 🇬🇧 İngilizce PDF indirin.',
                       'Skorunuz %82\'nin üstüne çıktığında başvuru için güçlü bir profil demektir.',
-                      'Premium "Visa Copilot" ile yapay zekaya son sorularınızı sorun.',
+                      'Premium "Vize Danışmanım" ile yapay zekaya son sorularınızı sorun.',
                     ]
                   },
                 ].map(({ step, title, color, items }) => (
@@ -7485,6 +7467,20 @@ Signature: _______________     Date: ${today}`;
       </AnimatePresence>
 
       <Footer />
+
+      {/* WhatsApp Destek Butonu — sabit, sağ alt */}
+      <a
+        href="https://wa.me/905000000000?text=Merhaba%2C%20vize%20ba%C5%9Fvurusu%20hakk%C4%B1nda%20yard%C4%B1m%20almak%20istiyorum."
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="WhatsApp ile destek al"
+        className="fixed bottom-6 right-6 z-50 w-14 h-14 bg-[#25D366] text-white rounded-full flex items-center justify-center shadow-lg hover:scale-110 hover:shadow-xl transition-all focus:outline-none focus:ring-4 focus:ring-[#25D366]/40"
+      >
+        {/* WhatsApp SVG icon */}
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-7 h-7" aria-hidden="true">
+          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+        </svg>
+      </a>
     </div>
     </>
   );
