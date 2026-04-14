@@ -4496,59 +4496,68 @@ Signature: _______________     Date: ${today}`;
               <motion.div
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                 onClick={() => setIsSocialMediaOpen(false)}
-                className="absolute inset-0 bg-slate-950/50 backdrop-blur-md"
+                className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
               />
               <motion.div
-                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                initial={{ opacity: 0, scale: 0.96, y: 16 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                className="relative w-full max-w-3xl bg-white rounded-[2.5rem] shadow-2xl border border-slate-200 flex flex-col max-h-[92vh] overflow-hidden"
+                exit={{ opacity: 0, scale: 0.96, y: 16 }}
+                className="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden"
               >
-                {/* Header */}
-                <div className="p-8 border-b border-slate-100 bg-gradient-to-r from-violet-600 to-purple-700 text-white shrink-0 rounded-t-[2.5rem]">
-                  <div className="flex justify-between items-start">
+                {/* Header — sade, beyaz */}
+                <div className="px-6 pt-6 pb-4 border-b border-slate-100 shrink-0">
+                  <div className="flex items-start justify-between gap-4">
                     <div>
-                      <div className="flex items-center gap-2 text-violet-200 text-xs font-bold uppercase tracking-widest mb-2">
-                        <ShieldCheck className="w-4 h-4" /> 2025 Konsolosluk Tarama Kriterleri
+                      <div className="flex items-center gap-2 mb-1">
+                        <ShieldCheck className="w-5 h-5 text-violet-600" />
+                        <h3 className="text-lg font-black text-slate-900">Sosyal Medya Denetim Rehberi</h3>
                       </div>
-                      <h3 className="text-2xl font-black">Sosyal Medya Denetim Rehberi</h3>
-                      <p className="text-violet-100 text-sm mt-1">
-                        Başvurunuzdan önce sosyal medyanızı "vize-safe" hale getirin.
+                      <p className="text-sm text-slate-500">
+                        Her maddeyi yapınca işaretleyin — güvenlik skoru otomatik yükselir.
                       </p>
                     </div>
-                    <button onClick={() => setIsSocialMediaOpen(false)}
-                      className="p-2 hover:bg-white/10 rounded-full transition-colors">
-                      <X className="w-6 h-6" />
+                    <button
+                      onClick={() => setIsSocialMediaOpen(false)}
+                      aria-label="Kapat"
+                      className="p-2 rounded-xl hover:bg-slate-100 transition-colors shrink-0"
+                    >
+                      <X className="w-5 h-5 text-slate-500" />
                     </button>
                   </div>
-                  {/* Risk Skoru + İlerleme */}
+
+                  {/* Skor bar — doğru yönde (tamamladıkça yükselir) */}
                   {(() => {
-                    const total = socialMediaChecklist.length;
-                    const checked = Object.values(socialMediaChecked).filter(Boolean).length;
-                    const pct = Math.round((checked / total) * 100);
-                    const riskItems = socialMediaChecklist.filter(i => i.category === 'risk');
-                    const riskChecked = riskItems.filter(i => socialMediaChecked[i.id]).length;
-                    const riskScore = Math.max(0, 100 - (riskChecked * 25));
-                    const riskLabel = riskScore >= 75 ? 'Düşük Risk' : riskScore >= 50 ? 'Orta Risk' : 'Yüksek Risk';
-                    const riskColor = riskScore >= 75 ? 'text-emerald-300' : riskScore >= 50 ? 'text-amber-300' : 'text-rose-300';
+                    const riskItems  = socialMediaChecklist.filter(i => i.category === 'risk');
+                    const riskDone   = riskItems.filter(i => socialMediaChecked[i.id]).length;
+                    const actionItems = socialMediaChecklist.filter(i => i.category === 'action');
+                    const actionDone  = actionItems.filter(i => socialMediaChecked[i.id]).length;
+                    const posItems   = socialMediaChecklist.filter(i => i.category === 'positive');
+                    const posDone    = posItems.filter(i => socialMediaChecked[i.id]).length;
+                    // Skor: risk %50 ağırlık, action %30, positive %20
+                    const score = Math.round(
+                      (riskDone / riskItems.length) * 50 +
+                      (actionDone / actionItems.length) * 30 +
+                      (posDone / posItems.length) * 20
+                    );
+                    const label = score >= 80 ? 'Hazır' : score >= 50 ? 'İlerliyor' : 'Başlanmadı';
+                    const barColor = score >= 80 ? 'bg-emerald-500' : score >= 50 ? 'bg-amber-400' : 'bg-rose-400';
+                    const textColor = score >= 80 ? 'text-emerald-600' : score >= 50 ? 'text-amber-600' : 'text-rose-600';
                     return (
-                      <div className="mt-6 space-y-3">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <div className="text-xs font-bold text-violet-200 mb-0.5">Sosyal Medya Risk Skoru</div>
-                            <div className={`text-2xl font-black ${riskColor}`}>{riskScore}/100 — {riskLabel}</div>
-                          </div>
-                          <div className="text-right">
-                            <div className="text-xs font-bold text-violet-200 mb-0.5">Adımlar</div>
-                            <div className="text-sm font-black text-white">{checked}/{total} tamamlandı</div>
-                          </div>
+                      <div className="mt-4 space-y-2">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="font-semibold text-slate-600">Güvenlik Skoru</span>
+                          <span className={`font-black text-base ${textColor}`}>{score}/100 — {label}</span>
                         </div>
-                        <div className="w-full bg-white/20 rounded-full h-2">
-                          <div className={`h-2 rounded-full transition-all duration-500 ${riskScore >= 75 ? 'bg-emerald-400' : riskScore >= 50 ? 'bg-amber-400' : 'bg-rose-400'}`}
-                            style={{ width: `${riskScore}%` }} />
+                        <div className="w-full bg-slate-100 rounded-full h-2.5">
+                          <div
+                            className={`h-2.5 rounded-full transition-all duration-500 ${barColor}`}
+                            style={{ width: `${score}%` }}
+                          />
                         </div>
-                        <div className="text-[10px] text-violet-200 font-medium">
-                          {riskScore < 75 ? `${riskItems.length - riskChecked} kritik riski temizleyin — skor otomatik yükselir.` : 'Sosyal medyanız temiz görünüyor!'}
+                        <div className="flex gap-4 text-xs text-slate-400 pt-0.5">
+                          <span className="text-rose-500 font-medium">{riskDone}/{riskItems.length} risk temizlendi</span>
+                          <span className="text-blue-500 font-medium">{actionDone}/{actionItems.length} adım yapıldı</span>
+                          <span className="text-emerald-500 font-medium">{posDone}/{posItems.length} avantaj aktif</span>
                         </div>
                       </div>
                     );
@@ -4556,161 +4565,151 @@ Signature: _______________     Date: ${today}`;
                 </div>
 
                 {/* İçerik */}
-                <div className="overflow-y-auto flex-1 p-6 space-y-6">
-                  {/* KRİTİK RİSKLER */}
-                  <div>
+                <div className="overflow-y-auto flex-1 px-6 py-5 space-y-6">
+
+                  {/* BÖLÜM 1: Riskler (kırmızı) */}
+                  <section>
                     <div className="flex items-center gap-2 mb-3">
-                      <div className="w-6 h-6 bg-rose-100 rounded-lg flex items-center justify-center">
-                        <AlertCircle className="w-4 h-4 text-rose-600" />
-                      </div>
-                      <h4 className="font-black text-slate-900 text-sm uppercase tracking-wide">Kritik Riskler — Hemen Kontrol Et</h4>
+                      <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0" />
+                      <h4 className="text-xs font-black text-rose-600 uppercase tracking-widest">
+                        Kritik Riskler — Sil veya Gizle
+                      </h4>
                     </div>
-                    <div className="space-y-3">
-                      {socialMediaChecklist.filter(item => item.category === 'risk').map((item) => (
-                        <div key={item.id}
-                          onClick={() => setSocialMediaChecked(prev => ({ ...prev, [item.id]: !prev[item.id] }))}
-                          className={`p-4 rounded-2xl border-2 cursor-pointer transition-all select-none ${socialMediaChecked[item.id] ? 'bg-rose-50 border-rose-200 opacity-60' : 'bg-white border-rose-100 hover:border-rose-200'}`}
-                        >
-                          <div className="flex items-start gap-3">
-                            <div className={`w-5 h-5 rounded-full border-2 shrink-0 mt-0.5 flex items-center justify-center transition-all ${socialMediaChecked[item.id] ? 'bg-rose-500 border-rose-500' : 'border-rose-300'}`}>
-                              {socialMediaChecked[item.id] && <Check className="w-3 h-3 text-white" />}
+                    <div className="space-y-2">
+                      {socialMediaChecklist.filter(i => i.category === 'risk').map((item) => {
+                        const done = !!socialMediaChecked[item.id];
+                        return (
+                          <button
+                            key={item.id}
+                            type="button"
+                            onClick={() => setSocialMediaChecked(prev => ({ ...prev, [item.id]: !prev[item.id] }))}
+                            className={`w-full text-left p-4 rounded-2xl border transition-all flex items-start gap-3 ${
+                              done
+                                ? 'bg-emerald-50 border-emerald-200'
+                                : 'bg-white border-slate-200 hover:border-rose-300 hover:bg-rose-50/40'
+                            }`}
+                          >
+                            <div className={`w-5 h-5 rounded-full border-2 shrink-0 mt-0.5 flex items-center justify-center transition-all ${
+                              done ? 'bg-emerald-500 border-emerald-500' : 'border-rose-300'
+                            }`}>
+                              {done && <Check className="w-3 h-3 text-white" />}
                             </div>
-                            <div className="flex-1">
-                              <div className="flex items-center justify-between mb-1">
-                                <span className="font-bold text-slate-900 text-sm">{item.title}</span>
-                                <span className={`text-[10px] font-black px-2 py-0.5 rounded-lg ml-2 shrink-0 ${item.severity === 'critical' ? 'bg-rose-100 text-rose-600' : 'bg-amber-100 text-amber-600'}`}>
-                                  {item.severity === 'critical' ? 'KRİTİK' : 'UYARI'}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap mb-1">
+                                <span className={`text-sm font-bold ${done ? 'line-through text-slate-400' : 'text-slate-900'}`}>
+                                  {item.title}
                                 </span>
+                                {!done && (
+                                  <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 ${
+                                    item.severity === 'critical' ? 'bg-rose-100 text-rose-600' : 'bg-amber-100 text-amber-600'
+                                  }`}>
+                                    {item.severity === 'critical' ? 'Kritik' : 'Uyarı'}
+                                  </span>
+                                )}
+                                {done && <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md bg-emerald-100 text-emerald-600 shrink-0">Temizlendi</span>}
                               </div>
-                              <div className="text-[10px] font-bold text-violet-500 mb-1">{item.platform}</div>
-                              <p className="text-xs text-slate-600 leading-relaxed">{item.description}</p>
+                              <p className="text-xs text-slate-500 leading-relaxed">{item.description}</p>
+                              <span className="text-[10px] text-slate-400 mt-1 block">{item.platform}</span>
                             </div>
-                          </div>
-                        </div>
-                      ))}
+                          </button>
+                        );
+                      })}
                     </div>
-                  </div>
+                  </section>
 
-                  {/* YAPILMASI GEREKENLER */}
-                  <div>
+                  {/* BÖLÜM 2: Yapılması Gerekenler (mavi) */}
+                  <section>
                     <div className="flex items-center gap-2 mb-3">
-                      <div className="w-6 h-6 bg-blue-100 rounded-lg flex items-center justify-center">
-                        <Target className="w-4 h-4 text-blue-600" />
-                      </div>
-                      <h4 className="font-black text-slate-900 text-sm uppercase tracking-wide">Yapılması Gerekenler</h4>
+                      <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0" />
+                      <h4 className="text-xs font-black text-blue-600 uppercase tracking-widest">
+                        Yapılması Gerekenler
+                      </h4>
                     </div>
-                    <div className="space-y-3">
-                      {socialMediaChecklist.filter(item => item.category === 'action').map((item) => (
-                        <div key={item.id}
-                          onClick={() => setSocialMediaChecked(prev => ({ ...prev, [item.id]: !prev[item.id] }))}
-                          className={`p-4 rounded-2xl border-2 cursor-pointer transition-all select-none ${socialMediaChecked[item.id] ? 'bg-blue-50 border-blue-200 opacity-60' : 'bg-white border-blue-100 hover:border-blue-200'}`}
-                        >
-                          <div className="flex items-start gap-3">
-                            <div className={`w-5 h-5 rounded-full border-2 shrink-0 mt-0.5 flex items-center justify-center transition-all ${socialMediaChecked[item.id] ? 'bg-blue-500 border-blue-500' : 'border-blue-300'}`}>
-                              {socialMediaChecked[item.id] && <Check className="w-3 h-3 text-white" />}
+                    <div className="space-y-2">
+                      {socialMediaChecklist.filter(i => i.category === 'action').map((item) => {
+                        const done = !!socialMediaChecked[item.id];
+                        return (
+                          <button
+                            key={item.id}
+                            type="button"
+                            onClick={() => setSocialMediaChecked(prev => ({ ...prev, [item.id]: !prev[item.id] }))}
+                            className={`w-full text-left p-4 rounded-2xl border transition-all flex items-start gap-3 ${
+                              done
+                                ? 'bg-emerald-50 border-emerald-200'
+                                : 'bg-white border-slate-200 hover:border-blue-300 hover:bg-blue-50/40'
+                            }`}
+                          >
+                            <div className={`w-5 h-5 rounded-full border-2 shrink-0 mt-0.5 flex items-center justify-center transition-all ${
+                              done ? 'bg-emerald-500 border-emerald-500' : 'border-blue-300'
+                            }`}>
+                              {done && <Check className="w-3 h-3 text-white" />}
                             </div>
-                            <div className="flex-1">
-                              <div className="flex items-center justify-between mb-1">
-                                <span className="font-bold text-slate-900 text-sm">{item.title}</span>
-                              </div>
-                              <div className="text-[10px] font-bold text-violet-500 mb-1">{item.platform}</div>
-                              <p className="text-xs text-slate-600 leading-relaxed">{item.description}</p>
+                            <div className="flex-1 min-w-0">
+                              <span className={`text-sm font-bold block mb-1 ${done ? 'line-through text-slate-400' : 'text-slate-900'}`}>
+                                {item.title}
+                              </span>
+                              <p className="text-xs text-slate-500 leading-relaxed">{item.description}</p>
+                              <span className="text-[10px] text-slate-400 mt-1 block">{item.platform}</span>
                             </div>
-                          </div>
-                        </div>
-                      ))}
+                          </button>
+                        );
+                      })}
                     </div>
-                  </div>
+                  </section>
 
-                  {/* POZİTİF FAKTÖRLER */}
-                  <div>
+                  {/* BÖLÜM 3: Pozitif Faktörler (yeşil) */}
+                  <section>
                     <div className="flex items-center gap-2 mb-3">
-                      <div className="w-6 h-6 bg-emerald-100 rounded-lg flex items-center justify-center">
-                        <TrendingUp className="w-4 h-4 text-emerald-600" />
-                      </div>
-                      <h4 className="font-black text-slate-900 text-sm uppercase tracking-wide">Profili Güçlendiren İçerikler</h4>
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+                      <h4 className="text-xs font-black text-emerald-600 uppercase tracking-widest">
+                        Profili Güçlendiren İçerikler
+                      </h4>
                     </div>
-                    <div className="space-y-3">
-                      {socialMediaChecklist.filter(item => item.category === 'positive').map((item) => (
-                        <div key={item.id}
-                          onClick={() => setSocialMediaChecked(prev => ({ ...prev, [item.id]: !prev[item.id] }))}
-                          className={`p-4 rounded-2xl border-2 cursor-pointer transition-all select-none ${socialMediaChecked[item.id] ? 'bg-emerald-50 border-emerald-200 opacity-60' : 'bg-white border-emerald-100 hover:border-emerald-200'}`}
-                        >
-                          <div className="flex items-start gap-3">
-                            <div className={`w-5 h-5 rounded-full border-2 shrink-0 mt-0.5 flex items-center justify-center transition-all ${socialMediaChecked[item.id] ? 'bg-emerald-500 border-emerald-500' : 'border-emerald-300'}`}>
-                              {socialMediaChecked[item.id] && <Check className="w-3 h-3 text-white" />}
+                    <div className="space-y-2">
+                      {socialMediaChecklist.filter(i => i.category === 'positive').map((item) => {
+                        const done = !!socialMediaChecked[item.id];
+                        return (
+                          <button
+                            key={item.id}
+                            type="button"
+                            onClick={() => setSocialMediaChecked(prev => ({ ...prev, [item.id]: !prev[item.id] }))}
+                            className={`w-full text-left p-4 rounded-2xl border transition-all flex items-start gap-3 ${
+                              done
+                                ? 'bg-emerald-50 border-emerald-200'
+                                : 'bg-white border-slate-200 hover:border-emerald-300 hover:bg-emerald-50/40'
+                            }`}
+                          >
+                            <div className={`w-5 h-5 rounded-full border-2 shrink-0 mt-0.5 flex items-center justify-center transition-all ${
+                              done ? 'bg-emerald-500 border-emerald-500' : 'border-emerald-300'
+                            }`}>
+                              {done && <Check className="w-3 h-3 text-white" />}
                             </div>
-                            <div className="flex-1">
-                              <div className="flex items-center justify-between mb-1">
-                                <span className="font-bold text-slate-900 text-sm">{item.title}</span>
-                                <span className="text-[10px] font-black px-2 py-0.5 rounded-lg ml-2 shrink-0 bg-emerald-100 text-emerald-600">AVANTAJ</span>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap mb-1">
+                                <span className={`text-sm font-bold ${done ? 'line-through text-slate-400' : 'text-slate-900'}`}>
+                                  {item.title}
+                                </span>
+                                <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md bg-emerald-100 text-emerald-600 shrink-0">Avantaj</span>
                               </div>
-                              <div className="text-[10px] font-bold text-violet-500 mb-1">{item.platform}</div>
-                              <p className="text-xs text-slate-600 leading-relaxed">{item.description}</p>
+                              <p className="text-xs text-slate-500 leading-relaxed">{item.description}</p>
+                              <span className="text-[10px] text-slate-400 mt-1 block">{item.platform}</span>
                             </div>
-                          </div>
-                        </div>
-                      ))}
+                          </button>
+                        );
+                      })}
                     </div>
-                  </div>
+                  </section>
                 </div>
 
-                {/* 100% Tamamlama Sonuç Paneli */}
-                {(() => {
-                  const total = socialMediaChecklist.length;
-                  const checked = Object.values(socialMediaChecked).filter(Boolean).length;
-                  const pct = Math.round((checked / total) * 100);
-                  const riskChecked = socialMediaChecklist.filter(i => i.category === 'risk' && socialMediaChecked[i.id]).length;
-                  const riskTotal = socialMediaChecklist.filter(i => i.category === 'risk').length;
-                  const actionChecked = socialMediaChecklist.filter(i => i.category === 'action' && socialMediaChecked[i.id]).length;
-                  const positiveChecked = socialMediaChecklist.filter(i => i.category === 'positive' && socialMediaChecked[i.id]).length;
-                  if (pct >= 80) {
-                    return (
-                      <div className="p-6 border-t border-emerald-100 bg-emerald-50 shrink-0 rounded-b-[2.5rem] space-y-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center">
-                            <BadgeCheck className="w-6 h-6 text-emerald-600" />
-                          </div>
-                          <div>
-                            <div className="font-black text-emerald-900">Sosyal Medyanız Vize-Safe! (%{pct} tamamlandı)</div>
-                            <div className="text-xs text-emerald-700">Denetim tamamlandı — aşağıda sonuç özeti</div>
-                          </div>
-                        </div>
-                        <div className="grid grid-cols-3 gap-3">
-                          <div className="bg-white rounded-xl p-3 text-center border border-emerald-100">
-                            <div className="text-xl font-black text-rose-600">{riskChecked}/{riskTotal}</div>
-                            <div className="text-[10px] text-slate-500 font-bold uppercase">Risk Temizlendi</div>
-                          </div>
-                          <div className="bg-white rounded-xl p-3 text-center border border-emerald-100">
-                            <div className="text-xl font-black text-blue-600">{actionChecked}</div>
-                            <div className="text-[10px] text-slate-500 font-bold uppercase">Aksiyon Alındı</div>
-                          </div>
-                          <div className="bg-white rounded-xl p-3 text-center border border-emerald-100">
-                            <div className="text-xl font-black text-emerald-600">{positiveChecked}</div>
-                            <div className="text-[10px] text-slate-500 font-bold uppercase">Avantaj Aktif</div>
-                          </div>
-                        </div>
-                        <div className="p-3 bg-white rounded-xl border border-emerald-100 text-xs text-slate-700 leading-relaxed">
-                          <strong className="text-emerald-700">Analiz Sonucu:</strong>{' '}
-                          {riskChecked === riskTotal
-                            ? 'Tüm kritik riskler temizlendi. Sosyal medya profiliniz konsolosluk taramasına hazır.'
-                            : `${riskTotal - riskChecked} kritik risk henüz çözülmedi. Başvurudan önce bu maddeleri tamamlayın.`}{' '}
-                          {positiveChecked >= 3 ? 'Güçlendirici içerikleriniz başvurunuzu destekleyecek.' : 'Daha fazla pozitif içerik paylaşmanız skoru artırır.'}
-                        </div>
-                      </div>
-                    );
-                  }
-                  return (
-                    <div className="p-6 border-t border-slate-100 bg-slate-50 shrink-0 rounded-b-[2.5rem]">
-                      <div className="flex items-start gap-3 p-4 bg-amber-50 rounded-2xl border border-amber-200">
-                        <Info className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-                        <p className="text-xs text-amber-800 leading-relaxed">
-                          <strong>Denetim Sonucu:</strong> {checked === 0 ? 'Listeyi işaretleyerek ilerlemenizi takip edin. Tamamlandıkça analiz sonucu burada görünecek.' : `${checked} adım tamamlandı. %80'e ulaştığınızda tam analiz raporu oluşturulacak.`}
-                        </p>
-                      </div>
-                    </div>
-                  );
-                })()}
+                {/* Footer — kapat butonu */}
+                <div className="px-6 py-4 border-t border-slate-100 shrink-0">
+                  <button
+                    onClick={() => setIsSocialMediaOpen(false)}
+                    className="w-full py-3 bg-slate-900 text-white rounded-2xl font-bold text-sm hover:bg-slate-800 transition-colors"
+                  >
+                    Denetimi Kaydet ve Kapat
+                  </button>
+                </div>
               </motion.div>
             </div>
           )}
