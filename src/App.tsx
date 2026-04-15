@@ -967,6 +967,7 @@ interface CommunityEntry {
   notes: string; date: string; profile: string;
 }
 const COMMUNITY_STORAGE_KEY = 'vizeakil_community_v1';
+const PROFILE_STORAGE_KEY   = 'vizeakil_profile_v1';
 const defaultCommunityEntries: CommunityEntry[] = [
   { id:'c1', consulate:'Almanya', city:'İstanbul', visaType:'Turizm (Schengen)', result:'onaylandi', waitDays:18, notes:'SGK + banka ekstresi + işveren mektubu ile onaylandı. Randevu almak 3 hafta sürdü.', date:'2026-02-14', profile:'Çalışan' },
   { id:'c2', consulate:'Hollanda', city:'İstanbul', visaType:'Turizm (Schengen)', result:'onaylandi', waitDays:12, notes:'6 aylık banka ekstresi ve otel rezervasyonu yeterliydi. Mülk tapu kopyasını da aldım yanıma.', date:'2026-01-28', profile:'Emekli' },
@@ -1573,7 +1574,7 @@ export default function App() {
     } catch { return defaultCommunityEntries; }
   });
   
-  const [profile, setProfile] = useState<ProfileData>({
+  const DEFAULT_PROFILE: ProfileData = {
     bankRegularity: false,
     bankSufficientBalance: false,
     bankNoLastMinuteDeposit: false,
@@ -1619,8 +1620,6 @@ export default function App() {
     cleanCriminalRecord: true,
     hasBarcodeSgk: false,
     hasTravelInsurance: false,
-    
-    // 7. Kritik Yeni Alanlar (2025-2026)
     has28DayHolding: false,
     has6MonthStatements: false,
     hasPreviousRefusal: false,
@@ -1640,20 +1639,32 @@ export default function App() {
       community: false,
       education: false,
     },
-
-    // Strategy & Intelligence (New)
     targetCountry: 'Almanya',
     persona: 'Analiz Ediliyor...',
     readinessStatus: 'wait',
-    documentStrengths: {
-      financial: 0,
-      professional: 0,
-      history: 0,
-      trust: 0
-    },
+    documentStrengths: { financial: 0, professional: 0, history: 0, trust: 0 },
     timelineAdvice: 'Profilinizi tamamlayın.',
-    strategyRoute: []
+    strategyRoute: [],
+    bankBalance: '',
+    monthlyIncome: '',
+  };
+
+  const [profile, setProfile] = useState<ProfileData>(() => {
+    try {
+      const saved = localStorage.getItem(PROFILE_STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // Eski sürüm uyumluluğu: eksik alanları DEFAULT ile tamamla
+        return { ...DEFAULT_PROFILE, ...parsed };
+      }
+    } catch { /* bozuk veri — varsayılan kullan */ }
+    return DEFAULT_PROFILE;
   });
+
+  // ── Profil otomatik kaydet ────────────────────────────────────────────────
+  useEffect(() => {
+    try { localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(profile)); } catch { /* noop */ }
+  }, [profile]);
 
   const [isOcrScanning, setIsOcrScanning] = useState(false);
   const [ocrResults, setOcrResults] = useState<{file: string; status: string; ok: boolean; warn?: boolean}[]>([]);
@@ -4289,7 +4300,7 @@ Signature: _______________     Date: ${today}`;
                               </div>
                               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
                                 <div className="bg-white/70 rounded-xl p-3 text-center">
-                                  <div className="text-xs font-bold text-slate-400 mb-1">Bekleme Süresi</div>
+                                  <div className="text-xs font-bold text-slate-400 mb-1">Tahmini Bekleme</div>
                                   <div className="text-xl font-black text-slate-900">~{c.waitDays} gün</div>
                                 </div>
                                 <div className="bg-white/70 rounded-xl p-3 text-center">
@@ -5679,11 +5690,43 @@ Signature: _______________     Date: ${today}`;
                 <button onClick={() => setStep('hero')} className="p-3 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl transition-all shadow-sm">
                   <ArrowLeft className="w-5 h-5 text-slate-600" />
                 </button>
-                <div>
+                <div className="flex-1">
                   <h2 className="text-3xl md:text-4xl font-bold text-slate-900">Hızlı Profil Analizi</h2>
                   <p className="text-slate-500 font-medium">Temel kriterlerinizi seçerek ilk tahmininizi alın.</p>
                 </div>
               </div>
+
+              {/* Profil tamamlanma çubuğu */}
+              {(() => {
+                const criteriaKeys: (keyof ProfileData)[] = [
+                  'bankSufficientBalance', 'hasSgkJob', 'hasHighValueVisa',
+                  'hasAssets', 'isMarried', 'cleanCriminalRecord',
+                  'hasTravelInsurance', 'hasValidPassport', 'purposeClear', 'noOverstayHistory',
+                ];
+                const filled = criteriaKeys.filter(k => profile[k] === true).length;
+                const total = criteriaKeys.length;
+                const pct = Math.round((filled / total) * 100);
+                return (
+                  <div className="bg-white border border-slate-200 rounded-2xl p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-bold text-slate-700">Profil Tamamlanma</span>
+                      <span className={`text-sm font-black ${pct >= 70 ? 'text-emerald-600' : pct >= 40 ? 'text-amber-600' : 'text-rose-500'}`}>{pct}%</span>
+                    </div>
+                    <div className="w-full bg-slate-100 rounded-full h-2">
+                      <div
+                        className={`h-2 rounded-full transition-all duration-500 ${pct >= 70 ? 'bg-emerald-500' : pct >= 40 ? 'bg-amber-400' : 'bg-rose-400'}`}
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                    <p className="text-xs text-slate-400 mt-1.5">
+                      {filled}/{total} kriter seçildi
+                      {pct < 50 && ' — Daha fazla kriter seçerek skorunuzu iyileştirin.'}
+                      {pct >= 50 && pct < 80 && ' — İyi ilerliyorsunuz, devam edin.'}
+                      {pct >= 80 && ' — Güçlü profil! Skoru görüntüleyin.'}
+                    </p>
+                  </div>
+                );
+              })()}
 
               <div className="space-y-10">
                 <div>
@@ -5873,10 +5916,24 @@ Signature: _______________     Date: ${today}`;
                     <h2 className="text-3xl font-black text-slate-900">Vize Yol Haritanız</h2>
                     <p className="text-slate-500">Başvurunuzu mükemmelleştirmek için kişisel analiziniz.</p>
                   </div>
-                  <button onClick={() => setStep('assessment')}
-                    className="text-xs font-bold text-brand-600 hover:underline flex items-center gap-1 shrink-0">
-                    <RefreshCw className="w-3.5 h-3.5"/> Profil Güncelle
-                  </button>
+                  <div className="flex items-center gap-3 shrink-0">
+                    <button onClick={() => setStep('assessment')}
+                      className="text-xs font-bold text-brand-600 hover:underline flex items-center gap-1">
+                      <RefreshCw className="w-3.5 h-3.5"/> Profil Güncelle
+                    </button>
+                    <span className="text-slate-200">·</span>
+                    <button
+                      onClick={() => {
+                        if (window.confirm('Profiliniz sıfırlanacak. Emin misiniz?')) {
+                          try { localStorage.removeItem(PROFILE_STORAGE_KEY); } catch { /* noop */ }
+                          setProfile(DEFAULT_PROFILE);
+                          setStep('onboarding');
+                        }
+                      }}
+                      className="text-xs font-bold text-rose-400 hover:underline flex items-center gap-1">
+                      <XCircle className="w-3.5 h-3.5"/> Sıfırla
+                    </button>
+                  </div>
                 </div>
 
                 {/* ── AKSIYON MERKEZİ ── */}
@@ -8179,12 +8236,18 @@ Signature: _______________     Date: ${today}`;
               </div>
 
               <div className="flex-1 overflow-y-auto p-6 space-y-5">
+                {/* Uyarı: bekleme süreleri tahmini */}
+                <div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-700">
+                  <AlertTriangle className="w-3.5 h-3.5 mt-0.5 shrink-0 text-amber-500" />
+                  <span>Bekleme süreleri <strong>tahminidir</strong> (Nisan 2026 verileri). Gerçek süre mevsim ve yoğunluğa göre değişir — konsolosluk sitesini kontrol edin.</span>
+                </div>
+
                 {/* İstatistik banner */}
                 <div className="grid grid-cols-3 gap-3">
                   {[
                     { label:'Takip Edilen', value:`${APPOINTMENT_TARGETS.length} Merkez` },
                     { label:'Müsait Şu An', value:`${APPOINTMENT_TARGETS.filter(t=>t.status==='müsait').length} Slot`, color:'text-emerald-600' },
-                    { label:'En Uzun Bekleme', value:`${Math.max(...APPOINTMENT_TARGETS.map(t=>t.avgWaitDays))} gün`, color:'text-rose-600' },
+                    { label:'Maks. Tahmini Bekleme', value:`~${Math.max(...APPOINTMENT_TARGETS.map(t=>t.avgWaitDays))} gün`, color:'text-rose-600' },
                   ].map(s => (
                     <div key={s.label} className="p-3 bg-slate-50 rounded-2xl text-center">
                       <div className={`text-lg font-black ${s.color ?? 'text-slate-900'}`}>{s.value}</div>
