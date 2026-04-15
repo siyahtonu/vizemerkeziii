@@ -6086,6 +6086,7 @@ Signature: _______________     Date: ${today}`;
                 {/* ── RET RİSK ANALİZİ (R-2077 Algoritması) ── */}
                 <RejectionRiskWidget
                   profile={profile}
+                  currentScore={currentScore}
                   onOpenTool={(toolKey: string) => {
                     const toolMap: Record<string, () => void> = {
                       bankAnaliz:   () => openTool('aibank',       setIsAiBankOpen),

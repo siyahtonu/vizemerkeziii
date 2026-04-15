@@ -13,6 +13,7 @@ import { calculateRejectionRisk, type RejectionRiskResult, type FactorScore } fr
 
 interface RejectionRiskWidgetProps {
   profile: Record<string, unknown>;
+  currentScore: number;   // calculateScore çıktısı — blend kalibrasyonu için
   onOpenTool: (toolKey: string) => void;
 }
 
@@ -112,12 +113,12 @@ const FactorRow: React.FC<FactorRowProps> = ({ factor, expanded, onToggle, onOpe
 
 // ── Ana Widget ────────────────────────────────────────────────────────────
 
-export function RejectionRiskWidget({ profile, onOpenTool }: RejectionRiskWidgetProps) {
+export function RejectionRiskWidget({ profile, currentScore, onOpenTool }: RejectionRiskWidgetProps) {
   const [expandedFactor, setExpandedFactor] = useState<string | null>(null);
   const [showAll, setShowAll] = useState(false);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const result: RejectionRiskResult = calculateRejectionRisk(profile as any);
+  const result: RejectionRiskResult = calculateRejectionRisk(profile as any, currentScore);
   const riskCfg = RISK_CONFIG[result.riskLevel];
 
   const visibleFactors = showAll ? result.factors : result.factors.slice(0, 5);

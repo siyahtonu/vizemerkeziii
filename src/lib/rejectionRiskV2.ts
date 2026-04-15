@@ -205,7 +205,12 @@ function getCountryInfo(country: string): CountryInfo {
 
 // ── Ana Algoritma ──────────────────────────────────────────────────────────
 
-export function calculateRejectionRisk(profile: ProfileData): RejectionRiskResult {
+/**
+ * @param profile        Kullanıcı profil verisi
+ * @param currentScore   Mevcut kalibre edilmiş skor (calculateScore çıktısı, 0-100).
+ *                       Verilirse iki algoritma ağırlıklı blend ile tutarlı hale getirilir.
+ */
+export function calculateRejectionRisk(profile: ProfileData, currentScore?: number): RejectionRiskResult {
   const factors: FactorScore[] = [];
   const vetoes: string[] = [];
 
@@ -547,9 +552,17 @@ export function calculateRejectionRisk(profile: ProfileData): RejectionRiskResul
 
   const rawScore = factors.reduce((sum, f) => sum + f.weighted, 0);
   const countryMod = getCountryModifier(profile.targetCountry ?? '');
-  const overallScore = clamp(Math.round(rawScore * countryMod));
+  const riskRawScore = clamp(Math.round(rawScore * countryMod));
 
-  // Veto koşulları: ağır red sinyalleri skoru bastırır
+  // ── Blend: R-2077 ham skoru + mevcut kalibre edilmiş skor ────────────────
+  // Sorun: R-2077 sıfırdan başladığı için undefined field'lar skoru düşürür.
+  // Çözüm: currentScore verilirse %40 R-2077 + %60 mevcut skor blend'i kullanılır.
+  // currentScore verilmezse saf R-2077 skoru kullanılır.
+  const overallScore = currentScore !== undefined
+    ? clamp(Math.round(0.40 * riskRawScore + 0.60 * currentScore))
+    : riskRawScore;
+
+  // Veto koşulları: ağır red sinyalleri skoru bastırır (blend'den bağımsız)
   const hasVeto = vetoes.length > 0;
   const finalScore = hasVeto ? Math.min(overallScore, 45) : overallScore;
 
