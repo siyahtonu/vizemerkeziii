@@ -1529,6 +1529,10 @@ export default function App() {
 
   // ── Belge Kontrol Listesi ───────────────────────────────────────────────────
   const [isDocChecklistOpen, setIsDocChecklistOpen] = useState(false);
+  const [checkedDocs, setCheckedDocs] = useState<Set<string>>(new Set());
+
+  // ── Yardım Sayfası ──────────────────────────────────────────────────────────
+  const [isHelpOpen, setIsHelpOpen] = useState(false);
 
   const APPOINTMENT_TARGETS = [
     { id:'de-ist', country:'Almanya', city:'İstanbul', visaType:'Schengen (C)', avgWaitDays:45, flag:'🇩🇪', status:'dolu' as const,   vfsUrl:'https://visa.vfsglobal.com/tur/tr/deu' },
@@ -3694,6 +3698,14 @@ Signature: _______________     Date: ${today}`;
               className={`hidden sm:flex p-2 rounded-xl transition-colors text-xs font-bold gap-1 items-center ${customCursorEnabled ? 'bg-brand-100 text-brand-700' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
             >
               <Target className="w-4 h-4"/>
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsHelpOpen(true)}
+              title="Yardım & Araç Rehberi"
+              className="p-2 sm:p-2.5 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors"
+            >
+              <Info className="w-4 h-4 sm:w-5 sm:h-5 text-slate-600" />
             </button>
             <button
               type="button"
@@ -9017,31 +9029,100 @@ Signature: _______________     Date: ${today}`;
                     sections.push({ title: `${country} Özel Belgeler`, icon: '🏛️', items: countrySpecific });
                   }
 
-                  return sections.map((section) => (
-                    <div key={section.title}>
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-base">{section.icon}</span>
-                        <h4 className="text-sm font-black text-slate-800">{section.title}</h4>
-                        <span className="text-xs text-slate-400">({section.items.length} belge)</span>
-                      </div>
-                      <div className="space-y-1.5">
-                        {section.items.map((item, i) => (
-                          <div key={i} className={`flex items-start gap-3 p-2.5 rounded-xl border ${item.status === 'required' ? 'bg-white border-slate-200' : 'bg-slate-50 border-slate-100'}`}>
-                            <div className={`w-4 h-4 rounded border-2 mt-0.5 shrink-0 ${item.status === 'required' ? 'border-indigo-400' : 'border-slate-300'}`} />
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm text-slate-700 leading-snug">{item.text}</p>
-                              {item.note && (
-                                <p className="text-xs text-amber-600 mt-0.5 font-medium">{item.note}</p>
-                              )}
-                            </div>
-                            {item.status === 'conditional' && (
-                              <span className="text-[9px] font-bold bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded-md shrink-0">Profile Göre</span>
-                            )}
+                  const doneCount = checkedDocs.size;
+                  const allItems = sections.flatMap(s => s.items);
+                  const totalCount = allItems.length;
+
+                  return (
+                    <>
+                      {/* Genel ilerleme çubuğu */}
+                      {totalCount > 0 && (
+                        <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                          <div className="flex justify-between text-xs font-bold text-slate-600 mb-1.5">
+                            <span>{doneCount}/{totalCount} belge hazır</span>
+                            <span className={doneCount === totalCount ? 'text-emerald-600' : 'text-slate-400'}>
+                              {doneCount === totalCount ? '✓ Tamamlandı!' : `${Math.round((doneCount / totalCount) * 100)}%`}
+                            </span>
                           </div>
-                        ))}
-                      </div>
-                    </div>
-                  ));
+                          <div className="w-full bg-slate-200 rounded-full h-2">
+                            <div
+                              className={`h-2 rounded-full transition-all duration-300 ${doneCount === totalCount ? 'bg-emerald-500' : 'bg-indigo-500'}`}
+                              style={{ width: `${Math.round((doneCount / totalCount) * 100)}%` }}
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      {sections.map((section) => {
+                        const sectionDone = section.items.filter(it => checkedDocs.has(it.text)).length;
+                        return (
+                          <div key={section.title}>
+                            <div className="flex items-center gap-2 mb-2">
+                              <span className="text-base">{section.icon}</span>
+                              <h4 className="text-sm font-black text-slate-800">{section.title}</h4>
+                              <span className="text-xs text-slate-400 ml-auto">
+                                {sectionDone}/{section.items.length}
+                                {sectionDone === section.items.length && section.items.length > 0 && (
+                                  <span className="ml-1 text-emerald-600 font-bold">✓</span>
+                                )}
+                              </span>
+                            </div>
+                            <div className="space-y-1.5">
+                              {section.items.map((item) => {
+                                const isChecked = checkedDocs.has(item.text);
+                                return (
+                                  <button
+                                    key={item.text}
+                                    type="button"
+                                    onClick={() => {
+                                      setCheckedDocs(prev => {
+                                        const next = new Set(prev);
+                                        if (next.has(item.text)) next.delete(item.text);
+                                        else next.add(item.text);
+                                        return next;
+                                      });
+                                    }}
+                                    className={`w-full text-left flex items-start gap-3 p-2.5 rounded-xl border transition-all duration-200 ${
+                                      isChecked
+                                        ? 'bg-emerald-50 border-emerald-200'
+                                        : item.status === 'required'
+                                          ? 'bg-white border-slate-200 hover:border-indigo-200 hover:bg-indigo-50/30'
+                                          : 'bg-slate-50 border-slate-100 hover:border-slate-200'
+                                    }`}
+                                  >
+                                    {/* Checkbox */}
+                                    <div className={`w-4 h-4 rounded border-2 mt-0.5 shrink-0 flex items-center justify-center transition-all ${
+                                      isChecked ? 'bg-emerald-500 border-emerald-500' : item.status === 'required' ? 'border-indigo-400' : 'border-slate-300'
+                                    }`}>
+                                      {isChecked && (
+                                        <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 10 8">
+                                          <path d="M1 4l3 3 5-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                        </svg>
+                                      )}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <p className={`text-sm leading-snug transition-all ${isChecked ? 'line-through text-slate-400' : 'text-slate-700'}`}>
+                                        {item.text}
+                                      </p>
+                                      {item.note && !isChecked && (
+                                        <p className="text-xs text-amber-600 mt-0.5 font-medium">{item.note}</p>
+                                      )}
+                                    </div>
+                                    {item.status === 'conditional' && !isChecked && (
+                                      <span className="text-[9px] font-bold bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded-md shrink-0">Profile Göre</span>
+                                    )}
+                                    {isChecked && (
+                                      <span className="text-[9px] font-bold bg-emerald-100 text-emerald-600 px-1.5 py-0.5 rounded-md shrink-0">Hazır ✓</span>
+                                    )}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </>
+                  );
                 })()}
 
                 <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-700">
@@ -9265,6 +9346,159 @@ Signature: _______________     Date: ${today}`;
                 <button onClick={() => setIsCountryGuideOpen(false)}
                   className="w-full py-3 bg-slate-900 text-white rounded-2xl font-bold text-sm hover:bg-slate-800 transition-colors">
                   Kapat
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ── YARDIM SAYFASI ────────────────────────────────────────────────────── */}
+      <AnimatePresence>
+        {isHelpOpen && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              onClick={() => setIsHelpOpen(false)}
+              className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" />
+            <motion.div initial={{ opacity: 0, scale: 0.96, y: 16 }} animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.96, y: 16 }}
+              className="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden">
+
+              {/* Header */}
+              <div className="px-6 pt-6 pb-4 border-b border-slate-100 flex items-start justify-between gap-4 shrink-0">
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <Info className="w-5 h-5 text-brand-600" />
+                    <h3 className="text-lg font-black text-slate-900">Yardım & Araç Rehberi</h3>
+                  </div>
+                  <p className="text-sm text-slate-500">VizeAkıl'ın tüm özelliklerini ve araçlarını keşfedin</p>
+                </div>
+                <button onClick={() => setIsHelpOpen(false)} aria-label="Kapat"
+                  className="p-2 rounded-xl hover:bg-slate-100 transition-colors shrink-0">
+                  <X className="w-5 h-5 text-slate-500" />
+                </button>
+              </div>
+
+              {/* Body */}
+              <div className="overflow-y-auto flex-1 px-6 py-5 space-y-8">
+
+                {/* Nasıl Çalışır */}
+                <div>
+                  <h4 className="text-sm font-black text-slate-900 uppercase tracking-wider mb-3">Nasıl Çalışır?</h4>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    {[
+                      { step: '1', icon: '🌍', title: 'Ülke Seç', desc: 'Başvurmak istediğin ülkeyi ve vize tipini belirle' },
+                      { step: '2', icon: '👤', title: 'Profil Oluştur', desc: 'Finansal, mesleki ve kişisel bilgilerini gir' },
+                      { step: '3', icon: '📊', title: 'Skor Al', desc: 'Gerçek veriye dayalı onay tahmini ve risk analizi' },
+                      { step: '4', icon: '🛠', title: 'Araçları Kullan', desc: '18+ araçla başvurunu güçlendir ve eksikleri gider' },
+                    ].map(s => (
+                      <div key={s.step} className="p-3 bg-slate-50 rounded-2xl text-center border border-slate-100">
+                        <div className="text-2xl mb-1">{s.icon}</div>
+                        <div className="text-xs font-black text-slate-800 mb-0.5">{s.title}</div>
+                        <div className="text-[10px] text-slate-500 leading-snug">{s.desc}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Skor Nasıl Hesaplanır */}
+                <div className="p-4 bg-brand-50 border border-brand-100 rounded-2xl">
+                  <h4 className="text-sm font-black text-brand-800 mb-2">Skor Nasıl Hesaplanır?</h4>
+                  <p className="text-xs text-brand-700 leading-relaxed">
+                    Skor, 6 kategoride değerlendirme yapılarak hesaplanır: <strong>Finansal (25p)</strong>, <strong>Mesleki (20p)</strong>, <strong>Seyahat Geçmişi (20p)</strong>, <strong>Aile & Bağ (10p)</strong>, <strong>Amaç & Taahhüt (15p)</strong> ve <strong>Kalite & Güven (10p)</strong>. Toplam 100 puan üzerinden hesaplanan ham skor, ülkenin Türk başvurucular için gerçek ret oranıyla Bayes yöntemiyle harmanlanır. 82+ = yeşil, 65-81 = sarı, 65 altı = kırmızı risk bölgesi.
+                  </p>
+                </div>
+
+                {/* Ücretsiz Araçlar */}
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-xs font-black bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">ÜCRETSİZ</span>
+                    <h4 className="text-sm font-black text-slate-900">Ücretsiz Araçlar</h4>
+                  </div>
+                  <div className="space-y-2">
+                    {[
+                      { icon: '📋', name: 'Profil Skoru & Risk Analizi', desc: 'Ana sayfa. Profilini doldur, anlık skor ve kırmızı bayrakları gör. Schengen, UK ve ABD için ayrı kalibrasyon.' },
+                      { icon: '🗂', name: 'Evrak Listesi', desc: 'Başvuru tipine (çalışan, öğrenci, sponsor vb.) göre tam evrak listesini görüntüle.' },
+                      { icon: '🎭', name: 'Senaryo Simülatörü', desc: '"Bankamda 10K TL daha olsaydı skorum ne olurdu?" Sliderla hipotetik değişikliklerin etkisini anlık gör.' },
+                      { icon: '✅', name: 'Belge Kontrol Listesi', desc: 'Profiline göre kişisel belge listesi oluşturur. Her belgeyi hazırladıkça üstünü çiz, PDF olarak indir.' },
+                      { icon: '🌍', name: 'Ülke Karşılaştırma Tablosu', desc: '10 ülkeyi yan yana karşılaştır — tahmini onay oranı, zorluk seviyesi, randevu bekleme süresi.' },
+                      { icon: '✈️', name: 'Nereye Gidebilirim?', desc: 'Mevcut profilinle en yüksek onay alacağın ülkeleri kart görünümünde sıralar.' },
+                      { icon: '📅', name: 'Randevu Takip Botu', desc: 'VFS konsolosluklarında randevu açılınca e-posta bildirimi almak için kayıt ol.' },
+                      { icon: '🔍', name: 'Belge Tutarlılık Matrisi', desc: 'Pasaport, SGK, banka ve otel bilgilerindeki çelişkileri otomatik tespit eder.' },
+                      { icon: '🗺', name: 'Vizesiz Ülkeler', desc: 'Türk pasaportuyla vizesiz, e-vize veya kapıda vize ile gidebileceğin 80+ ülke.' },
+                      { icon: '📝', name: 'Niyet Mektubu Oluşturucu', desc: '4 farklı mektup tipi (Başvuru, Sponsor, İşveren, Seyahat Planı) — Türkçe ve İngilizce PDF.' },
+                      { icon: '💬', name: 'Ret Mektubu Analizi', desc: 'Ret mektubundan anahtar kelimeleri tespit eder, sebep kategorisini belirler, aksiyon planı sunar.' },
+                      { icon: '🏆', name: 'Benchmark', desc: 'Benzer profildeki başvuru sahiplerinin onay/ret oranlarını ve sebeplerini gösterir.' },
+                      { icon: '👥', name: 'Topluluk Deneyimleri', desc: 'Gerçek başvuruların sonuçları — hangi konsoloslukta ne kadar beklenmiş, hangi belgeler fark yarattı.' },
+                    ].map(t => (
+                      <div key={t.name} className="flex gap-3 p-3 bg-white border border-slate-100 rounded-xl hover:border-slate-200 transition-colors">
+                        <span className="text-xl shrink-0 mt-0.5">{t.icon}</span>
+                        <div>
+                          <div className="text-sm font-bold text-slate-800">{t.name}</div>
+                          <div className="text-xs text-slate-500 mt-0.5 leading-relaxed">{t.desc}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Premium Araçlar */}
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-xs font-black bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">PREMİUM</span>
+                    <h4 className="text-sm font-black text-slate-900">Premium Araçlar</h4>
+                  </div>
+                  <div className="space-y-2">
+                    {[
+                      { icon: '🤖', name: 'Vize Danışmanım (AI Copilot)', desc: 'Yapay zeka destekli vize danışmanı. Profilini analiz eder, kişisel strateji sunar, sorularını yanıtlar.' },
+                      { icon: '📊', name: 'Schengen Ülke Kıyaslayıcı', desc: 'Schengen ülkelerini 8 kriter üzerinde detaylı karşılaştır — ret oranı, bekleme, finansal eşik.' },
+                      { icon: '🏦', name: 'AI Banka Dökümü Analizi', desc: 'Banka ekstrenini yükle, yapay zeka konsolosluk gözüyle değerlendirir. Şüpheli hareketleri işaretler.' },
+                      { icon: '🚩', name: 'Kırmızı Bayrak Tarayıcı', desc: 'Başvurmadan önce otomatik ret gerekçelerini tespit et — 12 farklı risk kategorisi.' },
+                      { icon: '📱', name: 'Sosyal Medya Denetim Rehberi', desc: 'LinkedIn, Instagram, Twitter profillerindeki riskli paylaşımları tespit et, düzenle.' },
+                      { icon: '🧠', name: 'Mülakat Simülatörü', desc: 'ABD ve UK mülakatı için 78 soruluk simülatör. Cevaplarını puanlar ve zayıf noktaları gösterir.' },
+                      { icon: '🗺', name: 'Çoklu Ülke Planlayıcı', desc: 'Birden fazla ülkeyi aynı turda gezerken optimum vize başvuru sırası ve strateji önerir.' },
+                      { icon: '🔥', name: 'Ret Nedeni Haritası', desc: '2021-2026 gerçek ret kodları — Schengen, İngiltere ve ABD için ülke bazında görsel dağılım.' },
+                      { icon: '💰', name: 'Banka Hazırlık Planı', desc: 'Başvuruya kaç ay var? Aylık giriş/çıkış hedeflerini ve grafik planı oluşturur.' },
+                    ].map(t => (
+                      <div key={t.name} className="flex gap-3 p-3 bg-amber-50/50 border border-amber-100 rounded-xl">
+                        <span className="text-xl shrink-0 mt-0.5">{t.icon}</span>
+                        <div>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-sm font-bold text-slate-800">{t.name}</span>
+                            <span className="text-[9px] font-black bg-amber-200 text-amber-700 px-1 py-0.5 rounded">PRO</span>
+                          </div>
+                          <div className="text-xs text-slate-500 mt-0.5 leading-relaxed">{t.desc}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Sık Sorulan Sorular */}
+                <div>
+                  <h4 className="text-sm font-black text-slate-900 uppercase tracking-wider mb-3">Sık Sorulan Sorular</h4>
+                  <div className="space-y-2">
+                    {[
+                      { q: 'Skor kaç olmalı ki başvurayım?', a: '70+ güvenli başvuru bölgesi, 82+ yüksek güven. 65 altında reddedilme riski yüksek — önce eksikleri gider.' },
+                      { q: 'Bilgilerimi kaydediyor musunuz?', a: 'Hayır. Tüm veriler sadece tarayıcınızda (localStorage) tutulur, sunucumuza iletilmez.' },
+                      { q: 'Veriler gerçek mi?', a: 'Evet. Schengen istatistikleri, Ekşi Sözlük, forum vakaları ve 50+ gerçek başvuru deneyimi analiz edildi. Yine de kesin sonuç garantisi verilmez.' },
+                      { q: 'Randevu bildirimi gerçekten çalışıyor mu?', a: '/api/appointments/subscribe endpointine kayıt yaptırırsın. Sistem konsoloslukları periyodik tarayarak müsaitlik açıldığında e-posta gönderir.' },
+                    ].map((faq, i) => (
+                      <div key={i} className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                        <div className="text-sm font-bold text-slate-800 mb-1">{faq.q}</div>
+                        <div className="text-xs text-slate-500 leading-relaxed">{faq.a}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+              </div>
+
+              {/* Footer */}
+              <div className="px-6 py-4 border-t border-slate-100 shrink-0">
+                <button onClick={() => setIsHelpOpen(false)}
+                  className="w-full py-3 bg-slate-900 text-white rounded-2xl font-bold text-sm hover:bg-slate-800 transition-colors">
+                  Anladım, Kapat
                 </button>
               </div>
             </motion.div>
