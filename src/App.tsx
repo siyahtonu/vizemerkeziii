@@ -1534,6 +1534,10 @@ export default function App() {
   // ── Belge Kontrol Listesi ───────────────────────────────────────────────────
   const [isDocChecklistOpen, setIsDocChecklistOpen] = useState(false);
 
+  // ── Dashboard UI State ───────────────────────────────────────────────────────
+  const [dashToolTab, setDashToolTab] = useState<'hazirlik' | 'analiz' | 'ulke'>('hazirlik');
+  const [showRiskDetail, setShowRiskDetail] = useState(false);
+
   // ── Yardım Sayfası ──────────────────────────────────────────────────────────
   const [isHelpOpen, setIsHelpOpen] = useState(false);
 
@@ -5985,237 +5989,236 @@ Signature: _______________     Date: ${today}`;
               exit={{ opacity: 0, scale: 0.98 }}
               className="space-y-10"
             >
-              <div className="space-y-4">
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-                  <div>
-                    <h2 className="text-3xl font-black text-slate-900">Vize Yol Haritanız</h2>
-                    <p className="text-slate-500">Başvurunuzu mükemmelleştirmek için kişisel analiziniz.</p>
-                  </div>
-                  <div className="flex items-center gap-3 shrink-0">
-                    <button onClick={() => setStep('assessment')}
-                      className="text-xs font-bold text-brand-600 hover:underline flex items-center gap-1">
-                      <RefreshCw className="w-3.5 h-3.5"/> Profil Güncelle
-                    </button>
-                    <span className="text-slate-200">·</span>
-                    <button
-                      onClick={() => {
-                        if (window.confirm('Profiliniz sıfırlanacak. Emin misiniz?')) {
-                          try { localStorage.removeItem(PROFILE_STORAGE_KEY); } catch { /* noop */ }
-                          setProfile(DEFAULT_PROFILE);
-                          setStep('onboarding');
-                        }
-                      }}
-                      className="text-xs font-bold text-rose-400 hover:underline flex items-center gap-1">
-                      <XCircle className="w-3.5 h-3.5"/> Sıfırla
-                    </button>
-                  </div>
-                </div>
+              <div className="space-y-5">
 
-                {/* ── AKSIYON MERKEZİ ── */}
-                <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-[2rem] p-6 text-white relative overflow-hidden">
-                  <div className="absolute top-0 right-0 w-48 h-48 bg-brand-600/20 blur-[80px] rounded-full pointer-events-none"/>
-                  <div className="relative z-10">
-                    {/* Üst satır: skor + hedef */}
-                    <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
-                      <div>
-                        <div className="text-[10px] font-black uppercase tracking-widest text-brand-400 mb-1">Güncel Başarı Skoru</div>
-                        <div className="flex items-end gap-2">
-                          <span className="text-4xl font-black">%{currentScore}</span>
-                          <span className={`text-sm font-bold pb-1 ${currentScore >= 82 ? 'text-emerald-400' : 'text-amber-400'}`}>
-                            {currentScore >= 82 ? '✓ Başvuruya Hazır' : `Hedef %82 — ${82-currentScore} puan eksik`}
+                {/* ── KART 1: SKOR + ÖNCELIKLI ADIMLAR ── */}
+                <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+                  {/* Üst şerit: ülke seçici + kontrol butonları */}
+                  <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100 bg-slate-50">
+                    <div className="flex items-center gap-2">
+                      <Globe className="w-4 h-4 text-slate-400" />
+                      <select
+                        value={profile.targetCountry}
+                        onChange={(e) => setProfile(prev => ({ ...prev, targetCountry: e.target.value }))}
+                        className="text-sm font-bold text-slate-700 bg-transparent border-none focus:ring-0 cursor-pointer p-0"
+                      >
+                        <option value="Almanya">Almanya</option>
+                        <option value="ABD">Amerika (ABD)</option>
+                        <option value="Fransa">Fransa</option>
+                        <option value="İtalya">İtalya</option>
+                        <option value="İspanya">İspanya</option>
+                        <option value="Yunanistan">Yunanistan</option>
+                        <option value="Portekiz">Portekiz</option>
+                        <option value="Hollanda">Hollanda</option>
+                        <option value="Polonya">Polonya</option>
+                        <option value="Macaristan">Macaristan</option>
+                        <option value="Danimarka">Danimarka</option>
+                        <option value="İsveç">İsveç</option>
+                        <option value="Norveç">Norveç</option>
+                        <option value="İngiltere">İngiltere</option>
+                      </select>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <button onClick={() => setStep('assessment')} className="text-xs font-bold text-brand-600 hover:underline flex items-center gap-1">
+                        <RefreshCw className="w-3 h-3"/> Güncelle
+                      </button>
+                      <button onClick={() => { if (window.confirm('Profiliniz sıfırlanacak. Emin misiniz?')) { try { localStorage.removeItem(PROFILE_STORAGE_KEY); } catch { /* noop */ } setProfile(DEFAULT_PROFILE); setStep('onboarding'); } }}
+                        className="text-xs font-bold text-rose-400 hover:underline">
+                        Sıfırla
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="p-5">
+                    {/* Skor satırı */}
+                    <div className="flex items-center gap-5 mb-5">
+                      {/* Dairesel skor */}
+                      <div className="relative w-20 h-20 shrink-0">
+                        <svg className="w-20 h-20 -rotate-90" viewBox="0 0 100 100">
+                          <circle cx="50" cy="50" r="42" fill="none" stroke="#e2e8f0" strokeWidth="10"/>
+                          <circle cx="50" cy="50" r="42" fill="none"
+                            stroke={currentScore >= 82 ? '#10b981' : currentScore >= 65 ? '#f59e0b' : '#ef4444'}
+                            strokeWidth="10"
+                            strokeDasharray={String(2 * Math.PI * 42)}
+                            strokeDashoffset={String(2 * Math.PI * 42 * (1 - currentScore / 100))}
+                            strokeLinecap="round"
+                            className="transition-all duration-700"
+                          />
+                        </svg>
+                        <div className="absolute inset-0 flex flex-col items-center justify-center">
+                          <span className={`text-xl font-black ${currentScore >= 82 ? 'text-emerald-600' : currentScore >= 65 ? 'text-amber-600' : 'text-red-600'}`}>
+                            %{currentScore}
                           </span>
                         </div>
-                        <div className="mt-2 w-48 h-1.5 bg-white/10 rounded-full overflow-hidden">
-                          <div className={`h-full rounded-full transition-all duration-500 ${currentScore >= 82 ? 'bg-emerald-400' : currentScore >= 65 ? 'bg-amber-400' : 'bg-rose-400'}`}
-                            style={{width:`${Math.min(currentScore,100)}%`}}/>
-                        </div>
                       </div>
-                      <div className="flex gap-2 flex-wrap">
-                        <button onClick={() => setStep('letter')}
-                          className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white text-xs font-bold rounded-xl transition-colors flex items-center gap-1.5">
-                          <FileText className="w-3.5 h-3.5"/> Mektup Oluştur
-                        </button>
-                        <button onClick={() => openTool('comparator', setIsSchengenComparatorOpen)}
-                          className="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold rounded-xl transition-colors flex items-center gap-1.5">
-                          <Globe className="w-3.5 h-3.5"/> Ülke Seç
-                        </button>
+                      {/* Durum metni */}
+                      <div className="flex-1">
+                        {currentScore >= 82 ? (
+                          <>
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="text-base font-black text-emerald-700">Başvuruya Hazır</span>
+                              <CheckCircle2 className="w-5 h-5 text-emerald-500"/>
+                            </div>
+                            <p className="text-sm text-slate-500">Profiliniz güçlü. Belge paketinizi hazırlayın.</p>
+                            <button onClick={() => setStep('letter')}
+                              className="mt-2 inline-flex items-center gap-1.5 text-xs font-bold bg-emerald-600 text-white px-3 py-1.5 rounded-lg hover:bg-emerald-700 transition-colors">
+                              <FileText className="w-3.5 h-3.5"/> Niyet Mektubu Oluştur
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <div className="text-sm text-slate-500 mb-1">
+                              Hedef <span className="font-black text-slate-900">%82</span> — <span className="font-bold text-amber-600">{82 - currentScore} puan eksik</span>
+                            </div>
+                            <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                              <div className={`h-full rounded-full transition-all duration-500 ${currentScore >= 65 ? 'bg-amber-400' : 'bg-rose-400'}`}
+                                style={{width:`${Math.min(currentScore,100)}%`}}/>
+                            </div>
+                            <p className="text-xs text-slate-400 mt-1">Aşağıdaki adımları tamamlayarak skoru artırın</p>
+                          </>
+                        )}
                       </div>
                     </div>
 
-                    {/* Aksiyon listesi */}
-                    {actionItems.length > 0 && (
+                    {/* Öncelikli adımlar */}
+                    {actionItems.length > 0 && currentScore < 82 && (
                       <div className="space-y-2">
-                        <div className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">
-                          Şu an yapılacak en önemli {actionItems.length} adım:
-                        </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                          {actionItems.slice(0, 3).map((item, i) => (
-                            <button key={i} onClick={item.toolFn} type="button"
-                              className={`text-left p-3 rounded-xl border transition-all hover:scale-[1.02] ${item.gain === '⚠️' ? 'bg-rose-900/40 border-rose-700/50 hover:bg-rose-900/60' : 'bg-white/5 border-white/10 hover:bg-white/10'}`}>
-                              <div className="flex items-center gap-2 mb-1">
-                                <span className={`text-[11px] font-black px-2 py-0.5 rounded-lg ${item.gain === '⚠️' ? 'bg-rose-600 text-white' : 'bg-amber-500 text-white'}`}>
-                                  {item.gain === '⚠️' ? '!' : item.gain + 'p'}
-                                </span>
-                                <span className="text-xs font-black text-white">{item.title}</span>
-                              </div>
-                              <div className="text-[10px] text-slate-400 leading-snug">{item.desc.substring(0, 60)}…</div>
-                              <div className="mt-2 text-[10px] font-black text-brand-300">{item.toolLabel} →</div>
-                            </button>
-                          ))}
-                        </div>
+                        <div className="text-xs font-black text-slate-500 uppercase tracking-widest mb-2">Şu an yapılacaklar</div>
+                        {actionItems.slice(0, 3).map((item, i) => (
+                          <button key={i} onClick={item.toolFn} type="button"
+                            className={`w-full flex items-center gap-3 p-3 rounded-xl border text-left transition-all hover:shadow-sm
+                              ${item.gain === '⚠️' ? 'bg-rose-50 border-rose-200 hover:bg-rose-100' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'}`}>
+                            <span className={`text-[11px] font-black px-2 py-1 rounded-lg shrink-0 ${item.gain === '⚠️' ? 'bg-rose-500 text-white' : 'bg-amber-500 text-white'}`}>
+                              {item.gain === '⚠️' ? '!' : item.gain + 'p'}
+                            </span>
+                            <div className="flex-1 min-w-0">
+                              <div className="text-sm font-bold text-slate-800">{item.title}</div>
+                              <div className="text-xs text-slate-500 truncate">{item.desc.substring(0, 55)}…</div>
+                            </div>
+                            <span className="text-xs font-bold text-brand-600 shrink-0">{item.toolLabel} →</span>
+                          </button>
+                        ))}
                         {actionItems.length > 3 && (
-                          <button onClick={() => setStep('assessment')}
-                            className="text-xs text-slate-400 hover:text-white transition-colors font-bold mt-1">
-                            +{actionItems.length - 3} adım daha → Profil Güncelle
+                          <button onClick={() => setStep('assessment')} className="text-xs text-brand-600 hover:underline font-bold pl-1">
+                            +{actionItems.length - 3} adım daha görüntüle →
                           </button>
                         )}
                       </div>
                     )}
-                    {currentScore >= 82 && (
-                      <div className="flex items-center gap-3 p-3 bg-emerald-900/40 border border-emerald-700/50 rounded-xl">
-                        <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0"/>
-                        <p className="text-sm text-emerald-300 font-bold">Profiliniz güçlü. Belgeleri hazırlayın ve başvurun.</p>
-                        <button onClick={() => setStep('letter')} className="ml-auto text-xs bg-emerald-600 text-white px-3 py-1.5 rounded-lg font-bold shrink-0">
-                          Belge Oluştur →
-                        </button>
+
+                    {/* R-2077 detay toggle */}
+                    <button onClick={() => setShowRiskDetail(v => !v)}
+                      className="mt-4 w-full flex items-center justify-between px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 hover:bg-slate-100 transition-colors">
+                      <span className="text-xs font-bold text-slate-600">10 Faktörlü Risk Analizi (R-2077)</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] bg-brand-100 text-brand-700 font-black px-2 py-0.5 rounded-full">Detaylar</span>
+                        {showRiskDetail ? <ChevronUp className="w-4 h-4 text-slate-400"/> : <ChevronDown className="w-4 h-4 text-slate-400"/>}
+                      </div>
+                    </button>
+                    {showRiskDetail && (
+                      <div className="mt-3">
+                        <RejectionRiskWidget
+                          profile={profile}
+                          currentScore={currentScore}
+                          onOpenTool={(toolKey: string) => {
+                            const toolMap: Record<string, () => void> = {
+                              bankAnaliz:   () => openTool('aibank',       setIsAiBankOpen),
+                              belgeKontrol: () => openTool('docchecklist', setIsDocChecklistOpen),
+                              niyetMektubu: () => setStep('letter'),
+                              retMektubu:   () => openTool('refusal',      setIsRefusalOpen),
+                              strateji:     () => openTool('copilot',      setIsCopilotOpen),
+                              roadmap:      () => setStep('assessment'),
+                              ulkeProfili:  () => openTool('comparator',   setIsSchengenComparatorOpen),
+                              itinerary:    () => openTool('docs',         setIsDocumentListOpen),
+                            };
+                            toolMap[toolKey]?.();
+                          }}
+                        />
                       </div>
                     )}
                   </div>
                 </div>
 
-                {/* ── RET RİSK ANALİZİ (R-2077 Algoritması) ── */}
-                <RejectionRiskWidget
-                  profile={profile}
-                  currentScore={currentScore}
-                  onOpenTool={(toolKey: string) => {
-                    const toolMap: Record<string, () => void> = {
-                      bankAnaliz:   () => openTool('aibank',       setIsAiBankOpen),
-                      belgeKontrol: () => openTool('docchecklist', setIsDocChecklistOpen),
-                      niyetMektubu: () => setStep('letter'),
-                      retMektubu:   () => openTool('refusal',      setIsRefusalOpen),
-                      strateji:     () => openTool('copilot',      setIsCopilotOpen),
-                      roadmap:      () => setStep('assessment'),
-                      ulkeProfili:  () => openTool('comparator',   setIsSchengenComparatorOpen),
-                      itinerary:    () => openTool('docs',         setIsDocumentListOpen),
-                    };
-                    toolMap[toolKey]?.();
-                  }}
-                />
-
-                {/* Araçlar Paneli */}
-                <div className="bg-white border border-slate-100 rounded-[2rem] p-5 shadow-sm">
-                  <div className="flex items-center justify-between mb-5">
-                    <div>
-                      <div className="text-sm font-black text-slate-800">18 Analiz Aracı</div>
-                      <div className="text-xs text-slate-400 mt-0.5">Bir araca tıklayarak hemen kullanmaya başlayın</div>
-                    </div>
-                    {!isPremium && (
-                      <button onClick={() => setIsUpgradeOpen(true)}
-                        className="text-[10px] bg-amber-50 text-amber-600 border border-amber-100 font-black px-2 py-1 rounded-lg uppercase tracking-widest hover:bg-amber-100 transition-colors">
-                        🔒 Premium'a Geç
-                      </button>
-                    )}
-                    {isPremium && (
-                      <span className="text-[10px] bg-emerald-50 text-emerald-600 border border-emerald-100 font-black px-2 py-1 rounded-lg uppercase tracking-widest">
-                        ✓ Premium Aktif
-                      </span>
-                    )}
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {[
-                      { label: 'Evrak Listesi', desc: 'Ülke ve profilinize göre eksiksiz belge listesi oluşturur.', icon: FileCheck, color: 'bg-emerald-500', id: 'docs', setter: setIsDocumentListOpen },
-                      { label: 'Vize Danışmanım', desc: 'Profilinizi analiz edip en kritik 3 adımı yapay zeka ile belirler.', icon: MessageSquare, color: 'bg-blue-500', id: 'copilot', setter: setIsCopilotOpen },
-                      { label: 'Senaryo Oluşturucu', desc: '"Bakiyem şu kadar olsa" ile farklı finansal senaryoların skora etkisini görün.', icon: Zap, color: 'bg-slate-800', id: 'calculator', setter: setIsCalculatorOpen },
-                      { label: 'Ülke Kıyaslayıcı', desc: 'Schengen ülkelerini ret oranı, bekleme süresi ve zorluk puanına göre karşılaştırır.', icon: Globe, color: 'bg-indigo-500', id: 'comparator', setter: setIsSchengenComparatorOpen },
-                      { label: 'Sosyal Medya Denetimi', desc: 'Hesaplarınızdaki vize-riskli içerikleri tespit edin, profili güçlendirin.', icon: ShieldCheck, color: 'bg-violet-500', id: 'socialmedia', setter: setIsSocialMediaOpen },
-                      { label: 'Ret Mektubu Analizi', desc: 'Elinizdeki ret mektubunu yapıştırın, hangi koddan reddedildiğinizi öğrenin.', icon: AlertTriangle, color: 'bg-rose-500', id: 'refusal', setter: setIsRefusalOpen },
-                      { label: 'Randevu Takip Botu', desc: 'VFS konsolosluklarında randevu açılınca e-posta bildirimi alın.', icon: Calendar, color: 'bg-teal-500', id: 'appointment', setter: setIsAppointmentOpen },
-                      { label: 'Belge Tutarlılık Matrisi', desc: 'Pasaport, SGK, banka ve otel bilgileri çelişiyor mu? Otomatik kontrol.', icon: CheckCircle2, color: 'bg-slate-600', id: 'consistency', setter: setIsConsistencyOpen },
-                      { label: 'Vizesiz Ülkeler', desc: 'Türk pasaportuyla vizesiz veya kapıda vize ile gidebileceğiniz ülkeler.', icon: Plane, color: 'bg-emerald-600', id: 'visafree', setter: setIsVisaFreeOpen },
-                      { label: 'Banka Dökümü Analizi', desc: 'Banka ekstrenizi yapay zeka ile inceleyin, konsolosluk gözüyle değerlendirin.', icon: Sparkles, color: 'bg-blue-700', id: 'aibank', setter: setIsAiBankOpen },
-                      { label: 'Kırmızı Bayrak Tarayıcı', desc: 'Başvurunuzdaki otomatik ret gerekçelerini başvurmadan önce tespit edin.', icon: XCircle, color: 'bg-red-600', id: 'redflag', setter: setIsRedFlagOpen },
-                      { label: 'Mülakat Pratiği', desc: 'ABD/UK mülakatları için 78 soruluk simülatör. Cevaplarınız puanlanır.', icon: Brain, color: 'bg-amber-500', id: 'interview', setter: setIsInterviewSimOpen },
-                      { label: 'Çoklu Ülke Planlayıcı', desc: 'Birden fazla ülkeyi aynı turda gezmek için optimum sıra ve strateji.', icon: Map, color: 'bg-cyan-600', id: 'multicountry', setter: setIsMultiCountryOpen },
-                      { label: 'Topluluk Deneyimleri', desc: 'Gerçek başvuru deneyimlerini okuyun, kendi sonucunuzu paylaşın.', icon: Star, color: 'bg-slate-700', id: 'community', setter: setIsCommunityOpen },
-                      { label: 'Banka Hazırlık Planı', desc: 'Başvuruya kaç ay var? Aylık giriş/çıkış hedeflerini ve grafik planı görün.', icon: Banknote, color: 'bg-green-600', id: 'bankplan', setter: setIsBankPlanOpen },
-                      { label: 'Ret Nedeni Haritası', desc: '2021-2026 gerçek ret kodları — Schengen, İngiltere ve ABD için ülke bazında görsel dağılım.', icon: AlertCircle, color: 'bg-orange-600', id: 'refusalmap', setter: setIsRefusalMapOpen },
-                      { label: 'Benchmark', desc: 'Benzer profildeki başvuru sahiplerinin onay/ret oranını ve sebeplerini görün.', icon: TrendingUp, color: 'bg-purple-600', id: 'benchmark', setter: setIsBenchmarkOpen },
-                      { label: 'Nereye Gidebilirim?', desc: 'Mevcut profilinizle en yüksek onay alacağınız 5 ülkeyi sıralayın.', icon: Plane, color: 'bg-sky-600', id: 'countryguide', setter: setIsCountryGuideOpen },
-                      { label: 'Belge Kontrol Listesi', desc: 'Profilinize göre hangi belgeleri toplamanız gerektiğini PDF olarak indirin.', icon: FileCheck, color: 'bg-indigo-600', id: 'docchecklist', setter: setIsDocChecklistOpen },
-                    ].map(({ label, desc, icon: Icon, color, id, setter }) => {
-                      const locked = PREMIUM_TOOLS.includes(id) && !isPremium;
-                      return (
-                        <button key={id} onClick={() => openTool(id, setter)}
-                          className={`group text-left rounded-2xl border p-4 transition-all hover:shadow-md hover:-translate-y-0.5 ${
-                            locked
-                              ? 'bg-slate-50 border-slate-200 cursor-pointer'
-                              : 'bg-white border-slate-200 hover:border-slate-300'
-                          }`}>
-                          <div className="flex items-start gap-3">
-                            <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${locked ? 'bg-slate-200' : color}`}>
-                              <Icon className={`w-4 h-4 ${locked ? 'text-slate-400' : 'text-white'}`} />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-1.5 flex-wrap">
-                                <span className={`text-sm font-bold ${locked ? 'text-slate-400' : 'text-slate-900'}`}>{label}</span>
-                                {locked
-                                  ? <span className="text-[9px] font-black bg-amber-100 text-amber-600 px-1 py-0.5 rounded-md">Premium</span>
-                                  : !PREMIUM_TOOLS.includes(id) && <span className="text-[9px] font-black bg-emerald-100 text-emerald-600 px-1 py-0.5 rounded-md">Ücretsiz</span>
-                                }
-                              </div>
-                              <p className={`text-xs mt-0.5 leading-relaxed ${locked ? 'text-slate-400' : 'text-slate-500'}`}>{desc}</p>
-                            </div>
-                            {locked && <span className="text-amber-400 shrink-0">🔒</span>}
-                          </div>
+                {/* ── KART 2: ARAÇLAR (SEKMELİ) ── */}
+                <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+                  {/* Sekme başlığı */}
+                  <div className="flex items-center justify-between px-5 pt-4 pb-0 border-b border-slate-100">
+                    <div className="flex gap-1">
+                      {([
+                        { key: 'hazirlik', label: 'Hazırlık' },
+                        { key: 'analiz',   label: 'Analiz'   },
+                        { key: 'ulke',     label: 'Ülke & Mülakat' },
+                      ] as const).map(tab => (
+                        <button key={tab.key} onClick={() => setDashToolTab(tab.key)}
+                          className={`px-4 py-2.5 text-xs font-black rounded-t-xl transition-colors border-b-2 -mb-px
+                            ${dashToolTab === tab.key
+                              ? 'text-brand-700 border-brand-600 bg-brand-50'
+                              : 'text-slate-500 border-transparent hover:text-slate-700'}`}>
+                          {tab.label}
                         </button>
-                      );
+                      ))}
+                    </div>
+                    {!isPremium
+                      ? <button onClick={() => setIsUpgradeOpen(true)} className="text-[10px] bg-amber-50 text-amber-600 border border-amber-100 font-black px-2 py-1 rounded-lg mb-1">🔒 Premium</button>
+                      : <span className="text-[10px] bg-emerald-50 text-emerald-600 border border-emerald-100 font-black px-2 py-1 rounded-lg mb-1">✓ Premium</span>
+                    }
+                  </div>
+
+                  {/* Sekme içeriği */}
+                  <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {([
+                      // ── Hazırlık sekmesi ──
+                      { tab: 'hazirlik', label: 'Evrak Listesi',         desc: 'Ülkenize özel belge listesi.',                     icon: FileCheck,    color: 'bg-emerald-500', id: 'docs',         setter: setIsDocumentListOpen },
+                      { tab: 'hazirlik', label: 'Belge Kontrol',         desc: 'Eksiksiz evrak listesini PDF olarak indirin.',      icon: FileCheck,    color: 'bg-indigo-600',  id: 'docchecklist', setter: setIsDocChecklistOpen },
+                      { tab: 'hazirlik', label: 'Randevu Takip Botu',    desc: 'VFS randevusu açılınca bildirim alın.',             icon: Calendar,     color: 'bg-teal-500',    id: 'appointment',  setter: setIsAppointmentOpen },
+                      { tab: 'hazirlik', label: 'Banka Hazırlık Planı',  desc: 'Aylık giriş/çıkış hedeflerini görün.',             icon: Banknote,     color: 'bg-green-600',   id: 'bankplan',     setter: setIsBankPlanOpen },
+                      { tab: 'hazirlik', label: 'Belge Tutarlılık',      desc: 'Pasaport, SGK, banka tarihleri uyuşuyor mu?',      icon: CheckCircle2, color: 'bg-slate-600',   id: 'consistency',  setter: setIsConsistencyOpen },
+                      { tab: 'hazirlik', label: 'Vizesiz Ülkeler',       desc: 'Türk pasaportuyla vize gerektirmeyen ülkeler.',    icon: Plane,        color: 'bg-emerald-600', id: 'visafree',     setter: setIsVisaFreeOpen },
+                      // ── Analiz sekmesi ──
+                      { tab: 'analiz',   label: 'Vize Danışmanım',       desc: 'Yapay zeka ile en kritik 3 adımı öğrenin.',        icon: MessageSquare, color: 'bg-blue-500',   id: 'copilot',      setter: setIsCopilotOpen },
+                      { tab: 'analiz',   label: 'Kırmızı Bayrak',        desc: 'Otomatik ret gerekçelerini önceden tespit edin.',  icon: XCircle,      color: 'bg-red-600',     id: 'redflag',      setter: setIsRedFlagOpen },
+                      { tab: 'analiz',   label: 'Banka Dökümü Analizi',  desc: 'Ekstrenizi konsolosluk gözüyle değerlendirin.',    icon: Sparkles,     color: 'bg-blue-700',    id: 'aibank',       setter: setIsAiBankOpen },
+                      { tab: 'analiz',   label: 'Senaryo Oluşturucu',    desc: '"Bakiyem şu kadar olsa" skora etkisini görün.',   icon: Zap,          color: 'bg-slate-800',   id: 'calculator',   setter: setIsCalculatorOpen },
+                      { tab: 'analiz',   label: 'Ret Mektubu Analizi',   desc: 'Ret kodunuzu yapıştırın, nedenini öğrenin.',      icon: AlertTriangle, color: 'bg-rose-500',   id: 'refusal',      setter: setIsRefusalOpen },
+                      { tab: 'analiz',   label: 'Ret Nedeni Haritası',   desc: '2021-2026 gerçek ret kodları — ülke bazında.',     icon: AlertCircle,  color: 'bg-orange-600',  id: 'refusalmap',   setter: setIsRefusalMapOpen },
+                      // ── Ülke & Mülakat sekmesi ──
+                      { tab: 'ulke',     label: 'Ülke Kıyaslayıcı',      desc: 'Ret oranı ve zorluk puanına göre ülke karşılaştır.', icon: Globe,      color: 'bg-indigo-500',  id: 'comparator',   setter: setIsSchengenComparatorOpen },
+                      { tab: 'ulke',     label: 'Nereye Gidebilirim?',   desc: 'Profilinizle en yüksek onay alacağınız 5 ülke.',  icon: Plane,        color: 'bg-sky-600',     id: 'countryguide', setter: setIsCountryGuideOpen },
+                      { tab: 'ulke',     label: 'Çoklu Ülke Planlayıcı', desc: 'Birden fazla ülke turu için optimum sıra.',       icon: Map,          color: 'bg-cyan-600',    id: 'multicountry', setter: setIsMultiCountryOpen },
+                      { tab: 'ulke',     label: 'Mülakat Pratiği',       desc: 'ABD/UK mülakatı — 78 soruluk simülatör.',         icon: Brain,        color: 'bg-amber-500',   id: 'interview',    setter: setIsInterviewSimOpen },
+                      { tab: 'ulke',     label: 'Sosyal Medya Denetimi', desc: 'Hesaplarınızdaki vize-riskli paylaşımları bulun.', icon: ShieldCheck, color: 'bg-violet-500',  id: 'socialmedia',  setter: setIsSocialMediaOpen },
+                      { tab: 'ulke',     label: 'Topluluk & Benchmark',  desc: 'Benzer profillerin onay/ret deneyimlerini okuyun.', icon: Star,       color: 'bg-slate-700',   id: 'community',    setter: setIsCommunityOpen },
+                    ] as const)
+                      .filter(t => t.tab === dashToolTab)
+                      .map(({ label, desc, icon: Icon, color, id, setter }) => {
+                        const locked = PREMIUM_TOOLS.includes(id) && !isPremium;
+                        return (
+                          <button key={id} onClick={() => openTool(id, setter as (b: boolean) => void)}
+                            className={`group text-left rounded-xl border p-4 transition-all hover:shadow-md hover:-translate-y-0.5
+                              ${locked ? 'bg-slate-50 border-slate-200' : 'bg-white border-slate-200 hover:border-brand-200'}`}>
+                            <div className="flex items-start gap-3">
+                              <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${locked ? 'bg-slate-200' : color}`}>
+                                <Icon className={`w-4 h-4 ${locked ? 'text-slate-400' : 'text-white'}`} />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-1.5 mb-0.5">
+                                  <span className={`text-sm font-bold ${locked ? 'text-slate-400' : 'text-slate-900'}`}>{label}</span>
+                                  {locked
+                                    ? <span className="text-[9px] font-black bg-amber-100 text-amber-600 px-1 py-0.5 rounded">🔒</span>
+                                    : !PREMIUM_TOOLS.includes(id) && <span className="text-[9px] font-black bg-emerald-100 text-emerald-600 px-1 py-0.5 rounded">Ücretsiz</span>
+                                  }
+                                </div>
+                                <p className={`text-xs leading-relaxed ${locked ? 'text-slate-400' : 'text-slate-500'}`}>{desc}</p>
+                              </div>
+                            </div>
+                          </button>
+                        );
                     })}
                   </div>
                 </div>
+
               </div>
 
-              {/* Target Country Selector */}
-              <div className="bg-white p-8 rounded-[3rem] border border-slate-100 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-6">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600">
-                    <Globe className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Hedef Ülke Seçimi</div>
-                    <select 
-                      value={profile.targetCountry}
-                      onChange={(e) => setProfile(prev => ({ ...prev, targetCountry: e.target.value }))}
-                      className="text-xl font-bold text-slate-900 bg-transparent border-none focus:ring-0 cursor-pointer p-0"
-                    >
-                      <option value="Almanya">Almanya (Schengen)</option>
-                      <option value="ABD">Amerika Birleşik Devletleri</option>
-                      <option value="Fransa">Fransa (Schengen)</option>
-                      <option value="İtalya">İtalya (Schengen)</option>
-                      <option value="İspanya">İspanya (Schengen)</option>
-                      <option value="Yunanistan">Yunanistan (Schengen)</option>
-                      <option value="Portekiz">Portekiz (Schengen)</option>
-                      <option value="Hollanda">Hollanda (Schengen)</option>
-                      <option value="Polonya">Polonya (Schengen)</option>
-                      <option value="Macaristan">Macaristan (Schengen)</option>
-                      <option value="Danimarka">Danimarka (Schengen)</option>
-                      <option value="İsveç">İsveç (Schengen)</option>
-                      <option value="Norveç">Norveç (Schengen)</option>
-                      <option value="İngiltere">Birleşik Krallık</option>
-                    </select>
-                  </div>
-                </div>
-                <div className="flex items-center gap-6">
-                  <div className="text-right">
-                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Vize Türü</div>
-                    <div className="text-sm font-bold text-slate-700">Turistik / Kısa Süreli</div>
-                  </div>
-                  <div className="w-px h-8 bg-slate-100 hidden sm:block"></div>
-                  <div className="text-right">
-                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">İşlem Süresi</div>
-                    <div className="text-sm font-bold text-slate-700">15-45 Gün</div>
-                  </div>
-                </div>
-              </div>
 
               {/* ── Ülke Zorluk Uyarısı ─────────────────────────────────── */}
               <AnimatePresence>
