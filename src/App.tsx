@@ -1524,6 +1524,10 @@ export default function App() {
 
   // ── Nereye Gidebilirim ──────────────────────────────────────────────────────
   const [isCountryGuideOpen, setIsCountryGuideOpen] = useState(false);
+  const [countryGuideView, setCountryGuideView] = useState<'cards' | 'table'>('cards');
+
+  // ── Belge Kontrol Listesi ───────────────────────────────────────────────────
+  const [isDocChecklistOpen, setIsDocChecklistOpen] = useState(false);
 
   const APPOINTMENT_TARGETS = [
     { id:'de-ist', country:'Almanya', city:'İstanbul', visaType:'Schengen (C)', avgWaitDays:45, flag:'🇩🇪', status:'dolu' as const,   vfsUrl:'https://visa.vfsglobal.com/tur/tr/deu' },
@@ -3378,6 +3382,183 @@ Signature: _______________     Date: ${today}`;
     doc.text('Bu belge VizeAkil (vizeakil.com) Smart Document Generator 2.0 ile olusturulmustur. Resmi vize danismanliginin yerini tutmaz.', 14, pageHeight - 4);
 
     doc.save(`VizeAkil_${normalizeTr(titles[type]).replace(/\s+/g, '_')}_${normalizeTr(letterData.fullName || 'Belge').replace(/\s+/g, '_')}.pdf`);
+  };
+
+  // ── Belge Kontrol Listesi PDF ─────────────────────────────────────────────
+  const generateDocumentChecklistPDF = () => {
+    const doc = new jsPDF();
+    const today = new Date().toLocaleDateString('tr-TR');
+    const country = profile.targetCountry || 'Schengen';
+    const isUK = country === 'İngiltere';
+    const isUSA = country === 'ABD';
+
+    // Header
+    doc.setFillColor(37, 99, 235);
+    doc.rect(0, 0, 210, 18, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.text('VizeAkil — vizeakil.com', 14, 12);
+    doc.text(today, 196, 12, { align: 'right' });
+
+    // Title
+    doc.setTextColor(30, 41, 59);
+    doc.setFontSize(13);
+    doc.setFont('helvetica', 'bold');
+    doc.text(normalizeTr(`${country} Vize Basvurusu — Kisisel Belge Kontrol Listesi`), 14, 30);
+    doc.setDrawColor(229, 231, 235);
+    doc.line(14, 33, 196, 33);
+
+    let y = 42;
+
+    const addSection = (title: string) => {
+      if (y > 260) { doc.addPage(); y = 20; }
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(10);
+      doc.setTextColor(37, 99, 235);
+      doc.text(normalizeTr(title), 14, y);
+      y += 5;
+      doc.setDrawColor(219, 234, 254);
+      doc.line(14, y, 196, y);
+      y += 6;
+    };
+
+    const addItem = (text: string, note?: string) => {
+      if (y > 270) { doc.addPage(); y = 20; }
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+      doc.setTextColor(51, 65, 85);
+      doc.setDrawColor(100, 116, 139);
+      doc.rect(14, y - 3.5, 4, 4);
+      const lines = doc.splitTextToSize(normalizeTr(text), 165);
+      doc.text(lines, 21, y);
+      y += lines.length * 5;
+      if (note) {
+        doc.setTextColor(148, 163, 184);
+        doc.setFontSize(7.5);
+        const noteLines = doc.splitTextToSize(normalizeTr('  Not: ' + note), 165);
+        doc.text(noteLines, 21, y);
+        y += noteLines.length * 4 + 1;
+        doc.setTextColor(51, 65, 85);
+        doc.setFontSize(9);
+      }
+      y += 1.5;
+    };
+
+    // 1. Zorunlu Belgeler
+    addSection('1. Zorunlu Belgeler (Tum Basvurucular)');
+    addItem('Gecerli pasaport (son 10 yilda alinmis, en az 2 bos sayfa)');
+    addItem('Onceki pasaportlar — vizeli/damgali sayfalar ile birlikte');
+    addItem('Vize basvuru formu (eksiksiz doldurulmus ve imzalanmis)');
+    addItem('Biyometrik fotograf (6 aydan yeni, 35x45mm, beyaz arka fon)');
+    addItem('Nufus cuzdani fotokopisi (on ve arka yuz)');
+    addItem('Tam tekmil vukuatli nufus kayit ornegi (e-Devletten barkodlu)');
+    addItem('Yerlesim yeri belgesi (e-Devletten barkodlu)');
+    addItem('Tarihceli yerlesim yeri belgesi (e-Devletten barkodlu)');
+    addItem('e-Devletten yurda giris-cikis belgesi (01.01.2009\'dan buguye)');
+    addItem('Ucak rezervasyonu — gidis ve donus (iptal edilebilir olmasi tercih edilir)');
+    addItem('Otel / konaklama rezervasyonu veya ev sahibi davet mektubu');
+    addItem('Detayli seyahat plani (itinerary) — gunluk aktiviteler ve ziyaret yerleri');
+    if (!isUSA) {
+      addItem('Seyahat saglik sigortasi (min 30.000 EUR teminath, Schengen Bolgesi kapsami)', 'Schengen icin zorunlu — AXA, Allianz veya Europ Assistance onerilen firmalar');
+    }
+    y += 3;
+
+    // 2. Finansal Belgeler
+    addSection('2. Finansal Belgeler');
+    if (isUK) {
+      addItem('Son 6 aylik banka hesap dokumu (banka kaseli ve imzali)', '28 gun kurali: paranin en az 28 gun hesapta kalmis olmasi gerekir');
+    } else {
+      addItem('Son 3 aylik banka hesap dokumu (banka kaseli ve imzali)', 'Schengen icin gunluk min. 100-120 EUR gosterilebilmeli; 10 gunluk trip ~ 55-60K TL');
+    }
+    if (profile.hasSteadyIncome || profile.salaryDetected) {
+      addItem('Son 3 aylik maas bordrosu');
+    }
+    if (profile.hasAssets) {
+      addItem('Tapu fotokopisi ve/veya arac ruhsati fotokopisi');
+    }
+    y += 3;
+
+    // 3. Mesleki / Ogrenci Belgeler
+    if (profile.hasSgkJob || profile.isPublicSectorEmployee) {
+      addSection('3. Mesleki Belgeler');
+      addItem('SGK hizmet dokumu (e-Devletten barkodlu)');
+      if (profile.isPublicSectorEmployee) {
+        addItem('Kamu kurumu gorev belgesi (imzali ve kaseli)');
+        addItem('Kamu kurumu izin onay belgesi (geri donus tarihi yazili)');
+      } else {
+        addItem('Isveren izin ve gorev yazisi (kesin geri donus tarihi ve kaseli-imzali)', 'Sadece "izin verilmistir" yetmez; geri donus taahhudunu icermeli');
+        addItem('Isyerine ait vergi levhasi fotokopisi (guncel)');
+        addItem('Ticaret Odasi kayit sureti (6 aydan eski olmamali)');
+      }
+      y += 3;
+    } else if (profile.isStudent) {
+      addSection('3. Ogrenci Belgeleri');
+      addItem('Ogrenci belgesi (guncel tarihli, tercihen Ingilizce veya Almanca)');
+      addItem('Not dokumu / Transkript');
+      addItem('Burs belgesi veya veliye ait finansal sponsorluk belgesi');
+      y += 3;
+    }
+
+    // 4. Aile ve Bag Belgeleri
+    if (profile.isMarried || profile.hasChildren || profile.strongFamilyTies) {
+      addSection('4. Aile ve Memleket Bag Belgeleri');
+      if (profile.isMarried) {
+        addItem('Evlilik cuzdani fotokopisi');
+        addItem('Formul B — evlilik kayit belgesi (e-Devletten)');
+      }
+      if (profile.hasChildren) {
+        addItem('Cocuklarin nufus cuzdani fotokopisi');
+        addItem('Formul A — dogum belgesi (e-Devletten)');
+      }
+      y += 3;
+    }
+
+    // 5. Ulkeye Ozel
+    if (isUSA) {
+      addSection('5. ABD Ozel Belgeler (B1/B2 Turistik Vize)');
+      addItem('DS-160 formu (online doldurulmus, barkod sayfasi basilmis)');
+      addItem('Mulakat randevu onay e-postasi veya ekran goruntüsü');
+      addItem('Mulakata hazirlik: "Turkiye\'deki guclu baglar" belgesi paketi');
+      addItem('SGK + tapu + is belgesi + aile belgesi — hepsini birlikte sunun');
+    } else if (isUK) {
+      addSection('5. Ingiltere Ozel Belgeler (Standard Visitor)');
+      addItem('Online UK vize basvuru teyidi (IHS ucreti odeme makbuzu)');
+      addItem('28 gun boyunca sabit kalan banka bakiye kaniti (ekstreden acikca gorulmeli)');
+      addItem('Varsa Schengen vize gecmisi — eski pasaport sayfasi fotokopisi', 'Schengen gecmisi olmadan UK basvurusu risklidir');
+    } else {
+      addSection('5. Schengen Ozel Belgeler');
+      if (profile.hasPreviousRefusal) {
+        addItem('Onceki ret mektubu fotokopisi — MUTLAKA beyan edilmeli', 'Gizlemek kara listeye alinmaniza yol acabilir');
+      }
+      if (profile.hasHighValueVisa || profile.hasOtherVisa) {
+        addItem('Onceki vize ve yurt disi seyahat kaniti (pul/vize sayfasi fotokopisi)');
+      }
+      addItem('Konsolosluga hitaben niyet mektubu (amac, tarihler, masraf karsilama)');
+    }
+    y += 3;
+
+    // Uyari kutusu
+    if (y > 245) { doc.addPage(); y = 20; }
+    doc.setFillColor(254, 243, 199);
+    doc.setDrawColor(251, 191, 36);
+    doc.roundedRect(14, y, 182, 22, 2, 2, 'FD');
+    doc.setTextColor(146, 64, 14);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8);
+    doc.text(normalizeTr('ONEMLI: Bu liste profilinize gore otomatik olusturulmustur.'), 18, y + 8);
+    doc.setFont('helvetica', 'normal');
+    doc.text(normalizeTr('Konsolosluk ek belge isteyebilir. Nihai kontrol icin resmi konsolosluk sitesini ziyaret edin.'), 18, y + 15);
+
+    // Footer
+    const pageHeight = doc.internal.pageSize.height;
+    doc.setFillColor(248, 250, 252);
+    doc.rect(0, pageHeight - 12, 210, 12, 'F');
+    doc.setTextColor(148, 163, 184);
+    doc.setFontSize(7);
+    doc.text('Bu liste VizeAkil (vizeakil.com) tarafindan profilinize gore olusturulmustur. Resmi vize danismanliginin yerini tutmaz.', 14, pageHeight - 4);
+
+    doc.save(`VizeAkil_Belge_Kontrol_Listesi_${normalizeTr(country)}_${today.replace(/\//g, '-')}.pdf`);
   };
 
   // Open a tool: if premium-gated and not premium, show upgrade modal; else navigate to dashboard + open
@@ -5809,6 +5990,7 @@ Signature: _______________     Date: ${today}`;
                       { label: 'Ret Nedeni Haritası', desc: '2021-2026 gerçek ret kodları — Schengen, İngiltere ve ABD için ülke bazında görsel dağılım.', icon: AlertCircle, color: 'bg-orange-600', id: 'refusalmap', setter: setIsRefusalMapOpen },
                       { label: 'Benchmark', desc: 'Benzer profildeki başvuru sahiplerinin onay/ret oranını ve sebeplerini görün.', icon: TrendingUp, color: 'bg-purple-600', id: 'benchmark', setter: setIsBenchmarkOpen },
                       { label: 'Nereye Gidebilirim?', desc: 'Mevcut profilinizle en yüksek onay alacağınız 5 ülkeyi sıralayın.', icon: Plane, color: 'bg-sky-600', id: 'countryguide', setter: setIsCountryGuideOpen },
+                      { label: 'Belge Kontrol Listesi', desc: 'Profilinize göre hangi belgeleri toplamanız gerektiğini PDF olarak indirin.', icon: FileCheck, color: 'bg-indigo-600', id: 'docchecklist', setter: setIsDocChecklistOpen },
                     ].map(({ label, desc, icon: Icon, color, id, setter }) => {
                       const locked = PREMIUM_TOOLS.includes(id) && !isPremium;
                       return (
@@ -8635,6 +8817,192 @@ Signature: _______________     Date: ${today}`;
         )}
       </AnimatePresence>
 
+      {/* ── ARAÇ: Belge Kontrol Listesi ──────────────────────────────────────── */}
+      <AnimatePresence>
+        {isDocChecklistOpen && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              onClick={() => setIsDocChecklistOpen(false)}
+              className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" />
+            <motion.div initial={{ opacity: 0, scale: 0.96, y: 16 }} animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.96, y: 16 }}
+              className="relative w-full max-w-xl bg-white rounded-3xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden">
+
+              {/* Header */}
+              <div className="px-6 pt-6 pb-4 border-b border-slate-100 flex items-start justify-between gap-4 shrink-0">
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <FileCheck className="w-5 h-5 text-indigo-600" />
+                    <h3 className="text-lg font-black text-slate-900">Kişisel Belge Kontrol Listesi</h3>
+                  </div>
+                  <p className="text-sm text-slate-500">
+                    <span className="font-semibold text-slate-700">{profile.targetCountry || 'Schengen'}</span> başvurusu — profilinize göre oluşturuldu
+                  </p>
+                </div>
+                <button onClick={() => setIsDocChecklistOpen(false)} aria-label="Kapat"
+                  className="p-2 rounded-xl hover:bg-slate-100 transition-colors shrink-0">
+                  <X className="w-5 h-5 text-slate-500" />
+                </button>
+              </div>
+
+              {/* Body */}
+              <div className="overflow-y-auto flex-1 px-6 py-5 space-y-5">
+                {(() => {
+                  const country = profile.targetCountry || 'Schengen';
+                  const isUK = country === 'İngiltere';
+                  const isUSA = country === 'ABD';
+
+                  type DocItem = { text: string; note?: string; status: 'required' | 'conditional' };
+                  type DocSection = { title: string; icon: string; items: DocItem[] };
+
+                  const sections: DocSection[] = [];
+
+                  sections.push({
+                    title: 'Zorunlu Belgeler',
+                    icon: '📋',
+                    items: [
+                      { text: 'Geçerli pasaport (en az 2 boş sayfa)', status: 'required' },
+                      { text: 'Önceki pasaportlar (vizeli/damgalı sayfalarla)', status: 'required' },
+                      { text: 'Vize başvuru formu (eksiksiz ve imzalı)', status: 'required' },
+                      { text: 'Biyometrik fotoğraf — 35x45mm, beyaz arka fon, 6 aydan yeni', status: 'required' },
+                      { text: 'Nüfus cüzdanı fotokopisi (ön ve arka)', status: 'required' },
+                      { text: 'Tam tekmil vukuatlı nüfus kayıt örneği (e-Devlet, barkodlu)', status: 'required' },
+                      { text: 'Yerleşim yeri belgesi (e-Devlet, barkodlu)', status: 'required' },
+                      { text: 'Tarihçeli yerleşim yeri belgesi (e-Devlet, barkodlu)', status: 'required' },
+                      { text: 'e-Devlet yurda giriş-çıkış belgesi (2009\'dan bugüne)', status: 'required' },
+                      { text: 'Uçak rezervasyonu — gidiş ve dönüş', status: 'required' },
+                      { text: 'Otel / konaklama rezervasyonu', status: 'required' },
+                      { text: 'Detaylı seyahat planı (itinerary)', status: 'required' },
+                      ...(!isUSA ? [{ text: 'Seyahat sağlık sigortası (min. €30.000, Schengen kapsami)', note: 'AXA, Allianz, Europ Assistance önerilir', status: 'required' as const }] : []),
+                    ]
+                  });
+
+                  sections.push({
+                    title: 'Finansal Belgeler',
+                    icon: '💰',
+                    items: [
+                      {
+                        text: isUK ? 'Son 6 aylık banka hesap dökümü (banka kaşeli ve imzalı)' : 'Son 3 aylık banka hesap dökümü (banka kaşeli ve imzalı)',
+                        note: isUK ? '28-gün kuralı: para en az 28 gün hesapta olmalı' : 'Günlük min. €100-120 gösterilebilmeli',
+                        status: 'required'
+                      },
+                      ...(profile.hasSteadyIncome || profile.salaryDetected ? [{ text: 'Son 3 aylık maaş bordrosu', status: 'conditional' as const }] : []),
+                      ...(profile.hasAssets ? [{ text: 'Tapu fotokopisi ve/veya araç ruhsatı', status: 'conditional' as const }] : []),
+                    ]
+                  });
+
+                  if (profile.hasSgkJob || profile.isPublicSectorEmployee) {
+                    sections.push({
+                      title: 'Mesleki Belgeler',
+                      icon: '💼',
+                      items: [
+                        { text: 'SGK hizmet dökümü (e-Devlet, barkodlu)', status: 'required' },
+                        ...(profile.isPublicSectorEmployee
+                          ? [
+                              { text: 'Kamu kurumu görev belgesi (imzalı ve kaşeli)', status: 'required' as const },
+                              { text: 'Kamu kurumu izin onay belgesi (geri dönüş tarihi içeren)', status: 'required' as const },
+                            ]
+                          : [
+                              { text: 'İşveren izin ve görev yazısı (geri dönüş taahhütlü, kaşeli-imzalı)', note: '"İzin verilmiştir" tek başına yetmez; kesin geri dönüş tarihi içermeli', status: 'required' as const },
+                              { text: 'İşyerine ait güncel vergi levhası fotokopisi', status: 'required' as const },
+                              { text: 'Ticaret Odası kayıt sureti (6 aydan eski olmayan)', status: 'conditional' as const },
+                            ]
+                        ),
+                      ]
+                    });
+                  } else if (profile.isStudent) {
+                    sections.push({
+                      title: 'Öğrenci Belgeleri',
+                      icon: '🎓',
+                      items: [
+                        { text: 'Güncel öğrenci belgesi (tercihen İngilizce/Almanca)', status: 'required' },
+                        { text: 'Not dökümü / Transkript', status: 'required' },
+                        { text: 'Burs belgesi veya veli finansal sponsorluğu', status: 'conditional' },
+                      ]
+                    });
+                  }
+
+                  if (profile.isMarried || profile.hasChildren) {
+                    const familyItems: DocItem[] = [];
+                    if (profile.isMarried) {
+                      familyItems.push({ text: 'Evlilik cüzdanı fotokopisi', status: 'required' });
+                      familyItems.push({ text: 'Formül B — evlilik kayıt belgesi (e-Devlet)', status: 'required' });
+                    }
+                    if (profile.hasChildren) {
+                      familyItems.push({ text: 'Çocukların nüfus cüzdanı fotokopisi', status: 'conditional' });
+                      familyItems.push({ text: 'Formül A — doğum belgesi (e-Devlet)', status: 'conditional' });
+                    }
+                    sections.push({ title: 'Aile ve Memleket Bağ Belgeleri', icon: '👨‍👩‍👧', items: familyItems });
+                  }
+
+                  const countrySpecific: DocItem[] = [];
+                  if (isUSA) {
+                    countrySpecific.push({ text: 'DS-160 formu (online, barkod sayfası basılmış)', status: 'required' });
+                    countrySpecific.push({ text: 'Mülakat randevu onayı', status: 'required' });
+                    countrySpecific.push({ text: '"Strong ties to Turkey" belge paketi (SGK + tapu + aile)', status: 'required' });
+                  } else if (isUK) {
+                    countrySpecific.push({ text: 'Online UK vize başvurusu teyidi (IHS ücreti makbuzu)', status: 'required' });
+                    countrySpecific.push({ text: '28 gün boyunca sabit banka bakiyesi kanıtı', status: 'required' });
+                    countrySpecific.push({ text: 'Schengen vize geçmişi (eski pasaport sayfası)', note: 'Schengen geçmişi olmadan UK başvurusu riskli', status: 'conditional' });
+                  } else {
+                    countrySpecific.push({ text: 'Konsolosluğa hitaben niyet mektubu (amaç, tarihler, masraf karşılama)', status: 'required' });
+                    if (profile.hasPreviousRefusal) {
+                      countrySpecific.push({ text: 'Önceki ret mektubu fotokopisi — MUTLAKA beyan edilmeli', note: 'Gizlemek kara listeye alınmanıza yol açar', status: 'required' });
+                    }
+                  }
+                  if (countrySpecific.length > 0) {
+                    sections.push({ title: `${country} Özel Belgeler`, icon: '🏛️', items: countrySpecific });
+                  }
+
+                  return sections.map((section) => (
+                    <div key={section.title}>
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-base">{section.icon}</span>
+                        <h4 className="text-sm font-black text-slate-800">{section.title}</h4>
+                        <span className="text-xs text-slate-400">({section.items.length} belge)</span>
+                      </div>
+                      <div className="space-y-1.5">
+                        {section.items.map((item, i) => (
+                          <div key={i} className={`flex items-start gap-3 p-2.5 rounded-xl border ${item.status === 'required' ? 'bg-white border-slate-200' : 'bg-slate-50 border-slate-100'}`}>
+                            <div className={`w-4 h-4 rounded border-2 mt-0.5 shrink-0 ${item.status === 'required' ? 'border-indigo-400' : 'border-slate-300'}`} />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm text-slate-700 leading-snug">{item.text}</p>
+                              {item.note && (
+                                <p className="text-xs text-amber-600 mt-0.5 font-medium">{item.note}</p>
+                              )}
+                            </div>
+                            {item.status === 'conditional' && (
+                              <span className="text-[9px] font-bold bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded-md shrink-0">Profile Göre</span>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ));
+                })()}
+
+                <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-700">
+                  <span className="font-bold">Not:</span> Bu liste profilinize göre otomatik oluşturuldu. Konsolosluk ek belge isteyebilir — nihai kontrol için resmi konsolosluk sitesini ziyaret edin.
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="px-6 py-4 border-t border-slate-100 flex gap-3 shrink-0">
+                <button onClick={generateDocumentChecklistPDF}
+                  className="flex-1 flex items-center justify-center gap-2 py-3 bg-indigo-600 text-white rounded-2xl font-bold text-sm hover:bg-indigo-700 transition-colors">
+                  <Download className="w-4 h-4" />
+                  PDF Olarak İndir
+                </button>
+                <button onClick={() => setIsDocChecklistOpen(false)}
+                  className="px-5 py-3 bg-slate-100 text-slate-700 rounded-2xl font-bold text-sm hover:bg-slate-200 transition-colors">
+                  Kapat
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       {/* ── ARAÇ 18: Nereye Gidebilirim ──────────────────────────────────── */}
       <AnimatePresence>
         {isCountryGuideOpen && (
@@ -8649,9 +9017,9 @@ Signature: _______________     Date: ${today}`;
                 <div>
                   <div className="flex items-center gap-2 mb-1">
                     <Plane className="w-5 h-5 text-sky-600" />
-                    <h3 className="text-lg font-black text-slate-900">Profilime Göre Nereye Gidebilirim?</h3>
+                    <h3 className="text-lg font-black text-slate-900">Ülke Karşılaştırma Tablosu</h3>
                   </div>
-                  <p className="text-sm text-slate-500">En yüksek onay alacağınız 5 ülke — mevcut profilinize göre</p>
+                  <p className="text-sm text-slate-500">Tüm hedef ülkeler — skor {currentScore}/100 bazında kişisel onay tahmini</p>
                 </div>
                 <button onClick={() => setIsCountryGuideOpen(false)} aria-label="Kapat"
                   className="p-2 rounded-xl hover:bg-slate-100 transition-colors shrink-0">
@@ -8659,27 +9027,38 @@ Signature: _______________     Date: ${today}`;
                 </button>
               </div>
 
-              <div className="overflow-y-auto flex-1 px-6 py-5 space-y-4">
+              {/* Görünüm Seçici */}
+              <div className="px-6 py-3 border-b border-slate-100 flex gap-2 shrink-0">
+                <button onClick={() => setCountryGuideView('cards')}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${countryGuideView === 'cards' ? 'bg-sky-600 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}>
+                  <Layers className="w-3.5 h-3.5" /> Kartlar
+                </button>
+                <button onClick={() => setCountryGuideView('table')}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${countryGuideView === 'table' ? 'bg-sky-600 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}>
+                  <LayoutList className="w-3.5 h-3.5" /> Tablo
+                </button>
+              </div>
+
+              <div className="overflow-y-auto flex-1 px-6 py-5">
                 {(() => {
-                  // Ülkeye özel zorluk + kullanıcı skor bazında onay tahmini
                   type CountryEntry = {
                     name: string; flag: string; visaType: string; difficulty: number;
                     approvalBase: number; tips: string; avgWait: number;
+                    difficultyLabel: string;
                   };
                   const allCountries: CountryEntry[] = [
-                    { name: 'İtalya',   flag: '🇮🇹', visaType: 'Schengen (C)', difficulty: 0.92, approvalBase: 88, tips: 'En yüksek Schengen onay oranı. Turizm güçlüdür.', avgWait: 10 },
-                    { name: 'İspanya',  flag: '🇪🇸', visaType: 'Schengen (C)', difficulty: 0.90, approvalBase: 86, tips: 'Başvuru merkezi erişimi kolay. Kültürel gezi iyi kabul görür.', avgWait: 12 },
-                    { name: 'Yunanistan',flag:'🇬🇷', visaType: 'Schengen (C)', difficulty: 0.88, approvalBase: 85, tips: 'Ada ve kıyı turizmi güçlü gerekçe. Hızlı randevu.', avgWait: 8 },
-                    { name: 'Portekiz', flag: '🇵🇹', visaType: 'Schengen (C)', difficulty: 0.87, approvalBase: 84, tips: 'Düşük ret oranı, hızlı süreç.', avgWait: 10 },
-                    { name: 'Macaristan',flag:'🇭🇺', visaType: 'Schengen (C)', difficulty: 0.88, approvalBase: 83, tips: 'Kültürel turizm, düşük günlük bütçe gereksinimi.', avgWait: 7 },
-                    { name: 'Hollanda', flag: '🇳🇱', visaType: 'Schengen (C)', difficulty: 0.82, approvalBase: 78, tips: 'Orta zorluk. Banka dökümü kritik.', avgWait: 14 },
-                    { name: 'Fransa',   flag: '🇫🇷', visaType: 'Schengen (C)', difficulty: 0.80, approvalBase: 75, tips: 'Niyet mektubu ve konaklama belgesi önemli.', avgWait: 21 },
-                    { name: 'Almanya',  flag: '🇩🇪', visaType: 'Schengen (C)', difficulty: 0.75, approvalBase: 70, tips: 'Yüksek standart. Finansal süreklilik şart.', avgWait: 45 },
-                    { name: 'İngiltere',flag: '🇬🇧', visaType: 'UK Visitor', difficulty: 0.72, approvalBase: 68, tips: '28 gün kuralı ve 6 aylık döküm zorunlu.', avgWait: 18 },
-                    { name: 'ABD',      flag: '🇺🇸', visaType: 'B1/B2', difficulty: 0.60, approvalBase: 55, tips: 'En zorlu. Mülakat + güçlü Türkiye bağı şart.', avgWait: 188 },
+                    { name: 'İtalya',    flag: '🇮🇹', visaType: 'Schengen (C)', difficulty: 0.92, approvalBase: 88, tips: 'En yüksek Schengen onay oranı. Turizm güçlüdür.', avgWait: 10,  difficultyLabel: 'Kolay' },
+                    { name: 'İspanya',   flag: '🇪🇸', visaType: 'Schengen (C)', difficulty: 0.90, approvalBase: 86, tips: 'Başvuru merkezi erişimi kolay. Kültürel gezi iyi kabul görür.', avgWait: 12,  difficultyLabel: 'Kolay' },
+                    { name: 'Yunanistan',flag: '🇬🇷', visaType: 'Schengen (C)', difficulty: 0.88, approvalBase: 85, tips: 'Ada ve kıyı turizmi güçlü gerekçe. Hızlı randevu.', avgWait: 8,   difficultyLabel: 'Kolay' },
+                    { name: 'Portekiz',  flag: '🇵🇹', visaType: 'Schengen (C)', difficulty: 0.87, approvalBase: 84, tips: 'Düşük ret oranı, hızlı süreç.', avgWait: 10,  difficultyLabel: 'Kolay' },
+                    { name: 'Macaristan',flag: '🇭🇺', visaType: 'Schengen (C)', difficulty: 0.88, approvalBase: 83, tips: 'Kültürel turizm, düşük bütçe gereksinimi.', avgWait: 7,   difficultyLabel: 'Kolay' },
+                    { name: 'Hollanda',  flag: '🇳🇱', visaType: 'Schengen (C)', difficulty: 0.82, approvalBase: 78, tips: 'Orta zorluk. Banka dökümü kritik.', avgWait: 14,  difficultyLabel: 'Orta' },
+                    { name: 'Fransa',    flag: '🇫🇷', visaType: 'Schengen (C)', difficulty: 0.80, approvalBase: 75, tips: 'Niyet mektubu ve konaklama belgesi önemli.', avgWait: 21,  difficultyLabel: 'Orta' },
+                    { name: 'Almanya',   flag: '🇩🇪', visaType: 'Schengen (C)', difficulty: 0.75, approvalBase: 70, tips: 'Yüksek standart. Finansal süreklilik şart.', avgWait: 45,  difficultyLabel: 'Zor' },
+                    { name: 'İngiltere', flag: '🇬🇧', visaType: 'UK Visitor',   difficulty: 0.72, approvalBase: 68, tips: '28 gün kuralı ve 6 aylık döküm zorunlu.', avgWait: 18,  difficultyLabel: 'Zor' },
+                    { name: 'ABD',       flag: '🇺🇸', visaType: 'B1/B2',        difficulty: 0.60, approvalBase: 55, tips: 'En zorlu. Mülakat + güçlü Türkiye bağı şart.', avgWait: 188, difficultyLabel: 'Çok Zor' },
                   ];
 
-                  // Her ülke için tahmini kişisel onay skoru
                   const scored = allCountries.map(c => {
                     const personalApproval = Math.round(
                       (currentScore / 100) * c.approvalBase * c.difficulty +
@@ -8688,29 +9067,96 @@ Signature: _______________     Date: ${today}`;
                     return { ...c, personalApproval: Math.min(99, Math.max(15, personalApproval)) };
                   }).sort((a, b) => b.personalApproval - a.personalApproval);
 
+                  const approvalColor = (v: number) =>
+                    v >= 75 ? 'text-emerald-600' : v >= 55 ? 'text-amber-600' : 'text-rose-600';
+                  const approvalBg = (v: number) =>
+                    v >= 75 ? 'bg-emerald-500' : v >= 55 ? 'bg-amber-400' : 'bg-rose-400';
+                  const difficultyBadge = (d: string) => {
+                    if (d === 'Kolay') return 'bg-emerald-100 text-emerald-700';
+                    if (d === 'Orta')  return 'bg-amber-100 text-amber-700';
+                    if (d === 'Zor')   return 'bg-orange-100 text-orange-700';
+                    return 'bg-rose-100 text-rose-700';
+                  };
+
+                  if (countryGuideView === 'table') {
+                    return (
+                      <div className="space-y-3">
+                        <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">
+                          Skor: {currentScore}/100 — {scored.length} Ülke Karşılaştırması
+                        </div>
+                        {/* Table Header */}
+                        <div className="grid grid-cols-[1.8fr_1fr_0.9fr_0.9fr] gap-2 px-3 py-2 bg-slate-50 rounded-xl border border-slate-200 text-[10px] font-black text-slate-400 uppercase tracking-wider">
+                          <span>Ülke</span>
+                          <span className="text-center">Tahmini Onay</span>
+                          <span className="text-center">Zorluk</span>
+                          <span className="text-center">Bekleme</span>
+                        </div>
+                        {/* Table Rows */}
+                        {scored.map((c, i) => (
+                          <div key={c.name}
+                            className={`grid grid-cols-[1.8fr_1fr_0.9fr_0.9fr] gap-2 items-center px-3 py-3 rounded-xl border transition-colors ${i === 0 ? 'bg-emerald-50 border-emerald-200' : 'bg-white border-slate-200 hover:bg-slate-50'}`}>
+                            {/* Ülke */}
+                            <div className="flex items-center gap-2 min-w-0">
+                              <span className="text-lg shrink-0">{c.flag}</span>
+                              <div className="min-w-0">
+                                <div className="flex items-center gap-1 flex-wrap">
+                                  <span className="text-sm font-bold text-slate-900 truncate">{c.name}</span>
+                                  {i === 0 && <span className="text-[8px] font-black bg-emerald-500 text-white px-1 py-0.5 rounded shrink-0">★ En İyi</span>}
+                                </div>
+                                <span className="text-[10px] text-slate-400">{c.visaType}</span>
+                              </div>
+                            </div>
+                            {/* Onay */}
+                            <div className="flex flex-col items-center gap-1">
+                              <span className={`text-base font-black ${approvalColor(c.personalApproval)}`}>%{c.personalApproval}</span>
+                              <div className="w-full bg-slate-100 rounded-full h-1">
+                                <div className={`h-1 rounded-full ${approvalBg(c.personalApproval)}`}
+                                  style={{ width: `${c.personalApproval}%` }} />
+                              </div>
+                            </div>
+                            {/* Zorluk */}
+                            <div className="flex justify-center">
+                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${difficultyBadge(c.difficultyLabel)}`}>
+                                {c.difficultyLabel}
+                              </span>
+                            </div>
+                            {/* Bekleme */}
+                            <div className="text-center">
+                              <span className={`text-xs font-bold ${c.avgWait > 30 ? 'text-rose-600' : c.avgWait > 14 ? 'text-amber-600' : 'text-slate-600'}`}>
+                                ~{c.avgWait}g
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                        <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 text-xs text-slate-500">
+                          Tahminler 2024-2025 konsolosluk istatistikleri ve profilinize dayalıdır. Nihai karar konsolosluğa aittir.
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  // Kart Görünümü
                   const top5 = scored.slice(0, 5);
                   const rest = scored.slice(5);
-
                   return (
                     <div className="space-y-4">
                       <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-                        Mevcut Skor: {currentScore}/100 — En İyi 5 Hedef
+                        Skor: {currentScore}/100 — En İyi 5 Hedef
                       </div>
-
                       {top5.map((c, i) => (
                         <div key={c.name} className={`p-4 rounded-2xl border ${i === 0 ? 'bg-emerald-50 border-emerald-200' : 'bg-white border-slate-200'}`}>
                           <div className="flex items-center gap-3 mb-2">
                             <span className="text-2xl shrink-0">{c.flag}</span>
                             <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2">
+                              <div className="flex items-center gap-2 flex-wrap">
                                 <span className="font-black text-slate-900">{c.name}</span>
                                 {i === 0 && <span className="text-[10px] font-black bg-emerald-500 text-white px-1.5 py-0.5 rounded-md">En İyi Seçim</span>}
-                                <span className="text-[10px] text-slate-400 font-medium">{c.visaType}</span>
+                                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${difficultyBadge(c.difficultyLabel)}`}>{c.difficultyLabel}</span>
                               </div>
                               <div className="text-xs text-slate-500 mt-0.5">{c.tips}</div>
                             </div>
                             <div className="text-right shrink-0">
-                              <div className={`text-xl font-black ${c.personalApproval >= 75 ? 'text-emerald-600' : c.personalApproval >= 55 ? 'text-amber-600' : 'text-rose-600'}`}>
+                              <div className={`text-xl font-black ${approvalColor(c.personalApproval)}`}>
                                 %{c.personalApproval}
                               </div>
                               <div className="text-[10px] text-slate-400">tahmini onay</div>
@@ -8718,15 +9164,13 @@ Signature: _______________     Date: ${today}`;
                           </div>
                           <div className="flex items-center gap-2">
                             <div className="flex-1 bg-slate-100 rounded-full h-1.5">
-                              <div className={`h-1.5 rounded-full ${c.personalApproval >= 75 ? 'bg-emerald-500' : c.personalApproval >= 55 ? 'bg-amber-400' : 'bg-rose-400'}`}
+                              <div className={`h-1.5 rounded-full ${approvalBg(c.personalApproval)}`}
                                 style={{ width: `${c.personalApproval}%` }} />
                             </div>
                             <span className="text-[10px] text-slate-400 shrink-0">~{c.avgWait}g bekleme</span>
                           </div>
                         </div>
                       ))}
-
-                      {/* Diğer ülkeler özet */}
                       <div className="pt-2">
                         <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Diğer Ülkeler</div>
                         <div className="space-y-1.5">
@@ -8734,18 +9178,18 @@ Signature: _______________     Date: ${today}`;
                             <div key={c.name} className="flex items-center gap-3 px-3 py-2 bg-slate-50 rounded-xl border border-slate-100">
                               <span className="text-base shrink-0">{c.flag}</span>
                               <span className="text-sm text-slate-600 flex-1">{c.name}</span>
+                              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full shrink-0 ${difficultyBadge(c.difficultyLabel)}`}>{c.difficultyLabel}</span>
                               <div className="flex items-center gap-2">
                                 <div className="w-16 bg-slate-200 rounded-full h-1.5">
-                                  <div className="h-1.5 rounded-full bg-slate-400"
+                                  <div className={`h-1.5 rounded-full ${approvalBg(c.personalApproval)}`}
                                     style={{ width: `${c.personalApproval}%` }} />
                                 </div>
-                                <span className="text-xs font-bold text-slate-500 w-8 text-right">%{c.personalApproval}</span>
+                                <span className={`text-xs font-bold w-8 text-right ${approvalColor(c.personalApproval)}`}>%{c.personalApproval}</span>
                               </div>
                             </div>
                           ))}
                         </div>
                       </div>
-
                       <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 text-xs text-slate-500">
                         Tahminler, 2024-2025 konsolosluk istatistikleri ve mevcut profilinize dayalı modeldir. Nihai karar konsolosluğa aittir.
                       </div>
