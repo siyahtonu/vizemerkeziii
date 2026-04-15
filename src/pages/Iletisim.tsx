@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, ShieldCheck, Mail, MessageSquare, MapPin, Clock } from 'lucide-react';
+import { SEO } from '../components/SEO';
 
 const Iletisim: React.FC = () => {
   const [sent, setSent] = useState(false);
@@ -14,6 +15,11 @@ const Iletisim: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-50">
+      <SEO
+        title="İletişim | VizeAkıl"
+        description="VizeAkıl ile iletişime geçin. Vize başvurusu, teknik destek ve genel sorularınız için bize ulaşın."
+        canonical="/iletisim"
+      />
       <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur-xl border-b border-slate-200/60 px-4 sm:px-6 py-4">
         <div className="max-w-5xl mx-auto flex items-center gap-3">
           <Link to="/" className="flex items-center gap-2 text-brand-600 font-bold hover:opacity-80 transition-opacity">

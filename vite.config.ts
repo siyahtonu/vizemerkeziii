@@ -3,8 +3,15 @@ import react from '@vitejs/plugin-react';
 import path from 'path';
 import { defineConfig } from 'vite';
 
+// NOT: SPA prerender için production deploy'da Netlify/Vercel SSG
+// veya ayrı bir `prerender` build adımı önerilir. react-helmet-async
+// tüm sayfalarda meta tag/title yönetimini üstlenir.
+
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
+  plugins: [
+    react(),
+    tailwindcss(),
+  ],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, '.'),
@@ -12,5 +19,18 @@ export default defineConfig({
   },
   server: {
     hmr: process.env.DISABLE_HMR !== 'true',
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-react':  ['react', 'react-dom', 'react-router-dom'],
+          'vendor-motion': ['motion'],
+          'vendor-pdf':    ['jspdf'],
+          'vendor-icons':  ['lucide-react'],
+          'vendor-helmet': ['react-helmet-async'],
+        },
+      },
+    },
   },
 });

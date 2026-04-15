@@ -1,9 +1,15 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, ShieldCheck, Target, Brain, Users } from 'lucide-react';
+import { SEO } from '../components/SEO';
 
 const Hakkimizda: React.FC = () => (
   <div className="min-h-screen bg-slate-50">
+    <SEO
+      title="Hakkımızda | VizeAkıl"
+      description="VizeAkıl, Türk vatandaşlarının Schengen, UK ve ABD vize başvurularını yapay zeka ile analiz etmelerine yardımcı olan bir platformdur."
+      canonical="/hakkimizda"
+    />
     <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur-xl border-b border-slate-200/60 px-4 sm:px-6 py-4">
       <div className="max-w-4xl mx-auto flex items-center gap-3">
         <Link to="/" className="flex items-center gap-2 text-brand-600 font-bold hover:opacity-80 transition-opacity">

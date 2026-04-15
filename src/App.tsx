@@ -57,6 +57,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { jsPDF } from 'jspdf';
 import Footer from './components/Footer';
+import { SEO } from './components/SEO';
 import { HelpModal } from './components/modals/HelpModal';
 import { CountryGuideModal } from './components/modals/CountryGuideModal';
 import { DocChecklistModal } from './components/modals/DocChecklistModal';
@@ -3655,8 +3656,68 @@ Signature: _______________     Date: ${today}`;
     };
   }, []);
 
+  // Route bazlı SEO meta
+  const seoMeta = useMemo(() => {
+    const country = profile.targetCountry || 'Schengen';
+    switch (step) {
+      case 'hero':
+        return {
+          title: 'VizeAkıl — AI Destekli Vize Başvuru Analizi',
+          description: 'Schengen, UK ve ABD vize başvurularında yapay zeka ile risk analizi. Banka dökümü, ret mektubu, randevu takibi ve 18+ araç. 2 dakikada ücretsiz profil skoru.',
+          canonical: '/',
+        };
+      case 'onboarding':
+        return {
+          title: 'Vize Profilinizi Oluşturun | VizeAkıl',
+          description: 'Ülke ve başvuru tipinizi seçin, kişiselleştirilmiş vize analizi için profilinizi başlatın.',
+          canonical: '/basla',
+          noIndex: true,
+        };
+      case 'assessment':
+        return {
+          title: 'Profil Analizi | VizeAkıl',
+          description: `${country} vize başvurusu için profil risk analiziniz hazırlanıyor.`,
+          canonical: '/sonuc',
+          noIndex: true,
+        };
+      case 'dashboard':
+        return {
+          title: `${country} Vize Skor Paneliniz | VizeAkıl`,
+          description: `${country} başvurusunda kişisel onay tahmininiz, risk faktörleriniz ve aksiyon önerileriniz.`,
+          canonical: '/panel',
+          noIndex: true,
+        };
+      case 'letter':
+        return {
+          title: 'Niyet Mektubu Oluşturucu | VizeAkıl',
+          description: 'Profesyonel vize niyet mektubu oluşturun — Türkçe ve İngilizce PDF formatında indirin.',
+          canonical: '/mektup',
+          noIndex: true,
+        };
+      case 'tactics':
+        return {
+          title: 'Vize Taktikleri & Yol Haritası | VizeAkıl',
+          description: `${country} vize başvurusunda başarı şansınızı artıracak kişisel taktik önerileri.`,
+          canonical: '/taktikler',
+          noIndex: true,
+        };
+      default:
+        return {
+          title: 'VizeAkıl — AI Destekli Vize Analizi',
+          description: 'Vize başvurunuzu yapay zeka ile analiz edin.',
+          canonical: '/',
+        };
+    }
+  }, [step, profile.targetCountry]);
+
   return (
     <>
+    <SEO
+      title={seoMeta.title}
+      description={seoMeta.description}
+      canonical={seoMeta.canonical}
+      noIndex={(seoMeta as { noIndex?: boolean }).noIndex}
+    />
     {/* Custom Cursor */}
     <div id="vize-cursor" aria-hidden="true">
       <div className="cursor-ring"/>
