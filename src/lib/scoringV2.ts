@@ -563,6 +563,94 @@ export function predictVisaOutcome(profile: ProfileV2, countryCode = 'DE'): Scor
   };
 }
 
+// ── EMPİRİK RET TAKSONOMİSİ: ProfileV2 üzerinden ceza katmanı ────────────
+//
+// 50 gerçek vaka (R analizi, 2026-04) — Schengen:30, UK:10, USA:10
+// score_penalty: severity × frequency formülüyle ölçülen tahmin değeri.
+// v1.0 uyarısı: 200+ vakaya ulaşıldığında kalibre edilecek.
+
+import { CALIBRATED_TAXONOMY, CalibratedRejection } from './rejectionTaxonomyCalibrated';
+
+export interface EmpiricalResult {
+  penaltyTotal: number;
+  triggeredPatterns: CalibratedRejection[];
+  vetoCap?: number;           // is_veto=true kalıp varsa skor bu değerle sınırlanır
+}
+
+export function applyEmpiricalPenalties(
+  profile: ProfileV2,
+  countryCode: string,
+): EmpiricalResult {
+  const group: 'uk' | 'usa' | 'schengen' =
+    countryCode === 'GB' ? 'uk'
+    : countryCode === 'US' ? 'usa'
+    : 'schengen';
+
+  const triggered: CalibratedRejection[] = [];
+  let penaltyTotal = 0;
+  let vetoCap: number | undefined = undefined;
+
+  for (const pattern of CALIBRATED_TAXONOMY) {
+    if (
+      !pattern.applicable_to.includes('all') &&
+      !pattern.applicable_to.includes(group)
+    ) continue;
+
+    if (!mapPatternToProfile(pattern.id, profile)) continue;
+
+    triggered.push(pattern);
+    if (pattern.is_veto) {
+      vetoCap = Math.min(vetoCap ?? 100, 20);
+    } else {
+      penaltyTotal += pattern.score_penalty;
+    }
+  }
+
+  return { penaltyTotal, triggeredPatterns: triggered, vetoCap };
+}
+
+/** Taksonomi ID'sini ProfileV2 alanlarına eşler */
+function mapPatternToProfile(id: string, p: ProfileV2): boolean {
+  switch (id) {
+    case 'return_doubt':
+      return !p.isMarried && !p.hasChildren && !p.hasProperty && p.yearsInJob < 3;
+    case 'purpose_unconvincing':
+      return p.purposeClarity < 2 || !p.hasDetailedItinerary;
+    case '214b_weak_ties':
+      return !p.isMarried && !p.hasProperty && p.yearsInJob < 2;
+    case 'documents_inconsistent':
+      return false; // Manuel tespit gerekli, form kontrolü uygulama tarafında
+    case 'financial_insufficient':
+      return p.bankBalance < 25_000;
+    case 'weak_ties':
+      return !p.isMarried && !p.hasProperty && !p.hasChildren;
+    case 'last_minute_deposit':
+      return p.lastMinuteDeposit;
+    case 'deception':
+      return p.previousRejections > 0 && p.balanceHeldMonths < 1; // proxy: ret var ama bakiye yeni
+    case 'documents_unreliable':
+      return !p.hasDetailedItinerary && p.purposeClarity < 1;
+    case 'family_split':
+      return p.isMarried && !p.hasChildren && p.yearsInJob < 2;
+    case 'genuine_visitor_failed':
+      return !p.hasRealHotelBooking || !p.hasDetailedItinerary;
+    case 'hotel_booking_fake':
+      return !p.hasRealHotelBooking;
+    case 'insurance_inadequate':
+      return !p.hasTravelInsurance;
+    case 'source_of_funds_unclear':
+      return p.lastMinuteDeposit || p.balanceHeldMonths < 6;
+    case 'unemployed':
+      return !p.hasSgk;
+    case 'unmarried_young':
+      return !p.isMarried && p.yearsInJob < 2;
+    case 'married_mixed':
+      return p.isMarried && !p.hasSgk && p.monthlyIncome < 10_000;
+    default:
+      return false;
+  }
+}
+
 // ── Ülke listesi yardımcısı ───────────────────────────────────────────────
 export const countryOptions = Object.values(COUNTRY_WEIGHTS).map(c => ({
   code: c.code,

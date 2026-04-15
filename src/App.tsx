@@ -1085,110 +1085,296 @@ interface RejectionPattern {
   name: string;
   country: 'schengen' | 'uk' | 'usa' | 'all';
   legalCode?: string;
-  frequency: number;   // 0-100, forum'da görülme sıklığı
+  frequency: number;        // 0-100, 50 gerçek vaka üzerinden yüzde (R analizi)
+  scorePenalty?: number;    // Ağırlıklı skor cezası (severity × frequency)
+  isVeto?: boolean;         // true → kalıcı ban / skor cap riski
   trigger: (p: ProfileData) => boolean;
   explanation: string;
   mitigation: string;
 }
 
+// ── Empirik Ret Taksonomisi v1.0 ─────────────────────────────────────────
+// Kaynak: 50 gerçek vaka R analizi (2026-04) — Schengen:30, UK:10, USA:10
+// frequency = frequency_pct, scorePenalty = severity × frequency ağırlıklı
+// v1.0 uyarısı: 200+ vakaya ulaşıldığında kalibre edilecek.
 const REJECTION_TAXONOMY: RejectionPattern[] = [
+  // ── RANK 1 — Geri dönüş şüphesi (%22, tüm ülkeler) ──────────────────
   {
-    id: 'schengen-article-10',
-    name: 'Seyahat amacı inandırıcı bulunmadı',
-    country: 'schengen',
-    legalCode: 'Madde 10',
-    frequency: 45,
-    trigger: (p) => !p.purposeClear || !p.paidReservations,
-    explanation: 'Schengen\'deki en yaygın ret sebebi (%45). Güçlü finans ve profil bile net seyahat gerekçesi olmadan yetmez.',
-    mitigation: 'Günlük plan yazın, spesifik müze/etkinlik adı verin. "Neden şimdi, neden bu ülke" sorusuna 3 cümle cevabınız olsun.',
-  },
-  {
-    id: 'schengen-article-3',
-    name: 'Finansal kanıt yetersiz/şüpheli',
-    country: 'schengen',
-    legalCode: 'Madde 3',
-    frequency: 30,
-    trigger: (p) => p.hasSuspiciousLargeDeposit || !p.bankSufficientBalance || !p.bankRegularity,
-    explanation: 'Son 28 gün içinde büyük para girişi, statik hesap veya yetersiz bakiye — hepsi aynı maddeden ret.',
-    mitigation: '3-6 ay düzenli maaş girişi, organik harcama deseni, başvurudan en az 30 gün önce bakiyeye dokunmama.',
-  },
-  {
-    id: 'schengen-article-13',
+    id: 'return_doubt',
     name: 'Geri dönüş şüphesi',
-    country: 'schengen',
-    legalCode: 'Madde 13',
-    frequency: 25,
-    trigger: (p) => !p.isMarried && !p.hasHighValueVisa && p.yearsInCurrentJob < 1,
-    explanation: 'Bekar + ilk Schengen + yeni iş kombinasyonu. Profil güçlü olsa bile bu üçlü otomatik risk sayılır.',
-    mitigation: 'Mülk/araç bağını vurgulayın. Aile üyesi Türkiye\'de kalacak mı belirtin. 5-7 günlük kısa seyahat önerin.',
+    country: 'all',
+    legalCode: 'Madde 13 / INA 214(b)',
+    frequency: 22,
+    scorePenalty: 26.7,
+    trigger: (p) =>
+      !p.isMarried && !p.hasChildren && !p.hasAssets && p.yearsInCurrentJob < 3,
+    explanation:
+      '50 vakada %22 ile en yaygın ret kalıbı. Bekar + genç + kısa iş süresi ' +
+      'kombinasyonu konsololuk gözünde "geri dönmeyebilir" izlenimi yaratır.',
+    mitigation:
+      "Türkiye'deki iş, mülk ve aile bağlarını somutlaştırın. " +
+      'SGK dökümü, tapu, kira kontratı ekleyin. 5-7 günlük kısa ilk seyahat önerilir.',
   },
+  // ── RANK 2 — Seyahat amacı inandırıcı değil (%18, tüm ülkeler) ───────
   {
-    id: 'all-sgk-missing',
-    name: 'SGK/İstihdam kanıtı eksik',
-    country: 'schengen',
-    legalCode: 'Madde 14',
-    frequency: 26,
-    trigger: (p) => !p.hasSgkJob,
-    explanation: 'Kayıt dışı çalışma veya SGK yokluğu. "İşimi kanıtlayamıyorum" şikayeti forumlarda çok sık.',
-    mitigation: 'SGK kaydı veya noter onaylı çalışma belgesi edinin. Serbest meslek varsa vergi levhası şart.',
+    id: 'purpose_unconvincing',
+    name: 'Seyahat amacı inandırıcı değil',
+    country: 'all',
+    legalCode: 'Madde 2 / Madde 10',
+    frequency: 18,
+    scorePenalty: 30.0,
+    trigger: (p) => !p.purposeClear || !p.paidReservations,
+    explanation:
+      '"Avrupa\'yı görmek istiyorum" gibi genel ifadeler %18 vakada ret sebebi. ' +
+      'Güçlü finans bile net seyahat gerekçesi olmadan tek başına yetmiyor.',
+    mitigation:
+      'Günlük seyahat planı yazın, spesifik müze/etkinlik adı verin. ' +
+      '"Neden şimdi, neden bu ülke?" sorularına 3 cümleyle net cevap hazırlayın.',
   },
+  // ── RANK 3 — ABD 214(b) zayıf bağlar (%14, sadece ABD) ───────────────
   {
-    id: 'uk-genuine-visitor',
-    name: 'Gerçek Ziyaretçi testi başarısız',
-    country: 'uk',
-    legalCode: 'Appendix V 4.2',
-    frequency: 50,
-    trigger: (p) => !p.purposeClear || !p.paidReservations || !p.hasReturnTicket,
-    explanation: 'UK\'nın en sık ret sebebi. Memur "gerçekten turist mi yoksa kalmak mı istiyor?" sorusuna kesin evet demezse ret.',
-    mitigation: 'Cover letter detaylı yazın (ne kadar, nerede, ne yapacaksınız). Türkiye\'ye dönüş bağlarını sayılarla gösterin.',
-  },
-  {
-    id: 'uk-source-of-funds',
-    name: 'Para kaynağı belirsiz',
-    country: 'uk',
-    legalCode: 'Appendix FM 1.7A',
-    frequency: 35,
-    trigger: (p) => p.hasSuspiciousLargeDeposit || !p.has6MonthStatements,
-    explanation: 'UK 28 gün kuralını katı uyguluyor. Son 6 ay hesap hareketi ve paranın kaynağı doğrulanmalı.',
-    mitigation: 'Son 6 ay banka ekstresini hazırlayın. Büyük girişler için kaynak belgesi (satış, miras, ikramiye) ekleyin.',
-  },
-  {
-    id: 'uk-deception',
-    name: 'Beyan tutarsızlığı — 10 yıl ban riski',
-    country: 'uk',
-    legalCode: 'Paragraph 9.7.1',
-    frequency: 5,
-    trigger: (p) => p.hasPreviousRefusal && !p.previousRefusalDisclosed,
-    explanation: 'Önceki ret formda bildirilmezse "Deception" sayılır → 10 yıl UK yasağı. En ağır yaptırım.',
-    mitigation: 'Tüm önceki retleri dürüstçe bildirin. Belgeler ile form arasında tek tutarsızlık olmasın.',
-  },
-  {
-    id: 'usa-214b',
-    name: '214(b) — Zayıf Türkiye bağları',
+    id: '214b_weak_ties',
+    name: "ABD 214(b) — Türkiye bağları yetersiz",
     country: 'usa',
     legalCode: 'INA 214(b)',
-    frequency: 65,
-    trigger: (p) => (!p.isMarried && !p.hasChildren && !p.hasAssets) || p.yearsInCurrentJob < 2,
-    explanation: 'ABD\'nin en sık ret sebebi (%65). Türkiye\'ye bağlayan somut unsurlar yoksa "potansiyel göçmen" sayılıyor.',
-    mitigation: 'Tapu, araç, SGK, aile fotoğrafları — bağları somutlaştırın. Kariyer planınızı mülakatta anlatın.',
+    frequency: 65, // ABD vakalarında %70 dominant — tüm 50 vakada %14
+    scorePenalty: 26.7,
+    trigger: (p) =>
+      (!p.isMarried && !p.hasChildren && !p.hasAssets) ||
+      p.yearsInCurrentJob < 2,
+    explanation:
+      "ABD vakalarının %70'inde dominant ret sebebi. Türkiye'ye bağlayan somut " +
+      'unsurlar yoksa "potansiyel göçmen" sayılıyor.',
+    mitigation:
+      "Tapu, araç, SGK, aile fotoğrafları — bağları somutlaştırın. " +
+      "Kariyer planınızı mülakatta anlatın. Mülakat hazırlığına özel çalışın.",
   },
+  // ── RANK 4 — Belge-form çelişkisi (%12, tüm ülkeler) ─────────────────
   {
-    id: 'usa-recent-job',
-    name: 'Yakın iş değişikliği',
-    country: 'usa',
-    frequency: 20,
-    trigger: (p) => p.yearsInCurrentJob < 1,
-    explanation: 'Son 6 ayda iş değişikliği istikrarsızlık sinyali. B1/B2 mülakat için ciddi risk.',
-    mitigation: 'Başvurudan önce yeni işte en az 6-12 ay kalın. Mümkünse öncekiyle aynı sektör/pozisyon.',
-  },
-  {
-    id: 'all-fake-booking',
-    name: 'Sahte rezervasyon tespiti',
+    id: 'documents_inconsistent',
+    name: 'Belge-form çelişkisi',
     country: 'all',
-    frequency: 25,
+    legalCode: 'Madde 14',
+    frequency: 12,
+    scorePenalty: 23.3,
+    trigger: (p) => !p.documentConsistency || !p.sgkAddressMatchesDs160,
+    explanation:
+      'Pasaporttaki adres ≠ SGK adresi, otel tarihleri ≠ uçuş tarihleri. ' +
+      '%12 vakada otomatik red sebebi olabildiği görüldü.',
+    mitigation:
+      'Form ile tüm belgeler arasındaki sayıları, tarihleri ve adresleri ' +
+      'çapraz kontrol edin. Adres tutarsızlığı otomatik ret riski taşıır.',
+  },
+  // ── RANK 5 — Finansal yetersizlik (%10, tüm ülkeler) ─────────────────
+  {
+    id: 'financial_insufficient',
+    name: 'Banka bakiyesi yetersiz / düzensiz',
+    country: 'all',
+    legalCode: 'Madde 3 / Madde 4',
+    frequency: 10,
+    scorePenalty: 16.7,
+    trigger: (p) =>
+      !p.bankSufficientBalance ||
+      !p.bankRegularity ||
+      p.hasSuspiciousLargeDeposit,
+    explanation:
+      'Son 28 gün içinde büyük para girişi, statik hesap veya yetersiz bakiye — ' +
+      'hepsi aynı maddeden ret. %10 vakada bu kalıp görüldü.',
+    mitigation:
+      '3-6 ay düzenli maaş girişi, organik harcama deseni, ' +
+      'başvurudan en az 30 gün önce bakiyeye dokunmama.',
+  },
+  // ── RANK 6 — Türkiye bağları genel zayıflık (%10, tüm ülkeler) ───────
+  {
+    id: 'weak_ties',
+    name: "Türkiye bağları genel olarak zayıf",
+    country: 'all',
+    frequency: 10,
+    scorePenalty: 17.4,
+    trigger: (p) =>
+      !p.isMarried && !p.hasAssets && !p.strongFamilyTies && !p.hasChildren,
+    explanation:
+      'Bekâr, çocuksuz, kiracı, SGK\'sız kombinasyonu %10 vakada bağımsız ret ' +
+      'sebebi. Geri dönüş şüphesinin genel biçimi.',
+    mitigation:
+      'Medeni durum, çocuk, mülk, kıdemli iş — hangisi varsa vurgulayın. ' +
+      "Hiçbiri yoksa güçlü profil oluşana kadar başvuruyu erteleyin.",
+  },
+  // ── RANK 7 — Son dakika banka yatırımı (%8, tüm ülkeler) ─────────────
+  {
+    id: 'last_minute_deposit',
+    name: 'Son dakika banka yatırımı (28 gün kuralı)',
+    country: 'all',
+    legalCode: 'Madde 3',
+    frequency: 8,
+    scorePenalty: 22.0,
+    trigger: (p) => p.hasSuspiciousLargeDeposit || !p.bankNoLastMinuteDeposit,
+    explanation:
+      'Başvurudan 1-2 hafta önce aile/arkadaştan borç alıp yatırmak — "emanet ' +
+      'para" terimi bizzat ret yazılarında geçiyor. Türklerin en yaygın hatası.',
+    mitigation:
+      'Başvurudan minimum 28 gün önce bakiye üzerinde hareket yapmayın. ' +
+      '3-6 ay önceden planlamaya başlayın.',
+  },
+  // ── RANK 8 — Aldatma / yanlış beyan (%4, UK + ABD, VETO) ─────────────
+  {
+    id: 'deception',
+    name: 'Aldatma / yanlış beyan — 10 yıl ban riski',
+    country: 'uk',
+    legalCode: 'Paragraph 9.7.1',
+    frequency: 4,
+    scorePenalty: 10.0,
+    isVeto: true,
+    trigger: (p) => p.hasPreviousRefusal && !p.previousRefusalDisclosed,
+    explanation:
+      'Önceki ret formda bildirilmezse "Deception" sayılır → 10 yıl UK yasağı. ' +
+      '%4 vakada görüldü ama tetiklendiğinde en ağır yaptırım.',
+    mitigation:
+      'Tüm önceki retleri eksiksiz ve dürüstçe beyan edin. ' +
+      'Belgeler ile form arasında tek bir tutarsızlık bile kalıcı yasağa yol açabilir.',
+  },
+  // ── RANK 9 — Belgeler güvenilir değil (%4, Schengen) ─────────────────
+  {
+    id: 'documents_unreliable',
+    name: 'Belgeler güvenilir bulunmadı',
+    country: 'schengen',
+    frequency: 4,
+    scorePenalty: 6.7,
+    trigger: (p) => !p.documentConsistency,
+    explanation:
+      'İşveren yazısı antetli/kaşeli/imzalı değil veya tercüme noter onaylı ' +
+      'değil. Schengen vakalarında %4 oranında görüldü.',
+    mitigation:
+      'İşveren yazısı antetli, kaşeli ve imzalı olmalı. ' +
+      'Tercüme gerekiyorsa noter onaylı olması zorunludur.',
+  },
+  // ── RANK 10 — Aile içi tutarsızlık (%4, tüm ülkeler) ─────────────────
+  {
+    id: 'family_split',
+    name: 'Aile içi dosya tutarsızlığı',
+    country: 'all',
+    frequency: 4,
+    scorePenalty: 6.7,
+    trigger: (p) => p.isMarried && !p.strongFamilyTies && !p.hasChildren,
+    explanation:
+      'Aile üyeleri ayrı dosya hazırlayınca içerik çelişkileri çıkabiliyor. ' +
+      '%4 vakada bu kalıp görüldü.',
+    mitigation:
+      'Aile başvurusu yapıyorsanız tüm üyelerin dosyalarını tek pakette ve ' +
+      'tutarlı şekilde hazırlayın.',
+  },
+  // ── RANK 11 — UK Gerçek Ziyaretçi testi (%4, UK) ─────────────────────
+  {
+    id: 'genuine_visitor_failed',
+    name: 'UK "Gerçek Ziyaretçi" testi başarısız',
+    country: 'uk',
+    legalCode: 'Appendix V 4.2',
+    frequency: 48, // UK vakalarında ağırlıklı — tüm 50 vakada %4
+    scorePenalty: 6.7,
+    trigger: (p) =>
+      !p.purposeClear || !p.paidReservations || !p.hasReturnTicket,
+    explanation:
+      "UK'nın en sık ret sebebi. Memur \"gerçekten turist mi yoksa kalmak mı " +
+      'istiyor?" sorusuna kesin evet demezse ret.',
+    mitigation:
+      "Cover letter'da ne kadar, nerede, ne yapacağınızı ayrıntılı anlatın. " +
+      "Türkiye'ye dönüş bağlarını sayılarla belgeleyin.",
+  },
+  // ── RANK 12 — Sahte otel rezervasyonu (%4, Schengen) ─────────────────
+  {
+    id: 'hotel_booking_fake',
+    name: 'Sahte otel rezervasyonu tespiti',
+    country: 'schengen',
+    frequency: 4,
+    scorePenalty: 15.0,
     trigger: (p) => !p.noFakeBooking,
-    explanation: 'İptal edilebilir ücretli otel/uçuş PDF\'i konsoloslukça biliniyor. Almanya ve UK özellikle kontrol ediyor.',
-    mitigation: 'Gerçek rezervasyon yapın veya Booking.com\'un ücretsiz iptalli seçeneğini kullanın (fake PDF değil).',
+    explanation:
+      'İptal edilebilir ücretli PDF konsoloslukça biliniyor. ' +
+      'Almanya ve UK özellikle sistematik biçimde kontrol ediyor.',
+    mitigation:
+      "Booking.com'un ücretsiz iptalli gerçek rezervasyonunu kullanın. " +
+      'Sahte PDF kesinlikle kullanmayın.',
+  },
+  // ── RANK 13 — Seyahat sigortası yetersiz (%4, Schengen) ──────────────
+  {
+    id: 'insurance_inadequate',
+    name: 'Seyahat sigortası yetersiz / eksik',
+    country: 'schengen',
+    frequency: 4,
+    scorePenalty: 8.0,
+    trigger: (p) => !p.hasTravelInsurance || !p.hasHealthInsurance,
+    explanation:
+      'Min €30.000 teminat + tüm Schengen kapsamı + seyahat tarihleri ' +
+      'şartı karşılanmadığında otomatik ret sebebi sayılıyor.',
+    mitigation:
+      '€30.000 minimum teminatlı, tüm Schengen bölgesini kapsayan ve ' +
+      'seyahat tarihlerinin tamamını içeren poliçe alın.',
+  },
+  // ── RANK 14 — UK para kaynağı belirsiz (%4, UK, VETO) ────────────────
+  {
+    id: 'source_of_funds_unclear',
+    name: 'Para kaynağı belirsiz (UK 28 gün kuralı)',
+    country: 'uk',
+    legalCode: 'Appendix FM 1.7A',
+    frequency: 22, // UK vakalarında ağırlıklı — tüm 50 vakada %4
+    scorePenalty: 10.0,
+    isVeto: true,
+    trigger: (p) =>
+      p.hasSuspiciousLargeDeposit || !p.has6MonthStatements,
+    explanation:
+      'UK 28 gün kuralını katı uyguluyor. Son 6 ay hesap hareketi ve ' +
+      'paranın kaynağı doğrulanmazsa ret.',
+    mitigation:
+      'Son 6 aylık banka ekstresini hazırlayın. ' +
+      'Büyük girişler için kaynak belgesi (satış, miras, ikramiye) ekleyin.',
+  },
+  // ── RANK 15 — İşsizlik / SGK yok (%4, Schengen + ABD) ───────────────
+  {
+    id: 'unemployed',
+    name: 'İşsizlik / SGK kaydı eksik',
+    country: 'schengen',
+    legalCode: 'Madde 14',
+    frequency: 4,
+    scorePenalty: 14.0,
+    trigger: (p) =>
+      !p.hasSgkJob && !p.isPublicSectorEmployee && !p.isStudent,
+    explanation:
+      'Kayıt dışı çalışma veya SGK yokluğu. ' +
+      '"İşimi kanıtlayamıyorum" şikayeti forumlarda çok sık karşılaşılıyor.',
+    mitigation:
+      'SGK kaydı veya noter onaylı çalışma belgesi edinin. ' +
+      'Serbest meslek varsa vergi levhası şart. Sponsor belgesiyle de başvurulabilir.',
+  },
+  // ── RANK 16 — Genç + bekar (ABD) (%4, ABD) ───────────────────────────
+  {
+    id: 'unmarried_young',
+    name: 'Genç + bekar profili (ABD riski)',
+    country: 'usa',
+    frequency: 20, // ABD vakalarında ağırlıklı — tüm 50 vakada %4
+    scorePenalty: 8.3,
+    trigger: (p) => !p.isMarried && p.yearsInCurrentJob < 2,
+    explanation:
+      'ABD vakalarında %20 oranında görülen risk kalıbı. ' +
+      'Kariyer istikrarsızlığı + bekarlık kombinasyonu 214(b) riskini artırır.',
+    mitigation:
+      'Kariyer planı + aile tapu/mülkü + kısa süreli seyahat (5-7 gün) hazırlayın. ' +
+      'İlk uluslararası başvuruda önce Schengen deneyimi kazanmanız tavsiye edilir.',
+  },
+  // ── RANK 17 — Eş yurt dışında + çalışmıyor (%4, Schengen) ────────────
+  {
+    id: 'married_mixed',
+    name: 'Eş yurt dışında + başvurucu çalışmıyor',
+    country: 'schengen',
+    frequency: 4,
+    scorePenalty: 10.0,
+    trigger: (p) =>
+      p.isMarried && !p.hasSgkJob && !p.isPublicSectorEmployee && !p.isStudent,
+    explanation:
+      'Eş yurt dışındayken başvurucunun çalışmaması ' +
+      '"aile birleşimi hedefi" izlenimi yaratabilir.',
+    mitigation:
+      'Eş yurt dışındaysa sponsor evrakı güçlü olmalı. ' +
+      "Türkiye'de kalacak aile üyesi veya mülk varsa mutlaka vurgulayın.",
   },
 ];
 
@@ -5846,6 +6032,13 @@ Signature: _______________     Date: ${today}`;
                       )}
                     </div>
 
+                    {/* 50 vaka disclaimer */}
+                    <div className="px-8 pb-1">
+                      <p className="text-[10px] text-slate-400 italic">
+                        50 gerçek Türk başvurusu R analiziyle türetildi (Schengen:30, UK:10, ABD:10 — 2026-04). İstatistiksel tahmindir, garanti değildir.
+                      </p>
+                    </div>
+
                     {rejectionMatches.length === 0 ? (
                       <div className="px-8 pb-8">
                         <div className="flex items-center gap-3 p-4 bg-emerald-50 rounded-2xl border border-emerald-100">
@@ -5858,8 +6051,9 @@ Signature: _______________     Date: ${today}`;
                     ) : (
                       <div className="divide-y divide-slate-50">
                         {rejectionMatches.map((match) => {
-                          const severity = match.frequency >= 40 ? 'critical'
-                                         : match.frequency >= 20 ? 'warning' : 'info';
+                          const severity = match.isVeto ? 'critical'
+                                         : match.frequency >= 15 ? 'critical'
+                                         : match.frequency >= 8  ? 'warning' : 'info';
                           return (
                             <div key={match.id} className="px-8 py-5">
                               <div className="flex items-start gap-3">
@@ -5868,7 +6062,7 @@ Signature: _______________     Date: ${today}`;
                                   : severity === 'warning' ? 'bg-amber-100 text-amber-700'
                                   : 'bg-blue-100 text-blue-600'
                                 }`}>
-                                  {match.frequency}%
+                                  {match.isVeto ? '⚠' : severity === 'critical' ? '🔴' : severity === 'warning' ? '🟠' : '🟡'}
                                 </div>
                                 <div className="flex-1 min-w-0">
                                   <div className="flex items-center gap-2 flex-wrap mb-1">
@@ -5883,8 +6077,13 @@ Signature: _______________     Date: ${today}`;
                                       : severity === 'warning' ? 'bg-amber-100 text-amber-700'
                                       : 'bg-blue-100 text-blue-600'
                                     }`}>
-                                      {severity === 'critical' ? 'KRİTİK' : severity === 'warning' ? 'UYARI' : 'BİLGİ'}
+                                      {match.isVeto ? 'BAN RİSKİ' : severity === 'critical' ? 'KRİTİK' : severity === 'warning' ? 'UYARI' : 'BİLGİ'}
                                     </span>
+                                    {match.scorePenalty && !match.isVeto && (
+                                      <span className="text-[10px] font-black px-2 py-0.5 bg-rose-50 text-rose-500 rounded-lg">
+                                        −{Math.round(match.scorePenalty)} puan
+                                      </span>
+                                    )}
                                   </div>
                                   <p className="text-xs text-slate-500 leading-relaxed mb-2">{match.explanation}</p>
                                   <div className="flex items-start gap-1.5">
