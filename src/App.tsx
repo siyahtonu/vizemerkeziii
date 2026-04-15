@@ -62,6 +62,7 @@ import { HelpModal } from './components/modals/HelpModal';
 import { CountryGuideModal } from './components/modals/CountryGuideModal';
 import { DocChecklistModal } from './components/modals/DocChecklistModal';
 import type { CountryWarning } from './lib/scoringV2';
+import { RejectionRiskWidget } from './components/RejectionRiskWidget';
 
 // Types
 interface ProfileData {
@@ -6081,6 +6082,24 @@ Signature: _______________     Date: ${today}`;
                     )}
                   </div>
                 </div>
+
+                {/* ── RET RİSK ANALİZİ (R-2077 Algoritması) ── */}
+                <RejectionRiskWidget
+                  profile={profile}
+                  onOpenTool={(toolKey: string) => {
+                    const toolMap: Record<string, () => void> = {
+                      bankAnaliz:   () => openTool('aibank',       setIsAiBankOpen),
+                      belgeKontrol: () => openTool('docchecklist', setIsDocChecklistOpen),
+                      niyetMektubu: () => setStep('letter'),
+                      retMektubu:   () => openTool('refusal',      setIsRefusalOpen),
+                      strateji:     () => openTool('copilot',      setIsCopilotOpen),
+                      roadmap:      () => setStep('assessment'),
+                      ulkeProfili:  () => openTool('comparator',   setIsSchengenComparatorOpen),
+                      itinerary:    () => openTool('docs',         setIsDocumentListOpen),
+                    };
+                    toolMap[toolKey]?.();
+                  }}
+                />
 
                 {/* Araçlar Paneli */}
                 <div className="bg-white border border-slate-100 rounded-[2rem] p-5 shadow-sm">
