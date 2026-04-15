@@ -6,7 +6,7 @@
  */
 
 import React, { useState } from 'react';
-import { AlertTriangle, CheckCircle2, ChevronDown, ChevronUp, TrendingUp, Zap, Info } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, ChevronDown, ChevronUp, TrendingUp, Zap, Info, Clock } from 'lucide-react';
 import { calculateRejectionRisk, type RejectionRiskResult, type FactorScore } from '../lib/rejectionRiskV2';
 
 // ── Tip Tanımları ─────────────────────────────────────────────────────────
@@ -170,7 +170,25 @@ export function RejectionRiskWidget({ profile, onOpenTool }: RejectionRiskWidget
               <span className="text-sm text-slate-500">Tahmini Onay Şansı</span>
             </div>
             <div className="text-3xl font-black text-slate-900 mb-1">%{result.approvalChance}</div>
-            <p className="text-xs text-slate-500 leading-relaxed">{result.summary}</p>
+            <p className="text-xs text-slate-500 leading-relaxed mb-2">{result.summary}</p>
+            {/* Ülke bilgi satırı */}
+            {result.countryInfo && result.countryInfo.name !== 'Belirtilmemiş' && (
+              <div className="flex flex-wrap gap-1.5">
+                <span className={`inline-flex items-center gap-1 text-[10px] font-black px-2 py-0.5 rounded-full
+                  ${result.countryInfo.difficulty === 'çok zor' ? 'bg-red-100 text-red-700' :
+                    result.countryInfo.difficulty === 'zor'     ? 'bg-orange-100 text-orange-700' :
+                    result.countryInfo.difficulty === 'orta'    ? 'bg-yellow-100 text-yellow-700' :
+                                                                   'bg-green-100 text-green-700'}`}>
+                  {result.countryInfo.name} · {result.countryInfo.difficulty}
+                </span>
+                <span className="inline-flex items-center gap-1 text-[10px] font-bold bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">
+                  <Clock className="w-2.5 h-2.5" /> ~{result.countryInfo.avgProcessingDays} gün
+                </span>
+                <span className="inline-flex items-center gap-1 text-[10px] font-bold bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">
+                  SM onay: %{result.countryInfo.approvalPct}
+                </span>
+              </div>
+            )}
           </div>
         </div>
 

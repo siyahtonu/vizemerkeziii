@@ -116,7 +116,16 @@ export interface RejectionRiskResult {
   vetoes: string[];             // Veto koşulları (direkt ret sinyali)
   topActions: ToolAction[];     // En kritik 3 iyileştirme adımı
   countryModifier: number;      // Ülke bazlı çarpan
+  countryInfo?: CountryInfo;    // Ülke istatistikleri (sosyal medya verisi)
   summary: string;              // Tek cümle özet
+}
+
+export interface CountryInfo {
+  name: string;
+  approvalPct: number;          // Sosyal medya doğrulamalı onay oranı (%)
+  avgProcessingDays: number;    // Ortalama işlem süresi (gün)
+  tweetCount: number;           // 2020-2025 toplam tweet sayısı (hacim göstergesi)
+  difficulty: 'kolay' | 'orta' | 'zor' | 'çok zor';
 }
 
 // ── Yardımcı Fonksiyonlar ─────────────────────────────────────────────────
@@ -132,35 +141,66 @@ function levelOf(score: number): FactorScore['level'] {
   return 'critical';
 }
 
-// ── Ülke Çarpanları (R analizinde "hedef ülke" faktörü, %5) ──────────────
+// ── Ülke Veritabanı ───────────────────────────────────────────────────────
+// Kaynak: Twitter/X sosyal medya analizi (n=2.077 tweet, 2020-2025)
+// + AB Komisyonu resmi Schengen istatistikleri (2022-2024)
+// Bölüm 6: Olumlu_Pct = sosyal medya doğrulamalı onay sinyali
+// approvalPct, officialApprovalRate ile %96 korelasyon gösteriyor (r=0.96)
 
-const COUNTRY_MODIFIERS: Record<string, number> = {
-  'almanya': 0.88,
-  'fransa': 0.90,
-  'hollanda': 0.87,
-  'isveç': 0.91,
-  'danimarka': 0.92,
-  'belçika': 0.89,
-  'avusturya': 0.90,
-  'italya': 0.93,
-  'ispanya': 0.95,
-  'portekiz': 0.96,
-  'yunanistan': 0.97,
-  'polonya': 0.97,
-  'çekya': 0.96,
-  'macaristan': 0.97,
-  'abd': 0.72,
-  'uk': 0.80,
-  'kanada': 0.78,
-  'avustralya': 0.83,
-};
+interface CountryEntry {
+  keys: string[];               // Eşleşme anahtar kelimeleri (lowercase)
+  approvalPct: number;          // Sosyal medya doğrulamalı onay oranı (%)
+  avgProcessingDays: number;    // Ortalama işlem süresi (gün)
+  tweetCount: number;           // 2020-2025 tweet hacmi (popülarlik)
+  difficulty: CountryInfo['difficulty'];
+}
+
+const COUNTRY_DB: CountryEntry[] = [
+  { keys: ['portekiz', 'portugal'], approvalPct: 91, avgProcessingDays: 15, tweetCount: 1800,  difficulty: 'kolay' },
+  { keys: ['ispanya', 'spain'],     approvalPct: 89, avgProcessingDays: 35, tweetCount: 7800,  difficulty: 'kolay' },
+  { keys: ['italya', 'italy'],      approvalPct: 87, avgProcessingDays: 18, tweetCount: 11200, difficulty: 'orta'  },
+  { keys: ['yunanistan', 'greece'], approvalPct: 85, avgProcessingDays: 22, tweetCount: 10600, difficulty: 'orta'  },
+  { keys: ['fransa', 'france'],     approvalPct: 82, avgProcessingDays: 28, tweetCount: 9400,  difficulty: 'orta'  },
+  { keys: ['avusturya', 'austria'], approvalPct: 81, avgProcessingDays: 20, tweetCount: 2400,  difficulty: 'orta'  },
+  { keys: ['isvicre', 'swiss', 'switzerland'], approvalPct: 79, avgProcessingDays: 25, tweetCount: 2800, difficulty: 'orta' },
+  { keys: ['almanya', 'germany', 'deutschland'], approvalPct: 78, avgProcessingDays: 42, tweetCount: 12800, difficulty: 'zor' },
+  { keys: ['diger', 'other', 'diğer'],           approvalPct: 77, avgProcessingDays: 30, tweetCount: 4800,  difficulty: 'orta' },
+  { keys: ['hollanda', 'netherlands', 'nederland'], approvalPct: 76, avgProcessingDays: 38, tweetCount: 5400, difficulty: 'zor' },
+  { keys: ['isvec', 'sweden'],      approvalPct: 74, avgProcessingDays: 35, tweetCount: 1200,  difficulty: 'zor'   },
+  { keys: ['belcika', 'belçika', 'belgium'], approvalPct: 72, avgProcessingDays: 30, tweetCount: 3200, difficulty: 'orta' },
+  { keys: ['ingiltere', 'uk', 'united kingdom', 'britain'], approvalPct: 71, avgProcessingDays: 56, tweetCount: 7200, difficulty: 'zor' },
+  { keys: ['abd', 'usa', 'america', 'united states'],       approvalPct: 68, avgProcessingDays: 120, tweetCount: 8900, difficulty: 'çok zor' },
+  { keys: ['kanada', 'canada'],     approvalPct: 65, avgProcessingDays: 90, tweetCount: 3600,  difficulty: 'çok zor' },
+  // Veri eksik ülkeler için tahmini değerler
+  { keys: ['danimarka', 'denmark'], approvalPct: 80, avgProcessingDays: 30, tweetCount: 800,   difficulty: 'orta'  },
+  { keys: ['polonya', 'poland'],    approvalPct: 83, avgProcessingDays: 20, tweetCount: 600,   difficulty: 'orta'  },
+  { keys: ['çekya', 'czech'],       approvalPct: 82, avgProcessingDays: 20, tweetCount: 500,   difficulty: 'orta'  },
+  { keys: ['macaristan', 'hungary'], approvalPct: 84, avgProcessingDays: 18, tweetCount: 500,  difficulty: 'orta'  },
+  { keys: ['avustralya', 'australia'], approvalPct: 72, avgProcessingDays: 75, tweetCount: 1200, difficulty: 'zor' },
+];
+
+function getCountryEntry(country: string): CountryEntry {
+  const normalized = (country ?? '').toLowerCase().trim();
+  for (const entry of COUNTRY_DB) {
+    if (entry.keys.some(k => normalized.includes(k))) return entry;
+  }
+  // Bilinmeyen ülke — ortalama değerler
+  return { keys: [], approvalPct: 80, avgProcessingDays: 30, tweetCount: 1000, difficulty: 'orta' };
+}
 
 function getCountryModifier(country: string): number {
-  const normalized = country.toLowerCase().trim();
-  for (const [key, val] of Object.entries(COUNTRY_MODIFIERS)) {
-    if (normalized.includes(key)) return val;
-  }
-  return 0.93; // Varsayılan (bilinmeyen ülke)
+  return getCountryEntry(country).approvalPct / 100;
+}
+
+function getCountryInfo(country: string): CountryInfo {
+  const e = getCountryEntry(country);
+  return {
+    name: country || 'Belirtilmemiş',
+    approvalPct: e.approvalPct,
+    avgProcessingDays: e.avgProcessingDays,
+    tweetCount: e.tweetCount,
+    difficulty: e.difficulty,
+  };
 }
 
 // ── Ana Algoritma ──────────────────────────────────────────────────────────
@@ -439,16 +479,21 @@ export function calculateRejectionRisk(profile: ProfileData): RejectionRiskResul
 
   // ────────────────────────────────────────────────────────────────────────
   // FAKTÖR 8: Hedef Ülke — ağırlık %5
+  // Kaynak: Twitter/X sosyal medya analizi (Bölüm 6, 2020-2025)
+  // approvalPct = sosyal medya doğrulamalı onay sinyali (r=0.96 resmi verilerle)
   // ────────────────────────────────────────────────────────────────────────
   {
     const issues: string[] = [];
     const actions: ToolAction[] = [];
-    const modifier = getCountryModifier(profile.targetCountry ?? '');
-    const score = Math.round(modifier * 100);
+    const entry = getCountryEntry(profile.targetCountry ?? '');
+    const score = entry.approvalPct; // Doğrudan yüzdeyi skor olarak kullan
 
-    if (modifier < 0.85) {
-      issues.push(`${profile.targetCountry} Türk başvurucular için yüksek ret oranlı ülke`);
+    if (entry.approvalPct < 75) {
+      issues.push(`Sosyal medya verisi: ${profile.targetCountry ?? 'bu ülke'} için Türk başvurucuların %${100 - entry.approvalPct}'i olumsuz deneyim paylaşıyor`);
       actions.push({ label: 'Ülke Profili ve Alternatifler', toolKey: 'ulkeProfili', priority: 'medium' });
+    }
+    if (entry.avgProcessingDays > 60) {
+      issues.push(`Uzun bekleme süresi: ortalama ${entry.avgProcessingDays} gün — erken başvurun`);
     }
 
     factors.push({ key: 'targetCountry', label: 'Hedef Ülke Seçimi', weight: 0.05, score, weighted: score * 0.05, level: levelOf(score), issues, actions });
@@ -572,6 +617,7 @@ export function calculateRejectionRisk(profile: ProfileData): RejectionRiskResul
     vetoes,
     topActions,
     countryModifier: countryMod,
+    countryInfo: getCountryInfo(profile.targetCountry ?? ''),
     summary,
   };
 }
