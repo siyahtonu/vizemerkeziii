@@ -143,9 +143,9 @@ export function RejectionRiskWidget({ profile, currentScore, onOpenTool }: Rejec
       </div>
 
       <div className="p-5">
-        {/* Skor + Onay Tahmini */}
-        <div className="flex items-center gap-6 mb-5">
-          {/* Dairesel skor */}
+        {/* Skor — tek headline, dashboard ile tutarlı */}
+        <div className="flex items-center gap-5 mb-5">
+          {/* Dairesel skor — currentScore ile birebir aynı */}
           <div className="relative w-24 h-24 shrink-0">
             <svg className="w-24 h-24 -rotate-90" viewBox="0 0 100 100">
               <circle cx="50" cy="50" r={radius} fill="none" stroke="#e2e8f0" strokeWidth="8" />
@@ -160,18 +160,14 @@ export function RejectionRiskWidget({ profile, currentScore, onOpenTool }: Rejec
               />
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className={`text-2xl font-black ${riskCfg.scoreColor}`}>{result.overallScore}</span>
-              <span className="text-[9px] text-slate-400 font-bold">/100</span>
+              <span className={`text-2xl font-black ${riskCfg.scoreColor}`}>%{result.overallScore}</span>
+              <span className="text-[9px] text-slate-400 font-bold leading-tight text-center">başarı<br/>şansı</span>
             </div>
           </div>
 
-          {/* Özet */}
+          {/* Sağ: özet + ülke bilgisi */}
           <div className="flex-1">
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-sm text-slate-500">Tahmini Onay Şansı</span>
-            </div>
-            <div className="text-3xl font-black text-slate-900 mb-1">%{result.approvalChance}</div>
-            <p className="text-xs text-slate-500 leading-relaxed mb-2">{result.summary}</p>
+            <p className="text-sm font-semibold text-slate-700 leading-relaxed mb-2">{result.summary}</p>
             {/* Ülke bilgi satırı */}
             {result.countryInfo && result.countryInfo.name !== 'Belirtilmemiş' && (
               <div className="flex flex-wrap gap-1.5">

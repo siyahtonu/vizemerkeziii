@@ -549,43 +549,44 @@ export function calculateRejectionRisk(profile: ProfileData, currentScore?: numb
   }
 
   // ── Genel Skor Hesabı ───────────────────────────────────────────────────
+  //
+  // Tasarım prensibi: Kullanıcı iki farklı sayı görmemeli.
+  // "Güncel Başarı Skoru" (currentScore) zaten Bayes blend ile kalibre
+  // edilmiş, ülke ret oranını içeriyor — tek gerçek sayı o.
+  //
+  // R-2077'nin görevi: faktör breakdown'ı (hangi alan güçlü/zayıf).
+  // Headline skor her zaman currentScore'dan türer.
+  //
+  // currentScore verilirse → doğrudan kullan (tutarlılık)
+  // currentScore verilmezse → R-2077 ham skoru kullan (standalone mod)
 
   const rawScore = factors.reduce((sum, f) => sum + f.weighted, 0);
   const countryMod = getCountryModifier(profile.targetCountry ?? '');
   const riskRawScore = clamp(Math.round(rawScore * countryMod));
 
-  // ── Blend: R-2077 ham skoru + mevcut kalibre edilmiş skor ────────────────
-  // Sorun: R-2077 sıfırdan başladığı için undefined field'lar skoru düşürür.
-  // Çözüm: currentScore verilirse %40 R-2077 + %60 mevcut skor blend'i kullanılır.
-  // currentScore verilmezse saf R-2077 skoru kullanılır.
-  const overallScore = currentScore !== undefined
-    ? clamp(Math.round(0.40 * riskRawScore + 0.60 * currentScore))
-    : riskRawScore;
+  // finalScore = tek gerçek sayı, iki ekranda da aynı görünür
+  const baseScore = currentScore !== undefined ? currentScore : riskRawScore;
 
-  // Veto koşulları: ağır red sinyalleri skoru bastırır (blend'den bağımsız)
+  // Veto koşulları: sahte rezervasyon / süre aşımı / ret gizleme → skor bastırılır
   const hasVeto = vetoes.length > 0;
-  const finalScore = hasVeto ? Math.min(overallScore, 45) : overallScore;
+  const finalScore = hasVeto ? Math.min(baseScore, 45) : baseScore;
 
-  // Onay tahmini: lojistik eğri benzeri dönüşüm
-  // Türk başvurucular için kalibre edilmiş: ortalama onay %68, veto yoksa
-  const approvalChance = clamp(Math.round(
-    hasVeto
-      ? finalScore * 0.6
-      : 20 + (finalScore * 0.75)
-  ));
+  // approvalChance = finalScore ile birebir aynı
+  // (currentScore zaten onay olasılığını temsil ediyor)
+  const approvalChance = finalScore;
 
-  // Risk seviyesi
+  // Risk seviyesi — finalScore eşiklerine göre
   let riskLevel: RejectionRiskResult['riskLevel'];
   let riskLabel: string;
   let riskColor: string;
 
-  if (finalScore >= 80) {
+  if (finalScore >= 82) {
     riskLevel = 'çok düşük'; riskLabel = 'Çok Düşük Risk'; riskColor = 'emerald';
-  } else if (finalScore >= 65) {
+  } else if (finalScore >= 70) {
     riskLevel = 'düşük'; riskLabel = 'Düşük Risk'; riskColor = 'green';
-  } else if (finalScore >= 50) {
+  } else if (finalScore >= 55) {
     riskLevel = 'orta'; riskLabel = 'Orta Risk'; riskColor = 'yellow';
-  } else if (finalScore >= 35) {
+  } else if (finalScore >= 40) {
     riskLevel = 'yüksek'; riskLabel = 'Yüksek Risk'; riskColor = 'orange';
   } else {
     riskLevel = 'kritik'; riskLabel = 'Kritik Risk'; riskColor = 'red';
@@ -617,8 +618,8 @@ export function calculateRejectionRisk(profile: ProfileData, currentScore?: numb
     .map(f => f.label);
 
   const summary = weakFactors.length > 0
-    ? `${weakFactors.join(' ve ')} zayıflıkları nedeniyle ret riski yüksek. Onay tahmini: %${approvalChance}.`
-    : `Profiliniz genel olarak güçlü görünüyor. Tahmini onay olasılığı: %${approvalChance}.`;
+    ? `${weakFactors.join(' ve ')} alanlarında zayıflık var — bu faktörleri güçlendirmek skoru artırır.`
+    : `Profiliniz tüm faktörlerde güçlü görünüyor. Eksik alanları kapatarak skoru koruyun.`;
 
   return {
     overallScore: finalScore,
