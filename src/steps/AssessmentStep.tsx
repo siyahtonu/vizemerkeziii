@@ -5,6 +5,8 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { CheckCircle2, Circle, ShieldCheck, ChevronRight, ArrowLeft, Briefcase, Home, Globe, Wallet, Zap } from 'lucide-react';
 import type { ProfileData } from '../types';
+import ScoreStory from '../components/ScoreStory';
+import BenchmarkCard from '../components/BenchmarkCard';
 
 interface ActionItem {
   title: string;
@@ -51,9 +53,9 @@ export function AssessmentStep({
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
-                className="max-w-4xl mx-auto space-y-12"
+                className="max-w-4xl mx-auto space-y-8 sm:space-y-12 px-4 sm:px-0"
               >
-                <div className="flex items-center gap-6">
+                <div className="flex items-center gap-3 sm:gap-6">
                   <button onClick={() => setStep('hero')} className="p-3 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl transition-all shadow-sm">
                     <ArrowLeft className="w-5 h-5 text-slate-600" />
                   </button>
@@ -275,18 +277,18 @@ export function AssessmentStep({
                 )}
   
                 {/* Skor Kartı */}
-                <div className="p-8 md:p-10 bg-slate-900 rounded-[2.5rem] text-white flex flex-col lg:flex-row items-center justify-between gap-8 relative overflow-hidden shadow-2xl">
+                <div className="p-5 sm:p-8 md:p-10 bg-slate-900 rounded-[2rem] sm:rounded-[2.5rem] text-white flex flex-col lg:flex-row items-center justify-between gap-6 sm:gap-8 relative overflow-hidden shadow-2xl">
                   <div className="absolute top-0 right-0 w-64 h-64 bg-brand-600/20 blur-[100px] rounded-full pointer-events-none" />
                   <div className="space-y-3 text-center lg:text-left relative z-10 w-full lg:w-auto">
                     <div className="text-brand-400 text-xs font-bold uppercase tracking-[0.2em]">Tahmini Başarı İhtimali</div>
-                    <div className="flex items-end gap-3">
-                      <div className="text-6xl md:text-7xl font-black text-white">%{currentScore}</div>
+                    <div className="flex items-end gap-3 justify-center lg:justify-start">
+                      <div className="text-5xl sm:text-6xl md:text-7xl font-black text-white">%{currentScore}</div>
                       <div className="text-sm text-slate-400 pb-2">
                         {currentScore < 82 ? `Hedef: %82 (+${82 - currentScore} puan)` : '✓ Başvuruya hazır'}
                       </div>
                     </div>
                     {/* Güven aralığı */}
-                    <div className="flex items-center gap-2 text-xs">
+                    <div className="flex flex-wrap items-center gap-2 text-xs justify-center lg:justify-start">
                       <span className="text-white/60">Aralık:</span>
                       <span className="text-white font-semibold">%{currentConfidence.low}–%{currentConfidence.high}</span>
                       <span className={`px-2 py-0.5 rounded-full font-bold ${currentConfidence.label === 'Yüksek' ? 'bg-emerald-500/30 text-emerald-300' : currentConfidence.label === 'Orta' ? 'bg-amber-500/30 text-amber-300' : 'bg-rose-500/30 text-rose-300'}`}>
@@ -297,26 +299,31 @@ export function AssessmentStep({
                       )}
                     </div>
                     {/* Mini progress bar */}
-                    <div className="w-full max-w-xs h-2 bg-white/10 rounded-full overflow-hidden">
+                    <div className="w-full max-w-xs h-2 bg-white/10 rounded-full overflow-hidden mx-auto lg:mx-0">
                       <div className={`h-full rounded-full transition-all ${currentScore >= 82 ? 'bg-emerald-400' : currentScore >= 65 ? 'bg-amber-400' : 'bg-rose-400'}`}
                         style={{width:`${currentScore}%`}}/>
                     </div>
-                    <p className="text-slate-400 text-xs font-medium">
-                      {currentScore >= 82 ? 'Profiliniz konsolosluk için hazır.' : `Yukarıdaki araçları kullanarak ${82-currentScore} puan daha kazanabilirsiniz.`}
-                    </p>
+                    {/* Storytelling Anlatı Kartı */}
+                    <div className="mt-3">
+                      <ScoreStory profile={profile} score={currentScore} />
+                    </div>
                   </div>
                   <div className="flex flex-col gap-3 relative z-10 w-full lg:w-auto">
                     <button
                       type="button"
                       onClick={() => setStep('dashboard')}
-                      className="btn-primary w-full lg:w-auto px-8 py-4 text-base flex items-center justify-center gap-2 group">
+                      className="btn-primary w-full lg:w-auto px-6 sm:px-8 py-3 sm:py-4 text-sm sm:text-base flex items-center justify-center gap-2 group">
                       Araçlarla Puanı Artır <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                     </button>
                     {currentScore >= 65 && (
                       <button type="button" onClick={() => setStep('letter')}
-                        className="w-full lg:w-auto px-8 py-4 text-base font-bold bg-white/10 hover:bg-white/20 rounded-xl flex items-center justify-center gap-2 transition-colors">
+                        className="w-full lg:w-auto px-6 sm:px-8 py-3 sm:py-4 text-sm sm:text-base font-bold bg-white/10 hover:bg-white/20 rounded-xl flex items-center justify-center gap-2 transition-colors">
                         Niyet Mektubu Oluştur →
                       </button>
+                    )}
+                    {/* Benchmarking Widget */}
+                    {profile.targetCountry && (
+                      <BenchmarkCard profile={profile} score={currentScore} />
                     )}
                   </div>
                 </div>

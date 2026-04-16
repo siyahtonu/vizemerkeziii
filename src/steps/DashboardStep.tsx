@@ -20,6 +20,8 @@ import { EvidenceChecklist } from '../components/EvidenceChecklist';
 import { RejectionRiskWidget } from '../components/RejectionRiskWidget';
 import SeasonalRiskWidget from '../components/SeasonalRiskWidget';
 import { WidgetBoundary } from '../components/ErrorBoundary';
+import ScoreStory from '../components/ScoreStory';
+import BenchmarkCard from '../components/BenchmarkCard';
 import { PROFILE_STORAGE_KEY, PREMIUM_TOOLS } from '../data/tools';
 import { AnimatePresence } from 'motion/react';
 import type { RejectionPattern } from '../data/refusals';
@@ -154,9 +156,9 @@ export function DashboardStep({
                 initial={{ opacity: 0, scale: 0.98 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.98 }}
-                className="space-y-10"
+                className="space-y-6 sm:space-y-10"
               >
-                <div className="space-y-5">
+                <div className="space-y-4 sm:space-y-5">
   
                   {/* ── KART 1: SKOR + ÖNCELIKLI ADIMLAR ── */}
                   <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
@@ -714,12 +716,12 @@ export function DashboardStep({
                   {/* Main Content - 8 Columns */}
                   <div className="lg:col-span-8 space-y-8">
                     {/* Score & Simulator Bento Box */}
-                    <div className="glass-card p-10 space-y-10 relative overflow-hidden group">
+                    <div className="glass-card p-5 sm:p-8 lg:p-10 space-y-6 sm:space-y-10 relative overflow-hidden group">
                       <div className="absolute -right-20 -top-20 w-64 h-64 bg-brand-500/5 rounded-full blur-3xl group-hover:bg-brand-500/10 transition-all duration-700" />
-                      
+
                       <div className="flex items-center justify-between relative z-10">
                         <div className="space-y-1">
-                          <h3 className="text-2xl font-bold text-slate-900 font-display">Başarı Analizi</h3>
+                          <h3 className="text-xl sm:text-2xl font-bold text-slate-900 font-display">Başarı Analizi</h3>
                           <p className="text-slate-500 text-sm font-medium">Profilinizin güncel vize onay ihtimali.</p>
                         </div>
                         <div className="px-4 py-2 bg-brand-50 text-brand-600 text-[10px] font-black rounded-xl tracking-widest uppercase border border-brand-100">
@@ -727,10 +729,10 @@ export function DashboardStep({
                         </div>
                       </div>
                       
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-12 relative z-10">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-12 relative z-10">
                         <div className="space-y-4">
                           <div className="flex items-baseline gap-2">
-                            <span className="text-8xl font-black text-slate-900 tracking-tighter font-mono">%{currentScore}</span>
+                            <span className="text-5xl sm:text-7xl lg:text-8xl font-black text-slate-900 tracking-tighter font-mono">%{currentScore}</span>
                             <span className={`text-sm font-bold px-3 py-1 rounded-lg ${
                               currentScore > 75 ? 'bg-emerald-50 text-emerald-600' : 
                               currentScore > 50 ? 'bg-amber-50 text-amber-600' : 'bg-rose-50 text-rose-600'
@@ -751,9 +753,13 @@ export function DashboardStep({
                           <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
                             Mavi alan: VizeAkıl stratejik katkısı
                           </p>
+                          {/* #14 Storytelling */}
+                          <WidgetBoundary name="ScoreStory">
+                            <ScoreStory profile={profile} score={currentScore} simValue={simulatorValue} />
+                          </WidgetBoundary>
                         </div>
-  
-                        <div className="space-y-6 bg-slate-50/50 p-6 rounded-[2rem] border border-slate-100">
+
+                        <div className="space-y-4 sm:space-y-6 bg-slate-50/50 p-4 sm:p-6 rounded-[1.5rem] sm:rounded-[2rem] border border-slate-100">
                           <div className="flex justify-between items-end">
                             <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Banka Bakiyesi</label>
                             <span className="text-xl font-bold text-brand-600 font-mono">{simulatorValue.toLocaleString('tr-TR')} ₺</span>
@@ -775,33 +781,40 @@ export function DashboardStep({
                       </div>
                     </div>
   
+                    {/* ── #15 Benchmark: Senin Gibi Profiller ──────────── */}
+                    {profile.targetCountry && (
+                      <WidgetBoundary name="BenchmarkCard">
+                        <BenchmarkCard profile={profile} score={currentScore} />
+                      </WidgetBoundary>
+                    )}
+
                     {/* ── Ret Risk Analizi ─────────────────────────────── */}
-                    <div className="bg-white rounded-[3rem] border border-slate-100 shadow-sm overflow-hidden">
-                      <div className="px-8 pt-8 pb-4 flex items-center justify-between">
+                    <div className="bg-white rounded-[2rem] sm:rounded-[3rem] border border-slate-100 shadow-sm overflow-hidden">
+                      <div className="px-4 sm:px-8 pt-5 sm:pt-8 pb-4 flex items-center justify-between gap-2">
                         <div>
-                          <h3 className="text-lg font-bold text-slate-900">Ret Risk Analizi</h3>
+                          <h3 className="text-base sm:text-lg font-bold text-slate-900">Ret Risk Analizi</h3>
                           <p className="text-xs text-slate-400 mt-0.5">Profilinizle eşleşen gerçek ret kalıpları</p>
                         </div>
                         {rejectionMatches.length === 0 ? (
-                          <span className="text-xs font-black px-3 py-1.5 bg-emerald-50 text-emerald-600 rounded-xl border border-emerald-100">
-                            Risk Tespit Edilmedi
+                          <span className="text-xs font-black px-3 py-1.5 bg-emerald-50 text-emerald-600 rounded-xl border border-emerald-100 shrink-0">
+                            Risk Yok
                           </span>
                         ) : (
-                          <span className="text-xs font-black px-3 py-1.5 bg-rose-50 text-rose-600 rounded-xl border border-rose-100">
-                            {rejectionMatches.length} Risk Var
+                          <span className="text-xs font-black px-3 py-1.5 bg-rose-50 text-rose-600 rounded-xl border border-rose-100 shrink-0">
+                            {rejectionMatches.length} Risk
                           </span>
                         )}
                       </div>
-  
+
                       {/* 50 vaka disclaimer */}
-                      <div className="px-8 pb-1">
+                      <div className="px-4 sm:px-8 pb-1">
                         <p className="text-[10px] text-slate-400 italic">
                           50 gerçek Türk başvurusu R analiziyle türetildi (Schengen:30, UK:10, ABD:10 — 2026-04). İstatistiksel tahmindir, garanti değildir.
                         </p>
                       </div>
   
                       {rejectionMatches.length === 0 ? (
-                        <div className="px-8 pb-8">
+                        <div className="px-4 sm:px-8 pb-5 sm:pb-8">
                           <div className="flex items-center gap-3 p-4 bg-emerald-50 rounded-2xl border border-emerald-100">
                             <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
                             <p className="text-sm text-emerald-700 font-medium">
@@ -816,7 +829,7 @@ export function DashboardStep({
                                            : match.frequency >= 15 ? 'critical'
                                            : match.frequency >= 8  ? 'warning' : 'info';
                             return (
-                              <div key={match.id} className="px-8 py-5">
+                              <div key={match.id} className="px-4 sm:px-8 py-4 sm:py-5">
                                 <div className="flex items-start gap-3">
                                   <div className={`mt-0.5 w-8 h-8 rounded-xl flex items-center justify-center shrink-0 text-xs font-black ${
                                     severity === 'critical' ? 'bg-rose-100 text-rose-600'
@@ -1042,9 +1055,9 @@ export function DashboardStep({
                   </div>
   
                   {/* Sidebar - 4 Columns */}
-                  <div className="lg:col-span-4 space-y-8">
+                  <div className="lg:col-span-4 space-y-6 sm:space-y-8">
                     {/* Bank Health Score */}
-                    <div className="glass-card p-8 space-y-8">
+                    <div className="glass-card p-5 sm:p-8 space-y-6 sm:space-y-8">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-brand-50 rounded-xl flex items-center justify-center text-brand-600 border border-brand-100">
                           <Stethoscope className="w-5 h-5" />
