@@ -4,7 +4,8 @@
 // ============================================================
 
 import type { ProfileData } from '../types';
-import { PROFILE_COUNTRY_MATRIX } from './matrices';
+import { PROFILE_COUNTRY_MATRIX, CONSULATE_MATRIX, CITY_TO_CONSULATE_ZONE } from './matrices';
+import type { ConsulateProfile, ProfileSegment, ConsulateCity } from './matrices';
 
 // ── #1 Temporal Decay (Zamansal Ağırlık) ─────────────────────────────────
 // Mantık: Konsoloslar eski vizelere yeni vizeler kadar değer vermez.
@@ -76,6 +77,101 @@ export const calculateConfidenceInterval = (
   if (completeness >= 0.80) return { label: 'Yüksek', color: 'text-emerald-600', low, high, missingCount };
   if (completeness >= 0.50) return { label: 'Orta',   color: 'text-amber-600',   low, high, missingCount };
   return { label: 'Düşük', color: 'text-rose-600', low, high, missingCount };
+};
+
+// ── #5b Konsolosluk Kalibrasyonu (v3.1) ──────────────────────────────────
+// Mantık: Aynı ülke için farklı şehirdeki konsolosluğun davranışı farklıdır.
+// city × country × profile_segment 3 boyutlu matris.
+// Çıktı: { multiplier, segmentDelta, consulateProfile }
+
+export interface ConsulateAdjustment {
+  /** Konsolosluk bazlı toplam çarpan (multiplier × segmentBonus) */
+  totalMultiplier: number;
+  /** Sadece base multiplier (segment bonusu olmadan) */
+  baseMultiplier: number;
+  /** Segment bonusu (eklenmiş değer) */
+  segmentDelta: number;
+  /** Eşleşen konsolosluk profili (null = veri yok) */
+  profile: ConsulateProfile | null;
+  /** Hangi şehir konsolosluğuna eşlendi */
+  resolvedCity: ConsulateCity | null;
+}
+
+/** Profil segment'ini belirler (algorithms.ts'deki mantıkla tutarlı) */
+const resolveSegment = (data: ProfileData): ProfileSegment => {
+  if (data.isStudent) return 'student';
+  if (data.isPublicSectorEmployee) return 'public_sector';
+  if (!data.hasSgkJob && data.hasAssets && data.applicantAge >= 55) return 'retired';
+  if (!data.hasSgkJob && data.hasAssets) return 'self_employed';
+  if (!data.hasSgkJob && !data.hasAssets) return 'unemployed';
+  return 'employed';
+};
+
+/**
+ * Kullanıcının şehrini konsolosluk bölgesine eşler.
+ * Bilinmeyen şehirler → İstanbul (varsayılan)
+ */
+export const findNearestConsulate = (
+  city: string | undefined,
+  country: string,
+): ConsulateCity | null => {
+  if (!city) return null;
+  const normalized = city.trim();
+
+  // Doğrudan eşleşme
+  const direct = CITY_TO_CONSULATE_ZONE[normalized];
+  if (direct) {
+    // Bu konsolosluk bu ülkede mevcut mu kontrol et
+    const countryEntry = CONSULATE_MATRIX[country];
+    if (countryEntry?.[direct]) return direct;
+    // Fallback: İstanbul (en büyük)
+    if (countryEntry?.['İstanbul']) return 'İstanbul';
+  }
+
+  // Konsolosluk şehri ise direkt kullan
+  const consulateCities: ConsulateCity[] = ['İstanbul', 'Ankara', 'İzmir', 'Adana', 'Gaziantep'];
+  const asConsulate = consulateCities.find(c => c === normalized);
+  if (asConsulate) {
+    const countryEntry = CONSULATE_MATRIX[country];
+    if (countryEntry?.[asConsulate]) return asConsulate;
+    if (countryEntry?.['İstanbul']) return 'İstanbul';
+  }
+
+  // Bilinmiyor → İstanbul default
+  const countryEntry = CONSULATE_MATRIX[country];
+  if (countryEntry?.['İstanbul']) return 'İstanbul';
+  return null;
+};
+
+/**
+ * 3 boyutlu konsolosluk kalibrasyonu:
+ * country × city (veya en yakın) × profile_segment → çarpan
+ */
+export const getConsulateAdjustment = (data: ProfileData): ConsulateAdjustment => {
+  const nullResult: ConsulateAdjustment = {
+    totalMultiplier: 1.0, baseMultiplier: 1.0, segmentDelta: 0, profile: null, resolvedCity: null,
+  };
+
+  const country = data.targetCountry;
+  if (!country) return nullResult;
+
+  const resolvedCity = findNearestConsulate(data.applicantCity, country);
+  if (!resolvedCity) return nullResult;
+
+  const consulateProfile = CONSULATE_MATRIX[country]?.[resolvedCity];
+  if (!consulateProfile) return nullResult;
+
+  const segment = resolveSegment(data);
+  const segmentDelta = consulateProfile.segmentBonus[segment] ?? 0;
+  const totalMultiplier = consulateProfile.multiplier + segmentDelta;
+
+  return {
+    totalMultiplier: Math.max(0.70, Math.min(1.20, totalMultiplier)),
+    baseMultiplier: consulateProfile.multiplier,
+    segmentDelta,
+    profile: consulateProfile,
+    resolvedCity,
+  };
 };
 
 // ── #3 Monotonluk Doğrulama (Dev-only guard) ─────────────────────────────

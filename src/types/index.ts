@@ -105,6 +105,9 @@ export interface ProfileData {
   // ── Form/UI Alanları ──────────────────────────────────────────────────
   bankBalance: string;        // Banka bakiyesi (form string)
   monthlyIncome: string;      // Aylık gelir (form string)
+
+  // ── Konsolosluk Kalibrasyonu (v3.1) ──────────────────────────────────
+  applicantCity?: string;     // Başvurucunun yaşadığı şehir (konsolosluk eşleme için)
 }
 
 export interface Conflict {

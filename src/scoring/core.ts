@@ -5,7 +5,7 @@
 
 import type { ProfileData } from '../types';
 import { TR_REJECTION_RATES } from './matrices';
-import { temporalDecay, getReturnTieMultiplier, getProfileCountryFactor } from './algorithms';
+import { temporalDecay, getReturnTieMultiplier, getProfileCountryFactor, getConsulateAdjustment } from './algorithms';
 
 // ============================================================
 // calculateRawScore: ülke kalibrasyonu öncesi ham skor (0-100)
@@ -168,13 +168,79 @@ export const calculateRawScore = (data: ProfileData, simValue: number = 0): numb
 
 // ============================================================
 // calculateScore: Bayes blending ile kalibre edilmiş final skor
-// Bayes blending: profil %65 + ülke TR başarı oranı %35
-// #4 Profil-Ülke Matrisi: blended skora ülke uyum çarpanı uygulanır
+//
+// Pipeline:
+//   1. calculateRawScore     → ham profil puanı (0-100)
+//   2. Bayes blending        → (raw/100)×0.65 + (1-trRejRate)×0.35
+//   3. PROFILE_COUNTRY_MATRIX → ülke × segment çarpanı
+//   4. CONSULATE_MATRIX (v3.1) → şehir × konsolosluk × segment kalibrasyonu
+//      (applicantCity tanımlıysa; yoksa bu adım atlanır → geriye uyumlu)
 // ============================================================
 export const calculateScore = (data: ProfileData, simValue: number = 0): number => {
   const raw = calculateRawScore(data, simValue);
   const trRejRate = TR_REJECTION_RATES[data.targetCountry] ?? 0.15;
   const blended = (raw / 100) * 0.65 + (1 - trRejRate) * 0.35;
   const countryFactor = getProfileCountryFactor(data);
-  return Math.max(0, Math.min(100, Math.round(blended * countryFactor * 100)));
+
+  // Konsolosluk kalibrasyonu: sadece applicantCity varsa uygula
+  // Yoksa toplam etki sıfır (geriye uyumlu)
+  let consulateFactor = 1.0;
+  if (data.applicantCity) {
+    const adj = getConsulateAdjustment(data);
+    if (adj.profile !== null) {
+      // Ağırlık: konsolosluk etkisi final skorda %15 belirleyici
+      // Formül: 0.85 (base) + 0.15 × consulateMultiplier
+      consulateFactor = 0.85 + 0.15 * adj.totalMultiplier;
+    }
+  }
+
+  return Math.max(0, Math.min(100, Math.round(blended * countryFactor * consulateFactor * 100)));
+};
+
+// ============================================================
+// calculateScoreDetailed: Kalibrasyon katmanlarını ayrı döner
+// UI'da "Neden bu skor?" breakdownı için kullanılır
+// ============================================================
+export interface ScoreBreakdown {
+  rawScore:        number;   // Ham profil puanı
+  blendedScore:    number;   // Bayes blending sonrası (0-1)
+  countryFactor:   number;   // Profil-ülke matrisi çarpanı
+  consulateFactor: number;   // Konsolosluk kalibrasyonu çarpanı
+  finalScore:      number;   // Tüm katmanlar sonrası (0-100)
+  consulateCity:   string | null;
+  consulateMood:   string | null;
+  consulateWaitDays: number | null;
+}
+
+export const calculateScoreDetailed = (data: ProfileData, simValue = 0): ScoreBreakdown => {
+  const rawScore     = calculateRawScore(data, simValue);
+  const trRejRate    = TR_REJECTION_RATES[data.targetCountry] ?? 0.15;
+  const blendedScore = (rawScore / 100) * 0.65 + (1 - trRejRate) * 0.35;
+  const countryFactor = getProfileCountryFactor(data);
+
+  let consulateFactor = 1.0;
+  let consulateCity: string | null = null;
+  let consulateMood: string | null = null;
+  let consulateWaitDays: number | null = null;
+
+  if (data.applicantCity) {
+    const adj = getConsulateAdjustment(data);
+    if (adj.profile) {
+      consulateFactor  = 0.85 + 0.15 * adj.totalMultiplier;
+      consulateCity    = adj.resolvedCity;
+      consulateMood    = adj.profile.mood;
+      consulateWaitDays = adj.profile.appointmentWaitDays;
+    }
+  }
+
+  return {
+    rawScore,
+    blendedScore,
+    countryFactor,
+    consulateFactor,
+    finalScore: Math.max(0, Math.min(100, Math.round(blendedScore * countryFactor * consulateFactor * 100))),
+    consulateCity,
+    consulateMood,
+    consulateWaitDays,
+  };
 };
