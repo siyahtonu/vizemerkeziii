@@ -48,6 +48,7 @@ const AbdVizesi2026             = lazy(() => import('./pages/blog/AbdVizesi2026'
 const KapidaVizeUlkeler         = lazy(() => import('./pages/blog/KapidaVizeUlkeler'));
 const KanadaVizesi2026          = lazy(() => import('./pages/blog/KanadaVizesi2026'));
 const DijitalNomadVizesi        = lazy(() => import('./pages/blog/DijitalNomadVizesi'));
+const NotFound                  = lazy(() => import('./pages/NotFound'));
 
 const LoadingSpinner = () => (
   <div className="min-h-screen flex items-center justify-center bg-slate-50">
@@ -111,7 +112,7 @@ createRoot(document.getElementById('root')!).render(
             <Route path="/blog/kapida-vize-veren-ulkeler-2026"           element={<KapidaVizeUlkeler />} />
             <Route path="/blog/kanada-vizesi-nasil-alinir-2026"          element={<KanadaVizesi2026 />} />
             <Route path="/blog/dijital-nomad-vizesi-2026"                element={<DijitalNomadVizesi />} />
-            <Route path="*"                    element={<App />} />
+            <Route path="*"                    element={<NotFound />} />
             </Routes>
           </Suspense>
         </BrowserRouter>

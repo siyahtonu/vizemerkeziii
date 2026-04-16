@@ -335,58 +335,93 @@ export default function BlogIndex() {
       </div>
 
       {/* ── Hero + Arama ── */}
-      <div className="bg-white border-b border-slate-200">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 bg-brand-600 rounded-xl flex items-center justify-center">
-              <BookOpen className="w-5 h-5 text-white" />
+      <div className="bg-gradient-to-b from-brand-700 to-brand-600">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
+          {/* Badge */}
+          <div className="flex items-center gap-2 mb-5">
+            <div className="w-8 h-8 bg-white/20 rounded-xl flex items-center justify-center">
+              <BookOpen className="w-4 h-4 text-white" />
             </div>
-            <span className="text-brand-600 font-semibold text-sm uppercase tracking-wider">
+            <span className="text-white/80 font-semibold text-sm uppercase tracking-wider">
               VizeAkıl Blog
             </span>
+            <span className="ml-auto text-white/60 text-xs">
+              {BLOG_POSTS.length} yazı
+            </span>
           </div>
-          <h1 className="text-3xl sm:text-4xl font-display font-black text-slate-900 mb-3 leading-tight">
+
+          <h1 className="text-3xl sm:text-4xl font-display font-black text-white mb-2 leading-tight">
             Vize Rehberleri & İpuçları
           </h1>
-          <p className="text-lg text-slate-600 max-w-2xl leading-relaxed mb-8">
-            Schengen, ABD, Almanya ve daha fazlası için güncel vize rehberleri.
-            Belge listeleri, ret sebepleri ve başarılı başvuru stratejileri.
+          <p className="text-brand-100 text-base max-w-2xl leading-relaxed mb-8">
+            Schengen, ABD, Almanya ve daha fazlası için güncel rehberler.
+            Belge listeleri, ret sebepleri, başarılı başvuru stratejileri.
           </p>
 
-          {/* ── Arama kutusu ── */}
-          <div className="relative max-w-xl">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+          {/* ── Arama kutusu — büyük, belirgin ── */}
+          <div className="relative max-w-2xl">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none" />
             <input
               type="search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Konu, ülke veya anahtar kelime ara…"
-              className="w-full pl-11 pr-10 py-3 border border-slate-200 rounded-2xl text-sm bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all"
+              placeholder="Ülke, konu veya anahtar kelime ara… (örn: Almanya banka)"
+              className="w-full pl-12 pr-12 py-4 border-0 rounded-2xl text-sm bg-white shadow-xl focus:outline-none focus:ring-2 focus:ring-brand-300 transition-all text-slate-800 placeholder:text-slate-400"
+              autoComplete="off"
             />
-            {query && (
+            {query ? (
               <button
                 onClick={() => setQuery('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-700 transition-colors"
+                className="absolute right-4 top-1/2 -translate-y-1/2 p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-all"
                 aria-label="Aramayı temizle"
               >
                 <X className="w-4 h-4" />
               </button>
+            ) : (
+              <div className="absolute right-4 top-1/2 -translate-y-1/2 hidden sm:flex items-center gap-1 text-[10px] text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded-md pointer-events-none">
+                ⌘K
+              </div>
             )}
           </div>
 
-          {/* ── Kategori filtreleri ── */}
-          <div className="flex flex-wrap gap-2 mt-4">
+          {/* Hızlı etiketler — query yokken göster */}
+          {!query && (
+            <div className="flex flex-wrap gap-2 mt-3">
+              <span className="text-xs text-white/50 self-center mr-1">Popüler:</span>
+              {['Schengen', 'Almanya', 'banka ekstresi', 'niyet mektubu', 'ret itirazı', 'randevu'].map(tag => (
+                <button
+                  key={tag}
+                  onClick={() => setQuery(tag)}
+                  className="px-3 py-1 text-xs font-medium bg-white/15 text-white rounded-full hover:bg-white/25 transition-colors border border-white/20"
+                >
+                  {tag}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ── Kategori filtreleri (kendi satırında, sticky) ── */}
+      <div className="sticky top-0 z-10 bg-white border-b border-slate-200 shadow-sm">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+          <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide pb-0.5">
             {ALL_CATEGORIES.map((cat) => (
               <button
                 key={cat}
                 onClick={() => setActiveCategory(cat)}
-                className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                className={`px-4 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all shrink-0 ${
                   activeCategory === cat
                     ? 'bg-brand-600 text-white shadow-sm'
                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                 }`}
               >
                 {cat}
+                {activeCategory === cat && activeCategory !== 'Tümü' && (
+                  <span className="ml-1.5 opacity-70">
+                    {BLOG_POSTS.filter(p => p.category === cat).length}
+                  </span>
+                )}
               </button>
             ))}
           </div>
@@ -394,32 +429,54 @@ export default function BlogIndex() {
       </div>
 
       {/* ── İçerik ── */}
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
 
-        {/* Sonuç sayısı */}
+        {/* Sonuç sayısı + hızlı sıfırla */}
         {(query || activeCategory !== 'Tümü') && (
-          <p className="text-sm text-slate-500 mb-6">
-            {filtered.length > 0
-              ? <><strong className="text-slate-800">{filtered.length}</strong> yazı bulundu</>
-              : 'Arama sonucu bulunamadı.'}
-            {query && <span className="ml-1">— "<span className="italic">{query}</span>"</span>}
-          </p>
+          <div className="flex items-center justify-between mb-6">
+            <p className="text-sm text-slate-500">
+              {filtered.length > 0 ? (
+                <><strong className="text-slate-800">{filtered.length}</strong> yazı bulundu
+                {query && <> — "<span className="italic text-brand-600">{query}</span>"</>}</>
+              ) : (
+                'Arama sonucu bulunamadı.'
+              )}
+            </p>
+            <button
+              onClick={() => { setQuery(''); setActiveCategory('Tümü'); }}
+              className="flex items-center gap-1 text-xs text-slate-400 hover:text-slate-700 transition-colors"
+            >
+              <X className="w-3 h-3" /> Filtreyi Kaldır
+            </button>
+          </div>
         )}
 
         {filtered.length === 0 ? (
-          <div className="text-center py-20">
+          <div className="text-center py-16">
             <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-5">
               <Search className="w-7 h-7 text-slate-400" />
             </div>
             <h2 className="text-lg font-bold text-slate-700 mb-2">Sonuç bulunamadı</h2>
-            <p className="text-slate-500 text-sm max-w-xs mx-auto">
-              Farklı anahtar kelimeler deneyin veya kategori filtresini kaldırın.
+            <p className="text-slate-500 text-sm max-w-xs mx-auto mb-5">
+              Farklı anahtar kelimeler deneyin veya popüler konulara göz atın.
             </p>
+            {/* Öneri etiketleri */}
+            <div className="flex flex-wrap justify-center gap-2 mb-6">
+              {['Schengen', 'Almanya', 'ABD', 'banka', 'niyet mektubu', 'ret itirazı'].map(t => (
+                <button
+                  key={t}
+                  onClick={() => { setQuery(t); setActiveCategory('Tümü'); }}
+                  className="px-3 py-1.5 bg-brand-50 text-brand-700 border border-brand-100 rounded-full text-xs font-semibold hover:bg-brand-100 transition-colors"
+                >
+                  {t}
+                </button>
+              ))}
+            </div>
             <button
               onClick={() => { setQuery(''); setActiveCategory('Tümü'); }}
-              className="mt-4 px-4 py-2 bg-brand-600 text-white rounded-xl text-sm font-semibold hover:bg-brand-700 transition-colors"
+              className="px-5 py-2.5 bg-brand-600 text-white rounded-xl text-sm font-semibold hover:bg-brand-700 transition-colors"
             >
-              Tümünü Göster
+              Tüm Yazıları Göster
             </button>
           </div>
         ) : (

@@ -22,6 +22,8 @@ import SeasonalRiskWidget from '../components/SeasonalRiskWidget';
 import { WidgetBoundary } from '../components/ErrorBoundary';
 import ScoreStory from '../components/ScoreStory';
 import BenchmarkCard from '../components/BenchmarkCard';
+import { CountryCompareWidget } from '../components/CountryCompareWidget';
+import { VisaTimeline } from '../components/VisaTimeline';
 import { PROFILE_STORAGE_KEY, PREMIUM_TOOLS } from '../data/tools';
 import { AnimatePresence } from 'motion/react';
 import type { RejectionPattern } from '../data/refusals';
@@ -361,6 +363,19 @@ export function DashboardStep({
                   <WidgetBoundary name="ProfileRadarChart">
                     <ProfileRadarChart profile={profile} />
                   </WidgetBoundary>
+
+                  {/* ── KART 1.55: ÜLKE KARŞILAŞTIRMA (VS) ── */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5">
+                    <WidgetBoundary name="CountryCompareWidget">
+                      <CountryCompareWidget
+                        defaultLeft={profile.targetCountry || 'Almanya'}
+                        defaultRight={profile.targetCountry === 'Yunanistan' ? 'Almanya' : 'Yunanistan'}
+                      />
+                    </WidgetBoundary>
+                    <WidgetBoundary name="VisaTimeline">
+                      <VisaTimeline profile={profile} />
+                    </WidgetBoundary>
+                  </div>
 
                   {/* ── KART 1.6: ÜLKE SIRALAMASI ── */}
                   <WidgetBoundary name="CountryRanking">
