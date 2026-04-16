@@ -85,6 +85,7 @@ import {
   _assertMonotonicity
 } from './scoring/algorithms';
 import { calculateRawScore, calculateScore } from './scoring/core';
+import { WhatIfSimulator } from './components/WhatIfSimulator';
 
 export default function App() {
   const navigate = useNavigate();
@@ -4830,7 +4831,10 @@ Signature: _______________     Date: ${today}`;
                   </div>
                 </div>
 
-                {/* ── KART 1.5: BAŞVURU SONUÇ TAKİBİ (Feedback Loop) ── */}
+                {/* ── KART 1.5: WHAT-IF SİMÜLATÖRÜ ── */}
+                <WhatIfSimulator profile={profile} currentScore={currentScore} />
+
+                {/* ── KART 2: BAŞVURU SONUÇ TAKİBİ (Feedback Loop) ── */}
                 <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
                   <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
                     <div className="flex items-center gap-2">
