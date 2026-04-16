@@ -34,6 +34,7 @@ const Footer: React.FC = () => {
             <div className="font-bold text-white text-sm uppercase tracking-wider mb-4">Kurumsal</div>
             <ul className="space-y-2 text-sm">
               {[
+                { label: 'Blog', href: '/blog' },
                 { label: 'Hakkımızda', href: '/hakkimizda' },
                 { label: 'KVKK Aydınlatma Metni', href: '/kvkk' },
                 { label: 'Gizlilik Politikası', href: '/gizlilik-politikasi' },
