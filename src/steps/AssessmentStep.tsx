@@ -232,6 +232,59 @@ export function AssessmentStep({
                         <p className="text-xs text-slate-400 mt-1">Eski ret cezası yıllar geçtikçe azalır</p>
                       </div>
                     </div>
+
+                    {/* Mevsimsellik — Planlanan Başvuru Tarihi */}
+                    <div className="mt-4 bg-indigo-50 border border-indigo-100 rounded-2xl p-4">
+                      <div className="flex items-center gap-2 mb-3">
+                        <span className="text-base">📅</span>
+                        <span className="text-sm font-bold text-indigo-800">Planlanan Başvuru Tarihi</span>
+                        <span className="ml-auto text-[10px] text-indigo-400 bg-indigo-100 px-2 py-0.5 rounded-full">Mevsimsel Risk Analizi</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs font-bold text-indigo-500 uppercase tracking-wider mb-1.5">Ay</label>
+                          <select
+                            value={profile.applyMonth ?? ''}
+                            onChange={(e) => setProfile(prev => ({
+                              ...prev,
+                              applyMonth: e.target.value ? parseInt(e.target.value) : undefined,
+                            }))}
+                            className="w-full bg-white border border-indigo-200 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-800 outline-none focus:border-indigo-400 transition-colors"
+                          >
+                            <option value="">Ay seçin</option>
+                            {['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran',
+                              'Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'].map((m, i) => (
+                              <option key={i + 1} value={i + 1}>{m}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-xs font-bold text-indigo-500 uppercase tracking-wider mb-1.5">Yıl</label>
+                          <input
+                            type="number"
+                            min={new Date().getFullYear()}
+                            max={new Date().getFullYear() + 2}
+                            placeholder={String(new Date().getFullYear())}
+                            value={profile.applyYear ?? ''}
+                            onChange={(e) => setProfile(prev => ({
+                              ...prev,
+                              applyYear: e.target.value ? parseInt(e.target.value) : undefined,
+                            }))}
+                            className="w-full bg-white border border-indigo-200 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-800 outline-none focus:border-indigo-400 transition-colors placeholder:text-slate-300"
+                          />
+                        </div>
+                      </div>
+                      {profile.applyMonth && (
+                        <p className="text-[11px] text-indigo-500 mt-2">
+                          ✓ Mevsimsel faktör aktif — skorunuza başvuru döneminin yoğunluk etkisi yansıtılıyor.
+                        </p>
+                      )}
+                      {!profile.applyMonth && (
+                        <p className="text-[11px] text-indigo-400 mt-2">
+                          Ay girdiğinizde Yunanistan/Almanya gibi ülkelerde yaz pik etkisi skora dahil edilir.
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </div>
   
@@ -296,6 +349,11 @@ export function AssessmentStep({
                       </span>
                       {currentConfidence.missingCount > 0 && (
                         <span className="text-white/40">(+{currentConfidence.missingCount} alan eksik)</span>
+                      )}
+                      {profile.applyMonth && (
+                        <span className="px-2 py-0.5 rounded-full font-bold bg-indigo-500/30 text-indigo-300">
+                          📅 Mevsimsel aktif
+                        </span>
                       )}
                     </div>
                     {/* Mini progress bar */}
