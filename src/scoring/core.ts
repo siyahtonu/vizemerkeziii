@@ -6,6 +6,7 @@
 import type { ProfileData } from '../types';
 import { TR_REJECTION_RATES } from './matrices';
 import { temporalDecay, getReturnTieMultiplier, getProfileCountryFactor, getConsulateAdjustment } from './algorithms';
+import { getSeasonalMultiplier } from './seasonal';
 
 // ============================================================
 // calculateRawScore: ülke kalibrasyonu öncesi ham skor (0-100)
@@ -175,6 +176,8 @@ export const calculateRawScore = (data: ProfileData, simValue: number = 0): numb
 //   3. PROFILE_COUNTRY_MATRIX → ülke × segment çarpanı
 //   4. CONSULATE_MATRIX (v3.1) → şehir × konsolosluk × segment kalibrasyonu
 //      (applicantCity tanımlıysa; yoksa bu adım atlanır → geriye uyumlu)
+//   5. SEASONAL_MULTIPLIER (v3.2) → ay × ülke × profil gücü kalibrasyonu
+//      (applyMonth tanımlıysa; yoksa 1.0 → geriye uyumlu)
 // ============================================================
 export const calculateScore = (data: ProfileData, simValue: number = 0): number => {
   const raw = calculateRawScore(data, simValue);
@@ -183,18 +186,29 @@ export const calculateScore = (data: ProfileData, simValue: number = 0): number 
   const countryFactor = getProfileCountryFactor(data);
 
   // Konsolosluk kalibrasyonu: sadece applicantCity varsa uygula
-  // Yoksa toplam etki sıfır (geriye uyumlu)
   let consulateFactor = 1.0;
   if (data.applicantCity) {
     const adj = getConsulateAdjustment(data);
     if (adj.profile !== null) {
-      // Ağırlık: konsolosluk etkisi final skorda %15 belirleyici
-      // Formül: 0.85 (base) + 0.15 × consulateMultiplier
       consulateFactor = 0.85 + 0.15 * adj.totalMultiplier;
     }
   }
 
-  return Math.max(0, Math.min(100, Math.round(blended * countryFactor * consulateFactor * 100)));
+  // Mevsimsellik kalibrasyonu (v3.2): applyMonth tanımlıysa uygula
+  // Ağırlık: final skorda %8 belirleyici (hafif sinyal)
+  // Formül: 0.92 (base) + 0.08 × seasonalMultiplier
+  let seasonalFactor = 1.0;
+  if (data.applyMonth) {
+    const sm = getSeasonalMultiplier(
+      data.targetCountry,
+      Math.round(blended * countryFactor * consulateFactor * 100),
+      data.applyMonth,
+      data.applyYear,
+    );
+    seasonalFactor = 0.92 + 0.08 * sm;
+  }
+
+  return Math.max(0, Math.min(100, Math.round(blended * countryFactor * consulateFactor * seasonalFactor * 100)));
 };
 
 // ============================================================
@@ -206,6 +220,7 @@ export interface ScoreBreakdown {
   blendedScore:    number;   // Bayes blending sonrası (0-1)
   countryFactor:   number;   // Profil-ülke matrisi çarpanı
   consulateFactor: number;   // Konsolosluk kalibrasyonu çarpanı
+  seasonalFactor:  number;   // Mevsimsellik kalibrasyonu çarpanı
   finalScore:      number;   // Tüm katmanlar sonrası (0-100)
   consulateCity:   string | null;
   consulateMood:   string | null;
@@ -233,12 +248,24 @@ export const calculateScoreDetailed = (data: ProfileData, simValue = 0): ScoreBr
     }
   }
 
+  let seasonalFactor = 1.0;
+  if (data.applyMonth) {
+    const sm = getSeasonalMultiplier(
+      data.targetCountry,
+      Math.round(blendedScore * countryFactor * consulateFactor * 100),
+      data.applyMonth,
+      data.applyYear,
+    );
+    seasonalFactor = 0.92 + 0.08 * sm;
+  }
+
   return {
     rawScore,
     blendedScore,
     countryFactor,
     consulateFactor,
-    finalScore: Math.max(0, Math.min(100, Math.round(blendedScore * countryFactor * consulateFactor * 100))),
+    seasonalFactor,
+    finalScore: Math.max(0, Math.min(100, Math.round(blendedScore * countryFactor * consulateFactor * seasonalFactor * 100))),
     consulateCity,
     consulateMood,
     consulateWaitDays,

@@ -18,6 +18,7 @@ import { CountryRanking } from '../components/CountryRanking';
 import { WhatIfSimulator } from '../components/WhatIfSimulator';
 import { EvidenceChecklist } from '../components/EvidenceChecklist';
 import { RejectionRiskWidget } from '../components/RejectionRiskWidget';
+import SeasonalRiskWidget from '../components/SeasonalRiskWidget';
 import { PROFILE_STORAGE_KEY, PREMIUM_TOOLS } from '../data/tools';
 import { AnimatePresence } from 'motion/react';
 import type { RejectionPattern } from '../data/refusals';
@@ -329,7 +330,17 @@ export function DashboardStep({
                     onProfileUpdate={(patch) => setProfile(prev => ({ ...prev, ...patch }))}
                   />
   
-                  {/* ── KART 1.8: WHAT-IF SİMÜLATÖRÜ ── */}
+                  {/* ── KART 1.8: MEVSİMSEL ZAMANLAMA ── */}
+                  {profile.targetCountry && (
+                    <SeasonalRiskWidget
+                      country={profile.targetCountry}
+                      score={currentScore}
+                      applyMonth={profile.applyMonth}
+                      applyYear={profile.applyYear}
+                    />
+                  )}
+
+                  {/* ── KART 1.9: WHAT-IF SİMÜLATÖRÜ ── */}
                   <WhatIfSimulator profile={profile} currentScore={currentScore} />
   
                   {/* ── KART 2: BAŞVURU SONUÇ TAKİBİ (Feedback Loop) ── */}

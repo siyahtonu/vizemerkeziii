@@ -108,6 +108,10 @@ export interface ProfileData {
 
   // ── Konsolosluk Kalibrasyonu (v3.1) ──────────────────────────────────
   applicantCity?: string;     // Başvurucunun yaşadığı şehir (konsolosluk eşleme için)
+
+  // ── Mevsimsellik (v3.2) ───────────────────────────────────────────────
+  applyMonth?: number;        // Başvuru ayı (1-12); tanımsızsa mevsimsel kalibrasyon atlanır
+  applyYear?:  number;        // Başvuru yılı (4 haneli)
 }
 
 export interface Conflict {
