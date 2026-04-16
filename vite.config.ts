@@ -1,7 +1,7 @@
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
-import { defineConfig } from 'vite';
+import { defineConfig } from 'vitest/config';
 
 // NOT: SPA prerender için production deploy'da Netlify/Vercel SSG
 // veya ayrı bir `prerender` build adımı önerilir. react-helmet-async
@@ -31,6 +31,15 @@ export default defineConfig({
           'vendor-helmet': ['react-helmet-async'],
         },
       },
+    },
+  },
+  test: {
+    environment: 'node',
+    include: ['src/**/__tests__/**/*.test.ts'],
+    coverage: {
+      provider: 'v8',
+      include: ['src/scoring/**'],
+      reporter: ['text', 'html'],
     },
   },
 });
