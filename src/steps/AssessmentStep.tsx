@@ -32,7 +32,7 @@ interface Props {
   onNavigate: (step: string) => void;
   onProfileUpdate: (patch: Partial<ProfileData>) => void;
   onProfileSet: React.Dispatch<React.SetStateAction<ProfileData>>;
-  onApplicantTypeChange: (t: string) => void;
+  onApplicantTypeChange: (t: 'employer' | 'unemployed' | 'minor' | 'sponsor') => void;
   onProfileToggle: (key: keyof ProfileData) => void;
 }
 

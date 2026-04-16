@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
 import './index.css';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 // ── Code splitting: sayfalar lazy yüklenir ──────────────────────────────
 const App             = lazy(() => import('./App'));
@@ -56,10 +57,11 @@ const LoadingSpinner = () => (
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <HelmetProvider>
-      <BrowserRouter>
-        <Suspense fallback={<LoadingSpinner />}>
-          <Routes>
+    <ErrorBoundary name="Root">
+      <HelmetProvider>
+        <BrowserRouter>
+          <Suspense fallback={<LoadingSpinner />}>
+            <Routes>
             <Route path="/"                    element={<App />} />
             <Route path="/basla"               element={<App />} />
             <Route path="/sonuc"               element={<App />} />
@@ -110,9 +112,10 @@ createRoot(document.getElementById('root')!).render(
             <Route path="/blog/kanada-vizesi-nasil-alinir-2026"          element={<KanadaVizesi2026 />} />
             <Route path="/blog/dijital-nomad-vizesi-2026"                element={<DijitalNomadVizesi />} />
             <Route path="*"                    element={<App />} />
-          </Routes>
-        </Suspense>
-      </BrowserRouter>
-    </HelmetProvider>
+            </Routes>
+          </Suspense>
+        </BrowserRouter>
+      </HelmetProvider>
+    </ErrorBoundary>
   </StrictMode>,
 );

@@ -1,0 +1,45 @@
+{
+  "_meta": {
+    "version": "2025-04",
+    "source": "Schengen Visa Statistics 2024 + UK Home Office + US DOS NIV Statistics",
+    "note": "Bu dosya kod deploy gerekmeden güncellenebilir. Değerler bir sonraki sayfa yüklemesinde aktif olur.",
+    "lastUpdated": "2025-04-16"
+  },
+  "rejectionRates": {
+    "Yunanistan": 0.06,
+    "Macaristan": 0.08,
+    "İtalya":     0.087,
+    "Portekiz":   0.09,
+    "Polonya":    0.09,
+    "İspanya":    0.10,
+    "Hollanda":   0.14,
+    "Avusturya":  0.14,
+    "Norveç":     0.20,
+    "Fransa":     0.21,
+    "ABD":        0.22,
+    "İsveç":      0.22,
+    "Almanya":    0.23,
+    "İngiltere":  0.30,
+    "Danimarka":  0.66
+  },
+  "difficultCountries": ["Almanya", "Fransa", "İngiltere", "ABD", "Danimarka", "İsveç", "Norveç"],
+  "countryMeta": {
+    "Yunanistan": { "flag": "🇬🇷", "region": "Schengen", "processingDays": 5,  "appointmentWaitDays": 5 },
+    "Macaristan": { "flag": "🇭🇺", "region": "Schengen", "processingDays": 8,  "appointmentWaitDays": 15 },
+    "İtalya":     { "flag": "🇮🇹", "region": "Schengen", "processingDays": 10, "appointmentWaitDays": 20 },
+    "Portekiz":   { "flag": "🇵🇹", "region": "Schengen", "processingDays": 10, "appointmentWaitDays": 14 },
+    "Polonya":    { "flag": "🇵🇱", "region": "Schengen", "processingDays": 10, "appointmentWaitDays": 14 },
+    "İspanya":    { "flag": "🇪🇸", "region": "Schengen", "processingDays": 12, "appointmentWaitDays": 25 },
+    "Hollanda":   { "flag": "🇳🇱", "region": "Schengen", "processingDays": 12, "appointmentWaitDays": 30 },
+    "Avusturya":  { "flag": "🇦🇹", "region": "Schengen", "processingDays": 12, "appointmentWaitDays": 25 },
+    "Norveç":     { "flag": "🇳🇴", "region": "Schengen", "processingDays": 15, "appointmentWaitDays": 40 },
+    "Fransa":     { "flag": "🇫🇷", "region": "Schengen", "processingDays": 15, "appointmentWaitDays": 45 },
+    "ABD":        { "flag": "🇺🇸", "region": "Diğer",    "processingDays": 30, "appointmentWaitDays": 188 },
+    "İsveç":      { "flag": "🇸🇪", "region": "Schengen", "processingDays": 15, "appointmentWaitDays": 40 },
+    "Almanya":    { "flag": "🇩🇪", "region": "Schengen", "processingDays": 20, "appointmentWaitDays": 90 },
+    "İngiltere":  { "flag": "🇬🇧", "region": "UK",       "processingDays": 15, "appointmentWaitDays": 30 },
+    "Danimarka":  { "flag": "🇩🇰", "region": "Schengen", "processingDays": 15, "appointmentWaitDays": 35 },
+    "İsviçre":    { "flag": "🇨🇭", "region": "Schengen", "processingDays": 10, "appointmentWaitDays": 20 },
+    "Belçika":    { "flag": "🇧🇪", "region": "Schengen", "processingDays": 10, "appointmentWaitDays": 20 }
+  }
+}

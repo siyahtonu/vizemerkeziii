@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import {
   CheckCircle2,
   Circle,
@@ -85,6 +85,8 @@ import {
   _assertMonotonicity
 } from './scoring/algorithms';
 import { calculateRawScore, calculateScore } from './scoring/core';
+import { useCountryRates } from './hooks/useCountryRates';
+import { WidgetBoundary } from './components/ErrorBoundary';
 import { WhatIfSimulator } from './components/WhatIfSimulator';
 import { ProfileRadarChart } from './components/ProfileRadarChart';
 import { CountryRanking } from './components/CountryRanking';
@@ -97,6 +99,9 @@ import { DashboardStep, type DashboardStepProps } from './steps/DashboardStep';
 export default function App() {
   const navigate = useNavigate();
   const location = useLocation();
+
+  // public/data/countries.json → TR_REJECTION_RATES override (deploy'suz güncelleme)
+  useCountryRates();
 
   // URL → step eşleştirmesi
   const urlToStep = (path: string): 'hero' | 'onboarding' | 'assessment' | 'dashboard' | 'letter' | 'tactics' => {
@@ -214,7 +219,7 @@ export default function App() {
   const [aiBankLoading, setAiBankLoading] = useState(false);
   const [aiBankResult, setAiBankResult] = useState<BankAnalysisResult | null>(null);
   const [aiBankFile, setAiBankFile] = useState<string>('');
-  const [applicantType, setApplicantType] = useState<'employer' | 'unemployed' | 'minor'>('employer');
+  const [applicantType, setApplicantType] = useState<'employer' | 'unemployed' | 'minor' | 'sponsor'>('employer');
   const [aiBankIncome, setAiBankIncome] = useState('');
   const [aiBankBalance, setAiBankBalance] = useState('');
   const [aiBankMonths, setAiBankMonths] = useState('3');
@@ -355,7 +360,7 @@ export default function App() {
   const [isCommunityOpen, setIsCommunityOpen] = useState(false);
   const [communityPhase, setCommunityPhase] = useState<'feed'|'submit'>('feed');
   const [communityFilter, setCommunityFilter] = useState('Tümü');
-  const [communityForm, setCommunityForm] = useState({ consulate:'', city:'İstanbul', visaType:'Turizm (Schengen)', result:'onaylandi' as const, waitDays:'', notes:'', profile:'Çalışan' });
+  const [communityForm, setCommunityForm] = useState<{consulate:string;city:string;visaType:string;result:'onaylandi'|'reddedildi'|'ek_evrak';waitDays:string;notes:string;profile:string}>({ consulate:'', city:'İstanbul', visaType:'Turizm (Schengen)', result:'onaylandi', waitDays:'', notes:'', profile:'Çalışan' });
   const [communityEntries, setCommunityEntries] = useState<CommunityEntry[]>(() => {
     try {
       const stored = localStorage.getItem(COMMUNITY_STORAGE_KEY);
@@ -479,6 +484,10 @@ export default function App() {
 
   const currentScore = useMemo(() => calculateScore(profile, simulatorValue), [profile, simulatorValue]);
 
+  // rawScore ayrı memo: countryWarning ve currentScore her ikisi de
+  // calculateRawScore çağırırdı — tek seferlik hesaplamayla paylaşılır
+  const rawScore = useMemo(() => calculateRawScore(profile, simulatorValue), [profile, simulatorValue]);
+
   // ── #6 Güven Aralığı — completeness'a göre skor aralığı ─────────────────
   const currentConfidence = useMemo(() => {
     const completeness = calculateCompleteness(profile);
@@ -491,8 +500,8 @@ export default function App() {
       return { show: false, level: 'info', message: '', alternatives: [] };
     }
 
-    // Ham profil skoru — ülke kalibrasyonu olmadan
-    const raw = calculateRawScore(profile, simulatorValue);
+    // Ham profil skoru — rawScore memo'dan gelir, yeniden hesaplanmaz
+    const raw = rawScore;
 
     // Tüm non-difficult ülkeleri dinamik olarak puanla
     const alternatives = Object.entries(TR_REJECTION_RATES)
@@ -521,7 +530,9 @@ export default function App() {
       message: messages[profile.targetCountry] ?? `${profile.targetCountry}, Türk başvurucular için yüksek ret oranıyla zorlu bir ülkedir.`,
       alternatives,
     };
-  }, [profile, simulatorValue]);
+  // rawScore zaten profile+simulatorValue'dan türetiyor; targetCountry ise
+  // DIFFICULT_COUNTRIES ve mesaj seçimi için gerekli
+  }, [rawScore, profile.targetCountry]);
 
   // ── Ret Taksonomisi: Profile uyan kalıpları tespit et ────────────────────
   const rejectionMatches = useMemo(() => {
@@ -535,7 +546,8 @@ export default function App() {
   }, [profile]);
 
   // ── Schengen Profil Bazlı Ülke Eşleşme Algoritması ──────────────
-  const computeCountryMatchScore = (country: SchengenCountry): number => {
+  // useCallback: sadece ilgili profil alanları veya currentScore değişince yeniden oluşturulur
+  const computeCountryMatchScore = useCallback((country: SchengenCountry): number => {
     let ms = 0;
 
     // 1. Temel onay oranı ağırlığı (0–35 puan)
@@ -575,7 +587,17 @@ export default function App() {
     else if (country.trend === 'Kötüleşiyor') ms -= 5;
 
     return Math.max(0, Math.min(100, Math.round(ms)));
-  };
+  }, [currentScore, profile.bankRegularity, profile.bankSufficientBalance,
+      profile.hasSgkJob, profile.hasHighValueVisa, profile.hasOtherVisa,
+      aiBankBalance, aiBankIncome, profile.bankBalance, profile.monthlyIncome]);
+
+  // Tüm ülkeler bir kez sıralanır — JSX'te iki yerde tekrar hesaplanmaz
+  const rankedCountries = useMemo(() =>
+    [...schengenCountries]
+      .map(c => ({ ...c, matchScore: computeCountryMatchScore(c) }))
+      .sort((a, b) => b.matchScore - a.matchScore),
+  [schengenCountries, computeCountryMatchScore]);
+
 
   const intelligence = useMemo(() => {
     // ─────────────────────────────────────────────────────────
@@ -3657,10 +3679,7 @@ Signature: _______________     Date: ${today}`;
                 <div className="overflow-y-auto flex-1 p-6 space-y-4">
                   {/* Profil bazlı öneri bandı */}
                   {(() => {
-                    const ranked = [...schengenCountries]
-                      .map(c => ({ ...c, matchScore: computeCountryMatchScore(c) }))
-                      .sort((a, b) => b.matchScore - a.matchScore);
-                    const best = ranked[0];
+                    const best = rankedCountries[0];
                     return best ? (
                       <div className="p-5 bg-emerald-50 border-2 border-emerald-300 rounded-2xl flex items-start gap-4 mb-2">
                         <div className="text-3xl">{best.flag}</div>
@@ -3686,10 +3705,7 @@ Signature: _______________     Date: ${today}`;
                   </div>
 
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                    {[...schengenCountries]
-                      .map(c => ({ ...c, matchScore: computeCountryMatchScore(c) }))
-                      .sort((a, b) => b.matchScore - a.matchScore)
-                      .map((country) => {
+                    {rankedCountries.map((country) => {
                       const diffColors: Record<string, string> = {
                         emerald: 'bg-emerald-50 border-emerald-200',
                         amber: 'bg-amber-50 border-amber-200',

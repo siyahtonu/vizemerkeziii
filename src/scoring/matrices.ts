@@ -3,7 +3,10 @@
 // TR_REJECTION_RATES | PROFILE_COUNTRY_MATRIX | CONSULATE_MATRIX
 // ============================================================
 
-// ── Türk başvurucular için ülke ret oranları (2024 gerçek veri) ──────────
+// ── Türk başvurucular için ülke ret oranları ─────────────────────────────
+// Bu değerler derleme zamanı fallback'tir.
+// Uygulama başlarken public/data/countries.json'dan override edilir.
+// → Ret oranı güncellemek için kod deploy gerekmez.
 export const TR_REJECTION_RATES: Record<string, number> = {
   'Yunanistan': 0.06,
   'Macaristan': 0.08,
@@ -22,7 +25,21 @@ export const TR_REJECTION_RATES: Record<string, number> = {
   'Danimarka':  0.66,
 };
 
-export const DIFFICULT_COUNTRIES = new Set(['Almanya', 'Fransa', 'İngiltere', 'ABD', 'Danimarka', 'İsveç', 'Norveç']);
+/**
+ * Uygulama boot'unda public/data/countries.json'dan gelen ret oranlarını yükler.
+ * calculateScore, bu çağrıdan sonra güncel oranları kullanır.
+ */
+export function overrideRejectionRates(rates: Record<string, number>): void {
+  for (const [country, rate] of Object.entries(rates)) {
+    TR_REJECTION_RATES[country] = rate;
+  }
+}
+
+export let DIFFICULT_COUNTRIES = new Set(['Almanya', 'Fransa', 'İngiltere', 'ABD', 'Danimarka', 'İsveç', 'Norveç']);
+
+export function overrideDifficultCountries(list: string[]): void {
+  DIFFICULT_COUNTRIES = new Set(list);
+}
 
 // ── #4 Profil-Ülke Uyum Matrisi (v2 — tam matris) ────────────────────────
 // Mantık: Belirli profil × ülke kombinasyonları tarihsel olarak daha/az uyumlu.

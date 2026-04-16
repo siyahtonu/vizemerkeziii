@@ -19,6 +19,7 @@ import { WhatIfSimulator } from '../components/WhatIfSimulator';
 import { EvidenceChecklist } from '../components/EvidenceChecklist';
 import { RejectionRiskWidget } from '../components/RejectionRiskWidget';
 import SeasonalRiskWidget from '../components/SeasonalRiskWidget';
+import { WidgetBoundary } from '../components/ErrorBoundary';
 import { PROFILE_STORAGE_KEY, PREMIUM_TOOLS } from '../data/tools';
 import { AnimatePresence } from 'motion/react';
 import type { RejectionPattern } from '../data/refusals';
@@ -76,7 +77,7 @@ export interface DashboardStepProps {
   onProfileUpdate: (patch: Partial<ProfileData>) => void;
   onProfileSet: React.Dispatch<React.SetStateAction<ProfileData>>;
   onSimulatorValueChange: (v: number) => void;
-  onOcrUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onOcrUpload: (files: FileList | null) => void;
   onGeneratePDF: (type: string) => void;
   onOpenTool: (key: string, setter: React.Dispatch<React.SetStateAction<boolean>>) => void;
   onFeedbackStepChange: React.Dispatch<React.SetStateAction<string>>;
@@ -295,53 +296,65 @@ export function DashboardStep({
                       </button>
                       {showRiskDetail && (
                         <div className="mt-3">
-                          <RejectionRiskWidget
-                            profile={profile as unknown as Record<string, unknown>}
-                            currentScore={currentScore}
-                            onOpenTool={(toolKey: string) => {
-                              const toolMap: Record<string, () => void> = {
-                                bankAnaliz:   () => openTool('aibank',       setIsAiBankOpen),
-                                belgeKontrol: () => openTool('docchecklist', setIsDocChecklistOpen),
-                                niyetMektubu: () => setStep('letter'),
-                                retMektubu:   () => openTool('refusal',      setIsRefusalOpen),
-                                strateji:     () => openTool('copilot',      setIsCopilotOpen),
-                                roadmap:      () => setStep('assessment'),
-                                ulkeProfili:  () => openTool('comparator',   setIsSchengenComparatorOpen),
-                                itinerary:    () => openTool('docs',         setIsDocumentListOpen),
-                              };
-                              toolMap[toolKey]?.();
-                            }}
-                          />
+                          <WidgetBoundary name="RejectionRiskWidget">
+                            <RejectionRiskWidget
+                              profile={profile as unknown as Record<string, unknown>}
+                              currentScore={currentScore}
+                              onOpenTool={(toolKey: string) => {
+                                const toolMap: Record<string, () => void> = {
+                                  bankAnaliz:   () => openTool('aibank',       setIsAiBankOpen),
+                                  belgeKontrol: () => openTool('docchecklist', setIsDocChecklistOpen),
+                                  niyetMektubu: () => setStep('letter'),
+                                  retMektubu:   () => openTool('refusal',      setIsRefusalOpen),
+                                  strateji:     () => openTool('copilot',      setIsCopilotOpen),
+                                  roadmap:      () => setStep('assessment'),
+                                  ulkeProfili:  () => openTool('comparator',   setIsSchengenComparatorOpen),
+                                  itinerary:    () => openTool('docs',         setIsDocumentListOpen),
+                                };
+                                toolMap[toolKey]?.();
+                              }}
+                            />
+                          </WidgetBoundary>
                         </div>
                       )}
                     </div>
                   </div>
   
                   {/* ── KART 1.5: KİŞİSEL RİSK HARİTASI ── */}
-                  <ProfileRadarChart profile={profile} />
-  
+                  <WidgetBoundary name="ProfileRadarChart">
+                    <ProfileRadarChart profile={profile} />
+                  </WidgetBoundary>
+
                   {/* ── KART 1.6: ÜLKE SIRALAMASI ── */}
-                  <CountryRanking profile={profile} currentScore={currentScore} />
-  
+                  <WidgetBoundary name="CountryRanking">
+                    <CountryRanking profile={profile} currentScore={currentScore} />
+                  </WidgetBoundary>
+
                   {/* ── KART 1.7: KANIT KONTROL LİSTESİ ── */}
-                  <EvidenceChecklist
-                    profile={profile}
-                    currentScore={currentScore}
-                    onProfileUpdate={(patch) => setProfile(prev => ({ ...prev, ...patch }))}
-                  />
-  
+                  <WidgetBoundary name="EvidenceChecklist">
+                    <EvidenceChecklist
+                      profile={profile}
+                      currentScore={currentScore}
+                      onProfileUpdate={(patch) => setProfile(prev => ({ ...prev, ...patch }))}
+                    />
+                  </WidgetBoundary>
+
                   {/* ── KART 1.8: MEVSİMSEL ZAMANLAMA ── */}
                   {profile.targetCountry && (
-                    <SeasonalRiskWidget
-                      country={profile.targetCountry}
-                      score={currentScore}
-                      applyMonth={profile.applyMonth}
-                      applyYear={profile.applyYear}
-                    />
+                    <WidgetBoundary name="SeasonalRiskWidget">
+                      <SeasonalRiskWidget
+                        country={profile.targetCountry}
+                        score={currentScore}
+                        applyMonth={profile.applyMonth}
+                        applyYear={profile.applyYear}
+                      />
+                    </WidgetBoundary>
                   )}
 
                   {/* ── KART 1.9: WHAT-IF SİMÜLATÖRÜ ── */}
-                  <WhatIfSimulator profile={profile} currentScore={currentScore} />
+                  <WidgetBoundary name="WhatIfSimulator">
+                    <WhatIfSimulator profile={profile} currentScore={currentScore} />
+                  </WidgetBoundary>
   
                   {/* ── KART 2: BAŞVURU SONUÇ TAKİBİ (Feedback Loop) ── */}
                   <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
