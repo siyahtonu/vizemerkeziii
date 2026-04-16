@@ -35,6 +35,18 @@ const IngiltereNiyetMektubu     = lazy(() => import('./pages/blog/IngiltereNiyet
 const SchengenUlkeKarsilastirma = lazy(() => import('./pages/blog/SchengenUlkeKarsilastirma'));
 const DubaiEvizeKapiVize        = lazy(() => import('./pages/blog/DubaiEvizeKapiVize'));
 const F1J1VizeFarklari          = lazy(() => import('./pages/blog/F1J1VizeFarklari'));
+// ── Blog — SEO Strateji Yazıları ────────────────────────────────────────
+const CascadeKurali             = lazy(() => import('./pages/blog/CascadeKurali'));
+const EesSistemi                = lazy(() => import('./pages/blog/EesSistemi'));
+const IngiltereEvisa            = lazy(() => import('./pages/blog/IngiltereEvisa'));
+const SchengenNasilAlinir       = lazy(() => import('./pages/blog/SchengenNasilAlinir'));
+const SchengenRetKodlari        = lazy(() => import('./pages/blog/SchengenRetKodlari'));
+const VizeRandevuNasilAlinir    = lazy(() => import('./pages/blog/VizeRandevuNasilAlinir'));
+const AlmanyaVizesi2026         = lazy(() => import('./pages/blog/AlmanyaVizesi2026'));
+const AbdVizesi2026             = lazy(() => import('./pages/blog/AbdVizesi2026'));
+const KapidaVizeUlkeler         = lazy(() => import('./pages/blog/KapidaVizeUlkeler'));
+const KanadaVizesi2026          = lazy(() => import('./pages/blog/KanadaVizesi2026'));
+const DijitalNomadVizesi        = lazy(() => import('./pages/blog/DijitalNomadVizesi'));
 
 const LoadingSpinner = () => (
   <div className="min-h-screen flex items-center justify-center bg-slate-50">
@@ -85,6 +97,18 @@ createRoot(document.getElementById('root')!).render(
             <Route path="/blog/2026-schengen-kolay-zor-ulkeler"          element={<SchengenUlkeKarsilastirma />} />
             <Route path="/blog/dubai-evize-mi-kapida-vize-mi"            element={<DubaiEvizeKapiVize />} />
             <Route path="/blog/f1-j1-vizesi-farklari"                    element={<F1J1VizeFarklari />} />
+            {/* Blog — SEO Strateji Yazıları */}
+            <Route path="/blog/cascade-kurali-schengen-vizesi"           element={<CascadeKurali />} />
+            <Route path="/blog/ees-sistemi-nedir"                        element={<EesSistemi />} />
+            <Route path="/blog/ingiltere-evisa-rehberi"                  element={<IngiltereEvisa />} />
+            <Route path="/blog/schengen-vizesi-nasil-alinir"             element={<SchengenNasilAlinir />} />
+            <Route path="/blog/schengen-vize-ret-kodlari-c1-c14"        element={<SchengenRetKodlari />} />
+            <Route path="/blog/vize-randevusu-nasil-alinir"              element={<VizeRandevuNasilAlinir />} />
+            <Route path="/blog/almanya-vizesi-nasil-alinir-2026"         element={<AlmanyaVizesi2026 />} />
+            <Route path="/blog/abd-vizesi-nasil-alinir-2026"             element={<AbdVizesi2026 />} />
+            <Route path="/blog/kapida-vize-veren-ulkeler-2026"           element={<KapidaVizeUlkeler />} />
+            <Route path="/blog/kanada-vizesi-nasil-alinir-2026"          element={<KanadaVizesi2026 />} />
+            <Route path="/blog/dijital-nomad-vizesi-2026"                element={<DijitalNomadVizesi />} />
             <Route path="*"                    element={<App />} />
           </Routes>
         </Suspense>
