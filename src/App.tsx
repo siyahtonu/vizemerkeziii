@@ -86,6 +86,8 @@ import {
 } from './scoring/algorithms';
 import { calculateRawScore, calculateScore } from './scoring/core';
 import { WhatIfSimulator } from './components/WhatIfSimulator';
+import { ProfileRadarChart } from './components/ProfileRadarChart';
+import { CountryRanking } from './components/CountryRanking';
 
 export default function App() {
   const navigate = useNavigate();
@@ -4831,7 +4833,13 @@ Signature: _______________     Date: ${today}`;
                   </div>
                 </div>
 
-                {/* ── KART 1.5: WHAT-IF SİMÜLATÖRÜ ── */}
+                {/* ── KART 1.5: KİŞİSEL RİSK HARİTASI ── */}
+                <ProfileRadarChart profile={profile} />
+
+                {/* ── KART 1.6: ÜLKE SIRALAMASI ── */}
+                <CountryRanking profile={profile} currentScore={currentScore} />
+
+                {/* ── KART 1.7: WHAT-IF SİMÜLATÖRÜ ── */}
                 <WhatIfSimulator profile={profile} currentScore={currentScore} />
 
                 {/* ── KART 2: BAŞVURU SONUÇ TAKİBİ (Feedback Loop) ── */}
