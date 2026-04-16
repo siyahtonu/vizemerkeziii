@@ -1449,6 +1449,7 @@ export default function App() {
   const [apptSelected, setApptSelected] = useState<string[]>([]);
   const [apptSubStatus, setApptSubStatus] = useState<'idle'|'loading'|'success'|'error'>('idle');
   const [apptCountryFilter, setApptCountryFilter] = useState('Tümü');
+  const [apptShowAvailableOnly, setApptShowAvailableOnly] = useState(false);
 
   // Özellik 9: Red Flag Checker — Başvuru Risk Tarayıcısı
   const [isRedFlagOpen, setIsRedFlagOpen] = useState(false);
@@ -8356,14 +8357,26 @@ Signature: _______________     Date: ${today}`;
                   ))}
                 </div>
 
-                {/* Ülke filtre */}
-                <div className="flex gap-2 flex-wrap">
+                {/* Ülke filtre + Müsait Olanlar butonu */}
+                <div className="flex gap-2 flex-wrap items-center">
                   {['Tümü','Almanya','Fransa','Hollanda','İngiltere','ABD','İtalya','İspanya'].map(c => (
                     <button key={c} onClick={() => setApptCountryFilter(c)}
                       className={`px-3 py-1 rounded-xl text-xs font-bold transition-all ${apptCountryFilter===c?'bg-white text-slate-900':'bg-white/10 text-white hover:bg-white/20'}`}>
                       {c}
                     </button>
                   ))}
+                  <div className="h-4 w-px bg-white/20 mx-1" />
+                  <button
+                    onClick={() => setApptShowAvailableOnly(v => !v)}
+                    className={`flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold transition-all border ${
+                      apptShowAvailableOnly
+                        ? 'bg-emerald-400 text-white border-emerald-300'
+                        : 'bg-white/10 text-white border-white/20 hover:bg-white/20'
+                    }`}
+                  >
+                    <span className={`w-2 h-2 rounded-full ${apptShowAvailableOnly ? 'bg-white' : 'bg-emerald-400'}`} />
+                    Müsait Olanlar
+                  </button>
                 </div>
               </div>
 
@@ -8396,16 +8409,25 @@ Signature: _______________     Date: ${today}`;
                       <span className="text-xs font-bold text-brand-600">{apptSelected.length} seçildi</span>
                     )}
                   </div>
+                  {apptShowAvailableOnly && (
+                    <div className="flex items-center gap-2 p-2.5 bg-emerald-50 border border-emerald-200 rounded-xl mb-3 text-xs text-emerald-700 font-semibold">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                      Yalnızca müsait merkezler gösteriliyor
+                    </div>
+                  )}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {(APPOINTMENT_TARGETS as readonly ApptTarget[])
-                      .filter(t => apptCountryFilter === 'Tümü' || t.country === apptCountryFilter)
+                      .filter(t =>
+                        (apptCountryFilter === 'Tümü' || t.country === apptCountryFilter) &&
+                        (!apptShowAvailableOnly || t.status === 'müsait')
+                      )
                       .map(t => {
                         const isSelected = apptSelected.includes(t.id);
                         const isMüsait = t.status === 'müsait';
                         return (
                           <button key={t.id}
                             onClick={() => setApptSelected(p => isSelected ? p.filter(x=>x!==t.id) : [...p, t.id])}
-                            className={`p-4 rounded-2xl border-2 text-left transition-all ${isSelected ? 'border-brand-500 bg-brand-50' : 'border-slate-200 hover:border-slate-300 bg-white'}`}>
+                            className={`p-4 rounded-2xl border-2 text-left transition-all ${isSelected ? 'border-brand-500 bg-brand-50' : isMüsait ? 'border-emerald-200 hover:border-emerald-300 bg-white' : 'border-slate-200 hover:border-slate-300 bg-white'}`}>
                             <div className="flex items-center justify-between mb-2">
                               <div className="flex items-center gap-2">
                                 <span className="text-xl">{t.flag}</span>
@@ -8434,6 +8456,24 @@ Signature: _______________     Date: ${today}`;
                           </button>
                         );
                       })}
+                    {/* Boş state: filtre sonucu yok */}
+                    {(APPOINTMENT_TARGETS as readonly ApptTarget[]).filter(t =>
+                      (apptCountryFilter === 'Tümü' || t.country === apptCountryFilter) &&
+                      (!apptShowAvailableOnly || t.status === 'müsait')
+                    ).length === 0 && (
+                      <div className="col-span-2 text-center py-8 text-sm text-slate-500">
+                        <div className="text-2xl mb-2">😔</div>
+                        {apptShowAvailableOnly
+                          ? 'Seçili ülkede şu an müsait slot yok. Takip için e-postanı bırak.'
+                          : 'Bu ülke için merkez bulunamadı.'}
+                        {apptShowAvailableOnly && (
+                          <button onClick={() => setApptShowAvailableOnly(false)}
+                            className="block mx-auto mt-2 text-xs text-brand-600 font-bold hover:text-brand-800">
+                            Tüm merkezleri göster →
+                          </button>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
 
