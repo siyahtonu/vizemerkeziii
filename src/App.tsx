@@ -96,6 +96,7 @@ import { TacticsStep } from './steps/TacticsStep';
 import { LetterStep } from './steps/LetterStep';
 import { DashboardStep, type DashboardStepProps } from './steps/DashboardStep';
 import { StepProgress } from './components/StepProgress';
+import { AnalysisReportModal } from './components/AnalysisReportModal';
 import { SocialProofBar } from './components/SocialProofBar';
 
 export default function App() {
@@ -137,7 +138,20 @@ export default function App() {
 
   // TEST MODU: Tüm premium araçlar açık — ödeme entegrasyonu tamamlanınca false yapılacak
   const [isPremium, setIsPremium] = useState(true);
+
+  // #18 Devam Et banneri — mount'ta bir kez kontrol et
+  const hasSavedProfile = useMemo(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(PROFILE_STORAGE_KEY) || 'null');
+      if (!saved) return false;
+      return !!(saved.bankSufficientBalance || saved.hasSgkJob || saved.hasHighValueVisa ||
+        saved.hasAssets || saved.isMarried || saved.cleanCriminalRecord ||
+        (saved.applicantAge && saved.applicantAge !== 28 && saved.applicantAge > 0));
+    } catch { return false; }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // mount-only
   const [isUpgradeOpen, setIsUpgradeOpen] = useState(false);
+  const [isAnalysisReportOpen, setIsAnalysisReportOpen] = useState(false);
   const [onboardingStep, setOnboardingStep] = useState(0);
   const [onboardingCountry, setOnboardingCountry] = useState('Almanya');
   const [onboardingProfile, setOnboardingProfile] = useState('');
@@ -391,7 +405,7 @@ export default function App() {
     hasSgkJob: false,
     isPublicSectorEmployee: false,
     sgkEmployerLetterWithReturn: false,
-    yearsInCurrentJob: 0,
+    yearsInCurrentJob: 3,
     sgkAddressMatchesDs160: true,
     hasHighValueVisa: false,
     hasOtherVisa: false,
@@ -445,7 +459,7 @@ export default function App() {
     monthlyIncome: '',
     lastVisaYear: 0,
     lastRejectionYear: 0,
-    applicantAge: 0,
+    applicantAge: 28,
   };
 
   const [profile, setProfile] = useState<ProfileData>(() => {
@@ -1966,6 +1980,13 @@ NOTE: All flight confirmation documents, hotel vouchers and travel insurance pol
 ${d.fullName}
 Signature: _______________     Date: ${today}`;
   };
+
+  // ── Profil Sıfırlama ─────────────────────────────────────────────────────
+  const handleReset = useCallback(() => {
+    try { localStorage.removeItem(PROFILE_STORAGE_KEY); } catch { /* noop */ }
+    setProfile(DEFAULT_PROFILE);
+    setStep('onboarding');
+  }, []); // DEFAULT_PROFILE is a module-level constant value, safe as empty dep
 
   const generatePDFEN = (type: 'cover' | 'sponsor' | 'employer' | 'itinerary' = 'cover') => {
     const doc = new jsPDF();
@@ -4209,6 +4230,31 @@ Signature: _______________     Date: ${today}`;
               <div className="-mx-4 sm:-mx-6 lg:-mx-8 -mt-12 mb-0">
                 <SocialProofBar />
               </div>
+
+              {/* #18 Devam Et Banneri — önceki profil tespit edilince */}
+              {hasSavedProfile && (
+                <motion.div
+                  initial={{ opacity: 0, y: -8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="max-w-lg mx-auto px-4"
+                >
+                  <div className="flex items-center gap-3 bg-brand-50 border border-brand-200 rounded-2xl px-4 py-3 text-left">
+                    <span className="text-2xl shrink-0">🔖</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold text-brand-800">Kaldığınız yerden devam edin</p>
+                      <p className="text-xs text-brand-500 mt-0.5">Önceki profiliniz kaydedildi.</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setStep('assessment')}
+                      className="shrink-0 bg-brand-600 text-white text-xs font-black px-3 py-1.5 rounded-xl hover:bg-brand-700 transition-colors whitespace-nowrap"
+                    >
+                      Skoru Gör →
+                    </button>
+                  </div>
+                </motion.div>
+              )}
               {/* Hero content */}
               <div className="space-y-6 max-w-3xl mx-auto px-4">
                 <motion.div
@@ -4555,9 +4601,11 @@ Signature: _______________     Date: ${today}`;
               onNavigate={setStep}
               onProfileUpdate={(patch) => setProfile(prev => ({ ...prev, ...patch }))}
               onProfileSet={setProfile}
+              onReset={handleReset}
               onSimulatorValueChange={setSimulatorValue}
               onOcrUpload={handleOcrUpload}
               onGeneratePDF={generatePDF}
+              onOpenReportModal={() => setIsAnalysisReportOpen(true)}
               onOpenTool={openTool}
               onFeedbackStepChange={setFeedbackStep}
               onFbEmailChange={setFbEmail}
@@ -4609,6 +4657,17 @@ Signature: _______________     Date: ${today}`;
           )}
         </AnimatePresence>
       </main>
+
+      {/* ── Kişisel Analiz Raporu Modalı ─────────────────────────────── */}
+      <AnalysisReportModal
+        isOpen={isAnalysisReportOpen}
+        onClose={() => setIsAnalysisReportOpen(false)}
+        profile={profile}
+        currentScore={currentScore}
+        currentConfidence={currentConfidence}
+        rejectionMatches={rejectionMatches}
+        actionItems={actionItems}
+      />
 
       {/* Footer */}
       <footer className="max-w-5xl mx-auto px-4 sm:px-6 py-12 space-y-6 mt-8 border-t border-slate-100">
@@ -4788,47 +4847,51 @@ Signature: _______________     Date: ${today}`;
                 {[
                   {
                     q: 'Başarı skorum neden düşük çıktı?',
-                    a: '"Puanınızı Nasıl Artırırsınız?" bölümündeki adımları takip edin. Her maddenin yanında "Yaptım ✓" butonu var — tıkladığınızda profil güncellenir ve skor anlık olarak yükselir. Banka düzenliliği, SGK belgesi ve seyahat sigortası en çok puan getiren 3 faktördür. Skorunuz aynı zamanda hedef ülkenin Türk başvurucularına uyguladığı tarihsel ret oranını da yansıtır — bu nedenle ülke seçimi kritiktir.'
+                    a: 'Skor kartının altındaki "6 Eksen Profil" bölümüne bakın — hangi eksenin (Finansal, Mesleki, Bağlar, Seyahat, Başvuru, Güven) zayıf olduğunu yıldız sayısından anlayabilirsiniz. Her eksene tıklayınca somut aksiyon önerisi çıkar. "Puanınızı Nasıl Artırırsınız?" listesindeki her maddenin "Yaptım ✓" butonuna tıkladığınızda skor anlık yükselir. Banka düzenliliği, SGK belgesi ve seyahat sigortası en çok puan getiren 3 faktördür.'
                   },
                   {
                     q: 'Bilgilerimi girmek güvenli mi? Verilerim nereye gidiyor?',
-                    a: 'Girdiğiniz tüm bilgiler yalnızca tarayıcınızda (cihazınızda) saklanır. Hiçbir bilginiz sunucularımıza iletilmez veya depolanmaz. Tarayıcı geçmişinizi temizlediğinizde veriler tamamen silinir. Detaylar için KVKK Aydınlatma Metni\'ni inceleyebilirsiniz.'
+                    a: 'Girdiğiniz tüm bilgiler yalnızca tarayıcınızda (cihazınızda) saklanır. Hiçbir bilginiz sunucularımıza iletilmez veya depolanmaz. Siteye bir sonraki girişinizde "Kaldığınız yerden devam edin" banneri görebilirsiniz — bu tamamen yerel bir özellik, sunucu tarafında kayıt yok. Tarayıcı geçmişini temizlediğinizde her şey silinir.'
+                  },
+                  {
+                    q: '6 Eksen Profil nedir? Radar skorları nasıl yorumlanır?',
+                    a: 'Skor kartındaki 6 Eksen Profil, başarı şansınızı bağımsız 6 boyutta değerlendirir: Finansal (banka düzeni, bakiye), Mesleki (SGK, işveren mektubu, kıdem), Bağlar (mülk, aile, sosyal), Seyahat (önceki vizeler, geçmiş), Başvuru (niyet mektubu, rezervasyon) ve Güven (pasaport, sigorta). Her eksen 0–100 arası puanlanır, yıldız sayısına (★★★★☆) dönüştürülür. Yeşil ≥80, sarı ≥50, kırmızı <50 anlamına gelir. Eksene tıklayarak o boyuta özel ipucu alabilirsiniz.'
+                  },
+                  {
+                    q: 'Ülke Karşılaştırma (VS Modu) nasıl kullanılır?',
+                    a: 'Dashboard\'daki "Ülke Karşılaştırma" widget\'ında 2 ülke seçin. Sistem ret oranını, bekleme gününü ve zorluk seviyesini yan yana bar grafiklerle gösterir ve hangisine önce başvurmanız gerektiğini otomatik hesaplar. Örneğin Almanya vs. Yunanistan karşılaştırmasında Yunanistan için ret oranı ve bekleme süresi belirgin şekilde düşük çıkar.'
+                  },
+                  {
+                    q: 'Başvuru Zaman Çizelgesi nasıl çalışır?',
+                    a: 'Dashboard\'daki "Başvuru Zaman Çizelgesi" widget\'ına planlanan başvuru tarihinizi girin. Sistem geriye doğru sayarak her görevi (profil değerlendirmesi, banka belgesi, sigorta, randevu vb.) ideal başlangıç tarihiyle listeler. Her görevin solundaki daireye tıklayarak tamamlandı olarak işaretleyebilirsiniz — bu bilgi tarayıcınızda kalır ve ilerlemenizi takip eder. Tarihi geçmiş görevler kırmızı renkte "⚠️ gecikti" uyarısıyla işaretlenir.'
                   },
                   {
                     q: 'Evrak Sihirbazı\'nda belge listesini nasıl kullanırım?',
-                    a: 'Ülke ve çalışma durumunuzu seçtikten sonra "Liste Oluştur" butonuna tıklayın. Her belgeye tıkladığınızda üzeri çizilir — hazırladıklarınızı böyle takip edebilirsiniz. Listeyi sıfırlamak için "Yeniden Oluştur" düğmesini kullanın.'
+                    a: 'Ülke ve çalışma durumunuzu seçtikten sonra "Liste Oluştur" butonuna tıklayın. Her belgeye tıkladığınızda üzeri çizilir — hazırladıklarınızı böyle takip edebilirsiniz. Başvuru tipinize göre (işveren, öğrenci, emekli vb.) farklı belge setleri otomatik oluşturulur.'
                   },
                   {
                     q: 'Ücretsiz araçlar neler? Premium ne kazandırıyor?',
-                    a: 'Platform toplamda 18 araç sunar. Evrak Listesi, Senaryo Simülatörü, Randevu Takvimi, Belge Tutarlılık Matrisi ve Vizesiz Ülkeler araçları tamamen ücretsizdir. Premium ile şu araçlar açılır: Vize Danışmanım (yapay zeka danışman), Ret Mektubu Analizi, Schengen Ülke Kıyaslayıcısı, AI Banka Dökümü Analizi, Kırmızı Bayrak Tarayıcı, Sosyal Medya Rehberi, Ret Nedeni Haritası (Schengen + İngiltere + ABD, 2021–2026 verileri) ve Banka Hazırlık Planı.'
-                  },
-                  {
-                    q: 'Daha önce vize reddettim. Tekrar başvurabilir miyim?',
-                    a: 'Evet. Önceki ret bilgilerinizi profil ekranında işaretlediğinizde Dashboard\'daki "Ret Risk Analizi" kartı devreye girer; dosyanızdaki en yüksek riskli 3 kalıbı (örn. finansal tutarsızlık, bağ eksikliği) yasal kodlarıyla birlikte gösterir ve her biri için somut önlem önerir. "Ret Nedeni Haritası" ise seçtiğiniz ülkenin 2021–2026 ret istatistiklerini ve başvurucularınızla örtüşen risk faktörlerini vurgular. Premium "Ret Mektubu Analizi" ve "Kırmızı Bayrak Tarayıcı" ile de desteklenebilirsiniz.'
-                  },
-                  {
-                    q: 'Niyet mektubunu Türkçe ve İngilizce indirebiliyor muyum?',
-                    a: 'Evet! "Niyet Mektubu Oluşturucu" bölümünde 4 farklı mektup türü (Başvuru Sahipliği, Sponsor, İşveren, Seyahat Planı) için hem 🇹🇷 Türkçe hem de 🇬🇧 İngilizce PDF indirebilirsiniz. İngilizce sürümler uluslararası konsolosluk standartlarına göre hazırlanmıştır.'
-                  },
-                  {
-                    q: 'Schengen Ülke Kıyaslayıcısı nasıl çalışıyor?',
-                    a: 'Profil bilgilerinize dayanarak her Schengen ülkesini 6 faktörde (onay oranı, finansal uyum, SGK/çalışma durumu, vize geçmişi, trend) puanlar ve en uygun ülkeleri en üste sıralar. "Ülke Seç" veya "Ülke Kıyasla" butonuna tıklayınca bu analiz açılır. Almanya veya Fransa gibi yüksek ret oranlı ülkeleri seçtiyseniz Dashboard\'da dinamik ülke alternatif önerisi de görünür — profilinize göre daha yüksek onay tahmini sunan 3 alternatif otomatik hesaplanır.'
-                  },
-                  {
-                    q: 'Ret Nedeni Haritası nasıl çalışıyor?',
-                    a: '"Ret Nedeni Haritası" 2021–2026 yılları arasındaki verilere dayanır ve üç bölge için ayrı istatistikler sunar: 14 Schengen ülkesi (finansal yetersizlik, bağ eksikliği, sahte belge vb. kategorilerde), İngiltere (V 4.2, V 4.3, FM 1.7A gibi resmi ret kodlarıyla) ve ABD (214(b), 221(g), 212(a) gibi yasal maddelerle). Profilinizle örtüşen ret kategorileri turuncu renkle vurgulanır; böylece en riskli noktalarınıza odaklanabilirsiniz.'
-                  },
-                  {
-                    q: 'Ülke zorluk uyarısı (sarı/turuncu banner) ne anlama geliyor?',
-                    a: 'Almanya, Fransa, İngiltere, ABD, Danimarka, İsveç veya Norveç seçtiğinizde Dashboard\'ın üstünde otomatik bir uyarı banner\'ı belirir. Bu ülkeler Türk başvurucularına uyguladığı ret oranı yüksek (örn. Danimarka %66, İngiltere %30) ülkelerdir. Banner, profilinize göre daha elverişli alternatif ülkeleri onay tahminleriyle birlikte gösterir. Bu bir engel değil, bilgilendirme amaçlı bir rehberdir; isterseniz seçiminizi değiştirmeden devam edebilirsiniz.'
+                    a: 'Ücretsiz: Profil Skoru, 6 Eksen Radar, Ülke Karşılaştırma, Başvuru Zaman Çizelgesi, Evrak Listesi, Senaryo Simülatörü, Randevu Takvimi, Ülke Sıralaması. Premium ile: Vize Danışmanım (yapay zeka), Ret Mektubu Analizi, AI Banka Dökümü, Kırmızı Bayrak Tarayıcı, Sosyal Medya Rehberi, Ret Nedeni Haritası (2021–2026) ve Banka Hazırlık Planı.'
                   },
                   {
                     q: 'Başarı skorum nasıl hesaplanıyor?',
-                    a: 'Algoritma iki aşamalıdır. İlk aşamada finansal durum, SGK, seyahat sigortası, vize geçmişi, seyahat amacı netliği ve bağ faktörleri gibi 15+ kritere göre ham skor hesaplanır. İkinci aşamada bu ham skor, hedef ülkenin Türk başvurucularına ait tarihsel ret oranıyla Bayes yöntemiyle harmanlanır (%65 ham skor + %35 ülke onay istatistiği). Ayrıca şüpheli büyük para yatırma gibi veto koşulları skoru 30\'a kadar kısıtlayabilir.'
+                    a: 'Algoritma v3.0 üç aşamalıdır: (1) 6 boyutta ham skor — finansal, mesleki, bağlar, seyahat, başvuru, güven. (2) Temporal Decay — eski vizeler ve eski ret cezaları zamanla azalan bir ağırlıkla değerlenir. (3) Bayes harmanı — ham skor (%65) + hedef ülkenin Türk başvurucu ret oranı (%35). Ek olarak planlanan başvuru ayı girilirse mevsimsel faktör (yaz pikinde Yunanistan/Almanya için hafif ceza) devreye girer. Şüpheli büyük mevduat veto koşulu olarak skoru 30\'a kısıtlar.'
+                  },
+                  {
+                    q: 'Daha önce vize reddettim. Tekrar başvurabilir miyim?',
+                    a: 'Evet. Önceki ret bilgilerinizi işaretlediğinizde Dashboard\'daki "Ret Risk Analizi" en yüksek riskli kalıpları yasal kodlarıyla gösterir. Temporal Decay sayesinde eski retlerin etkisi zamanla azalır — 3+ yıl önceki ret bugün çok daha az ağırlık taşır. "Ret Nedeni Haritası" ile hedef ülkenin 2021–2026 ret istatistiklerini de görebilirsiniz.'
+                  },
+                  {
+                    q: 'Niyet mektubunu Türkçe ve İngilizce indirebiliyor muyum?',
+                    a: 'Evet! 4 mektup türü (Başvuru Sahipliği, Sponsor, İşveren, Seyahat Planı) için hem 🇹🇷 Türkçe hem 🇬🇧 İngilizce PDF indirebilirsiniz. Skorunuz %65 üzerindeyse direkt "Niyet Mektubu Oluştur →" butonu skor kartında görünür.'
+                  },
+                  {
+                    q: 'Ülke zorluk uyarısı (sarı/turuncu banner) ne anlama geliyor?',
+                    a: 'Almanya, Fransa, İngiltere, ABD, Danimarka, İsveç veya Norveç seçtiğinizde Dashboard\'da otomatik uyarı çıkar (örn. Danimarka %66, ABD ~%45 ret oranı). Banner, profilinize göre daha elverişli 3 alternatif ülkeyi onay tahminleriyle önerir. Bilgilendirme amaçlıdır; seçiminizi değiştirmeden devam edebilirsiniz.'
                   },
                   {
                     q: 'Türkçe destek var mı?',
-                    a: 'Platform tamamen Türkçe\'dir ve Türk pasaportuna sahip başvuru sahipleri için özel olarak geliştirilmiştir. Teknik destek için destek@vizeakil.com adresine yazabilirsiniz.'
+                    a: 'Platform tamamen Türkçe\'dir ve Türk pasaportuna sahip başvuru sahipleri için özel geliştirilmiştir. Teknik destek için destek@vizeakil.com adresine yazabilirsiniz.'
                   },
                 ].map(({ q, a }, i) => (
                   <details key={i} className="group border border-slate-100 rounded-2xl overflow-hidden">
@@ -4862,7 +4925,7 @@ Signature: _______________     Date: ${today}`;
                   <div>
                     <div className="text-brand-200 text-xs font-bold uppercase tracking-widest mb-1">Başlangıç Rehberi</div>
                     <h3 className="text-xl font-black">VizeAkıl Nasıl Kullanılır?</h3>
-                    <p className="text-brand-100 text-xs mt-1">18 araçla profesyonel başvuru hazırlığı — 3 adımda</p>
+                    <p className="text-brand-100 text-xs mt-1">Ülke seçiminden başvuruya — 3 adımda tam hazırlık</p>
                   </div>
                   <button type="button" onClick={() => setIsHowToOpen(false)} className="p-2 hover:bg-white/10 rounded-full"><X className="w-5 h-5" /></button>
                 </div>
@@ -4872,37 +4935,38 @@ Signature: _______________     Date: ${today}`;
                 {[
                   {
                     step: '01',
-                    title: 'Profilinizi Oluşturun',
+                    title: 'Ülke Seçin — Anında Bilgi Alın',
                     color: 'brand',
                     items: [
-                      '"Ücretsiz Analiz Başlat" butonuna tıklayın.',
-                      'Hangi ülkeye başvuracağınızı seçin — Schengen, İngiltere veya ABD.',
-                      'Çalışma durumunuzu, mali profilinizi ve vize geçmişinizi işaretleyin.',
-                      'Anlık başarı skorunuzu görün; "Tam Analizi Gör" ile Dashboard\'a geçin.',
-                      'Almanya/Fransa gibi zor ülkeler için sarı uyarı banner\'ı görünürse önerilen alternatifleri değerlendirin.',
+                      '"Ücretsiz Analizi Başlat" butonuna tıklayın.',
+                      'Gelen bayrak ekranından başvuracağınız ülkeyi seçin — her ülkenin yanında ret oranı rozeti görünür.',
+                      'Seçtiğiniz ülkeye ait bilgi kartı açılır: bekleme günü, zorluk seviyesi, kritik ipucu.',
+                      '"Devam Et" ile analiz ekranına geçin. Daha önce ziyaret ettiyseniz "🔖 Kaldığınız yerden devam edin" banneri sizi doğrudan skor ekranına yönlendirir.',
+                      'Başvuru tipinizi seçin (İşveren/Çalışmayan/Öğrenci/Sponsor) — ekran buna göre ilgili alanları otomatik gösterir/gizler.',
                     ]
                   },
                   {
                     step: '02',
-                    title: 'Dashboard\'ı Okuyun ve Aksiyona Geçin',
+                    title: 'Profil Doldurun — 6 Eksen Skor Alın',
                     color: 'indigo',
                     items: [
-                      '"Ret Risk Analizi" kartını inceleyin — profilinizle örtüşen ret kalıplarını yasal kodlarıyla görün, her biri için öneri alın.',
-                      '"Puanınızı Nasıl Artırırsınız?" bölümündeki önerileri sırayla uygulayın; "Yaptım ✓" ile skor anlık güncellenir.',
-                      '"Evrak Sihirbazı" ile profilinize özel belge listesi alın; hazırladıklarınızı tıklayarak işaretleyin.',
-                      '"Ülke Seç" veya "Kıyasla" ile Schengen ülkelerini profil uyumuna göre karşılaştırın.',
-                      'Premium "Ret Nedeni Haritası" ile hedef ülkenin 2021–2026 ret istatistiklerini ve risk profilinizi görün.',
+                      'Temel kriterleri işaretleyin (mobilde kart kart, masaüstünde grid olarak görünür).',
+                      'Kalibrasyonlar bölümünde yaşınızı, kıdem sürenizi ve planlanan başvuru ayınızı girin — bu veriler temporal decay ve mevsimsel risk motorunu aktive eder.',
+                      'Skor kartının altındaki "6 Eksen Profil"de her eksene tıklayarak zayıf noktanızı ve aksiyon önerisini görün.',
+                      '"Puanınızı Nasıl Artırırsınız?" listesinde her adımı tamamladığınızda "Yaptım ✓" butonuna tıklayın — skor anında güncellenir, yeşil +X rozeti çıkar.',
+                      'Skor %82+ olduğunda yeşil renkte "✓ Başvuruya hazır" gösterilir ve konfeti animasyonu tetiklenir.',
                     ]
                   },
                   {
                     step: '03',
-                    title: 'Dosyanızı Güçlendirin ve Başvurun',
+                    title: 'Dashboard — Karşılaştır, Planla, Başvur',
                     color: 'violet',
                     items: [
-                      '"Kırmızı Bayrak Tarayıcı" ile dosyanızdaki mantıksal çelişkileri tespit edin.',
-                      '"Niyet Mektubu" bölümünden 🇹🇷 Türkçe veya 🇬🇧 İngilizce PDF indirin (4 mektup türü).',
-                      'Skorunuz %82\'nin üstüne çıktığında başvuru için güçlü bir profil demektir.',
-                      'Premium "Vize Danışmanım" ile yapay zekaya son sorularınızı sorun.',
+                      '"Ülke Karşılaştırma" widget\'ında 2 ülkeyi yan yana karşılaştırın; ret oranı, bekleme süresi ve zorluk barları otomatik hesaplanır.',
+                      '"Başvuru Zaman Çizelgesi"ne planlanan tarihinizi girin — görevler geriye doğru tarihlerle sıralanır, tamamladıklarınızı işaretleyin.',
+                      '"Ret Risk Analizi" ile profilinize özgü risk kalıplarını yasal kodlarıyla görün.',
+                      '"Niyet Mektubu" bölümünden 🇹🇷/🇬🇧 PDF indirin. Evrak Sihirbazı ile başvuru tipinize özel kontrol listesi oluşturun.',
+                      'Kırmızı Bayrak Tarayıcı ile dosyanızdaki çelişkileri tespit edin; %82+ skorla güçlü bir başvuru yapın.',
                     ]
                   },
                 ].map(({ step, title, color, items }) => (
@@ -4930,7 +4994,7 @@ Signature: _______________     Date: ${today}`;
                     <Star className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
                     <div>
                       <div className="font-bold text-amber-900 text-sm mb-1">Pro İpucu</div>
-                      <p className="text-xs text-amber-800 leading-relaxed">Başvurunuzdan <strong>en az 8 hafta önce</strong> sisteme girin. Bu süre; eksik evrakları tamamlamanıza, banka hesabınızı düzenlemenize ve randevu almanıza yetecektir. "Ret Risk Analizi" kartındaki uyarıları başvuru öncesinde sıfırlamayı hedefleyin — bu tek adım ret riskini önemli ölçüde azaltır.</p>
+                      <p className="text-xs text-amber-800 leading-relaxed">Başvurunuzdan <strong>en az 8 hafta önce</strong> sisteme girin ve "Başvuru Zaman Çizelgesi"ne tarihinizi girin. Görevleri teker teker işaretleyerek hiçbir adımı atlamayın. "Ret Risk Analizi" kartındaki uyarıları başvuru öncesinde sıfırlamayı hedefleyin — bu tek adım ret riskini önemli ölçüde azaltır.</p>
                     </div>
                   </div>
                 </div>

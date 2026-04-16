@@ -23,9 +23,10 @@ export const temporalDecay = (eventYear: number, lambda = 0.20): number => {
 // 22 yaşındaki öğrenci ile 45 yaşındaki aile babası aynı ceza almamalı.
 export interface ContextProfile { age: number; isStudent: boolean; isMarried: boolean; hasChildren: boolean; hasSgkJob: boolean; }
 export const getReturnTieMultiplier = (ctx: ContextProfile): number => {
+  // 55+ yaş en güçlü anti-göç sinyal — diğer koşullardan önce gelmelidir
+  if (ctx.age >= 55)                     return 0.5;  // 55+: geri dönmeme riski çok düşük
   if (ctx.isMarried && ctx.hasChildren) return 1.6;  // Aile babası/annesi: şüphe çok yüksek
   if (ctx.hasSgkJob && ctx.age >= 35)   return 1.4;  // Orta yaş çalışan: yerleşik profil
-  if (ctx.age >= 55)                     return 0.5;  // 55+: geri dönmeme riski çok düşük
   if (ctx.isStudent)                     return 0.6;  // Öğrenci: normal kabul edilir
   if (ctx.age > 0 && ctx.age < 25)      return 0.7;  // Genç: beklenen, tolerans var
   return 1.0;

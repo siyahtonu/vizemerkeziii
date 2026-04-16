@@ -1,4 +1,21 @@
 User-agent: *
-Allow: /
+
+# ── İndekslenecek sayfalar ──────────────────────────────────
+Allow: /$
+Allow: /blog/
+Allow: /blog/$
+Allow: /iletisim
+Allow: /hakkimizda
+
+# ── SPA uygulama rotaları — dinamik durum, indeksleme anlamsız
+Disallow: /basla
+Disallow: /sonuc
+Disallow: /panel
+Disallow: /mektup
+Disallow: /taktikler
+
+# ── Statik varlıklar ve API
+Disallow: /api/
+Allow: /data/
 
 Sitemap: https://vizeakil.com/sitemap.xml

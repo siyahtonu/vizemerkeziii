@@ -80,9 +80,11 @@ export interface DashboardStepProps {
   onNavigate: (step: string) => void;
   onProfileUpdate: (patch: Partial<ProfileData>) => void;
   onProfileSet: React.Dispatch<React.SetStateAction<ProfileData>>;
+  onReset: () => void;
   onSimulatorValueChange: (v: number) => void;
   onOcrUpload: (files: FileList | null) => void;
   onGeneratePDF: (type: string) => void;
+  onOpenReportModal: () => void;
   onOpenTool: (key: string, setter: React.Dispatch<React.SetStateAction<boolean>>) => void;
   onFeedbackStepChange: React.Dispatch<React.SetStateAction<string>>;
   onFbEmailChange: React.Dispatch<React.SetStateAction<string>>;
@@ -122,8 +124,8 @@ export function DashboardStep({
   baseScoreWithoutUs, isPremium, simulatorValue, isOcrScanning, ocrResults,
   letterData, feedbackStep, fbEmail, fbDate, fbStatus, fbRegisteredId,
   fbOutcome, fbRejCode, fbRejNotes, dashToolTab, showRiskDetail,
-  onNavigate, onProfileUpdate, onProfileSet, onSimulatorValueChange,
-  onOcrUpload, onGeneratePDF, onOpenTool,
+  onNavigate, onProfileUpdate, onProfileSet, onReset, onSimulatorValueChange,
+  onOcrUpload, onGeneratePDF, onOpenReportModal, onOpenTool,
   onFeedbackStepChange, onFbEmailChange, onFbDateChange, onFbStatusChange,
   onFbRegisteredIdChange, onFbOutcomeChange, onFbRejCodeChange, onFbRejNotesChange,
   onDashToolTabChange, onShowRiskDetailChange,
@@ -150,8 +152,6 @@ export function DashboardStep({
   const setFbRejNotes = onFbRejNotesChange;
   const setDashToolTab = onDashToolTabChange;
   const setShowRiskDetail = onShowRiskDetailChange;
-  const DEFAULT_PROFILE = {} as ProfileData; // passed via setProfile reset
-
   // ── Boş profil kontrolü ──────────────────────────────────────────────────
   const isEmptyProfile = currentScore <= 12 &&
     !profile.bankSufficientBalance && !profile.hasSgkJob &&
@@ -228,7 +228,7 @@ export function DashboardStep({
                         <button onClick={() => setStep('assessment')} className="text-xs font-bold text-brand-600 hover:underline flex items-center gap-1">
                           <RefreshCw className="w-3 h-3"/> Güncelle
                         </button>
-                        <button onClick={() => { if (window.confirm('Profiliniz sıfırlanacak. Emin misiniz?')) { try { localStorage.removeItem(PROFILE_STORAGE_KEY); } catch { /* noop */ } setProfile(DEFAULT_PROFILE); setStep('onboarding'); } }}
+                        <button onClick={() => { if (window.confirm('Profiliniz sıfırlanacak. Emin misiniz?')) onReset(); }}
                           className="text-xs font-bold text-rose-400 hover:underline">
                           Sıfırla
                         </button>
@@ -359,12 +359,84 @@ export function DashboardStep({
                     </div>
                   </div>
   
-                  {/* ── KART 1.5: KİŞİSEL RİSK HARİTASI ── */}
+                  {/* ── ARAÇLAR (SEKMELİ) — üste taşındı ── */}
+                  <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+                    <div className="flex items-center justify-between px-5 pt-4 pb-0 border-b border-slate-100">
+                      <div className="flex gap-1">
+                        {([
+                          { key: 'hazirlik', label: 'Hazırlık' },
+                          { key: 'analiz',   label: 'Analiz'   },
+                          { key: 'ulke',     label: 'Ülke & Mülakat' },
+                        ] as const).map(tab => (
+                          <button key={tab.key} onClick={() => setDashToolTab(tab.key)}
+                            className={`px-4 py-2.5 text-xs font-black rounded-t-xl transition-colors border-b-2 -mb-px
+                              ${dashToolTab === tab.key
+                                ? 'text-brand-700 border-brand-600 bg-brand-50'
+                                : 'text-slate-500 border-transparent hover:text-slate-700'}`}>
+                            {tab.label}
+                          </button>
+                        ))}
+                      </div>
+                      {!isPremium
+                        ? <button onClick={() => setIsUpgradeOpen(true)} className="text-[10px] bg-amber-50 text-amber-600 border border-amber-100 font-black px-2 py-1 rounded-lg mb-1">🔒 Premium</button>
+                        : <span className="text-[10px] bg-emerald-50 text-emerald-600 border border-emerald-100 font-black px-2 py-1 rounded-lg mb-1">✓ Premium</span>
+                      }
+                    </div>
+                    <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                      {([
+                        { tab: 'hazirlik', label: 'Evrak Listesi',         desc: 'Ülkenize özel belge listesi.',                     icon: FileCheck,    color: 'bg-emerald-500', id: 'docs',         setter: setIsDocumentListOpen },
+                        { tab: 'hazirlik', label: 'Belge Kontrol',         desc: 'Eksiksiz evrak listesini PDF olarak indirin.',      icon: FileCheck,    color: 'bg-indigo-600',  id: 'docchecklist', setter: setIsDocChecklistOpen },
+                        { tab: 'hazirlik', label: 'Randevu Takip Botu',    desc: 'VFS randevusu açılınca bildirim alın.',             icon: Calendar,     color: 'bg-teal-500',    id: 'appointment',  setter: setIsAppointmentOpen },
+                        { tab: 'hazirlik', label: 'Banka Hazırlık Planı',  desc: 'Aylık giriş/çıkış hedeflerini görün.',             icon: Banknote,     color: 'bg-green-600',   id: 'bankplan',     setter: setIsBankPlanOpen },
+                        { tab: 'hazirlik', label: 'Belge Tutarlılık',      desc: 'Pasaport, SGK, banka tarihleri uyuşuyor mu?',      icon: CheckCircle2, color: 'bg-slate-600',   id: 'consistency',  setter: setIsConsistencyOpen },
+                        { tab: 'hazirlik', label: 'Vizesiz Ülkeler',       desc: 'Türk pasaportuyla vize gerektirmeyen ülkeler.',    icon: Plane,        color: 'bg-emerald-600', id: 'visafree',     setter: setIsVisaFreeOpen },
+                        { tab: 'analiz',   label: 'Vize Danışmanım',       desc: 'Yapay zeka ile en kritik 3 adımı öğrenin.',        icon: MessageSquare, color: 'bg-blue-500',   id: 'copilot',      setter: setIsCopilotOpen },
+                        { tab: 'analiz',   label: 'Kırmızı Bayrak',        desc: 'Otomatik ret gerekçelerini önceden tespit edin.',  icon: XCircle,      color: 'bg-red-600',     id: 'redflag',      setter: setIsRedFlagOpen },
+                        { tab: 'analiz',   label: 'Banka Dökümü Analizi',  desc: 'Ekstrenizi konsolosluk gözüyle değerlendirin.',    icon: Sparkles,     color: 'bg-blue-700',    id: 'aibank',       setter: setIsAiBankOpen },
+                        { tab: 'analiz',   label: 'Senaryo Oluşturucu',    desc: '"Bakiyem şu kadar olsa" skora etkisini görün.',   icon: Zap,          color: 'bg-slate-800',   id: 'calculator',   setter: setIsCalculatorOpen },
+                        { tab: 'analiz',   label: 'Ret Mektubu Analizi',   desc: 'Ret kodunuzu yapıştırın, nedenini öğrenin.',      icon: AlertTriangle, color: 'bg-rose-500',   id: 'refusal',      setter: setIsRefusalOpen },
+                        { tab: 'analiz',   label: 'Ret Nedeni Haritası',   desc: '2021-2026 gerçek ret kodları — ülke bazında.',     icon: AlertCircle,  color: 'bg-orange-600',  id: 'refusalmap',   setter: setIsRefusalMapOpen },
+                        { tab: 'ulke',     label: 'Ülke Kıyaslayıcı',     desc: 'Ret oranı ve zorluk puanına göre ülke karşılaştır.', icon: Globe,     color: 'bg-indigo-500',  id: 'comparator',   setter: setIsSchengenComparatorOpen },
+                        { tab: 'ulke',     label: 'Nereye Gidebilirim?',   desc: 'Profilinizle en yüksek onay alacağınız 5 ülke.',  icon: Plane,        color: 'bg-sky-600',     id: 'countryguide', setter: setIsCountryGuideOpen },
+                        { tab: 'ulke',     label: 'Çoklu Ülke Planlayıcı', desc: 'Birden fazla ülke turu için optimum sıra.',      icon: Map,          color: 'bg-cyan-600',    id: 'multicountry', setter: setIsMultiCountryOpen },
+                        { tab: 'ulke',     label: 'Mülakat Pratiği',       desc: 'ABD/UK mülakatı — 78 soruluk simülatör.',         icon: Brain,        color: 'bg-amber-500',   id: 'interview',    setter: setIsInterviewSimOpen },
+                        { tab: 'ulke',     label: 'Sosyal Medya Denetimi', desc: 'Hesaplarınızdaki vize-riskli paylaşımları bulun.', icon: ShieldCheck, color: 'bg-violet-500',  id: 'socialmedia',  setter: setIsSocialMediaOpen },
+                        { tab: 'ulke',     label: 'Topluluk & Benchmark',  desc: 'Benzer profillerin onay/ret deneyimlerini okuyun.', icon: Star,      color: 'bg-slate-700',   id: 'community',    setter: setIsCommunityOpen },
+                      ] as const)
+                        .filter(t => t.tab === dashToolTab)
+                        .map(({ label, desc, icon: Icon, color, id, setter }) => {
+                          const locked = PREMIUM_TOOLS.includes(id) && !isPremium;
+                          return (
+                            <button key={id} onClick={() => openTool(id, setter as (b: boolean) => void)}
+                              className={`group text-left rounded-xl border p-4 transition-all hover:shadow-md hover:-translate-y-0.5
+                                ${locked ? 'bg-slate-50 border-slate-200' : 'bg-white border-slate-200 hover:border-brand-200'}`}>
+                              <div className="flex items-start gap-3">
+                                <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${locked ? 'bg-slate-200' : color}`}>
+                                  <Icon className={`w-4 h-4 ${locked ? 'text-slate-400' : 'text-white'}`} />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-1.5 mb-0.5">
+                                    <span className={`text-sm font-bold ${locked ? 'text-slate-400' : 'text-slate-900'}`}>{label}</span>
+                                    {locked
+                                      ? <span className="text-[9px] font-black bg-amber-100 text-amber-600 px-1 py-0.5 rounded">🔒</span>
+                                      : !PREMIUM_TOOLS.includes(id) && <span className="text-[9px] font-black bg-emerald-100 text-emerald-600 px-1 py-0.5 rounded">Ücretsiz</span>
+                                    }
+                                  </div>
+                                  <p className={`text-xs leading-relaxed ${locked ? 'text-slate-400' : 'text-slate-500'}`}>{desc}</p>
+                                </div>
+                              </div>
+                            </button>
+                          );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* ── KİŞİSEL RİSK HARİTASI ── */}
                   <WidgetBoundary name="ProfileRadarChart">
                     <ProfileRadarChart profile={profile} />
                   </WidgetBoundary>
 
-                  {/* ── KART 1.55: ÜLKE KARŞILAŞTIRMA (VS) ── */}
+                  {/* ── ÜLKE KARŞILAŞTIRMA + ZAMAN ÇİZELGESİ ── */}
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5">
                     <WidgetBoundary name="CountryCompareWidget">
                       <CountryCompareWidget
@@ -377,12 +449,12 @@ export function DashboardStep({
                     </WidgetBoundary>
                   </div>
 
-                  {/* ── KART 1.6: ÜLKE SIRALAMASI ── */}
+                  {/* ── ÜLKE SIRALAMASI ── */}
                   <WidgetBoundary name="CountryRanking">
                     <CountryRanking profile={profile} currentScore={currentScore} />
                   </WidgetBoundary>
 
-                  {/* ── KART 1.7: KANIT KONTROL LİSTESİ ── */}
+                  {/* ── KANIT KONTROL LİSTESİ ── */}
                   <WidgetBoundary name="EvidenceChecklist">
                     <EvidenceChecklist
                       profile={profile}
@@ -391,7 +463,7 @@ export function DashboardStep({
                     />
                   </WidgetBoundary>
 
-                  {/* ── KART 1.8: MEVSİMSEL ZAMANLAMA ── */}
+                  {/* ── MEVSİMSEL ZAMANLAMA ── */}
                   {profile.targetCountry && (
                     <WidgetBoundary name="SeasonalRiskWidget">
                       <SeasonalRiskWidget
@@ -403,12 +475,30 @@ export function DashboardStep({
                     </WidgetBoundary>
                   )}
 
-                  {/* ── KART 1.9: WHAT-IF SİMÜLATÖRÜ ── */}
+                  {/* ── WHAT-IF SİMÜLATÖRÜ ── */}
                   <WidgetBoundary name="WhatIfSimulator">
                     <WhatIfSimulator profile={profile} currentScore={currentScore} />
                   </WidgetBoundary>
-  
-                  {/* ── KART 2: BAŞVURU SONUÇ TAKİBİ (Feedback Loop) ── */}
+
+                  {/* ── SONUCU ÇIKART CTA ── */}
+                  <div className="rounded-2xl bg-gradient-to-br from-indigo-600 to-brand-700 p-5 flex flex-col sm:flex-row items-center gap-4">
+                    <div className="flex-1 text-white">
+                      <div className="font-black text-base mb-1">Kişisel Vize Analiz Raporunuzu İndirin</div>
+                      <p className="text-indigo-200 text-xs leading-relaxed">
+                        Tüm araç sonuçlarını, ülke karşılaştırmasını ve öncelikli aksiyon planını tek sayfada PDF olarak indirin.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={onOpenReportModal}
+                      className="shrink-0 flex items-center gap-2 px-5 py-3 bg-white text-indigo-700 font-black text-sm rounded-xl hover:bg-indigo-50 transition-colors shadow-lg whitespace-nowrap"
+                    >
+                      <Download className="w-4 h-4" />
+                      Sonucu Çıkart
+                    </button>
+                  </div>
+
+                  {/* ── BAŞVURU SONUÇ TAKİBİ (Feedback Loop) ── */}
                   <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
                     <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
                       <div className="flex items-center gap-2">
@@ -613,84 +703,6 @@ export function DashboardStep({
                           </button>
                         </div>
                       )}
-                    </div>
-                  </div>
-  
-                  {/* ── KART 2: ARAÇLAR (SEKMELİ) ── */}
-                  <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
-                    {/* Sekme başlığı */}
-                    <div className="flex items-center justify-between px-5 pt-4 pb-0 border-b border-slate-100">
-                      <div className="flex gap-1">
-                        {([
-                          { key: 'hazirlik', label: 'Hazırlık' },
-                          { key: 'analiz',   label: 'Analiz'   },
-                          { key: 'ulke',     label: 'Ülke & Mülakat' },
-                        ] as const).map(tab => (
-                          <button key={tab.key} onClick={() => setDashToolTab(tab.key)}
-                            className={`px-4 py-2.5 text-xs font-black rounded-t-xl transition-colors border-b-2 -mb-px
-                              ${dashToolTab === tab.key
-                                ? 'text-brand-700 border-brand-600 bg-brand-50'
-                                : 'text-slate-500 border-transparent hover:text-slate-700'}`}>
-                            {tab.label}
-                          </button>
-                        ))}
-                      </div>
-                      {!isPremium
-                        ? <button onClick={() => setIsUpgradeOpen(true)} className="text-[10px] bg-amber-50 text-amber-600 border border-amber-100 font-black px-2 py-1 rounded-lg mb-1">🔒 Premium</button>
-                        : <span className="text-[10px] bg-emerald-50 text-emerald-600 border border-emerald-100 font-black px-2 py-1 rounded-lg mb-1">✓ Premium</span>
-                      }
-                    </div>
-  
-                    {/* Sekme içeriği */}
-                    <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                      {([
-                        // ── Hazırlık sekmesi ──
-                        { tab: 'hazirlik', label: 'Evrak Listesi',         desc: 'Ülkenize özel belge listesi.',                     icon: FileCheck,    color: 'bg-emerald-500', id: 'docs',         setter: setIsDocumentListOpen },
-                        { tab: 'hazirlik', label: 'Belge Kontrol',         desc: 'Eksiksiz evrak listesini PDF olarak indirin.',      icon: FileCheck,    color: 'bg-indigo-600',  id: 'docchecklist', setter: setIsDocChecklistOpen },
-                        { tab: 'hazirlik', label: 'Randevu Takip Botu',    desc: 'VFS randevusu açılınca bildirim alın.',             icon: Calendar,     color: 'bg-teal-500',    id: 'appointment',  setter: setIsAppointmentOpen },
-                        { tab: 'hazirlik', label: 'Banka Hazırlık Planı',  desc: 'Aylık giriş/çıkış hedeflerini görün.',             icon: Banknote,     color: 'bg-green-600',   id: 'bankplan',     setter: setIsBankPlanOpen },
-                        { tab: 'hazirlik', label: 'Belge Tutarlılık',      desc: 'Pasaport, SGK, banka tarihleri uyuşuyor mu?',      icon: CheckCircle2, color: 'bg-slate-600',   id: 'consistency',  setter: setIsConsistencyOpen },
-                        { tab: 'hazirlik', label: 'Vizesiz Ülkeler',       desc: 'Türk pasaportuyla vize gerektirmeyen ülkeler.',    icon: Plane,        color: 'bg-emerald-600', id: 'visafree',     setter: setIsVisaFreeOpen },
-                        // ── Analiz sekmesi ──
-                        { tab: 'analiz',   label: 'Vize Danışmanım',       desc: 'Yapay zeka ile en kritik 3 adımı öğrenin.',        icon: MessageSquare, color: 'bg-blue-500',   id: 'copilot',      setter: setIsCopilotOpen },
-                        { tab: 'analiz',   label: 'Kırmızı Bayrak',        desc: 'Otomatik ret gerekçelerini önceden tespit edin.',  icon: XCircle,      color: 'bg-red-600',     id: 'redflag',      setter: setIsRedFlagOpen },
-                        { tab: 'analiz',   label: 'Banka Dökümü Analizi',  desc: 'Ekstrenizi konsolosluk gözüyle değerlendirin.',    icon: Sparkles,     color: 'bg-blue-700',    id: 'aibank',       setter: setIsAiBankOpen },
-                        { tab: 'analiz',   label: 'Senaryo Oluşturucu',    desc: '"Bakiyem şu kadar olsa" skora etkisini görün.',   icon: Zap,          color: 'bg-slate-800',   id: 'calculator',   setter: setIsCalculatorOpen },
-                        { tab: 'analiz',   label: 'Ret Mektubu Analizi',   desc: 'Ret kodunuzu yapıştırın, nedenini öğrenin.',      icon: AlertTriangle, color: 'bg-rose-500',   id: 'refusal',      setter: setIsRefusalOpen },
-                        { tab: 'analiz',   label: 'Ret Nedeni Haritası',   desc: '2021-2026 gerçek ret kodları — ülke bazında.',     icon: AlertCircle,  color: 'bg-orange-600',  id: 'refusalmap',   setter: setIsRefusalMapOpen },
-                        // ── Ülke & Mülakat sekmesi ──
-                        { tab: 'ulke',     label: 'Ülke Kıyaslayıcı',      desc: 'Ret oranı ve zorluk puanına göre ülke karşılaştır.', icon: Globe,      color: 'bg-indigo-500',  id: 'comparator',   setter: setIsSchengenComparatorOpen },
-                        { tab: 'ulke',     label: 'Nereye Gidebilirim?',   desc: 'Profilinizle en yüksek onay alacağınız 5 ülke.',  icon: Plane,        color: 'bg-sky-600',     id: 'countryguide', setter: setIsCountryGuideOpen },
-                        { tab: 'ulke',     label: 'Çoklu Ülke Planlayıcı', desc: 'Birden fazla ülke turu için optimum sıra.',       icon: Map,          color: 'bg-cyan-600',    id: 'multicountry', setter: setIsMultiCountryOpen },
-                        { tab: 'ulke',     label: 'Mülakat Pratiği',       desc: 'ABD/UK mülakatı — 78 soruluk simülatör.',         icon: Brain,        color: 'bg-amber-500',   id: 'interview',    setter: setIsInterviewSimOpen },
-                        { tab: 'ulke',     label: 'Sosyal Medya Denetimi', desc: 'Hesaplarınızdaki vize-riskli paylaşımları bulun.', icon: ShieldCheck, color: 'bg-violet-500',  id: 'socialmedia',  setter: setIsSocialMediaOpen },
-                        { tab: 'ulke',     label: 'Topluluk & Benchmark',  desc: 'Benzer profillerin onay/ret deneyimlerini okuyun.', icon: Star,       color: 'bg-slate-700',   id: 'community',    setter: setIsCommunityOpen },
-                      ] as const)
-                        .filter(t => t.tab === dashToolTab)
-                        .map(({ label, desc, icon: Icon, color, id, setter }) => {
-                          const locked = PREMIUM_TOOLS.includes(id) && !isPremium;
-                          return (
-                            <button key={id} onClick={() => openTool(id, setter as (b: boolean) => void)}
-                              className={`group text-left rounded-xl border p-4 transition-all hover:shadow-md hover:-translate-y-0.5
-                                ${locked ? 'bg-slate-50 border-slate-200' : 'bg-white border-slate-200 hover:border-brand-200'}`}>
-                              <div className="flex items-start gap-3">
-                                <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${locked ? 'bg-slate-200' : color}`}>
-                                  <Icon className={`w-4 h-4 ${locked ? 'text-slate-400' : 'text-white'}`} />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex items-center gap-1.5 mb-0.5">
-                                    <span className={`text-sm font-bold ${locked ? 'text-slate-400' : 'text-slate-900'}`}>{label}</span>
-                                    {locked
-                                      ? <span className="text-[9px] font-black bg-amber-100 text-amber-600 px-1 py-0.5 rounded">🔒</span>
-                                      : !PREMIUM_TOOLS.includes(id) && <span className="text-[9px] font-black bg-emerald-100 text-emerald-600 px-1 py-0.5 rounded">Ücretsiz</span>
-                                    }
-                                  </div>
-                                  <p className={`text-xs leading-relaxed ${locked ? 'text-slate-400' : 'text-slate-500'}`}>{desc}</p>
-                                </div>
-                              </div>
-                            </button>
-                          );
-                      })}
                     </div>
                   </div>
   

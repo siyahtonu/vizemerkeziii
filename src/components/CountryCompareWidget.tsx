@@ -16,23 +16,23 @@ interface CountryMeta {
 }
 
 const COUNTRY_META: Record<string, CountryMeta> = {
-  'Almanya':    { flag: '🇩🇪', waitDays: 23, difficulty: 3, visaType: 'Schengen', tip: 'Finansal süreklilik bakiyeden önemli' },
-  'Fransa':     { flag: '🇫🇷', waitDays: 20, difficulty: 3, visaType: 'Schengen', tip: 'Seyahat sigortası ön koşul' },
-  'Hollanda':   { flag: '🇳🇱', waitDays: 18, difficulty: 2, visaType: 'Schengen', tip: 'Banka düzeni ön planda' },
-  'İtalya':     { flag: '🇮🇹', waitDays: 25, difficulty: 3, visaType: 'Schengen', tip: 'Başlıca güzergah uyumu önemli' },
-  'İspanya':    { flag: '🇪🇸', waitDays: 22, difficulty: 2, visaType: 'Schengen', tip: 'Otel + uçak rezervasyonu yeterli' },
-  'Yunanistan': { flag: '🇬🇷', waitDays: 12, difficulty: 1, visaType: 'Schengen', tip: 'İlk Schengen başvurusu için ideal' },
+  'Almanya':    { flag: '🇩🇪', waitDays: 45, difficulty: 3, visaType: 'Schengen', tip: 'Finansal süreklilik bakiyeden önemli' },
+  'Fransa':     { flag: '🇫🇷', waitDays: 21, difficulty: 3, visaType: 'Schengen', tip: 'Seyahat sigortası ön koşul' },
+  'Hollanda':   { flag: '🇳🇱', waitDays: 14, difficulty: 2, visaType: 'Schengen', tip: 'Banka düzeni ön planda' },
+  'İtalya':     { flag: '🇮🇹', waitDays: 10, difficulty: 3, visaType: 'Schengen', tip: 'Başlıca güzergah uyumu önemli' },
+  'İspanya':    { flag: '🇪🇸', waitDays: 8,  difficulty: 2, visaType: 'Schengen', tip: 'Otel + uçak rezervasyonu yeterli' },
+  'Yunanistan': { flag: '🇬🇷', waitDays: 5,  difficulty: 1, visaType: 'Schengen', tip: 'İlk Schengen başvurusu için ideal' },
   'Avusturya':  { flag: '🇦🇹', waitDays: 20, difficulty: 2, visaType: 'Schengen', tip: 'Ret oranı makul, değerlendirme hızlı' },
-  'Belçika':    { flag: '🇧🇪', waitDays: 21, difficulty: 3, visaType: 'Schengen', tip: 'Amaç belgesi kritik' },
-  'Portekiz':   { flag: '🇵🇹', waitDays: 18, difficulty: 2, visaType: 'Schengen', tip: 'Göçmen ülke etkisi düşük' },
+  'Belçika':    { flag: '🇧🇪', waitDays: 15, difficulty: 3, visaType: 'Schengen', tip: 'Amaç belgesi kritik' },
+  'Portekiz':   { flag: '🇵🇹', waitDays: 12, difficulty: 2, visaType: 'Schengen', tip: 'Göçmen ülke etkisi düşük' },
   'İsviçre':    { flag: '🇨🇭', waitDays: 22, difficulty: 3, visaType: 'Schengen', tip: 'Finansal eşik yüksek' },
-  'İsveç':      { flag: '🇸🇪', waitDays: 20, difficulty: 2, visaType: 'Schengen', tip: 'Dijital başvuru kolaylaştı' },
+  'İsveç':      { flag: '🇸🇪', waitDays: 35, difficulty: 2, visaType: 'Schengen', tip: 'Dijital başvuru kolaylaştı' },
   'Norveç':     { flag: '🇳🇴', waitDays: 18, difficulty: 2, visaType: 'Schengen', tip: 'Davet mektubu işe yarıyor' },
-  'Danimarka':  { flag: '🇩🇰', waitDays: 19, difficulty: 2, visaType: 'Schengen', tip: 'Sakin değerlendirme süreci' },
-  'Polonya':    { flag: '🇵🇱', waitDays: 15, difficulty: 2, visaType: 'Schengen', tip: 'Düşük ret oranı, hızlı süreç' },
-  'Macaristan': { flag: '🇭🇺', waitDays: 15, difficulty: 1, visaType: 'Schengen', tip: 'İlk Schengen için alternatif' },
+  'Danimarka':  { flag: '🇩🇰', waitDays: 42, difficulty: 4, visaType: 'Schengen', tip: '%66 ret oranı — en zorlu Schengen' },
+  'Polonya':    { flag: '🇵🇱', waitDays: 9,  difficulty: 2, visaType: 'Schengen', tip: 'Düşük ret oranı, hızlı süreç' },
+  'Macaristan': { flag: '🇭🇺', waitDays: 7,  difficulty: 1, visaType: 'Schengen', tip: 'İlk Schengen için alternatif' },
   'İngiltere':  { flag: '🇬🇧', waitDays: 15, difficulty: 2, visaType: 'UK Vizesi', tip: '2026 eVisa sistemi ile başvur' },
-  'ABD':        { flag: '🇺🇸', waitDays: 60, difficulty: 4, visaType: 'B1/B2',    tip: 'Mülakat kritik — önceden hazırlan' },
+  'ABD':        { flag: '🇺🇸', waitDays: 90, difficulty: 4, visaType: 'B1/B2',    tip: 'Mülakat kritik — önceden hazırlan' },
 };
 
 const DIFFICULTY_LABEL: Record<number, string> = { 1: 'Kolay', 2: 'Orta', 3: 'Zor', 4: 'Çok Zor' };

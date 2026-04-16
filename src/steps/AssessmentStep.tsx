@@ -8,6 +8,7 @@ import type { ProfileData } from '../types';
 import ScoreStory from '../components/ScoreStory';
 import BenchmarkCard from '../components/BenchmarkCard';
 import { useCountUp } from '../hooks/useCountUp';
+import { ScoreRadarMini } from '../components/ScoreRadarMini';
 
 interface ActionItem {
   title: string;
@@ -53,12 +54,19 @@ const CRITERIA = [
 function SwipeCriteriaCards({
   profile,
   onToggle,
+  applicantType,
 }: {
   profile: ProfileData;
   onToggle: (key: keyof ProfileData) => void;
+  applicantType: string;
 }) {
+  const visibleCriteria = CRITERIA.filter(c => {
+    if (c.id === 'hasSgkJob' && (applicantType === 'unemployed' || applicantType === 'minor')) return false;
+    return true;
+  });
   const [idx, setIdx] = useState(0);
-  const card = CRITERIA[idx];
+  const safeIdx = Math.min(idx, visibleCriteria.length - 1);
+  const card = visibleCriteria[safeIdx];
   const isOn = !!profile[card.id as keyof ProfileData];
   const Icon = card.icon;
 
@@ -74,12 +82,12 @@ function SwipeCriteriaCards({
     <div className="md:hidden">
       {/* Progress dots */}
       <div className="flex justify-center gap-1.5 mb-4">
-        {CRITERIA.map((_, i) => (
+        {visibleCriteria.map((c, i) => (
           <div
-            key={i}
+            key={c.id}
             className={`h-1.5 rounded-full transition-all ${
-              i === idx ? 'w-5 bg-slate-900' :
-              !!profile[CRITERIA[i].id as keyof ProfileData] ? 'w-2 bg-emerald-400' :
+              i === safeIdx ? 'w-5 bg-slate-900' :
+              !!profile[c.id as keyof ProfileData] ? 'w-2 bg-emerald-400' :
               'w-2 bg-slate-200'
             }`}
           />
@@ -142,18 +150,18 @@ function SwipeCriteriaCards({
         <button
           type="button"
           onClick={() => setIdx(i => Math.max(0, i - 1))}
-          disabled={idx === 0}
+          disabled={safeIdx === 0}
           className="p-2.5 rounded-xl bg-white border border-slate-200 disabled:opacity-30 transition-opacity"
         >
           <ChevronLeft className="w-4 h-4 text-slate-600" />
         </button>
         <span className="text-xs text-slate-400 font-medium">
-          {idx + 1} / {CRITERIA.length}
+          {safeIdx + 1} / {visibleCriteria.length}
         </span>
         <button
           type="button"
-          onClick={() => setIdx(i => Math.min(CRITERIA.length - 1, i + 1))}
-          disabled={idx === CRITERIA.length - 1}
+          onClick={() => setIdx(i => Math.min(visibleCriteria.length - 1, i + 1))}
+          disabled={safeIdx === visibleCriteria.length - 1}
           className="p-2.5 rounded-xl bg-white border border-slate-200 disabled:opacity-30 transition-opacity"
         >
           <ChevronRight className="w-4 h-4 text-slate-600" />
@@ -299,15 +307,39 @@ export function AssessmentStep({
                     </div>
                   </div>
   
+                  {/* ── #19 Conditional: applicantType-specific notice ── */}
+                  {(applicantType === 'unemployed' || applicantType === 'minor') && (
+                    <div className="bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3 text-sm text-amber-800 font-medium flex items-start gap-2">
+                      <span className="text-base mt-0.5">ℹ️</span>
+                      <div>
+                        {applicantType === 'unemployed' && (
+                          <>SGK kriteri sizin için geçerli değil — <strong>sponsor mektubu veya emekli maaşı</strong> finansal bağ olarak değerlendiriliyor.</>
+                        )}
+                        {applicantType === 'minor' && (
+                          <>Reşit olmayan başvurucular için <strong>veli muvafakatnamesi ve okul kaydı</strong> en kritik belgelerdir.</>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  {profile.isStudent && (
+                    <div className="bg-indigo-50 border border-indigo-200 rounded-2xl px-4 py-3 text-sm text-indigo-800 font-medium flex items-start gap-2">
+                      <span className="text-base mt-0.5">🎓</span>
+                      <div>Öğrenci profili aktif — <strong>okul kaydı / transkript</strong> belgesi bağ puanınıza katkı sağlıyor.</div>
+                    </div>
+                  )}
+
                   <div>
                     <h3 className="text-xl font-bold text-slate-900 mb-4">2. Temel Kriterleriniz</h3>
 
                     {/* ── Mobil: tek kart swipe ── */}
-                    <SwipeCriteriaCards profile={profile} onToggle={handleProfileToggle} />
+                    <SwipeCriteriaCards profile={profile} onToggle={handleProfileToggle} applicantType={applicantType} />
 
                     {/* ── Desktop: grid (md+ ) ── */}
                     <div className="hidden md:grid grid-cols-2 gap-4">
-                      {CRITERIA.map((item) => (
+                      {CRITERIA.filter(item => {
+                        if (item.id === 'hasSgkJob' && (applicantType === 'unemployed' || applicantType === 'minor')) return false;
+                        return true;
+                      }).map((item) => (
                         <button
                           key={`assess-${item.id}`}
                           onClick={() => handleProfileToggle(item.id as keyof ProfileData)}
@@ -353,7 +385,7 @@ export function AssessmentStep({
                         <input
                           type="number"
                           min={18} max={90}
-                          placeholder="örn. 34"
+                          placeholder="28"
                           value={profile.applicantAge || ''}
                           onChange={(e) => setProfile(prev => ({ ...prev, applicantAge: parseInt(e.target.value) || 0 }))}
                           className="w-full text-2xl font-black text-slate-900 border-none outline-none bg-transparent p-0 placeholder:text-slate-300"
@@ -385,6 +417,41 @@ export function AssessmentStep({
                         <p className="text-xs text-slate-400 mt-1">Eski ret cezası yıllar geçtikçe azalır</p>
                       </div>
                     </div>
+
+                    {/* #16 Mesleki kıdem slider — işveren / çalışan için */}
+                    {(applicantType === 'employer') && (
+                      <div className="mt-4 bg-white border border-slate-200 rounded-2xl p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                            Mevcut İşte Kaç Yıl?
+                          </label>
+                          <span className={`text-sm font-black px-2 py-0.5 rounded-lg ${
+                            profile.yearsInCurrentJob >= 3 ? 'bg-emerald-100 text-emerald-700' :
+                            profile.yearsInCurrentJob >= 1 ? 'bg-amber-100 text-amber-700' :
+                                                              'bg-rose-100 text-rose-700'
+                          }`}>
+                            {profile.yearsInCurrentJob} yıl
+                          </span>
+                        </div>
+                        <input
+                          type="range"
+                          min={0} max={20} step={1}
+                          value={profile.yearsInCurrentJob ?? 3}
+                          onChange={(e) => setProfile(prev => ({ ...prev, yearsInCurrentJob: parseInt(e.target.value) }))}
+                          className="w-full accent-brand-600 h-1.5"
+                        />
+                        <div className="flex justify-between text-[10px] text-slate-300 mt-1">
+                          <span>0</span><span>5</span><span>10</span><span>15</span><span>20</span>
+                        </div>
+                        <p className="text-xs text-slate-400 mt-1.5">
+                          {profile.yearsInCurrentJob >= 3
+                            ? '✓ 3+ yıl kıdem — profesyonel bağ puanına +5 katkı'
+                            : profile.yearsInCurrentJob >= 1
+                            ? '1–2 yıl kıdem — orta düzey bağ puanı'
+                            : '0 yıl — yeni işe başladıysanız veya serbest meslek seçin'}
+                        </p>
+                      </div>
+                    )}
 
                     {/* Mevsimsellik — Planlanan Başvuru Tarihi */}
                     <div className="mt-4 bg-indigo-50 border border-indigo-100 rounded-2xl p-4">
@@ -627,6 +694,9 @@ export function AssessmentStep({
                     <div className="mt-3">
                       <ScoreStory profile={profile} score={currentScore} />
                     </div>
+
+                    {/* #12 Kompakt 6-eksen radar mini */}
+                    <ScoreRadarMini profile={profile} />
                   </div>
 
                   {/* Sağ taraf: aksiyonlar + benchmark */}

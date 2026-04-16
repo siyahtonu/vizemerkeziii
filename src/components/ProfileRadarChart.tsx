@@ -203,13 +203,18 @@ export function ProfileRadarChart({ profile }: Props) {
 
           {/* Sağ panel: boyut listesi + hover detayı */}
           <div className="flex-1 w-full space-y-2">
-            {/* Hover tooltip */}
-            {hovered && (
-              <div className="mb-3 p-3 rounded-xl border border-indigo-100 bg-indigo-50 text-xs text-indigo-700 leading-relaxed">
-                <span className="font-black">{DIMENSION_LABELS[hovered]}: %{hoveredScore}</span>
-                <br />{hoveredTip}
-              </div>
-            )}
+            {/* Hover tooltip — sabit yükseklik, kayma olmasın */}
+            <div className={`mb-3 p-3 rounded-xl border text-xs leading-relaxed transition-all duration-150 min-h-[56px] ${
+              hovered
+                ? 'border-indigo-100 bg-indigo-50 text-indigo-700'
+                : 'border-transparent bg-transparent text-transparent pointer-events-none'
+            }`}>
+              <span className="font-black">
+                {hovered ? `${DIMENSION_LABELS[hovered]}: %${hoveredScore}` : '\u00a0'}
+              </span>
+              <br />
+              {hovered ? hoveredTip : '\u00a0'}
+            </div>
 
             {/* Boyut barları */}
             {AXIS_KEYS.map(key => {

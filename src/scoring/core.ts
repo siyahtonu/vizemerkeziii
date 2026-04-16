@@ -118,7 +118,7 @@ export const calculateRawScore = (data: ProfileData, simValue: number = 0): numb
   if (data.hasPreviousRefusal && data.previousRefusalDisclosed) score -= Math.round(5 * refusalDecay);
 
   // ─────────────────────────────────────────────────────────
-  // BÖLÜM 6: BAŞVURU KALİTESİ & NİYET KANITI (Maks 15 puan)
+  // BÖLÜM 6: BAŞVURU KALİTESİ & NİYET KANITI (Maks 24 puan)
   // ─────────────────────────────────────────────────────────
   if (data.useOurTemplate) score += 5;
   if (data.hasInvitation) score += 3;

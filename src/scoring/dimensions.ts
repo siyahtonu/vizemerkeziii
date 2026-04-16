@@ -94,8 +94,8 @@ export function getTravelScore(data: ProfileData): number {
   return Math.max(0, Math.min(100, Math.round((pts / TRAVEL_MAX) * 100)));
 }
 
-// ─── Başvuru Kalitesi (max 22 ham puan) ──────────────────────────────────────
-const APP_MAX = 22;
+// ─── Başvuru Kalitesi (max 24 ham puan) ──────────────────────────────────────
+const APP_MAX = 24;
 export function getApplicationScore(data: ProfileData): number {
   let pts = 0;
   if (data.useOurTemplate)          pts += 5;
@@ -104,6 +104,7 @@ export function getApplicationScore(data: ProfileData): number {
   if (data.hasReturnTicket)         pts += 3;
   if (data.hasInvitation)           pts += 3;
   if (data.datesMatchReservations)  pts += 2;
+  if (data.addressMatchSgk)         pts += 2; // core.ts Bölüm 6 ile tutarlılık
   if (!data.noFakeBooking)          pts -= 15; // sahte rezervasyon veto
 
   return Math.max(0, Math.min(100, Math.round((pts / APP_MAX) * 100)));
