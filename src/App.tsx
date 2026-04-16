@@ -8311,17 +8311,49 @@ Signature: _______________     Date: ${today}`;
 
               {/* Header */}
               <div className="p-7 bg-gradient-to-r from-slate-800 to-slate-900 text-white rounded-t-2xl shrink-0">
-                <div className="flex justify-between items-start mb-4">
+                <div className="flex justify-between items-start mb-3">
                   <div>
                     <div className="text-slate-400 text-xs font-black uppercase tracking-widest mb-1 flex items-center gap-2">
                       <Bell className="w-4 h-4"/> Randevu Takip Botu
                     </div>
-                    <h3 className="text-2xl font-black">VFS Randevu Bildirimi</h3>
-                    <p className="text-slate-400 text-sm mt-1">
-                      Seçtiğin konsolosluklarda slot açılınca anında e-posta alırsın
+                    <h3 className="text-2xl font-black">Anlık Vize Randevu Takip Sistemi</h3>
+                    <p className="text-slate-400 text-sm mt-1 leading-relaxed">
+                      Randevu takip botu ile gerçek zamanlı veri ile Schengen vize randevusu, VFS randevu bulma ve VFS Global randevu takip durumlarını anında öğrenin.
                     </p>
                   </div>
-                  <button onClick={() => setIsAppointmentOpen(false)} className="p-2 hover:bg-white/10 rounded-full"><X className="w-6 h-6"/></button>
+                  <button onClick={() => setIsAppointmentOpen(false)} className="p-2 hover:bg-white/10 rounded-full shrink-0 ml-4"><X className="w-6 h-6"/></button>
+                </div>
+
+                {/* 3 özellik bandı */}
+                <div className="grid grid-cols-3 gap-2 mb-4 mt-4">
+                  {[
+                    { icon: '🎯', title: 'Güvenilir Otomatik Sistem', desc: 'VFS Global ve resmi kaynaklardan %100 doğru ve güncel vize randevusu verileri.' },
+                    { icon: '🔔', title: 'Akıllı Bildirimler', desc: 'Sadece istediğiniz ülkeler ve şehirler için özelleştirilmiş anlık bildirimler.' },
+                    { icon: '⚡', title: 'Hızlı Kurulum', desc: 'Birkaç adımda botu kurun, Fransa ve Hollanda gibi ülkeler için takibe başlayın.' },
+                  ].map(({ icon, title, desc }) => (
+                    <div key={title} className="bg-white/5 rounded-xl p-3 text-center">
+                      <div className="text-xl mb-1">{icon}</div>
+                      <div className="text-xs font-black text-white mb-0.5">{title}</div>
+                      <div className="text-[10px] text-slate-400 leading-relaxed">{desc}</div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* 3 adım */}
+                <div className="flex gap-3 mb-4">
+                  {[
+                    { n: '1', b: 'Kurulum', d: 'Takip etmek istediğiniz ülke, şehir ve vize türünü seçin.' },
+                    { n: '2', b: 'Bildirimleri Aç', d: 'Premium ile anlık bildirimleri aktif edin, "randevu çıkmıyor" sorununu yaşamayın.' },
+                    { n: '3', b: 'Randevu Bul', d: 'Randevu açıldığında bildirimi alın, anında başvuru merkezine gidin.' },
+                  ].map(({ n, b, d }) => (
+                    <div key={n} className="flex-1 flex items-start gap-2">
+                      <span className="w-6 h-6 bg-brand-500 text-white rounded-full flex items-center justify-center font-black text-xs shrink-0 mt-0.5">{n}</span>
+                      <div>
+                        <div className="text-xs font-black text-white">{b}</div>
+                        <div className="text-[10px] text-slate-400 leading-relaxed mt-0.5">{d}</div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
 
                 {/* Ülke filtre */}
