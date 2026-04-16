@@ -9,6 +9,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import paymentRouter from './payment.js';
 import appointmentRouter from './appointmentWatcher.js';
+import outcomesRouter from './outcomes.js';
 
 dotenv.config({ path: '.env.local' });
 
@@ -61,6 +62,9 @@ app.use('/api/payment', paymentRouter);
 
 // ── Randevu takip rotaları ────────────────────────────────
 app.use('/api/appointments', appointmentRouter);
+
+// ── Başvuru sonuç takip rotaları ──────────────────────────
+app.use('/api/outcomes', outcomesRouter);
 
 // ── Sağlık kontrolü ───────────────────────────────────────
 app.get('/api/health', (_req, res) => {
