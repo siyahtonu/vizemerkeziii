@@ -157,17 +157,19 @@ function getSections(p: ProfileData, simValue = 0): SectionScore[] {
 
 // ── Puan → Anlatı Üretici ────────────────────────────────────────────────
 function buildNarrative(
-  profile: ProfileData,
-  score:   number,
-  weak:    SectionScore,
+  profile:   ProfileData,
+  score:     number,
+  weak:      SectionScore,
+  strong:    SectionScore,
   potential: number,
-): { opener: string; body: string; cta: string } {
+): { opener: string; body: string; cta: string; indicator: '🟢' | '🟡' | '🔴' } {
 
-  const name   = profile.targetCountry || 'bu ülke';
+  const name    = profile.targetCountry || 'bu ülke';
   const gainStr = potential > score ? ` (+${potential - score} puan)` : '';
 
   if (!profile.noOverstayHistory) {
     return {
+      indicator: '🔴',
       opener: 'Kritik bir engel tespit edildi.',
       body:   'Pasaport/vize geçmişinizde süre aşımı kaydı bulunuyor. Bu, skor üst sınırını %10\'a kitleyen bir veto kuralıdır. Başvurudan önce bu durumu açıklayıcı bir dilekçeyle ele almalısınız.',
       cta:    'Süre aşımını nasıl açıklayacağınızı öğrenin',
@@ -176,29 +178,33 @@ function buildNarrative(
 
   if (score >= 82) {
     return {
-      opener: `Profiliniz ${name} için hazır görünüyor.`,
-      body:   `100 başvurucudan ${score}'u gibi profilli kişiler genellikle onay alıyor. Belge paketinizi eksiksiz hazırlayın — bu seviyede reddedilmelerin %90'ı belge eksikliğinden kaynaklanıyor.`,
+      indicator: '🟢',
+      opener: `Güçlü Profil — ${name} için hazır görünüyor.`,
+      body:   `100 başvurucudan ${score}'u gibi profilli kişiler genellikle onay alıyor. **${strong.name}** çok güçlü. Belge paketinizi eksiksiz hazırlayın — bu seviyede reddedilmelerin %90'ı belge eksikliğinden kaynaklanıyor.`,
       cta:    'Niyet mektubunuzu oluşturun',
     };
   }
 
   if (score >= 72) {
     return {
-      opener: `Profiliniz güçlü, ama ${82 - score} puanlık bir fark var.`,
-      body:   `100 başvurucudan ${score}'u gibi profille değerlendirme alıyorsunuz. En zayıf bölümünüz **${weak.name}** — ${weak.hint}. Bunu kapatırsanız skor ${potential}'e çıkabilir${gainStr}.`,
+      indicator: '🟢',
+      opener: `Güçlü Profil — ama ${82 - score} puanlık bir fark var.`,
+      body:   `100 başvurucudan ${score}'u gibi profille değerlendirme alıyorsunuz. **${strong.name}** iyi — ama **${weak.name}** zayıf (${weak.hint}). Bunu kapatırsanız skor ${potential}'e çıkabilir${gainStr}.`,
       cta:    `${weak.name} bölümünü güçlendirin`,
     };
   }
 
   if (score >= 55) {
     return {
-      opener: 'Orta güçlü profil — iyileştirme ile onay mümkün.',
-      body:   `Şu anki seviyenizde 100 başvurucudan yaklaşık ${score}'u benzer profil taşıyor. En kritik eksik: **${weak.name}** (${weak.hint}). Bu tek alanı düzeltmek skoru ${potential}'e taşıyabilir${gainStr}.`,
+      indicator: '🟡',
+      opener: 'Orta Profil — iyileştirme ile onay mümkün.',
+      body:   `100 başvurucudan yaklaşık ${score}'u benzer profil taşıyor. **${strong.name}** olumlu — ama en kritik eksik **${weak.name}** (${weak.hint}). Bu tek alanı düzeltmek skoru ${potential}'e taşıyabilir${gainStr}.`,
       cta:    `En kritik adımı görün`,
     };
   }
 
   return {
+    indicator: '🔴',
     opener: 'Dikkat: Başvuru yüksek riskli.',
     body:   `Mevcut profilde ciddi eksikler var. En ağır sorun: **${weak.name}** — ${weak.hint}. Başvurmadan önce bu açığı kapatmak reddi büyük ölçüde azaltır.`,
     cta:    `Kritik eksikleri listeleyin`,
@@ -225,14 +231,19 @@ const ScoreStory: React.FC<Props> = ({ profile, score, simValue = 0 }) => {
     [sections],
   );
 
+  const strongest = useMemo(
+    () => [...sections].sort((a, b) => b.efficiency - a.efficiency)[0],
+    [sections],
+  );
+
   const potential = useMemo(
     () => estimatePotential(score, weakest),
     [score, weakest],
   );
 
-  const { opener, body, cta } = useMemo(
-    () => buildNarrative(profile, score, weakest, potential),
-    [profile, score, weakest, potential],
+  const { opener, body, cta, indicator } = useMemo(
+    () => buildNarrative(profile, score, weakest, strongest, potential),
+    [profile, score, weakest, strongest, potential],
   );
 
   const scoreColor =
@@ -254,9 +265,7 @@ const ScoreStory: React.FC<Props> = ({ profile, score, simValue = 0 }) => {
     <div className={`rounded-xl border p-4 ${bgColor}`}>
       {/* Başlık */}
       <div className="flex items-start gap-3">
-        <div className={`text-3xl font-black leading-none ${scoreColor}`}>
-          %{score}
-        </div>
+        <div className="text-2xl leading-none pt-0.5">{indicator}</div>
         <div className="flex-1 min-w-0">
           <p className={`font-bold text-sm ${scoreColor} leading-tight`}>{opener}</p>
           <p className="text-xs text-slate-600 mt-1 leading-relaxed">

@@ -95,6 +95,7 @@ import { AssessmentStep } from './steps/AssessmentStep';
 import { TacticsStep } from './steps/TacticsStep';
 import { LetterStep } from './steps/LetterStep';
 import { DashboardStep, type DashboardStepProps } from './steps/DashboardStep';
+import { StepProgress } from './components/StepProgress';
 
 export default function App() {
   const navigate = useNavigate();
@@ -2440,6 +2441,9 @@ Signature: _______________     Date: ${today}`;
           </div>
         </div>
       </nav>
+
+      {/* Funnel adım göstergesi */}
+      <StepProgress currentStep={step} onNavigate={setStep} />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative">
 

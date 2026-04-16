@@ -150,6 +150,13 @@ export function DashboardStep({
   const setShowRiskDetail = onShowRiskDetailChange;
   const DEFAULT_PROFILE = {} as ProfileData; // passed via setProfile reset
 
+  // ── Boş profil kontrolü ──────────────────────────────────────────────────
+  const isEmptyProfile = currentScore <= 12 &&
+    !profile.bankSufficientBalance && !profile.hasSgkJob &&
+    !profile.hasHighValueVisa && !profile.hasAssets &&
+    !profile.isMarried && !profile.cleanCriminalRecord &&
+    !profile.hasTravelInsurance;
+
   return (
             <motion.div
                 key="dashboard"
@@ -158,8 +165,36 @@ export function DashboardStep({
                 exit={{ opacity: 0, scale: 0.98 }}
                 className="space-y-6 sm:space-y-10"
               >
+
+                {/* ── BOŞ DURUM BANNER ────────────────────────────────── */}
+                {isEmptyProfile && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="rounded-2xl bg-gradient-to-br from-indigo-50 to-brand-50 border border-indigo-100 p-6 flex flex-col sm:flex-row items-start sm:items-center gap-5"
+                  >
+                    <div className="text-5xl">🫥</div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-black text-slate-900 text-lg">
+                        Henüz bilgilerinizi girmediniz.
+                      </h3>
+                      <p className="text-slate-500 text-sm mt-1 leading-relaxed">
+                        3 dakika ayırıp profilinizi doldurun — size özel başarı tahmini ve aksiyon planı hazırlayalım.
+                        Banka bakiyesi, iş durumu ve seyahat geçmişinizi ekleyerek skoru <strong className="text-indigo-700">~25–40 puan</strong> artırabilirsiniz.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setStep('assessment')}
+                      className="shrink-0 px-5 py-3 bg-indigo-600 text-white rounded-xl font-bold text-sm hover:bg-indigo-700 transition-colors whitespace-nowrap flex items-center gap-2"
+                    >
+                      Profili Doldur →
+                    </button>
+                  </motion.div>
+                )}
+
                 <div className="space-y-4 sm:space-y-5">
-  
+
                   {/* ── KART 1: SKOR + ÖNCELIKLI ADIMLAR ── */}
                   <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
                     {/* Üst şerit: ülke seçici + kontrol butonları */}
