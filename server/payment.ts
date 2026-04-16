@@ -125,7 +125,7 @@ router.post('/callback', express.urlencoded({ extended: true }), async (req, res
 
       // ── JWT premium token oluştur ─────────────────────────────────────
       const premiumToken = jwt.sign(
-        { email: result.buyer?.email ?? '', plan: result.basketId, paid: true },
+        { email: (result.buyer as Record<string, unknown>)?.email ?? '', plan: result.basketId, paid: true },
         jwtSecret,
         { expiresIn: '90d' }
       );

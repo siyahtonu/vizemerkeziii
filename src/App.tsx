@@ -88,6 +88,7 @@ import { calculateRawScore, calculateScore } from './scoring/core';
 import { WhatIfSimulator } from './components/WhatIfSimulator';
 import { ProfileRadarChart } from './components/ProfileRadarChart';
 import { CountryRanking } from './components/CountryRanking';
+import { EvidenceChecklist } from './components/EvidenceChecklist';
 
 export default function App() {
   const navigate = useNavigate();
@@ -4839,7 +4840,14 @@ Signature: _______________     Date: ${today}`;
                 {/* ── KART 1.6: ÜLKE SIRALAMASI ── */}
                 <CountryRanking profile={profile} currentScore={currentScore} />
 
-                {/* ── KART 1.7: WHAT-IF SİMÜLATÖRÜ ── */}
+                {/* ── KART 1.7: KANIT KONTROL LİSTESİ ── */}
+                <EvidenceChecklist
+                  profile={profile}
+                  currentScore={currentScore}
+                  onProfileUpdate={(patch) => setProfile(prev => ({ ...prev, ...patch }))}
+                />
+
+                {/* ── KART 1.8: WHAT-IF SİMÜLATÖRÜ ── */}
                 <WhatIfSimulator profile={profile} currentScore={currentScore} />
 
                 {/* ── KART 2: BAŞVURU SONUÇ TAKİBİ (Feedback Loop) ── */}
