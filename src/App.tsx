@@ -3609,6 +3609,9 @@ Signature: _______________     Date: ${today}`;
       document.body.classList.remove('use-custom-cursor');
     }
     try { localStorage.setItem('vizeakil_custom_cursor', String(customCursorEnabled)); } catch { /* noop */ }
+    return () => {
+      document.body.classList.remove('use-custom-cursor');
+    };
   }, [customCursorEnabled]);
 
   React.useEffect(() => {
