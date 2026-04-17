@@ -4473,8 +4473,10 @@ Signature: _______________     Date: ${today}`;
                       whileHover={{ y: -4, transition: { duration: 0.2 } }}
                       whileTap={{ scale: 0.97 }}
                       onClick={() => {
+                        // Yeni analiz başlatılıyor → eski profil cevaplarını sıfırla.
+                        // "Devam Et" butonu eski veriye erişim için ayrı olarak duruyor.
                         setOnboardingCountry(label);
-                        setProfile((prev: ProfileData) => ({ ...prev, targetCountry: label }));
+                        setProfile({ ...DEFAULT_PROFILE, targetCountry: label });
                         setOnboardingStep(1);
                         setStep('onboarding');
                       }}
