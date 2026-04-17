@@ -19,8 +19,11 @@ const Footer: React.FC = () => {
               </div>
               VizeAkıl
             </div>
-            <p className="text-xs text-slate-400 leading-relaxed font-light">
-              AI destekli vize analiz motoru. Resmi vize otoritesi değildir.
+            <p className="text-[13px] text-slate-400 leading-relaxed font-light mt-1">
+              Yapay zeka ile vize başvuru sürecinizi analiz eder, kişisel öneriler sunar.
+            </p>
+            <p className="text-[10px] text-slate-300 leading-relaxed font-light mt-2 italic">
+              Bilgilendirme amaçlıdır, resmi vize danışmanlığı yerine geçmez.
             </p>
           </div>
 
