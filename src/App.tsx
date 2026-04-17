@@ -59,6 +59,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { jsPDF } from 'jspdf';
 import Footer from './components/Footer';
 import { SEO } from './components/SEO';
+import { apiUrl } from './lib/api';
 import { HelpModal } from './components/modals/HelpModal';
 import { CountryGuideModal } from './components/modals/CountryGuideModal';
 import { DocChecklistModal } from './components/modals/DocChecklistModal';
@@ -359,7 +360,7 @@ export default function App() {
     if (!apptSubEmail || !apptSubEmail.includes('@') || apptSelected.length === 0) return;
     setApptSubStatus('loading');
     try {
-      const res = await fetch('/api/appointments/subscribe', {
+      const res = await fetch(apiUrl('/api/appointments/subscribe'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: apptSubEmail, targets: apptSelected }),

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, ShieldCheck, Lock, TrendingUp, AlertCircle, CheckCircle2, XCircle, Clock } from 'lucide-react';
 import { SEO } from '../components/SEO';
+import { apiUrl } from '../lib/api';
 
 interface StatsResponse {
   total: number;
@@ -26,7 +27,7 @@ const OutcomesStats: React.FC = () => {
     setStatus('loading');
     setErrorMsg('');
     try {
-      const res = await fetch('/api/outcomes/stats', {
+      const res = await fetch(apiUrl('/api/outcomes/stats'), {
         headers: { 'x-admin-secret': secret },
       });
       if (res.status === 403) {

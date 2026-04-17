@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, ShieldCheck, CheckCircle2, XCircle, Clock, Send, AlertTriangle } from 'lucide-react';
 import { SEO } from '../components/SEO';
+import { apiUrl } from '../lib/api';
 
 type Outcome = 'onay' | 'ret' | 'bekliyor';
 
@@ -72,7 +73,7 @@ const OutcomeReport: React.FC = () => {
   // Backend'den güncel ret kodu listesini çek (opsiyonel — fallback var)
   useEffect(() => {
     let cancelled = false;
-    fetch('/api/outcomes/codes')
+    fetch(apiUrl('/api/outcomes/codes'))
       .then(r => (r.ok ? r.json() : null))
       .then(d => {
         if (!cancelled && d && Array.isArray(d.codes) && d.codes.length > 0) {
@@ -98,7 +99,7 @@ const OutcomeReport: React.FC = () => {
     setStatus('loading');
     setErrorMsg('');
     try {
-      const res = await fetch('/api/outcomes/submit', {
+      const res = await fetch(apiUrl('/api/outcomes/submit'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

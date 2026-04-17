@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import type { ProfileData } from '../types';
 import type { CountryWarning } from '../lib/scoringV2';
+import { apiUrl } from '../lib/api';
 import { ProfileRadarChart } from '../components/ProfileRadarChart';
 import { CountryRanking } from '../components/CountryRanking';
 import { WhatIfSimulator } from '../components/WhatIfSimulator';
@@ -555,7 +556,7 @@ export function DashboardStep({
                                 if (!fbEmail.includes('@') || !fbDate) return;
                                 setFbStatus('loading');
                                 try {
-                                  const res = await fetch('/api/outcomes/register', {
+                                  const res = await fetch(apiUrl('/api/outcomes/register'), {
                                     method: 'POST',
                                     headers: { 'Content-Type': 'application/json' },
                                     body: JSON.stringify({
@@ -656,7 +657,7 @@ export function DashboardStep({
                               onClick={async () => {
                                 setFbStatus('loading');
                                 try {
-                                  const res = await fetch('/api/outcomes/submit', {
+                                  const res = await fetch(apiUrl('/api/outcomes/submit'), {
                                     method: 'POST',
                                     headers: { 'Content-Type': 'application/json' },
                                     body: JSON.stringify({

@@ -16,6 +16,26 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 app.use(express.json());
 
+// ── CORS — farklı origin'den gelen frontend için ──────────────────────
+// Frontend api.vizeakil.com'dan ayrı origin'de (vizeakil.com) çalışır.
+const ALLOWED_ORIGINS = [
+  'https://vizeakil.com',
+  'https://www.vizeakil.com',
+  'http://localhost:3000',
+  'http://localhost:3001',
+];
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (origin && ALLOWED_ORIGINS.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Vary', 'Origin');
+  }
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-admin-secret, x-check-secret');
+  if (req.method === 'OPTIONS') return res.status(204).end();
+  next();
+});
+
 // ── Rate Limiting ─────────────────────────────────────────
 const apiLimiter = rateLimit({
   windowMs: 60 * 1000,       // 1 dakika
