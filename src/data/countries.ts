@@ -37,6 +37,25 @@ export const visaFreeCountries: VisaFreeCountry[] = [
   { name: 'Tayland', flag: '🇹🇭', region: 'Asya', entryType: 'Vizesiz', maxDays: 30, flightHours: 10, avgCostEur: 700, scoreBoost: 5, stampValue: 'Orta', tip: 'Bangkok + Phuket popüler. Makul maliyetli.' },
 ];
 
+/**
+ * Ziyaret edilen vizesiz ülkelerden algoritma ham skoruna eklenecek bonus.
+ * Maksimum scoreBoost değerine bakar — toplam değil (abuse önler).
+ *   ≥ 8  (Japonya, Singapur, Hong Kong, Güney Kore) → +2
+ *   5–7  (Sırbistan, Georgia, Tayland, Karadağ vs.) → +1
+ *   < 5                                              →  0
+ */
+export function getVisaFreeBonus(visitedNames: string[] | undefined): number {
+  if (!visitedNames || visitedNames.length === 0) return 0;
+  let maxBoost = 0;
+  for (const name of visitedNames) {
+    const entry = visaFreeCountries.find(c => c.name === name);
+    if (entry && entry.scoreBoost > maxBoost) maxBoost = entry.scoreBoost;
+  }
+  if (maxBoost >= 8) return 2;
+  if (maxBoost >= 5) return 1;
+  return 0;
+}
+
 // Banka Analizi Yapılandırılmış Sonuç
 export interface BankAnalysisResult {
   fileName: string;

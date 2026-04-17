@@ -7,6 +7,7 @@ import type { ProfileData } from '../types';
 import { TR_REJECTION_RATES } from './matrices';
 import { temporalDecay, getReturnTieMultiplier, getProfileCountryFactor, getConsulateAdjustment, resolveSegment } from './algorithms';
 import { getSeasonalMultiplier } from './seasonal';
+import { getVisaFreeBonus } from '../data/countries';
 
 // ============================================================
 // calculateRawScore: ülke kalibrasyonu öncesi ham skor (0-100)
@@ -124,6 +125,12 @@ export const calculateRawScore = (data: ProfileData, simValue: number = 0): numb
   const refusalDecay = temporalDecay(data.lastRejectionYear, 0.35);
   if (data.hasPreviousRefusal && !data.previousRefusalDisclosed) score -= Math.round(20 * refusalDecay);
   if (data.hasPreviousRefusal && data.previousRefusalDisclosed) score -= Math.round(5 * refusalDecay);
+
+  // v3.5: Vizesiz seyahat geçmişi bonusu (+0/+1/+2).
+  // Kullanıcı Japonya/Singapur/Kore gibi "güçlü damga" ülkelerini ziyaret
+  // ettiyse geri dönüş güvenilirliği artar. Abuse önlemek için maksimum
+  // scoreBoost'a bakıyoruz (sum değil) — tavan +2 puan.
+  score += getVisaFreeBonus(data.visitedVisaFreeCountries);
 
   // ─────────────────────────────────────────────────────────
   // BÖLÜM 6: BAŞVURU KALİTESİ & NİYET KANITI (Maks 24 puan)

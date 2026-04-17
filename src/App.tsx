@@ -70,7 +70,7 @@ import { RejectionRiskWidget } from './components/RejectionRiskWidget';
 import type { ProfileData, Conflict, RoadmapItem, LetterData } from './types';
 import { ukDocuments, ukPricing, refusalRules, consulateData, docMatrixFields } from './data/documents';
 import type { RefusalRule, ConsulateInfo, DocField } from './data/documents';
-import { visaFreeCountries, schengenCountries, multiCountryVisaData } from './data/countries';
+import { visaFreeCountries, schengenCountries, multiCountryVisaData, getVisaFreeBonus } from './data/countries';
 import type { VisaFreeCountry, BankAnalysisResult, SchengenCountry } from './data/countries';
 import {
   socialMediaChecklist, interviewQuestions, BANK_PLAN_PARAMS,
@@ -3458,10 +3458,53 @@ Signature: _______________     Date: ${today}`;
                               {country.stampValue} damga
                             </span>
                           </div>
-                          <p className="text-xs text-slate-500 italic">{country.tip}</p>
+                          <p className="text-xs text-slate-500 italic mb-3">{country.tip}</p>
+                          {/* Ziyaret ettim toggle → algoritmaya bonus (+0/+1/+2) */}
+                          {(() => {
+                            const visited = profile.visitedVisaFreeCountries ?? [];
+                            const isVisited = visited.includes(country.name);
+                            return (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setProfile(prev => {
+                                    const list = prev.visitedVisaFreeCountries ?? [];
+                                    const next = isVisited
+                                      ? list.filter(n => n !== country.name)
+                                      : [...list, country.name];
+                                    return { ...prev, visitedVisaFreeCountries: next };
+                                  });
+                                }}
+                                className={`w-full py-2 rounded-xl text-xs font-bold transition-all ${
+                                  isVisited
+                                    ? 'bg-emerald-600 text-white hover:bg-emerald-700'
+                                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                }`}
+                              >
+                                {isVisited ? '✓ Ziyaret ettim' : 'Ziyaret ettim'}
+                              </button>
+                            );
+                          })()}
                         </div>
                     ))}
                   </div>
+                  {/* Bonus özeti — seçili ülkelerden algoritmaya eklenecek puan */}
+                  {(profile.visitedVisaFreeCountries?.length ?? 0) > 0 && (() => {
+                    const bonus = getVisaFreeBonus(profile.visitedVisaFreeCountries);
+                    return (
+                      <div className="mt-6 p-4 bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-2xl flex items-center justify-between">
+                        <div>
+                          <p className="font-bold text-emerald-900 text-sm">
+                            Seçili {profile.visitedVisaFreeCountries?.length} ülke — algoritma bonusu
+                          </p>
+                          <p className="text-xs text-emerald-700 mt-0.5">
+                            En güçlü damga hedef ülke skoruna +{bonus} ham puan ekliyor.
+                          </p>
+                        </div>
+                        <span className="text-3xl font-bold text-emerald-700">+{bonus}</span>
+                      </div>
+                    );
+                  })()}
                 </div>
               </motion.div>
             </div>

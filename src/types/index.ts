@@ -117,6 +117,11 @@ export interface ProfileData {
   // applicantType='sponsor' seçildiğinde algoritma segmentini belirlemek için set edilir.
   // Başka bir kriter olarak UI'da gösterilmez — saf segment marker.
   hasSponsor?: boolean;
+
+  // ── Vizesiz Seyahat Bonusu (v3.5) ─────────────────────────────────────
+  // Kullanıcının daha önce ziyaret ettiği vizesiz ülkeler (isim listesi).
+  // Algoritma maksimum scoreBoost değerine göre +0/+1/+2 ham puan ekler.
+  visitedVisaFreeCountries?: string[];
 }
 
 export interface Conflict {
