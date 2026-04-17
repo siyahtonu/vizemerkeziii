@@ -88,7 +88,7 @@ export function ProfileRadarChart({ profile }: Props) {
           </svg>
         </div>
         <div>
-          <div className="font-black text-slate-900 text-sm">Kişisel Risk Haritası</div>
+          <div className="font-bold text-slate-900 text-sm">Kişisel Risk Haritası</div>
           <div className="text-xs text-slate-400">6 boyutlu profil analizi — zayıf eksenleri tespit edin</div>
         </div>
       </div>
@@ -209,7 +209,7 @@ export function ProfileRadarChart({ profile }: Props) {
                 ? 'border-indigo-100 bg-indigo-50 text-indigo-700'
                 : 'border-transparent bg-transparent text-transparent pointer-events-none'
             }`}>
-              <span className="font-black">
+              <span className="font-bold">
                 {hovered ? `${DIMENSION_LABELS[hovered]}: %${hoveredScore}` : '\u00a0'}
               </span>
               <br />
@@ -239,7 +239,7 @@ export function ProfileRadarChart({ profile }: Props) {
                     />
                   </div>
                   <div
-                    className="w-9 text-right text-xs font-black shrink-0"
+                    className="w-9 text-right text-xs font-bold shrink-0"
                     style={{ color: scoreColor(score) }}
                   >
                     %{score}
@@ -251,7 +251,7 @@ export function ProfileRadarChart({ profile }: Props) {
             {/* Zayıf boyut uyarısı */}
             {weakDimensions.length > 0 && (
               <div className="mt-2 p-3 bg-rose-50 border border-rose-100 rounded-xl text-xs text-rose-700">
-                <span className="font-black">Öncelikli geliştirme:</span>{' '}
+                <span className="font-bold">Öncelikli geliştirme:</span>{' '}
                 {weakDimensions.map(k => DIMENSION_LABELS[k]).join(', ')} boyutu zayıf.
               </div>
             )}

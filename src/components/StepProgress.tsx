@@ -41,7 +41,7 @@ export function StepProgress({ currentStep, onNavigate }: Props) {
           <button
             type="button"
             onClick={() => onNavigate?.('hero')}
-            className="flex items-center gap-2 font-display font-black text-lg text-slate-900 hover:text-brand-600 transition-colors shrink-0"
+            className="flex items-center gap-2 font-display font-bold text-lg text-slate-900 hover:text-brand-600 transition-colors shrink-0"
           >
             <div className="w-7 h-7 bg-brand-600 rounded-lg flex items-center justify-center">
               <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>

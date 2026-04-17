@@ -16,14 +16,14 @@ const Hakkimizda: React.FC = () => (
           <ArrowLeft className="w-5 h-5" /> Ana Sayfa
         </Link>
         <div className="h-4 w-px bg-slate-300" />
-        <div className="flex items-center gap-2 text-slate-700 font-display font-black text-lg">
+        <div className="flex items-center gap-2 text-slate-700 font-display font-bold text-lg">
           <ShieldCheck className="w-5 h-5 text-brand-600"/> VizeAkıl
         </div>
       </div>
     </nav>
 
     <main className="max-w-4xl mx-auto px-4 sm:px-6 py-12">
-      <h1 className="text-3xl font-black text-slate-900 mb-2">Hakkımızda</h1>
+      <h1 className="text-3xl font-bold text-slate-900 mb-2">Hakkımızda</h1>
       <p className="text-slate-500 mb-10 text-lg leading-relaxed">
         VizeAkıl, vize başvuru sürecini şeffaf ve erişilebilir hale getirmek için kuruldu.
       </p>
@@ -35,7 +35,7 @@ const Hakkimizda: React.FC = () => (
             <div className="w-10 h-10 bg-brand-50 rounded-xl flex items-center justify-center">
               <Target className="w-5 h-5 text-brand-600"/>
             </div>
-            <h2 className="text-xl font-black text-slate-900">Misyonumuz</h2>
+            <h2 className="text-xl font-bold text-slate-900">Misyonumuz</h2>
           </div>
           <p className="text-slate-600 leading-relaxed">
             Türkiye'den yurt dışına seyahat etmek isteyen her bireyin, pahalı vize danışmanı
@@ -51,7 +51,7 @@ const Hakkimizda: React.FC = () => (
             <div className="w-10 h-10 bg-brand-50 rounded-xl flex items-center justify-center">
               <Brain className="w-5 h-5 text-brand-600"/>
             </div>
-            <h2 className="text-xl font-black text-slate-900">Algoritmamız</h2>
+            <h2 className="text-xl font-bold text-slate-900">Algoritmamız</h2>
           </div>
           <p className="text-slate-600 leading-relaxed">
             Schengen Visa Statistics (AB Komisyonu 2024-2026) ve gerçek başvurucu deneyimlerinden
@@ -70,7 +70,7 @@ const Hakkimizda: React.FC = () => (
             <div className="w-10 h-10 bg-brand-50 rounded-xl flex items-center justify-center">
               <Users className="w-5 h-5 text-brand-600"/>
             </div>
-            <h2 className="text-xl font-black text-slate-900">Ekip</h2>
+            <h2 className="text-xl font-bold text-slate-900">Ekip</h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {[
@@ -78,10 +78,10 @@ const Hakkimizda: React.FC = () => (
               { name: '[Teknik Kurucu]', role: 'CTO', bio: 'AI ve backend geliştirme uzmanı.' },
             ].map(m => (
               <div key={m.name} className="p-4 bg-slate-50 rounded-xl">
-                <div className="w-12 h-12 bg-brand-100 rounded-full flex items-center justify-center mb-3 font-black text-brand-700">
+                <div className="w-12 h-12 bg-brand-100 rounded-full flex items-center justify-center mb-3 font-bold text-brand-700">
                   {m.name[1]}
                 </div>
-                <div className="font-black text-slate-900">{m.name}</div>
+                <div className="font-bold text-slate-900">{m.name}</div>
                 <div className="text-xs text-brand-600 font-bold mb-1">{m.role}</div>
                 <div className="text-xs text-slate-500">{m.bio}</div>
               </div>
@@ -91,7 +91,7 @@ const Hakkimizda: React.FC = () => (
 
         <div className="text-center">
           <Link to="/iletisim"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-brand-600 text-white font-black rounded-xl hover:bg-brand-700 transition-colors">
+            className="inline-flex items-center gap-2 px-6 py-3 bg-brand-600 text-white font-bold rounded-xl hover:bg-brand-700 transition-colors">
             İletişime Geç →
           </Link>
         </div>

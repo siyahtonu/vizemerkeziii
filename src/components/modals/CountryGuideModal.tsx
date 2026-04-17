@@ -63,7 +63,7 @@ export function CountryGuideModal({ isOpen, onClose, currentScore }: Props) {
               <div>
                 <div className="flex items-center gap-2 mb-1">
                   <Plane className="w-5 h-5 text-sky-600" />
-                  <h3 className="text-lg font-black text-slate-900">Ülke Karşılaştırma Tablosu</h3>
+                  <h3 className="text-lg font-bold text-slate-900">Ülke Karşılaştırma Tablosu</h3>
                 </div>
                 <p className="text-sm text-slate-500">Tüm hedef ülkeler — skor {currentScore}/100 bazında kişisel onay tahmini</p>
               </div>
@@ -92,7 +92,7 @@ export function CountryGuideModal({ isOpen, onClose, currentScore }: Props) {
                     Skor: {currentScore}/100 — {scored.length} Ülke Karşılaştırması
                   </div>
                   {/* Table Header */}
-                  <div className="grid grid-cols-[1.8fr_1fr_0.9fr_0.9fr] gap-2 px-3 py-2 bg-slate-50 rounded-xl border border-slate-200 text-[10px] font-black text-slate-400 uppercase tracking-wider">
+                  <div className="grid grid-cols-[1.8fr_1fr_0.9fr_0.9fr] gap-2 px-3 py-2 bg-slate-50 rounded-xl border border-slate-200 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                     <span>Ülke</span>
                     <span className="text-center">Tahmini Onay</span>
                     <span className="text-center">Zorluk</span>
@@ -106,13 +106,13 @@ export function CountryGuideModal({ isOpen, onClose, currentScore }: Props) {
                         <div className="min-w-0">
                           <div className="flex items-center gap-1 flex-wrap">
                             <span className="text-sm font-bold text-slate-900 truncate">{c.name}</span>
-                            {i === 0 && <span className="text-[8px] font-black bg-emerald-500 text-white px-1 py-0.5 rounded shrink-0">★ En İyi</span>}
+                            {i === 0 && <span className="text-[8px] font-bold bg-emerald-500 text-white px-1 py-0.5 rounded shrink-0">★ En İyi</span>}
                           </div>
                           <span className="text-[10px] text-slate-400">{c.visaType}</span>
                         </div>
                       </div>
                       <div className="flex flex-col items-center gap-1">
-                        <span className={`text-base font-black ${approvalColor(c.personalApproval)}`}>%{c.personalApproval}</span>
+                        <span className={`text-base font-bold ${approvalColor(c.personalApproval)}`}>%{c.personalApproval}</span>
                         <div className="w-full bg-slate-100 rounded-full h-1">
                           <div className={`h-1 rounded-full ${approvalBg(c.personalApproval)}`}
                             style={{ width: `${c.personalApproval}%` }} />
@@ -146,14 +146,14 @@ export function CountryGuideModal({ isOpen, onClose, currentScore }: Props) {
                         <span className="text-2xl shrink-0">{c.flag}</span>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className="font-black text-slate-900">{c.name}</span>
-                            {i === 0 && <span className="text-[10px] font-black bg-emerald-500 text-white px-1.5 py-0.5 rounded-md">En İyi Seçim</span>}
+                            <span className="font-bold text-slate-900">{c.name}</span>
+                            {i === 0 && <span className="text-[10px] font-bold bg-emerald-500 text-white px-1.5 py-0.5 rounded-md">En İyi Seçim</span>}
                             <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${difficultyBadge(c.difficultyLabel)}`}>{c.difficultyLabel}</span>
                           </div>
                           <div className="text-xs text-slate-500 mt-0.5">{c.tips}</div>
                         </div>
                         <div className="text-right shrink-0">
-                          <div className={`text-xl font-black ${approvalColor(c.personalApproval)}`}>
+                          <div className={`text-xl font-bold ${approvalColor(c.personalApproval)}`}>
                             %{c.personalApproval}
                           </div>
                           <div className="text-[10px] text-slate-400">tahmini onay</div>

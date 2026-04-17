@@ -122,7 +122,7 @@ export function CountryRanking({ profile, currentScore }: Props) {
             <Globe className="w-4 h-4 text-emerald-600" />
           </div>
           <div>
-            <div className="font-black text-slate-900 text-sm">Hangi Ülkeye Başvurmalıyım?</div>
+            <div className="font-bold text-slate-900 text-sm">Hangi Ülkeye Başvurmalıyım?</div>
             <div className="text-xs text-slate-400">Profilinize göre {ranked.length} ülke onay olasılığı — büyükten küçüğe</div>
           </div>
         </div>
@@ -161,11 +161,11 @@ export function CountryRanking({ profile, currentScore }: Props) {
                     <span className="text-lg">{c.flag}</span>
                   </div>
                   <div>
-                    <div className="font-black text-slate-900 text-sm">{c.name}</div>
+                    <div className="font-bold text-slate-900 text-sm">{c.name}</div>
                     <div className="text-[10px] text-slate-500">{c.visaType}</div>
                   </div>
                   <div className="flex items-end gap-1">
-                    <span className={`text-2xl font-black ${
+                    <span className={`text-2xl font-bold ${
                       c.score >= 75 ? 'text-emerald-600' :
                       c.score >= 60 ? 'text-amber-600' : 'text-rose-600'
                     }`}>%{c.score}</span>
@@ -211,11 +211,11 @@ export function CountryRanking({ profile, currentScore }: Props) {
                           isCur ? 'border-brand-200 bg-brand-50' : 'border-slate-100'
                         }`}
                       >
-                        <span className="w-5 text-xs font-black text-slate-400 text-center">{rank + 1}.</span>
+                        <span className="w-5 text-xs font-bold text-slate-400 text-center">{rank + 1}.</span>
                         <span className="text-base">{c.flag}</span>
                         <span className="flex-1 text-xs font-bold text-slate-700">{c.name}</span>
                         <span className="text-[10px] text-slate-400">{c.visaType}</span>
-                        <span className={`text-xs font-black ${
+                        <span className={`text-xs font-bold ${
                           c.score >= 75 ? 'text-emerald-600' :
                           c.score >= 60 ? 'text-amber-600' : 'text-rose-600'
                         }`}>%{c.score}</span>

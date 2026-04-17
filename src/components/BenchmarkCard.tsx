@@ -187,7 +187,7 @@ const BenchmarkCard: React.FC<Props> = ({ profile, score }) => {
         {/* Ana Stat: kaç kişi başvurdu, kaçı onaylandı */}
         <div className="flex items-stretch gap-3">
           <div className="flex-1 rounded-lg bg-indigo-50 border border-indigo-100 p-3 text-center">
-            <div className="text-2xl font-black text-indigo-700">
+            <div className="text-2xl font-bold text-indigo-700">
               {data.totalApplicants.toLocaleString('tr-TR')}
             </div>
             <div className="text-[10px] text-indigo-500 mt-0.5 leading-tight">
@@ -195,13 +195,13 @@ const BenchmarkCard: React.FC<Props> = ({ profile, score }) => {
             </div>
           </div>
           <div className="flex-1 rounded-lg bg-emerald-50 border border-emerald-100 p-3 text-center">
-            <div className="text-2xl font-black text-emerald-700">%{data.approvalRate}</div>
+            <div className="text-2xl font-bold text-emerald-700">%{data.approvalRate}</div>
             <div className="text-[10px] text-emerald-500 mt-0.5 leading-tight">
               ortalama onay oranı<br />bu profil segmentinde
             </div>
           </div>
           <div className="flex-1 rounded-lg bg-slate-50 border border-slate-200 p-3 text-center">
-            <div className="text-2xl font-black text-slate-700">%{data.betterThanPct}</div>
+            <div className="text-2xl font-bold text-slate-700">%{data.betterThanPct}</div>
             <div className="text-[10px] text-slate-400 mt-0.5 leading-tight">
               benzer profilden<br />daha güçlü skor
             </div>

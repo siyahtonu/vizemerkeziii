@@ -177,7 +177,7 @@ export function DashboardStep({
                   >
                     <div className="text-5xl">🫥</div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-black text-slate-900 text-lg">
+                      <h3 className="font-bold text-slate-900 text-lg">
                         Henüz bilgilerinizi girmediniz.
                       </h3>
                       <p className="text-slate-500 text-sm mt-1 leading-relaxed">
@@ -252,7 +252,7 @@ export function DashboardStep({
                             />
                           </svg>
                           <div className="absolute inset-0 flex flex-col items-center justify-center">
-                            <span className={`text-xl font-black ${currentScore >= 82 ? 'text-emerald-600' : currentScore >= 65 ? 'text-amber-600' : 'text-red-600'}`}>
+                            <span className={`text-xl font-bold ${currentScore >= 82 ? 'text-emerald-600' : currentScore >= 65 ? 'text-amber-600' : 'text-red-600'}`}>
                               %{currentScore}
                             </span>
                           </div>
@@ -262,7 +262,7 @@ export function DashboardStep({
                           {currentScore >= 82 ? (
                             <>
                               <div className="flex items-center gap-2 mb-1">
-                                <span className="text-base font-black text-emerald-700">Başvuruya Hazır</span>
+                                <span className="text-base font-bold text-emerald-700">Başvuruya Hazır</span>
                                 <CheckCircle2 className="w-5 h-5 text-emerald-500"/>
                               </div>
                               <p className="text-sm text-slate-500">Profiliniz güçlü. Belge paketinizi hazırlayın.</p>
@@ -274,7 +274,7 @@ export function DashboardStep({
                           ) : (
                             <>
                               <div className="text-sm text-slate-500 mb-1">
-                                Hedef <span className="font-black text-slate-900">%82</span> — <span className="font-bold text-amber-600">{82 - currentScore} puan eksik</span>
+                                Hedef <span className="font-bold text-slate-900">%82</span> — <span className="font-bold text-amber-600">{82 - currentScore} puan eksik</span>
                               </div>
                               <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
                                 <div className={`h-full rounded-full transition-all duration-500 ${currentScore >= 65 ? 'bg-amber-400' : 'bg-rose-400'}`}
@@ -301,12 +301,12 @@ export function DashboardStep({
                       {/* Öncelikli adımlar */}
                       {actionItems.length > 0 && currentScore < 82 && (
                         <div className="space-y-2">
-                          <div className="text-xs font-black text-slate-500 uppercase tracking-widest mb-2">Şu an yapılacaklar</div>
+                          <div className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Şu an yapılacaklar</div>
                           {actionItems.slice(0, 3).map((item, i) => (
                             <button key={i} onClick={item.toolFn} type="button"
                               className={`w-full flex items-center gap-3 p-3 rounded-xl border text-left transition-all hover:shadow-sm
                                 ${item.gain === '⚠️' ? 'bg-rose-50 border-rose-200 hover:bg-rose-100' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'}`}>
-                              <span className={`text-[11px] font-black px-2 py-1 rounded-lg shrink-0 ${item.gain === '⚠️' ? 'bg-rose-500 text-white' : 'bg-amber-500 text-white'}`}>
+                              <span className={`text-[11px] font-bold px-2 py-1 rounded-lg shrink-0 ${item.gain === '⚠️' ? 'bg-rose-500 text-white' : 'bg-amber-500 text-white'}`}>
                                 {item.gain === '⚠️' ? '!' : item.gain + 'p'}
                               </span>
                               <div className="flex-1 min-w-0">
@@ -329,7 +329,7 @@ export function DashboardStep({
                         className="mt-4 w-full flex items-center justify-between px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 hover:bg-slate-100 transition-colors">
                         <span className="text-xs font-bold text-slate-600">10 Faktörlü Risk Analizi (R-2077)</span>
                         <div className="flex items-center gap-2">
-                          <span className="text-[10px] bg-brand-100 text-brand-700 font-black px-2 py-0.5 rounded-full">Detaylar</span>
+                          <span className="text-[10px] bg-brand-100 text-brand-700 font-bold px-2 py-0.5 rounded-full">Detaylar</span>
                           {showRiskDetail ? <ChevronUp className="w-4 h-4 text-slate-400"/> : <ChevronDown className="w-4 h-4 text-slate-400"/>}
                         </div>
                       </button>
@@ -369,7 +369,7 @@ export function DashboardStep({
                           { key: 'ulke',     label: 'Ülke & Mülakat' },
                         ] as const).map(tab => (
                           <button key={tab.key} onClick={() => setDashToolTab(tab.key)}
-                            className={`px-4 py-2.5 text-xs font-black rounded-t-xl transition-colors border-b-2 -mb-px
+                            className={`px-4 py-2.5 text-xs font-bold rounded-t-xl transition-colors border-b-2 -mb-px
                               ${dashToolTab === tab.key
                                 ? 'text-brand-700 border-brand-600 bg-brand-50'
                                 : 'text-slate-500 border-transparent hover:text-slate-700'}`}>
@@ -378,8 +378,8 @@ export function DashboardStep({
                         ))}
                       </div>
                       {!isPremium
-                        ? <button onClick={() => setIsUpgradeOpen(true)} className="text-[10px] bg-amber-50 text-amber-600 border border-amber-100 font-black px-2 py-1 rounded-lg mb-1">🔒 Premium</button>
-                        : <span className="text-[10px] bg-emerald-50 text-emerald-600 border border-emerald-100 font-black px-2 py-1 rounded-lg mb-1">✓ Premium</span>
+                        ? <button onClick={() => setIsUpgradeOpen(true)} className="text-[10px] bg-amber-50 text-amber-600 border border-amber-100 font-bold px-2 py-1 rounded-lg mb-1">🔒 Premium</button>
+                        : <span className="text-[10px] bg-emerald-50 text-emerald-600 border border-emerald-100 font-bold px-2 py-1 rounded-lg mb-1">✓ Premium</span>
                       }
                     </div>
                     <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -418,8 +418,8 @@ export function DashboardStep({
                                   <div className="flex items-center gap-1.5 mb-0.5">
                                     <span className={`text-sm font-bold ${locked ? 'text-slate-400' : 'text-slate-900'}`}>{label}</span>
                                     {locked
-                                      ? <span className="text-[9px] font-black bg-amber-100 text-amber-600 px-1 py-0.5 rounded">🔒</span>
-                                      : !PREMIUM_TOOLS.includes(id) && <span className="text-[9px] font-black bg-emerald-100 text-emerald-600 px-1 py-0.5 rounded">Ücretsiz</span>
+                                      ? <span className="text-[9px] font-bold bg-amber-100 text-amber-600 px-1 py-0.5 rounded">🔒</span>
+                                      : !PREMIUM_TOOLS.includes(id) && <span className="text-[9px] font-bold bg-emerald-100 text-emerald-600 px-1 py-0.5 rounded">Ücretsiz</span>
                                     }
                                   </div>
                                   <p className={`text-xs leading-relaxed ${locked ? 'text-slate-400' : 'text-slate-500'}`}>{desc}</p>
@@ -483,7 +483,7 @@ export function DashboardStep({
                   {/* ── SONUCU ÇIKART CTA ── */}
                   <div className="rounded-2xl bg-gradient-to-br from-indigo-600 to-brand-700 p-5 flex flex-col sm:flex-row items-center gap-4">
                     <div className="flex-1 text-white">
-                      <div className="font-black text-base mb-1">Kişisel Vize Analiz Raporunuzu İndirin</div>
+                      <div className="font-bold text-base mb-1">Kişisel Vize Analiz Raporunuzu İndirin</div>
                       <p className="text-indigo-200 text-xs leading-relaxed">
                         Tüm araç sonuçlarını, ülke karşılaştırmasını ve öncelikli aksiyon planını tek sayfada PDF olarak indirin.
                       </p>
@@ -491,7 +491,7 @@ export function DashboardStep({
                     <button
                       type="button"
                       onClick={onOpenReportModal}
-                      className="shrink-0 flex items-center gap-2 px-5 py-3 bg-white text-indigo-700 font-black text-sm rounded-xl hover:bg-indigo-50 transition-colors shadow-lg whitespace-nowrap"
+                      className="shrink-0 flex items-center gap-2 px-5 py-3 bg-white text-indigo-700 font-bold text-sm rounded-xl hover:bg-indigo-50 transition-colors shadow-lg whitespace-nowrap"
                     >
                       <Download className="w-4 h-4" />
                       Sonucu Çıkart
@@ -506,7 +506,7 @@ export function DashboardStep({
                           <ClipboardList className="w-4 h-4 text-indigo-600" />
                         </div>
                         <div>
-                          <div className="font-black text-slate-900 text-sm">Başvuru Sonuç Takibi</div>
+                          <div className="font-bold text-slate-900 text-sm">Başvuru Sonuç Takibi</div>
                           <div className="text-xs text-slate-400">Başvurunuzu kaydedin — sonuç bildiriminiz algoritmamızı güçlendirir</div>
                         </div>
                       </div>
@@ -689,7 +689,7 @@ export function DashboardStep({
                       {feedbackStep === 'done' && (
                         <div className="text-center py-4 space-y-2">
                           <div className="text-3xl">🎉</div>
-                          <div className="font-black text-slate-900">
+                          <div className="font-bold text-slate-900">
                             {fbOutcome === 'onay' ? 'Tebrikler! Güzel haberler için teşekkürler.' :
                              fbOutcome === 'ret'  ? 'Üzgünüz. Verileriniz algoritmamızı geliştirmeye yardım edecek.' :
                              'Kaydedildi. Sonuç belli olunca bildir etmeyi unutmayın!'}
@@ -731,7 +731,7 @@ export function DashboardStep({
                           <AlertTriangle className="w-5 h-5" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className={`text-xs font-black uppercase tracking-widest mb-1 ${
+                          <div className={`text-xs font-bold uppercase tracking-widest mb-1 ${
                             countryWarning.level === 'danger' ? 'text-rose-500' : 'text-amber-600'
                           }`}>
                             {countryWarning.level === 'danger' ? 'Yüksek Ret Riski' : 'Dikkat — Zorlu Ülke'}
@@ -760,7 +760,7 @@ export function DashboardStep({
                                     <span className="text-sm font-bold text-slate-800 group-hover:text-brand-700">
                                       {alt.name}
                                     </span>
-                                    <span className="text-xs font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-xl">
+                                    <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-xl">
                                       ~%{alt.approvalEstimate} onay
                                     </span>
                                   </button>
@@ -786,7 +786,7 @@ export function DashboardStep({
                           <h3 className="text-xl sm:text-2xl font-bold text-slate-900 font-display">Başarı Analizi</h3>
                           <p className="text-slate-500 text-sm font-medium">Profilinizin güncel vize onay ihtimali.</p>
                         </div>
-                        <div className="px-4 py-2 bg-brand-50 text-brand-600 text-[10px] font-black rounded-xl tracking-widest uppercase border border-brand-100">
+                        <div className="px-4 py-2 bg-brand-50 text-brand-600 text-[10px] font-bold rounded-xl tracking-widest uppercase border border-brand-100">
                           Canlı Simülasyon
                         </div>
                       </div>
@@ -794,7 +794,7 @@ export function DashboardStep({
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-12 relative z-10">
                         <div className="space-y-4">
                           <div className="flex items-baseline gap-2">
-                            <span className="text-5xl sm:text-7xl lg:text-8xl font-black text-slate-900 tracking-tighter font-mono">%{currentScore}</span>
+                            <span className="text-5xl sm:text-7xl lg:text-8xl font-bold text-slate-900 tracking-tighter font-mono">%{currentScore}</span>
                             <span className={`text-sm font-bold px-3 py-1 rounded-lg ${
                               currentScore > 75 ? 'bg-emerald-50 text-emerald-600' : 
                               currentScore > 50 ? 'bg-amber-50 text-amber-600' : 'bg-rose-50 text-rose-600'
@@ -858,11 +858,11 @@ export function DashboardStep({
                           <p className="text-xs text-slate-400 mt-0.5">Profilinizle eşleşen gerçek ret kalıpları</p>
                         </div>
                         {rejectionMatches.length === 0 ? (
-                          <span className="text-xs font-black px-3 py-1.5 bg-emerald-50 text-emerald-600 rounded-xl border border-emerald-100 shrink-0">
+                          <span className="text-xs font-bold px-3 py-1.5 bg-emerald-50 text-emerald-600 rounded-xl border border-emerald-100 shrink-0">
                             Risk Yok
                           </span>
                         ) : (
-                          <span className="text-xs font-black px-3 py-1.5 bg-rose-50 text-rose-600 rounded-xl border border-rose-100 shrink-0">
+                          <span className="text-xs font-bold px-3 py-1.5 bg-rose-50 text-rose-600 rounded-xl border border-rose-100 shrink-0">
                             {rejectionMatches.length} Risk
                           </span>
                         )}
@@ -893,7 +893,7 @@ export function DashboardStep({
                             return (
                               <div key={match.id} className="px-4 sm:px-8 py-4 sm:py-5">
                                 <div className="flex items-start gap-3">
-                                  <div className={`mt-0.5 w-8 h-8 rounded-xl flex items-center justify-center shrink-0 text-xs font-black ${
+                                  <div className={`mt-0.5 w-8 h-8 rounded-xl flex items-center justify-center shrink-0 text-xs font-bold ${
                                     severity === 'critical' ? 'bg-rose-100 text-rose-600'
                                     : severity === 'warning' ? 'bg-amber-100 text-amber-700'
                                     : 'bg-blue-100 text-blue-600'
@@ -904,11 +904,11 @@ export function DashboardStep({
                                     <div className="flex items-center gap-2 flex-wrap mb-1">
                                       <span className="text-sm font-bold text-slate-900">{match.name}</span>
                                       {match.legalCode && (
-                                        <span className="text-[10px] font-black px-2 py-0.5 bg-slate-100 text-slate-500 rounded-lg">
+                                        <span className="text-[10px] font-bold px-2 py-0.5 bg-slate-100 text-slate-500 rounded-lg">
                                           {match.legalCode}
                                         </span>
                                       )}
-                                      <span className={`text-[10px] font-black px-2 py-0.5 rounded-lg ${
+                                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-lg ${
                                         severity === 'critical' ? 'bg-rose-100 text-rose-600'
                                         : severity === 'warning' ? 'bg-amber-100 text-amber-700'
                                         : 'bg-blue-100 text-blue-600'
@@ -916,7 +916,7 @@ export function DashboardStep({
                                         {match.isVeto ? 'BAN RİSKİ' : severity === 'critical' ? 'KRİTİK' : severity === 'warning' ? 'UYARI' : 'BİLGİ'}
                                       </span>
                                       {match.scorePenalty && !match.isVeto && (
-                                        <span className="text-[10px] font-black px-2 py-0.5 bg-rose-50 text-rose-500 rounded-lg">
+                                        <span className="text-[10px] font-bold px-2 py-0.5 bg-rose-50 text-rose-500 rounded-lg">
                                           −{Math.round(match.scorePenalty)} puan
                                         </span>
                                       )}
@@ -949,7 +949,7 @@ export function DashboardStep({
                           }`}>
                             <Zap className="w-6 h-6" />
                           </div>
-                          <span className={`text-[10px] font-black px-3 py-1 rounded-lg uppercase tracking-widest ${
+                          <span className={`text-[10px] font-bold px-3 py-1 rounded-lg uppercase tracking-widest ${
                             intelligence.readiness === 'apply' ? 'bg-emerald-100 text-emerald-700' :
                             intelligence.readiness === 'risky' ? 'bg-amber-100 text-amber-700' : 'bg-rose-100 text-rose-700'
                           }`}>
@@ -1069,7 +1069,7 @@ export function DashboardStep({
                                     {res.ok ? <CheckCircle2 className="w-4 h-4"/> : res.warn ? <AlertTriangle className="w-4 h-4"/> : <XCircle className="w-4 h-4"/>}
                                   </div>
                                   <div className="min-w-0 flex-1">
-                                    <p className="text-xs font-black text-slate-900 mb-0.5 truncate">{res.file}</p>
+                                    <p className="text-xs font-bold text-slate-900 mb-0.5 truncate">{res.file}</p>
                                     <p className={`text-[11px] leading-relaxed ${res.ok ? 'text-emerald-800' : res.warn ? 'text-amber-800' : 'text-rose-800'}`}>{res.status}</p>
                                   </div>
                                 </div>
@@ -1099,7 +1099,7 @@ export function DashboardStep({
                             <div key={`strength-${i}`} className="space-y-4 p-6 bg-slate-50/50 rounded-3xl border border-slate-100">
                               <div className="flex justify-between items-end">
                                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{doc.label}</span>
-                                <span className={`text-lg font-black text-${doc.color === 'brand' ? 'brand' : doc.color}-600 font-mono`}>{doc.value.toFixed(1)}</span>
+                                <span className={`text-lg font-bold text-${doc.color === 'brand' ? 'brand' : doc.color}-600 font-mono`}>{doc.value.toFixed(1)}</span>
                               </div>
                               <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
                                 <motion.div 
@@ -1133,7 +1133,7 @@ export function DashboardStep({
                             <circle cx="18" cy="18" r="16" fill="none" className="stroke-slate-200" strokeWidth="3" />
                             <circle cx="18" cy="18" r="16" fill="none" className="stroke-brand-600" strokeWidth="3" strokeDasharray={`${bankHealthScore} 100`} strokeLinecap="round" />
                           </svg>
-                          <div className="absolute inset-0 flex items-center justify-center font-black text-lg text-slate-900 font-mono">
+                          <div className="absolute inset-0 flex items-center justify-center font-bold text-lg text-slate-900 font-mono">
                             %{bankHealthScore}
                           </div>
                         </div>
@@ -1171,12 +1171,12 @@ export function DashboardStep({
                           {roadmap.map((item, i) => (
                             <div key={`roadmap-${i}`} className="flex gap-4 relative">
                               {i !== roadmap.length - 1 && <div className="absolute left-4 top-10 bottom-0 w-px bg-white/20" />}
-                              <div className="w-8 h-8 bg-white/20 rounded-xl flex items-center justify-center text-[10px] font-black shrink-0 border border-white/10">
+                              <div className="w-8 h-8 bg-white/20 rounded-xl flex items-center justify-center text-[10px] font-bold shrink-0 border border-white/10">
                                 {item.week}
                               </div>
                               <div className="space-y-1">
                                 <p className="text-xs font-bold text-white">{item.task}</p>
-                                <p className="text-[9px] text-brand-200 font-black uppercase tracking-widest">{item.impact}</p>
+                                <p className="text-[9px] text-brand-200 font-bold uppercase tracking-widest">{item.impact}</p>
                               </div>
                             </div>
                           ))}
@@ -1202,7 +1202,7 @@ export function DashboardStep({
                           <div key={`flag-${i}`} className="flex items-center justify-between p-3 bg-white rounded-xl border border-slate-100">
                             <span className="text-xs font-bold text-slate-600">{flag.label}</span>
                             {flag.risk ? (
-                              <span className="text-[10px] font-black text-rose-600 bg-rose-100 px-2 py-1 rounded-lg uppercase tracking-wider">KRİTİK</span>
+                              <span className="text-[10px] font-bold text-rose-600 bg-rose-100 px-2 py-1 rounded-lg uppercase tracking-wider">KRİTİK</span>
                             ) : (
                               <CheckCircle2 className="w-4 h-4 text-emerald-500" />
                             )}
@@ -1222,7 +1222,7 @@ export function DashboardStep({
                       <div className="space-y-4">
                         <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-3">
                           <div className="flex justify-between items-center">
-                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Veri Uyumu</span>
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Veri Uyumu</span>
                             <span className="text-xs font-bold text-emerald-600">92%</span>
                           </div>
                           <div className="h-1.5 bg-slate-200 rounded-full overflow-hidden">
@@ -1279,7 +1279,7 @@ export function DashboardStep({
                         <h3 className="text-2xl font-bold text-slate-900 font-display">Smart Document Generator 2.0</h3>
                         <p className="text-slate-500 text-sm font-medium">Yapay zeka ile profesyonel vize dilekçeleri oluşturun.</p>
                       </div>
-                      <div className="px-4 py-2 bg-brand-50 text-brand-600 text-[10px] font-black rounded-xl tracking-widest uppercase border border-brand-100">
+                      <div className="px-4 py-2 bg-brand-50 text-brand-600 text-[10px] font-bold rounded-xl tracking-widest uppercase border border-brand-100">
                         AI Yazım
                       </div>
                     </div>

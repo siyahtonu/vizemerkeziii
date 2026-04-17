@@ -119,7 +119,7 @@ export function ScoreRadarMini({ profile }: Props) {
                 {DIMENSION_LABELS[key]}
               </span>
               <Stars value={score} />
-              <span className={`ml-auto text-[10px] font-black px-1.5 py-0.5 rounded border ${color}`}>
+              <span className={`ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded border ${color}`}>
                 %{score}
               </span>
               <span className={`text-[9px] text-white/30 transition-transform group-hover:text-white/60 ${isOpen ? 'rotate-180' : ''}`}>

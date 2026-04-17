@@ -70,7 +70,7 @@ export default function SchengenVizeBelgeleri() {
             <ArrowLeft className="w-5 h-5" /> Ana Sayfa
           </Link>
           <div className="h-4 w-px bg-slate-300" />
-          <div className="flex items-center gap-2 text-slate-700 font-black text-sm">
+          <div className="flex items-center gap-2 text-slate-700 font-bold text-sm">
             <ShieldCheck className="w-4 h-4 text-brand-600" /> VizeAkıl Rehber
           </div>
         </div>
@@ -92,7 +92,7 @@ export default function SchengenVizeBelgeleri() {
           <div className="inline-flex items-center gap-1.5 text-xs font-bold bg-blue-100 text-blue-700 px-3 py-1 rounded-full mb-4">
             <FileText className="w-3.5 h-3.5" /> 2026 Güncel
           </div>
-          <h1 className="text-3xl sm:text-4xl font-black text-slate-900 mb-4 leading-tight">
+          <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4 leading-tight">
             Schengen Vize Belgeleri<br />Türk Vatandaşları İçin Eksiksiz Liste
           </h1>
           <p className="text-lg text-slate-600 leading-relaxed">
@@ -104,18 +104,18 @@ export default function SchengenVizeBelgeleri() {
         {/* Hızlı CTA */}
         <div className="p-5 bg-brand-600 rounded-2xl text-white mb-10 flex flex-col sm:flex-row items-start sm:items-center gap-4">
           <div className="flex-1">
-            <div className="font-black text-lg mb-1">Profilinize Özel Liste İster misiniz?</div>
+            <div className="font-bold text-lg mb-1">Profilinize Özel Liste İster misiniz?</div>
             <div className="text-brand-100 text-sm">VizeAkıl, çalışma durumunuza, medeni halinize ve seyahat geçmişinize göre kişiselleştirilmiş belge listesi oluşturur.</div>
           </div>
           <Link to="/basla"
-            className="shrink-0 bg-white text-brand-700 font-black px-5 py-2.5 rounded-xl text-sm hover:bg-brand-50 transition-colors">
+            className="shrink-0 bg-white text-brand-700 font-bold px-5 py-2.5 rounded-xl text-sm hover:bg-brand-50 transition-colors">
             Ücretsiz Analiz Başlat →
           </Link>
         </div>
 
         {/* Zorunlu Belgeler */}
         <section className="mb-10">
-          <h2 className="text-2xl font-black text-slate-900 mb-2">1. Zorunlu Belgeler</h2>
+          <h2 className="text-2xl font-bold text-slate-900 mb-2">1. Zorunlu Belgeler</h2>
           <p className="text-slate-500 text-sm mb-5">Her başvurucunun sunması gereken temel belgeler. Bunların eksikliği anında reddedilme sebebidir.</p>
           <div className="space-y-2">
             {ZORUNLU.map((item) => (
@@ -132,7 +132,7 @@ export default function SchengenVizeBelgeleri() {
 
         {/* Finansal Belgeler */}
         <section className="mb-10">
-          <h2 className="text-2xl font-black text-slate-900 mb-2">2. Finansal Belgeler</h2>
+          <h2 className="text-2xl font-bold text-slate-900 mb-2">2. Finansal Belgeler</h2>
           <p className="text-slate-500 text-sm mb-5">Konsolosluklar finansal yeterliliğinizi bu belgelerle değerlendirir.</p>
           <div className="space-y-2">
             {FINANSAL.map((item) => (
@@ -149,7 +149,7 @@ export default function SchengenVizeBelgeleri() {
 
         {/* Mesleki Belgeler */}
         <section className="mb-10">
-          <h2 className="text-2xl font-black text-slate-900 mb-2">3. Mesleki Belgeler</h2>
+          <h2 className="text-2xl font-bold text-slate-900 mb-2">3. Mesleki Belgeler</h2>
           <p className="text-slate-500 text-sm mb-5">Çalışanlar, kamu görevlileri ve serbest meslek sahipleri için.</p>
           <div className="space-y-2">
             {MESLEKI.map((item) => (
@@ -166,7 +166,7 @@ export default function SchengenVizeBelgeleri() {
 
         {/* İpuçları */}
         <section className="mb-10">
-          <h2 className="text-2xl font-black text-slate-900 mb-5">4. Kritik İpuçları</h2>
+          <h2 className="text-2xl font-bold text-slate-900 mb-5">4. Kritik İpuçları</h2>
           <div className="space-y-3">
             {IPUCLARI.map((ip) => (
               <div key={ip.baslik} className={`flex gap-3 p-4 rounded-xl border ${ip.tip === 'uyarı' ? 'bg-amber-50 border-amber-200' : 'bg-blue-50 border-blue-200'}`}>
@@ -182,7 +182,7 @@ export default function SchengenVizeBelgeleri() {
 
         {/* Diğer rehberler */}
         <section className="mb-10">
-          <h2 className="text-xl font-black text-slate-900 mb-4">İlgili Rehberler</h2>
+          <h2 className="text-xl font-bold text-slate-900 mb-4">İlgili Rehberler</h2>
           <div className="grid sm:grid-cols-2 gap-3">
             <Link to="/rehber/almanya-vize-basvurusu"
               className="flex items-center gap-3 p-4 bg-white rounded-xl border border-slate-200 hover:border-brand-300 hover:bg-brand-50/30 transition-colors group">
@@ -207,7 +207,7 @@ export default function SchengenVizeBelgeleri() {
 
         {/* Bottom CTA */}
         <div className="p-6 bg-slate-900 rounded-2xl text-white text-center">
-          <div className="font-black text-xl mb-2">Başvurunuz ne kadar güçlü?</div>
+          <div className="font-bold text-xl mb-2">Başvurunuz ne kadar güçlü?</div>
           <p className="text-slate-300 text-sm mb-5">VizeAkıl, 6 kategori üzerinden profilinizi analiz eder ve kişisel onay tahmini sunar.</p>
           <Link to="/"
             className="inline-flex items-center gap-2 bg-brand-500 hover:bg-brand-600 text-white font-bold px-6 py-3 rounded-xl text-sm transition-colors">

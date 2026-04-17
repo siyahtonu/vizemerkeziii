@@ -334,7 +334,7 @@ export function EvidenceChecklist({ profile, currentScore, onProfileUpdate }: Pr
       <div className="bg-white rounded-2xl border border-emerald-200 p-5 flex items-center gap-3">
         <Trophy className="w-6 h-6 text-emerald-500 shrink-0" />
         <div>
-          <div className="font-black text-emerald-700 text-sm">Tüm maddeler tamamlandı!</div>
+          <div className="font-bold text-emerald-700 text-sm">Tüm maddeler tamamlandı!</div>
           <div className="text-xs text-slate-400 mt-0.5">Profiliniz konsolosluk için hazır görünüyor.</div>
         </div>
       </div>
@@ -355,7 +355,7 @@ export function EvidenceChecklist({ profile, currentScore, onProfileUpdate }: Pr
             <ListChecks className="w-4 h-4 text-rose-600" />
           </div>
           <div>
-            <div className="font-black text-slate-900 text-sm">Kanıt Kontrol Listesi</div>
+            <div className="font-bold text-slate-900 text-sm">Kanıt Kontrol Listesi</div>
             <div className="text-xs text-slate-400">
               {doneCount}/{total} madde ·{' '}
               {totalGain > 0
@@ -365,7 +365,7 @@ export function EvidenceChecklist({ profile, currentScore, onProfileUpdate }: Pr
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <span className={`text-xs font-black px-2.5 py-1 rounded-full ${
+          <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${
             progress === 100 ? 'bg-emerald-100 text-emerald-700'
             : progress >= 50 ? 'bg-amber-100 text-amber-700'
             : 'bg-rose-100 text-rose-700'
@@ -383,7 +383,7 @@ export function EvidenceChecklist({ profile, currentScore, onProfileUpdate }: Pr
           {recentMilestone !== null && (
             <div className="flex items-center gap-3 p-3 rounded-xl bg-emerald-50 border border-emerald-200 animate-pulse">
               <Trophy className="w-5 h-5 text-emerald-500 shrink-0" />
-              <span className="text-sm font-black text-emerald-700">
+              <span className="text-sm font-bold text-emerald-700">
                 %{recentMilestone} tamamlandı! {recentMilestone === 100 ? '🎉 Mükemmel!' : 'Harika gidiyorsun →'}
               </span>
             </div>
@@ -404,7 +404,7 @@ export function EvidenceChecklist({ profile, currentScore, onProfileUpdate }: Pr
             <div className="flex items-center justify-between text-xs">
               <span className="text-slate-400">Mevcut: <span className="font-bold text-slate-600">%{currentScore}</span></span>
               {totalGain > 0 && (
-                <span className="font-black text-emerald-600 flex items-center gap-1">
+                <span className="font-bold text-emerald-600 flex items-center gap-1">
                   <TrendingUp className="w-3 h-3" />
                   Tahmini: %{projectedScore} <span className="text-emerald-500">(+{totalGain})</span>
                 </span>
@@ -430,9 +430,9 @@ export function EvidenceChecklist({ profile, currentScore, onProfileUpdate }: Pr
             <div className="p-4 rounded-2xl bg-gradient-to-r from-brand-50 to-blue-50 border border-brand-100">
               <div className="flex items-center gap-2 mb-2">
                 <Zap className="w-4 h-4 text-brand-600 shrink-0" />
-                <span className="text-[10px] font-black text-brand-600 uppercase tracking-widest">Sıradaki En Etkili Adım</span>
+                <span className="text-[10px] font-bold text-brand-600 uppercase tracking-widest">Sıradaki En Etkili Adım</span>
                 {(deltas[topItem.id] ?? 0) > 0 && (
-                  <span className="ml-auto text-[10px] font-black bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">
+                  <span className="ml-auto text-[10px] font-bold bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">
                     +{deltas[topItem.id]} puan
                   </span>
                 )}
@@ -454,7 +454,7 @@ export function EvidenceChecklist({ profile, currentScore, onProfileUpdate }: Pr
                 <button
                   type="button"
                   onClick={() => handleToggle(topItem)}
-                  className="ml-auto flex items-center gap-1.5 px-4 py-1.5 text-xs font-black bg-brand-600 text-white hover:bg-brand-700 rounded-xl transition-colors"
+                  className="ml-auto flex items-center gap-1.5 px-4 py-1.5 text-xs font-bold bg-brand-600 text-white hover:bg-brand-700 rounded-xl transition-colors"
                 >
                   Yaptım ✓ <ArrowRight className="w-3 h-3" />
                 </button>
@@ -480,7 +480,7 @@ export function EvidenceChecklist({ profile, currentScore, onProfileUpdate }: Pr
           {/* ── Öncelik grupları ── */}
           {grouped.map(({ priority, items }) => (
             <div key={priority}>
-              <div className={`inline-flex items-center gap-1.5 text-[10px] font-black px-2.5 py-0.5 rounded-full border mb-2.5 ${PRIORITY_COLOR[priority].badge}`}>
+              <div className={`inline-flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-0.5 rounded-full border mb-2.5 ${PRIORITY_COLOR[priority].badge}`}>
                 {priority === 'critical' && '⚠ '}
                 {PRIORITY_LABEL[priority]}
                 <span className="opacity-60">
@@ -542,7 +542,7 @@ export function EvidenceChecklist({ profile, currentScore, onProfileUpdate }: Pr
                       {/* Sağ: delta badge + aksiyon */}
                       <div className="shrink-0 flex flex-col items-end gap-1.5">
                         {!isChecked && delta > 0 && (
-                          <span className="text-[10px] font-black bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">
+                          <span className="text-[10px] font-bold bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">
                             +{delta} puan
                           </span>
                         )}
@@ -550,7 +550,7 @@ export function EvidenceChecklist({ profile, currentScore, onProfileUpdate }: Pr
                           <button
                             type="button"
                             onClick={() => handleToggle(item)}
-                            className="px-3 py-1.5 text-xs font-black bg-emerald-100 text-emerald-700 hover:bg-emerald-200 border border-emerald-200 rounded-lg transition-colors whitespace-nowrap"
+                            className="px-3 py-1.5 text-xs font-bold bg-emerald-100 text-emerald-700 hover:bg-emerald-200 border border-emerald-200 rounded-lg transition-colors whitespace-nowrap"
                           >
                             Yaptım ✓
                           </button>

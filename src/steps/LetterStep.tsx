@@ -40,10 +40,10 @@ export function LetterStep({
                   </button>
                   <div>
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="text-[10px] font-black bg-brand-50 text-brand-600 border border-brand-100 px-2 py-1 rounded-lg uppercase tracking-widest">Smart Document Generator 2.0</span>
-                      <span className="text-[10px] font-black bg-emerald-50 text-emerald-600 border border-emerald-100 px-2 py-1 rounded-lg uppercase tracking-widest">2024-2026 Standartları</span>
+                      <span className="text-[10px] font-bold bg-brand-50 text-brand-600 border border-brand-100 px-2 py-1 rounded-lg uppercase tracking-widest">Smart Document Generator 2.0</span>
+                      <span className="text-[10px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-100 px-2 py-1 rounded-lg uppercase tracking-widest">2024-2026 Standartları</span>
                     </div>
-                    <h2 className="text-3xl font-black text-slate-900">Profesyonel Vize Belgesi Oluşturucu</h2>
+                    <h2 className="text-3xl font-bold text-slate-900">Profesyonel Vize Belgesi Oluşturucu</h2>
                     <p className="text-slate-500 text-sm mt-0.5">Konsolosluk standartlarında, 4 farklı belge tipi — bilgilerinizi girin, PDF alın.</p>
                   </div>
                 </div>
@@ -93,7 +93,7 @@ export function LetterStep({
                       <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${bg} flex items-center justify-center mb-3`}>
                         <Icon className="w-5 h-5 text-white" />
                       </div>
-                      <div className="font-black text-slate-900 text-sm">{title}</div>
+                      <div className="font-bold text-slate-900 text-sm">{title}</div>
                       <div className="text-[10px] text-slate-400 font-bold mt-0.5">{sub}</div>
                       {activeLetterType === id && <p className="text-[10px] text-slate-500 mt-2 leading-relaxed">{desc}</p>}
                     </button>
@@ -105,12 +105,12 @@ export function LetterStep({
                   {/* Sol: Dinamik Form */}
                   <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden">
                     <div className="p-5 border-b border-slate-50 bg-slate-50">
-                      <h3 className="font-black text-slate-900">Bilgilerinizi Girin</h3>
+                      <h3 className="font-bold text-slate-900">Bilgilerinizi Girin</h3>
                       <p className="text-xs text-slate-400 mt-0.5">Yazarken önizleme otomatik güncellenir</p>
                     </div>
                     <div className="p-5 space-y-4 max-h-[70vh] overflow-y-auto">
                       {/* Ortak alanlar */}
-                      <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Kimlik Bilgileri</div>
+                      <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Kimlik Bilgileri</div>
                       <div className="grid grid-cols-2 gap-3">
                         {[
                           { id: 'fullName', label: 'Ad Soyad', placeholder: 'Emre Kaya' },
@@ -137,7 +137,7 @@ export function LetterStep({
                           className="w-full px-3 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all" />
                       </div>
   
-                      <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest pt-2">Seyahat Bilgileri</div>
+                      <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pt-2">Seyahat Bilgileri</div>
                       <div className="grid grid-cols-2 gap-3">
                         {[
                           { id: 'targetCountry', label: 'Hedef Ülke', placeholder: 'Almanya' },
@@ -162,7 +162,7 @@ export function LetterStep({
                       {/* Niyet Mektubu ek alanlar */}
                       {activeLetterType === 'cover' && (
                         <>
-                          <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest pt-2">Finansal & Mesleki</div>
+                          <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pt-2">Finansal & Mesleki</div>
                           <div className="grid grid-cols-2 gap-3">
                             {[
                               { id: 'occupation', label: 'Meslek/Pozisyon', placeholder: 'Yazılım Mühendisi' },
@@ -194,7 +194,7 @@ export function LetterStep({
                       {/* Sponsor ek alanlar */}
                       {activeLetterType === 'sponsor' && (
                         <>
-                          <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest pt-2">Sponsor Bilgileri</div>
+                          <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pt-2">Sponsor Bilgileri</div>
                           <div className="grid grid-cols-2 gap-3">
                             {[
                               { id: 'sponsorFullName', label: 'Sponsor Adı Soyadı', placeholder: 'Ali Kaya' },
@@ -226,7 +226,7 @@ export function LetterStep({
                       {/* İşveren ek alanlar */}
                       {activeLetterType === 'employer' && (
                         <>
-                          <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest pt-2">Mesleki Bilgiler</div>
+                          <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pt-2">Mesleki Bilgiler</div>
                           <div className="grid grid-cols-2 gap-3">
                             {[
                               { id: 'occupation', label: 'Pozisyon/Ünvan', placeholder: 'Yazılım Geliştirici' },
@@ -243,7 +243,7 @@ export function LetterStep({
                               </div>
                             ))}
                           </div>
-                          <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest pt-2">Şirket Bilgileri</div>
+                          <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pt-2">Şirket Bilgileri</div>
                           <div className="grid grid-cols-2 gap-3">
                             {[
                               { id: 'companyName', label: 'Şirket Adı', placeholder: 'ABC Teknoloji A.Ş.' },
@@ -273,7 +273,7 @@ export function LetterStep({
                       {/* Seyahat planı ek alanlar */}
                       {activeLetterType === 'itinerary' && (
                         <>
-                          <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest pt-2">Sigorta & Konaklama</div>
+                          <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pt-2">Sigorta & Konaklama</div>
                           <div className="grid grid-cols-2 gap-3">
                             {[
                               { id: 'hotelAddress', label: 'Otel Adresi', placeholder: 'Kaiserstr. 1, Frankfurt' },
@@ -326,13 +326,13 @@ export function LetterStep({
                     <div className="grid grid-cols-2 gap-3">
                       <button type="button"
                         onClick={() => generatePDF(activeLetterType)}
-                        className="py-3.5 bg-gradient-to-r from-brand-600 to-indigo-600 text-white rounded-2xl font-black text-sm flex items-center justify-center gap-2 hover:opacity-90 transition-opacity shadow-lg shadow-brand-500/30">
+                        className="py-3.5 bg-gradient-to-r from-brand-600 to-indigo-600 text-white rounded-2xl font-bold text-sm flex items-center justify-center gap-2 hover:opacity-90 transition-opacity shadow-lg shadow-brand-500/30">
                         <Download className="w-4 h-4" />
                         🇹🇷 Türkçe PDF
                       </button>
                       <button type="button"
                         onClick={() => generatePDFEN(activeLetterType)}
-                        className="py-3.5 bg-gradient-to-r from-slate-700 to-slate-900 text-white rounded-2xl font-black text-sm flex items-center justify-center gap-2 hover:opacity-90 transition-opacity shadow-lg">
+                        className="py-3.5 bg-gradient-to-r from-slate-700 to-slate-900 text-white rounded-2xl font-bold text-sm flex items-center justify-center gap-2 hover:opacity-90 transition-opacity shadow-lg">
                         <Download className="w-4 h-4" />
                         🇬🇧 English PDF
                       </button>

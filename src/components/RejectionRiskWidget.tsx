@@ -54,7 +54,7 @@ const FactorRow: React.FC<FactorRowProps> = ({ factor, expanded, onToggle, onOpe
         className="w-full flex items-center gap-3 px-4 py-3 hover:bg-black/5 transition-colors"
       >
         {/* Ağırlık etiketi */}
-        <span className="text-[10px] font-black text-slate-400 w-7 shrink-0">
+        <span className="text-[10px] font-bold text-slate-400 w-7 shrink-0">
           %{Math.round(factor.weight * 100)}
         </span>
 
@@ -72,7 +72,7 @@ const FactorRow: React.FC<FactorRowProps> = ({ factor, expanded, onToggle, onOpe
         </div>
 
         {/* Seviye etiketi */}
-        <span className={`text-[10px] font-black px-2 py-0.5 rounded w-14 text-center shrink-0 ${cfg.text} ${cfg.bg}`}>
+        <span className={`text-[10px] font-bold px-2 py-0.5 rounded w-14 text-center shrink-0 ${cfg.text} ${cfg.bg}`}>
           {cfg.label}
         </span>
 
@@ -134,10 +134,10 @@ export function RejectionRiskWidget({ profile, currentScore, onOpenTool }: Rejec
       <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <TrendingUp className="w-5 h-5 text-brand-600" />
-          <span className="font-black text-slate-800">Ret Risk Analizi</span>
-          <span className="text-[10px] bg-brand-100 text-brand-700 font-black px-2 py-0.5 rounded-full">R-2077</span>
+          <span className="font-bold text-slate-800">Ret Risk Analizi</span>
+          <span className="text-[10px] bg-brand-100 text-brand-700 font-bold px-2 py-0.5 rounded-full">R-2077</span>
         </div>
-        <span className={`text-xs font-black px-2.5 py-1 rounded-full ${riskCfg.badge}`}>
+        <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${riskCfg.badge}`}>
           {result.riskLabel}
         </span>
       </div>
@@ -160,7 +160,7 @@ export function RejectionRiskWidget({ profile, currentScore, onOpenTool }: Rejec
               />
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className={`text-2xl font-black ${riskCfg.scoreColor}`}>%{result.overallScore}</span>
+              <span className={`text-2xl font-bold ${riskCfg.scoreColor}`}>%{result.overallScore}</span>
               <span className="text-[9px] text-slate-400 font-bold leading-tight text-center">başarı<br/>şansı</span>
             </div>
           </div>
@@ -171,7 +171,7 @@ export function RejectionRiskWidget({ profile, currentScore, onOpenTool }: Rejec
             {/* Ülke bilgi satırı */}
             {result.countryInfo && result.countryInfo.name !== 'Belirtilmemiş' && (
               <div className="flex flex-wrap gap-1.5">
-                <span className={`inline-flex items-center gap-1 text-[10px] font-black px-2 py-0.5 rounded-full
+                <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full
                   ${result.countryInfo.difficulty === 'çok zor' ? 'bg-red-100 text-red-700' :
                     result.countryInfo.difficulty === 'zor'     ? 'bg-orange-100 text-orange-700' :
                     result.countryInfo.difficulty === 'orta'    ? 'bg-yellow-100 text-yellow-700' :
@@ -231,7 +231,7 @@ export function RejectionRiskWidget({ profile, currentScore, onOpenTool }: Rejec
         {/* En kritik aksiyonlar */}
         {result.topActions.length > 0 && (
           <div className="pt-4 border-t border-slate-100">
-            <div className="text-xs font-black text-slate-600 mb-2.5">Öncelikli İyileştirme Adımları</div>
+            <div className="text-xs font-bold text-slate-600 mb-2.5">Öncelikli İyileştirme Adımları</div>
             <div className="space-y-2">
               {result.topActions.map((action, i) => (
                 <button
@@ -243,7 +243,7 @@ export function RejectionRiskWidget({ profile, currentScore, onOpenTool }: Rejec
                       : 'bg-slate-50 border border-slate-200 text-slate-700 hover:border-brand-300 hover:bg-brand-50'
                     }`}
                 >
-                  <span className={`text-[10px] font-black px-1.5 py-0.5 rounded shrink-0
+                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded shrink-0
                     ${action.priority === 'high' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-600'}`}>
                     {i + 1}
                   </span>

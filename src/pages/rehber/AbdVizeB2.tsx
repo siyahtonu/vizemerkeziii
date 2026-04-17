@@ -59,7 +59,7 @@ export default function AbdVizeB2() {
             <ArrowLeft className="w-5 h-5" /> Ana Sayfa
           </Link>
           <div className="h-4 w-px bg-slate-300" />
-          <div className="flex items-center gap-2 text-slate-700 font-black text-sm">
+          <div className="flex items-center gap-2 text-slate-700 font-bold text-sm">
             <ShieldCheck className="w-4 h-4 text-brand-600" /> VizeAkıl Rehber
           </div>
         </div>
@@ -86,7 +86,7 @@ export default function AbdVizeB2() {
               <Clock className="w-3.5 h-3.5" /> ~188 gün bekleme
             </div>
           </div>
-          <h1 className="text-3xl sm:text-4xl font-black text-slate-900 mb-4 leading-tight">
+          <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4 leading-tight">
             ABD B1/B2 Vize Başvurusu 2026<br />Mülakat Rehberi ve Belgeler
           </h1>
           <p className="text-lg text-slate-600 leading-relaxed">
@@ -110,11 +110,11 @@ export default function AbdVizeB2() {
 
         {/* Başvuru Adımları */}
         <section className="mb-10">
-          <h2 className="text-2xl font-black text-slate-900 mb-5">Başvuru Adımları</h2>
+          <h2 className="text-2xl font-bold text-slate-900 mb-5">Başvuru Adımları</h2>
           <div className="space-y-3">
             {ADIMLAR.map((adim) => (
               <div key={adim.no} className="flex gap-4 p-4 bg-white rounded-xl border border-slate-200">
-                <div className="w-8 h-8 bg-brand-600 text-white rounded-full flex items-center justify-center font-black text-sm shrink-0">
+                <div className="w-8 h-8 bg-brand-600 text-white rounded-full flex items-center justify-center font-bold text-sm shrink-0">
                   {adim.no}
                 </div>
                 <div>
@@ -128,7 +128,7 @@ export default function AbdVizeB2() {
 
         {/* Belge Listesi */}
         <section className="mb-10">
-          <h2 className="text-2xl font-black text-slate-900 mb-2">Gerekli Belgeler</h2>
+          <h2 className="text-2xl font-bold text-slate-900 mb-2">Gerekli Belgeler</h2>
           <p className="text-slate-500 text-sm mb-5">Kırmızı olanlar kritik — bunlar olmadan mülakat başlamaz veya kesin ret gelir.</p>
           <div className="space-y-2">
             {BELGE_LISTESI.map((item) => (
@@ -137,7 +137,7 @@ export default function AbdVizeB2() {
                 <div>
                   <div className="flex items-center gap-2">
                     <span className="font-bold text-slate-800 text-sm">{item.belge}</span>
-                    {item.kritik && <span className="text-[10px] font-black bg-rose-100 text-rose-600 px-1.5 py-0.5 rounded">Zorunlu</span>}
+                    {item.kritik && <span className="text-[10px] font-bold bg-rose-100 text-rose-600 px-1.5 py-0.5 rounded">Zorunlu</span>}
                   </div>
                   <div className="text-xs text-slate-500 mt-0.5">{item.detay}</div>
                 </div>
@@ -148,7 +148,7 @@ export default function AbdVizeB2() {
 
         {/* Mülakat Soruları */}
         <section className="mb-10">
-          <h2 className="text-2xl font-black text-slate-900 mb-2">Sık Sorulan Mülakat Soruları</h2>
+          <h2 className="text-2xl font-bold text-slate-900 mb-2">Sık Sorulan Mülakat Soruları</h2>
           <p className="text-slate-500 text-sm mb-5">Mülakat genellikle 2-5 dakika sürer. Bu soruların cevaplarını önceden hazırlayın.</p>
           <div className="space-y-3">
             {MULAKAT_SORULARI.map((item) => (
@@ -172,17 +172,17 @@ export default function AbdVizeB2() {
         {/* CTA */}
         <div className="p-5 bg-brand-600 rounded-2xl text-white mb-10 flex flex-col sm:flex-row items-start sm:items-center gap-4">
           <div className="flex-1">
-            <div className="font-black text-lg mb-1">ABD vize profiliniz ne kadar güçlü?</div>
+            <div className="font-bold text-lg mb-1">ABD vize profiliniz ne kadar güçlü?</div>
             <div className="text-brand-100 text-sm">Türkiye bağlarınızı, finansal durumunuzu ve seyahat geçmişinizi analiz edin.</div>
           </div>
-          <Link to="/basla" className="shrink-0 bg-white text-brand-700 font-black px-5 py-2.5 rounded-xl text-sm hover:bg-brand-50 transition-colors">
+          <Link to="/basla" className="shrink-0 bg-white text-brand-700 font-bold px-5 py-2.5 rounded-xl text-sm hover:bg-brand-50 transition-colors">
             Ücretsiz Analiz →
           </Link>
         </div>
 
         {/* İlgili Rehberler */}
         <section>
-          <h2 className="text-xl font-black text-slate-900 mb-4">İlgili Rehberler</h2>
+          <h2 className="text-xl font-bold text-slate-900 mb-4">İlgili Rehberler</h2>
           <div className="grid sm:grid-cols-2 gap-3">
             <Link to="/rehber/schengen-vize-belgeleri"
               className="flex items-center gap-3 p-4 bg-white rounded-xl border border-slate-200 hover:border-brand-300 hover:bg-brand-50/30 transition-colors group">

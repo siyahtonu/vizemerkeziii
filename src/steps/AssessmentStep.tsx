@@ -113,7 +113,7 @@ function SwipeCriteriaCards({
           }`}>
             <Icon className={`w-8 h-8 ${isOn ? 'text-white' : 'text-slate-500'}`} />
           </div>
-          <h3 className="text-lg font-black mb-1">{card.label}</h3>
+          <h3 className="text-lg font-bold mb-1">{card.label}</h3>
           <p className={`text-xs mb-6 ${isOn ? 'text-white/70' : 'text-slate-400'}`}>
             {card.desc}
           </p>
@@ -124,7 +124,7 @@ function SwipeCriteriaCards({
               onClick={() => { if (isOn) onToggle(card.id as keyof ProfileData); }}
               className={`flex-1 py-3 rounded-2xl font-bold text-sm transition-all ${
                 !isOn
-                  ? 'bg-rose-100 text-rose-600 font-black shadow-sm scale-105'
+                  ? 'bg-rose-100 text-rose-600 font-bold shadow-sm scale-105'
                   : 'bg-white/20 text-white/70 hover:bg-white/30'
               }`}
             >
@@ -135,7 +135,7 @@ function SwipeCriteriaCards({
               onClick={() => { if (!isOn) onToggle(card.id as keyof ProfileData); }}
               className={`flex-1 py-3 rounded-2xl font-bold text-sm transition-all ${
                 isOn
-                  ? 'bg-white text-emerald-600 font-black shadow-sm scale-105'
+                  ? 'bg-white text-emerald-600 font-bold shadow-sm scale-105'
                   : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'
               }`}
             >
@@ -224,12 +224,12 @@ export function AssessmentStep({
                     <ArrowLeft className="w-5 h-5 text-slate-500" />
                   </button>
                   <div className="flex-1">
-                    <h2 className="text-2xl sm:text-3xl font-black text-slate-900">Profil Analizi</h2>
+                    <h2 className="text-2xl sm:text-3xl font-bold text-slate-900">Profil Analizi</h2>
                     <p className="text-sm text-slate-500">Kriterlerinizi işaretleyin — skor anlık güncellenir.</p>
                   </div>
                   {/* Desktop: mini live skor */}
                   <div className="hidden sm:flex items-center gap-3 bg-slate-900 rounded-2xl px-5 py-3">
-                    <div className={`text-2xl font-black font-mono ${
+                    <div className={`text-2xl font-bold font-mono ${
                       currentScore >= 82 ? 'text-emerald-400' :
                       currentScore >= 65 ? 'text-amber-300' : 'text-rose-400'
                     }`}>
@@ -262,7 +262,7 @@ export function AssessmentStep({
                     <div className="bg-white border border-slate-200 rounded-2xl p-4">
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-sm font-bold text-slate-700">Profil Tamamlanma</span>
-                        <span className={`text-sm font-black ${pct >= 70 ? 'text-emerald-600' : pct >= 40 ? 'text-amber-600' : 'text-rose-500'}`}>{pct}%</span>
+                        <span className={`text-sm font-bold ${pct >= 70 ? 'text-emerald-600' : pct >= 40 ? 'text-amber-600' : 'text-rose-500'}`}>{pct}%</span>
                       </div>
                       <div className="w-full bg-slate-100 rounded-full h-2.5">
                         <div
@@ -408,7 +408,7 @@ export function AssessmentStep({
                           placeholder="28"
                           value={profile.applicantAge || ''}
                           onChange={(e) => setProfile(prev => ({ ...prev, applicantAge: parseInt(e.target.value) || 0 }))}
-                          className="w-full text-2xl font-black text-slate-900 border-none outline-none bg-transparent p-0 placeholder:text-slate-300"
+                          className="w-full text-2xl font-bold text-slate-900 border-none outline-none bg-transparent p-0 placeholder:text-slate-300"
                         />
                         <p className="text-xs text-slate-400 mt-1">Geri dönüş taahhüdü puanını kişiselleştirir</p>
                       </div>
@@ -433,7 +433,7 @@ export function AssessmentStep({
                             placeholder="örn. 2022"
                             value={profile.lastVisaYear || ''}
                             onChange={(e) => setProfile(prev => ({ ...prev, lastVisaYear: parseInt(e.target.value) || 0 }))}
-                            className="w-full text-2xl font-black text-slate-900 border-none outline-none bg-transparent p-0 placeholder:text-slate-300"
+                            className="w-full text-2xl font-bold text-slate-900 border-none outline-none bg-transparent p-0 placeholder:text-slate-300"
                           />
                         )}
                         {profile.lastVisaYear === -1 && (
@@ -466,7 +466,7 @@ export function AssessmentStep({
                             placeholder="örn. 2020"
                             value={profile.lastRejectionYear || ''}
                             onChange={(e) => setProfile(prev => ({ ...prev, lastRejectionYear: parseInt(e.target.value) || 0 }))}
-                            className="w-full text-2xl font-black text-slate-900 border-none outline-none bg-transparent p-0 placeholder:text-slate-300"
+                            className="w-full text-2xl font-bold text-slate-900 border-none outline-none bg-transparent p-0 placeholder:text-slate-300"
                           />
                         )}
                         {profile.lastRejectionYear === -1 && (
@@ -487,7 +487,7 @@ export function AssessmentStep({
                           <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                             Mevcut İşte Kaç Yıl?
                           </label>
-                          <span className={`text-sm font-black px-2 py-0.5 rounded-lg ${
+                          <span className={`text-sm font-bold px-2 py-0.5 rounded-lg ${
                             profile.yearsInCurrentJob >= 3 ? 'bg-emerald-100 text-emerald-700' :
                             profile.yearsInCurrentJob >= 1 ? 'bg-amber-100 text-amber-700' :
                                                               'bg-rose-100 text-rose-700'
@@ -575,7 +575,7 @@ export function AssessmentStep({
                   <div className="space-y-3">
                     <div className="flex items-center gap-2">
                       <Zap className="w-5 h-5 text-amber-500"/>
-                      <h3 className="font-black text-slate-900 text-sm">Skoru Artır</h3>
+                      <h3 className="font-bold text-slate-900 text-sm">Skoru Artır</h3>
                       <span className="ml-auto text-xs font-bold text-slate-400">+{actionItems.filter(a=>a.gain!=='⚠️').reduce((s,a)=>s+parseInt(a.gain),0)} puan</span>
                     </div>
                     <div className="space-y-2">
@@ -627,7 +627,7 @@ export function AssessmentStep({
                         <div className="text-[10px] font-bold text-brand-400 uppercase tracking-widest">
                           Tahmini Başarı
                         </div>
-                        <div className={`text-5xl font-black font-mono ${
+                        <div className={`text-5xl font-bold font-mono ${
                           currentScore >= 82 ? 'text-emerald-400' :
                           currentScore >= 65 ? 'text-amber-300' : 'text-rose-400'
                         }`}>
@@ -690,7 +690,7 @@ export function AssessmentStep({
                 {/* Mobil: alt sabit skor barı */}
                 <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-slate-900 border-t border-slate-800 px-4 py-3 flex items-center justify-between safe-bottom">
                   <div className="flex items-center gap-3">
-                    <div className={`text-2xl font-black font-mono ${
+                    <div className={`text-2xl font-bold font-mono ${
                       currentScore >= 82 ? 'text-emerald-400' :
                       currentScore >= 65 ? 'text-amber-300' : 'text-rose-400'
                     }`}>

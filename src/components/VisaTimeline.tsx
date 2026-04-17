@@ -220,7 +220,7 @@ export function VisaTimeline({ profile }: Props) {
                   <button
                     type="button"
                     onClick={() => toggleCheck(task.id)}
-                    className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-black border-2 transition-all ${
+                    className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold border-2 transition-all ${
                       done ? 'bg-emerald-500 border-emerald-500 text-white' : 'bg-white border-slate-200 hover:border-brand-400'
                     }`}
                   >

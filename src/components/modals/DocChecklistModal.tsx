@@ -175,7 +175,7 @@ export function DocChecklistModal({ isOpen, onClose, profile, onDownloadPDF }: P
               <div>
                 <div className="flex items-center gap-2 mb-1">
                   <FileCheck className="w-5 h-5 text-indigo-600" />
-                  <h3 className="text-lg font-black text-slate-900">Kişisel Belge Kontrol Listesi</h3>
+                  <h3 className="text-lg font-bold text-slate-900">Kişisel Belge Kontrol Listesi</h3>
                 </div>
                 <p className="text-sm text-slate-500">
                   <span className="font-semibold text-slate-700">{profile.targetCountry || 'Schengen'}</span> başvurusu — profilinize göre oluşturuldu
@@ -213,7 +213,7 @@ export function DocChecklistModal({ isOpen, onClose, profile, onDownloadPDF }: P
                   <div key={section.title}>
                     <div className="flex items-center gap-2 mb-2">
                       <span className="text-base">{section.icon}</span>
-                      <h4 className="text-sm font-black text-slate-800">{section.title}</h4>
+                      <h4 className="text-sm font-bold text-slate-800">{section.title}</h4>
                       <span className="text-xs text-slate-400 ml-auto">
                         {sectionDone}/{section.items.length}
                         {sectionDone === section.items.length && section.items.length > 0 && (

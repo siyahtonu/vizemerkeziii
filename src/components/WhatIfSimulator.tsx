@@ -167,13 +167,13 @@ export function WhatIfSimulator({ profile, currentScore }: Props) {
             <Zap className="w-4 h-4 text-violet-600" />
           </div>
           <div>
-            <div className="font-black text-slate-900 text-sm">Ne Yaparsam Skorum Ne Olur?</div>
+            <div className="font-bold text-slate-900 text-sm">Ne Yaparsam Skorum Ne Olur?</div>
             <div className="text-xs text-slate-400">İşaretlediğiniz adımların anlık etkisini görün</div>
           </div>
         </div>
         <div className="flex items-center gap-3">
           {checked.size > 0 && (
-            <span className="text-xs font-black text-violet-700 bg-violet-100 px-2.5 py-1 rounded-full">
+            <span className="text-xs font-bold text-violet-700 bg-violet-100 px-2.5 py-1 rounded-full">
               +{totalGain} puan
             </span>
           )}
@@ -196,7 +196,7 @@ export function WhatIfSimulator({ profile, currentScore }: Props) {
               <div className="flex items-center gap-2">
                 <span className="text-sm text-slate-500">%{currentScore}</span>
                 <span className="text-slate-400">→</span>
-                <span className={`text-lg font-black ${totalGain > 0 ? 'text-violet-700' : 'text-slate-700'}`}>
+                <span className={`text-lg font-bold ${totalGain > 0 ? 'text-violet-700' : 'text-slate-700'}`}>
                   %{projectedScore}
                 </span>
                 {totalGain > 0 && (
@@ -240,7 +240,7 @@ export function WhatIfSimulator({ profile, currentScore }: Props) {
                   </div>
 
                   {/* Delta rozeti */}
-                  <div className={`shrink-0 text-xs font-black px-2.5 py-1 rounded-full ${
+                  <div className={`shrink-0 text-xs font-bold px-2.5 py-1 rounded-full ${
                     delta > 0
                       ? 'bg-emerald-100 text-emerald-700'
                       : delta < 0

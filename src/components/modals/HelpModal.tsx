@@ -24,7 +24,7 @@ export function HelpModal({ isOpen, onClose }: Props) {
               <div>
                 <div className="flex items-center gap-2 mb-1">
                   <Info className="w-5 h-5 text-brand-600" />
-                  <h3 className="text-lg font-black text-slate-900">Yardım & Araç Rehberi</h3>
+                  <h3 className="text-lg font-bold text-slate-900">Yardım & Araç Rehberi</h3>
                 </div>
                 <p className="text-sm text-slate-500">VizeAkıl'ın tüm özelliklerini ve araçlarını keşfedin</p>
               </div>
@@ -39,7 +39,7 @@ export function HelpModal({ isOpen, onClose }: Props) {
 
               {/* Nasıl Çalışır */}
               <div>
-                <h4 className="text-sm font-black text-slate-900 uppercase tracking-wider mb-3">Nasıl Çalışır?</h4>
+                <h4 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-3">Nasıl Çalışır?</h4>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   {[
                     { step: '1', icon: '🌍', title: 'Ülke Seç', desc: 'Başvurmak istediğin ülkeyi ve vize tipini belirle' },
@@ -49,7 +49,7 @@ export function HelpModal({ isOpen, onClose }: Props) {
                   ].map(s => (
                     <div key={s.step} className="p-3 bg-slate-50 rounded-2xl text-center border border-slate-100">
                       <div className="text-2xl mb-1">{s.icon}</div>
-                      <div className="text-xs font-black text-slate-800 mb-0.5">{s.title}</div>
+                      <div className="text-xs font-bold text-slate-800 mb-0.5">{s.title}</div>
                       <div className="text-[10px] text-slate-500 leading-snug">{s.desc}</div>
                     </div>
                   ))}
@@ -58,7 +58,7 @@ export function HelpModal({ isOpen, onClose }: Props) {
 
               {/* Skor Nasıl Hesaplanır */}
               <div className="p-4 bg-brand-50 border border-brand-100 rounded-2xl">
-                <h4 className="text-sm font-black text-brand-800 mb-2">Skor Nasıl Hesaplanır?</h4>
+                <h4 className="text-sm font-bold text-brand-800 mb-2">Skor Nasıl Hesaplanır?</h4>
                 <p className="text-xs text-brand-700 leading-relaxed">
                   Skor, 6 kategoride değerlendirme yapılarak hesaplanır: <strong>Finansal (25p)</strong>, <strong>Mesleki (20p)</strong>, <strong>Seyahat Geçmişi (20p)</strong>, <strong>Aile & Bağ (10p)</strong>, <strong>Amaç & Taahhüt (15p)</strong> ve <strong>Kalite & Güven (10p)</strong>. Toplam 100 puan üzerinden hesaplanan ham skor, ülkenin Türk başvurucular için gerçek ret oranıyla Bayes yöntemiyle harmanlanır. 82+ = yeşil, 65-81 = sarı, 65 altı = kırmızı risk bölgesi.
                 </p>
@@ -67,7 +67,7 @@ export function HelpModal({ isOpen, onClose }: Props) {
               {/* Ücretsiz Araçlar */}
               <div>
                 <div className="flex items-center gap-2 mb-3">
-                  <span className="text-xs font-black bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">ÜCRETSİZ — 9 araç</span>
+                  <span className="text-xs font-bold bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">ÜCRETSİZ — 9 araç</span>
                 </div>
                 <div className="space-y-2">
                   {[
@@ -95,7 +95,7 @@ export function HelpModal({ isOpen, onClose }: Props) {
               {/* Ücretsiz — Topluluk */}
               <div>
                 <div className="flex items-center gap-2 mb-3">
-                  <span className="text-xs font-black bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">ÜCRETSİZ — Topluluk & Analiz (2 araç)</span>
+                  <span className="text-xs font-bold bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">ÜCRETSİZ — Topluluk & Analiz (2 araç)</span>
                 </div>
                 <div className="space-y-2">
                   {[
@@ -116,7 +116,7 @@ export function HelpModal({ isOpen, onClose }: Props) {
               {/* Premium Araçlar */}
               <div>
                 <div className="flex items-center gap-2 mb-3">
-                  <span className="text-xs font-black bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">PREMİUM — 10 araç</span>
+                  <span className="text-xs font-bold bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">PREMİUM — 10 araç</span>
                 </div>
                 <div className="space-y-2">
                   {[
@@ -136,7 +136,7 @@ export function HelpModal({ isOpen, onClose }: Props) {
                       <div>
                         <div className="flex items-center gap-1.5">
                           <span className="text-sm font-bold text-slate-800">{t.name}</span>
-                          <span className="text-[9px] font-black bg-amber-200 text-amber-700 px-1 py-0.5 rounded">PRO</span>
+                          <span className="text-[9px] font-bold bg-amber-200 text-amber-700 px-1 py-0.5 rounded">PRO</span>
                         </div>
                         <div className="text-xs text-slate-500 mt-0.5 leading-relaxed">{t.desc}</div>
                       </div>
@@ -147,7 +147,7 @@ export function HelpModal({ isOpen, onClose }: Props) {
 
               {/* Sık Sorulan Sorular */}
               <div>
-                <h4 className="text-sm font-black text-slate-900 uppercase tracking-wider mb-3">Sık Sorulan Sorular</h4>
+                <h4 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-3">Sık Sorulan Sorular</h4>
                 <div className="space-y-2">
                   {[
                     { q: 'Skor kaç olmalı ki başvurayım?', a: '70+ güvenli başvuru bölgesi, 82+ yüksek güven. 65 altında reddedilme riski yüksek — önce eksikleri gider.' },

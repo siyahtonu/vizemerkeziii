@@ -2485,7 +2485,7 @@ Signature: _______________     Date: ${today}`;
                   <div className="w-14 h-14 bg-amber-400/20 rounded-2xl flex items-center justify-center mx-auto mb-3">
                     <Sparkles className="w-7 h-7 text-amber-300" />
                   </div>
-                  <h3 className="text-2xl font-black">VizeAkıl — Plan Seç</h3>
+                  <h3 className="text-2xl font-bold">VizeAkıl — Plan Seç</h3>
                   <p className="text-slate-400 text-sm mt-1">İhtiyacına göre ödeme yap. Sürpriz maliyet yok.</p>
                 </div>
                 {/* Planlar */}
@@ -2494,10 +2494,10 @@ Signature: _______________     Date: ${today}`;
                   <div className="border-2 border-slate-200 rounded-2xl p-5">
                     <div className="flex items-center justify-between mb-3">
                       <div>
-                        <div className="font-black text-slate-900 text-base">Ücretsiz</div>
+                        <div className="font-bold text-slate-900 text-base">Ücretsiz</div>
                         <div className="text-xs text-slate-500 mt-0.5">Hemen başla, kayıt gerekmez</div>
                       </div>
-                      <div className="text-2xl font-black text-slate-900">₺0</div>
+                      <div className="text-2xl font-bold text-slate-900">₺0</div>
                     </div>
                     <div className="space-y-1.5">
                       {['Başarı profili analizi', 'Kişiye özel evrak listesi', 'Schengen ülke kıyaslayıcısı (görüntüleme)', 'SSS ve rehber içerikleri'].map(f => (
@@ -2511,14 +2511,14 @@ Signature: _______________     Date: ${today}`;
 
                   {/* Tek Başvuru */}
                   <div className="border-2 border-brand-200 bg-brand-50 rounded-2xl p-5 relative">
-                    <div className="absolute -top-3 left-5 bg-brand-600 text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-wider">En Çok Tercih</div>
+                    <div className="absolute -top-3 left-5 bg-brand-600 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">En Çok Tercih</div>
                     <div className="flex items-center justify-between mb-3">
                       <div>
-                        <div className="font-black text-slate-900 text-base">Tek Başvuru</div>
+                        <div className="font-bold text-slate-900 text-base">Tek Başvuru</div>
                         <div className="text-xs text-slate-500 mt-0.5">90 gün / 1 ülke başvurusu</div>
                       </div>
                       <div>
-                        <span className="text-2xl font-black text-slate-900">₺499</span>
+                        <span className="text-2xl font-bold text-slate-900">₺499</span>
                         <span className="text-xs text-slate-500 ml-1">/ 90 gün</span>
                       </div>
                     </div>
@@ -2531,7 +2531,7 @@ Signature: _______________     Date: ${today}`;
                     </div>
                     <button
                       disabled
-                      className="mt-4 w-full py-3 bg-brand-600 text-white font-black rounded-xl text-sm flex items-center justify-center gap-2 opacity-70 cursor-not-allowed">
+                      className="mt-4 w-full py-3 bg-brand-600 text-white font-bold rounded-xl text-sm flex items-center justify-center gap-2 opacity-70 cursor-not-allowed">
                       <Clock className="w-4 h-4"/>
                       Yakında — Ödeme Sistemi Hazırlanıyor
                     </button>
@@ -2541,11 +2541,11 @@ Signature: _______________     Date: ${today}`;
                   <div className="border-2 border-slate-800 bg-slate-900 rounded-2xl p-5">
                     <div className="flex items-center justify-between mb-3">
                       <div>
-                        <div className="font-black text-white text-base">Yıllık Pro</div>
+                        <div className="font-bold text-white text-base">Yıllık Pro</div>
                         <div className="text-xs text-slate-400 mt-0.5">12 ay / sınırsız ülke</div>
                       </div>
                       <div>
-                        <span className="text-2xl font-black text-white">₺999</span>
+                        <span className="text-2xl font-bold text-white">₺999</span>
                         <span className="text-xs text-slate-400 ml-1">/ yıl</span>
                       </div>
                     </div>
@@ -2558,7 +2558,7 @@ Signature: _______________     Date: ${today}`;
                     </div>
                     <button
                       disabled
-                      className="mt-4 w-full py-3 bg-white/10 border border-white/20 text-white/60 font-black rounded-xl text-sm flex items-center justify-center gap-2 cursor-not-allowed">
+                      className="mt-4 w-full py-3 bg-white/10 border border-white/20 text-white/60 font-bold rounded-xl text-sm flex items-center justify-center gap-2 cursor-not-allowed">
                       <Clock className="w-4 h-4"/>
                       Yakında — Ödeme Sistemi Hazırlanıyor
                     </button>
@@ -2593,7 +2593,7 @@ Signature: _______________     Date: ${today}`;
               >
                 <div className="p-8 border-b border-slate-100 flex justify-between items-center bg-slate-50 shrink-0">
                   <div>
-                    <h3 className="text-2xl font-black text-slate-900 flex items-center gap-2">
+                    <h3 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
                       <FileCheck className="w-6 h-6 text-emerald-600" />
                       Evrak Listesi & Kişiye Özel Sihirbaz
                     </h3>
@@ -2613,7 +2613,7 @@ Signature: _______________     Date: ${today}`;
                   <div className="mb-8 p-6 bg-gradient-to-br from-emerald-50 to-teal-50 border-2 border-emerald-200 rounded-3xl">
                     <div className="flex items-center gap-2 mb-4">
                       <Target className="w-5 h-5 text-emerald-700"/>
-                      <h4 className="font-black text-emerald-900">Kişiye Özel Evrak Sihirbazı</h4>
+                      <h4 className="font-bold text-emerald-900">Kişiye Özel Evrak Sihirbazı</h4>
                       <span className="ml-auto text-xs font-bold bg-emerald-700 text-white px-2 py-0.5 rounded-lg">Niş Analiz</span>
                     </div>
                     {!wizardDone ? (
@@ -2828,7 +2828,7 @@ Signature: _______________     Date: ${today}`;
                     <div className="space-y-6">
                       <div className="flex justify-between items-end">
                         <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Mevcut Bakiye (₺)</label>
-                        <span className="text-4xl font-black text-brand-600 font-mono">
+                        <span className="text-4xl font-bold text-brand-600 font-mono">
                           {simulatorValue.toLocaleString('tr-TR')} ₺
                         </span>
                       </div>
@@ -2858,7 +2858,7 @@ Signature: _______________     Date: ${today}`;
                           <div className="text-xs text-brand-600 font-semibold">Bakiye artışı sonrası tahmin</div>
                         </div>
                       </div>
-                      <div className="text-5xl font-black text-brand-700">%{currentScore}</div>
+                      <div className="text-5xl font-bold text-brand-700">%{currentScore}</div>
                     </div>
                   </div>
                 </div>
@@ -2906,7 +2906,7 @@ Signature: _______________     Date: ${today}`;
                       <div className="flex items-center gap-2 text-rose-200 text-xs font-bold uppercase tracking-widest mb-2">
                         <XCircle className="w-4 h-4" /> Ret Analizi
                       </div>
-                      <h3 className="text-2xl font-black">Ret Mektubu Analiz Motoru</h3>
+                      <h3 className="text-2xl font-bold">Ret Mektubu Analiz Motoru</h3>
                       <p className="text-rose-100 text-sm mt-1">Ret gerekçenizi yapıştırın — size özel aksiyon planı oluşturalım.</p>
                     </div>
                     <button onClick={() => setIsRefusalOpen(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors"><X className="w-6 h-6"/></button>
@@ -2936,7 +2936,7 @@ Signature: _______________     Date: ${today}`;
                   ) : (
                     <div className="space-y-6">
                       <div className="flex items-center justify-between">
-                        <h4 className="font-black text-slate-900 text-lg">Tespit Edilen {refusalResult.length} Sorun</h4>
+                        <h4 className="font-bold text-slate-900 text-lg">Tespit Edilen {refusalResult.length} Sorun</h4>
                         <button onClick={() => { setRefusalAnalyzed(false); setRefusalText(''); setRefusalResult([]); }}
                           className="flex items-center gap-1 text-sm font-bold text-rose-600 hover:underline">
                           <RefreshCw className="w-4 h-4" /> Yeniden Analiz
@@ -2950,7 +2950,7 @@ Signature: _______________     Date: ${today}`;
                               <span className="font-bold text-slate-900">{rule.title}</span>
                             </div>
                             <div className="flex items-center gap-2 shrink-0 ml-3">
-                              <span className={`text-[10px] font-black px-2 py-1 rounded-lg ${rule.severity === 'critical' ? 'bg-rose-100 text-rose-700' : rule.severity === 'high' ? 'bg-orange-100 text-orange-700' : 'bg-amber-100 text-amber-700'}`}>
+                              <span className={`text-[10px] font-bold px-2 py-1 rounded-lg ${rule.severity === 'critical' ? 'bg-rose-100 text-rose-700' : rule.severity === 'high' ? 'bg-orange-100 text-orange-700' : 'bg-amber-100 text-amber-700'}`}>
                                 {rule.severity === 'critical' ? 'KRİTİK' : rule.severity === 'high' ? 'YÜKSEK' : 'ORTA'}
                               </span>
                               {rule.waitMonths > 0 && (
@@ -2963,7 +2963,7 @@ Signature: _______________     Date: ${today}`;
                           <div className="p-5 space-y-2">
                             {rule.actions.map((action, j) => (
                               <div key={j} className="flex items-start gap-3">
-                                <div className="w-5 h-5 rounded-full bg-slate-900 text-white flex items-center justify-center text-[10px] font-black shrink-0 mt-0.5">{j+1}</div>
+                                <div className="w-5 h-5 rounded-full bg-slate-900 text-white flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">{j+1}</div>
                                 <p className="text-sm text-slate-700 leading-relaxed">{action}</p>
                               </div>
                             ))}
@@ -3005,7 +3005,7 @@ Signature: _______________     Date: ${today}`;
                       <div className="flex items-center gap-2 text-teal-200 text-xs font-bold uppercase tracking-widest mb-2">
                         <Calendar className="w-4 h-4" /> Randevu Planlayıcı
                       </div>
-                      <h3 className="text-2xl font-black">Randevu Takvim Asistanı</h3>
+                      <h3 className="text-2xl font-bold">Randevu Takvim Asistanı</h3>
                       <p className="text-teal-100 text-sm mt-1">Seyahat tarihinize göre randevuyu en geç ne zaman almalısınız?</p>
                     </div>
                     <button onClick={() => setIsAppointmentOpen(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors"><X className="w-6 h-6"/></button>
@@ -3050,26 +3050,26 @@ Signature: _______________     Date: ${today}`;
                                 <div className="flex items-center gap-3">
                                   <span className="text-3xl">{c.flag}</span>
                                   <div>
-                                    <div className="font-black text-slate-900">{c.country} — {c.city}</div>
+                                    <div className="font-bold text-slate-900">{c.country} — {c.city}</div>
                                     <div className="text-xs text-slate-500">{c.address}</div>
                                   </div>
                                 </div>
-                                <span className={`text-xs font-black px-3 py-1 rounded-xl ${isLate ? 'bg-rose-100 text-rose-700' : isUrgent ? 'bg-amber-100 text-amber-700' : 'bg-teal-100 text-teal-700'}`}>
+                                <span className={`text-xs font-bold px-3 py-1 rounded-xl ${isLate ? 'bg-rose-100 text-rose-700' : isUrgent ? 'bg-amber-100 text-amber-700' : 'bg-teal-100 text-teal-700'}`}>
                                   {isLate ? '⚠ GEÇ KALDIM' : isUrgent ? '⚡ ACİL' : '✅ YETİŞİR'}
                                 </span>
                               </div>
                               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
                                 <div className="bg-white/70 rounded-xl p-3 text-center">
                                   <div className="text-xs font-bold text-slate-400 mb-1">Tahmini Bekleme</div>
-                                  <div className="text-xl font-black text-slate-900">~{c.waitDays} gün</div>
+                                  <div className="text-xl font-bold text-slate-900">~{c.waitDays} gün</div>
                                 </div>
                                 <div className="bg-white/70 rounded-xl p-3 text-center">
                                   <div className="text-xs font-bold text-slate-400 mb-1">Son Randevu</div>
-                                  <div className="text-sm font-black text-slate-900">{deadline.toLocaleDateString('tr-TR')}</div>
+                                  <div className="text-sm font-bold text-slate-900">{deadline.toLocaleDateString('tr-TR')}</div>
                                 </div>
                                 <div className="bg-white/70 rounded-xl p-3 text-center">
                                   <div className="text-xs font-bold text-slate-400 mb-1">Kalan Gün</div>
-                                  <div className={`text-xl font-black ${isLate ? 'text-rose-600' : isUrgent ? 'text-amber-600' : 'text-teal-600'}`}>
+                                  <div className={`text-xl font-bold ${isLate ? 'text-rose-600' : isUrgent ? 'text-amber-600' : 'text-teal-600'}`}>
                                     {isLate ? Math.abs(daysLeft)+' gün geçti' : daysLeft+' gün'}
                                   </div>
                                 </div>
@@ -3098,7 +3098,7 @@ Signature: _______________     Date: ${today}`;
 
                   {/* Konsolosluk listesi */}
                   <div>
-                    <h4 className="font-black text-slate-900 mb-4 flex items-center gap-2">
+                    <h4 className="font-bold text-slate-900 mb-4 flex items-center gap-2">
                       <MapPin className="w-4 h-4 text-teal-600" /> Türkiye'deki Tüm Konsolosluklar
                     </h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -3138,7 +3138,7 @@ Signature: _______________     Date: ${today}`;
                       <div className="flex items-center gap-2 text-slate-400 text-xs font-bold uppercase tracking-widest mb-2">
                         <Layers className="w-4 h-4" /> Çapraz Kontrol
                       </div>
-                      <h3 className="text-2xl font-black">Belge Tutarlılık Matrisi</h3>
+                      <h3 className="text-2xl font-bold">Belge Tutarlılık Matrisi</h3>
                       <p className="text-slate-300 text-sm mt-1">Belgelerdeki kritik bilgileri girin — uyumsuzlukları tespit edelim.</p>
                     </div>
                     <button onClick={() => setIsConsistencyOpen(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors"><X className="w-6 h-6"/></button>
@@ -3232,7 +3232,7 @@ Signature: _______________     Date: ${today}`;
                       <div className="flex items-center gap-2 text-emerald-200 text-xs font-bold uppercase tracking-widest mb-2">
                         <Plane className="w-4 h-4" /> Türk Pasaportu
                       </div>
-                      <h3 className="text-2xl font-black">Vizesiz Ülkeler & Pasaport Güçlendirici</h3>
+                      <h3 className="text-2xl font-bold">Vizesiz Ülkeler & Pasaport Güçlendirici</h3>
                       <p className="text-emerald-100 text-sm mt-1">Bu ülkelere giderek Schengen/UK başvurunuz için güçlü seyahat geçmişi oluşturun.</p>
                     </div>
                     <button onClick={() => setIsVisaFreeOpen(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors"><X className="w-6 h-6"/></button>
@@ -3275,22 +3275,22 @@ Signature: _______________     Date: ${today}`;
                                 <div className="text-xs text-slate-400">{country.region}</div>
                               </div>
                             </div>
-                            <span className={`text-[10px] font-black px-2 py-1 rounded-lg ${country.entryType === 'Vizesiz' ? 'bg-emerald-100 text-emerald-700' : country.entryType === 'e-Vize' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'}`}>
+                            <span className={`text-[10px] font-bold px-2 py-1 rounded-lg ${country.entryType === 'Vizesiz' ? 'bg-emerald-100 text-emerald-700' : country.entryType === 'e-Vize' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'}`}>
                               {country.entryType}
                             </span>
                           </div>
                           <div className="grid grid-cols-3 gap-2 mb-3">
                             <div className="text-center p-2 bg-slate-50 rounded-xl">
                               <div className="text-[10px] font-bold text-slate-400">Kalış</div>
-                              <div className="text-sm font-black text-slate-900">{country.maxDays}g</div>
+                              <div className="text-sm font-bold text-slate-900">{country.maxDays}g</div>
                             </div>
                             <div className="text-center p-2 bg-slate-50 rounded-xl">
                               <div className="text-[10px] font-bold text-slate-400">Uçuş</div>
-                              <div className="text-sm font-black text-slate-900">{country.flightHours}s</div>
+                              <div className="text-sm font-bold text-slate-900">{country.flightHours}s</div>
                             </div>
                             <div className="text-center p-2 bg-emerald-50 rounded-xl">
                               <div className="text-[10px] font-bold text-emerald-600">+Puan</div>
-                              <div className="text-sm font-black text-emerald-700">+{country.scoreBoost}</div>
+                              <div className="text-sm font-bold text-emerald-700">+{country.scoreBoost}</div>
                             </div>
                           </div>
                           <div className="flex items-center gap-2 mb-3">
@@ -3328,7 +3328,7 @@ Signature: _______________     Date: ${today}`;
                       <div className="flex items-center gap-2 text-blue-200 text-xs font-bold uppercase tracking-widest mb-2">
                         <Sparkles className="w-4 h-4" /> VizeAkıl Analiz Motoru
                       </div>
-                      <h3 className="text-2xl font-black">Banka Dökümü Vize Analizi</h3>
+                      <h3 className="text-2xl font-bold">Banka Dökümü Vize Analizi</h3>
                       <p className="text-blue-100 text-sm mt-1">Bilgileri girin, banka dökümünüzü yükleyin — saniyeler içinde vize uyumluluk raporu alın.</p>
                     </div>
                     <button onClick={() => setIsAiBankOpen(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors"><X className="w-6 h-6"/></button>
@@ -3419,7 +3419,7 @@ Signature: _______________     Date: ${today}`;
                       {/* Başlık + Yeni Analiz */}
                       <div className="flex items-center gap-2">
                         <Sparkles className="w-5 h-5 text-blue-600"/>
-                        <h4 className="font-black text-slate-900">Vize Uyumluluk Raporu</h4>
+                        <h4 className="font-bold text-slate-900">Vize Uyumluluk Raporu</h4>
                         <button onClick={() => { setAiBankResult(null); setAiBankFile(''); setAiBankIncome(''); setAiBankBalance(''); setAiBankMonths('3'); setAiBankSalaryRegular(true); setAiBankLargeDeposit(false); }}
                           className="ml-auto flex items-center gap-1 text-sm font-bold text-blue-600 hover:underline">
                           <RefreshCw className="w-4 h-4"/> Yeni Analiz
@@ -3430,19 +3430,19 @@ Signature: _______________     Date: ${today}`;
                       <div className={`p-5 rounded-2xl border-2 ${aiBankResult.score >= 80 ? 'bg-emerald-50 border-emerald-300' : aiBankResult.score >= 65 ? 'bg-blue-50 border-blue-300' : aiBankResult.score >= 50 ? 'bg-amber-50 border-amber-300' : 'bg-rose-50 border-rose-300'}`}>
                         <div className="flex items-center justify-between mb-2">
                           <div>
-                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Hedef Ülke</p>
-                            <p className="font-black text-slate-900 text-lg">{aiBankResult.country}</p>
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Hedef Ülke</p>
+                            <p className="font-bold text-slate-900 text-lg">{aiBankResult.country}</p>
                           </div>
                           <div className="text-right">
-                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Vize Uyum Puanı</p>
-                            <p className={`text-3xl font-black ${aiBankResult.score >= 80 ? 'text-emerald-700' : aiBankResult.score >= 65 ? 'text-blue-700' : aiBankResult.score >= 50 ? 'text-amber-700' : 'text-rose-700'}`}>
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Vize Uyum Puanı</p>
+                            <p className={`text-3xl font-bold ${aiBankResult.score >= 80 ? 'text-emerald-700' : aiBankResult.score >= 65 ? 'text-blue-700' : aiBankResult.score >= 50 ? 'text-amber-700' : 'text-rose-700'}`}>
                               {aiBankResult.score}<span className="text-base font-bold text-slate-400">/100</span>
                             </p>
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
                           <span className="text-lg">{aiBankResult.gradeEmoji}</span>
-                          <span className={`font-black text-sm px-3 py-1 rounded-lg ${aiBankResult.score >= 80 ? 'bg-emerald-200 text-emerald-800' : aiBankResult.score >= 65 ? 'bg-blue-200 text-blue-800' : aiBankResult.score >= 50 ? 'bg-amber-200 text-amber-800' : 'bg-rose-200 text-rose-800'}`}>
+                          <span className={`font-bold text-sm px-3 py-1 rounded-lg ${aiBankResult.score >= 80 ? 'bg-emerald-200 text-emerald-800' : aiBankResult.score >= 65 ? 'bg-blue-200 text-blue-800' : aiBankResult.score >= 50 ? 'bg-amber-200 text-amber-800' : 'bg-rose-200 text-rose-800'}`}>
                             {aiBankResult.grade}
                           </span>
                           <span className="text-xs text-slate-500 ml-1">— {aiBankResult.fileName}</span>
@@ -3456,7 +3456,7 @@ Signature: _______________     Date: ${today}`;
 
                       {/* Güçlü Yönler */}
                       <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-200">
-                        <h5 className="font-black text-emerald-800 text-sm mb-3 flex items-center gap-2">
+                        <h5 className="font-bold text-emerald-800 text-sm mb-3 flex items-center gap-2">
                           <CheckCircle2 className="w-4 h-4"/> Güçlü Yönler
                         </h5>
                         <ul className="space-y-1.5">
@@ -3471,7 +3471,7 @@ Signature: _______________     Date: ${today}`;
                       {/* Riskli Alanlar */}
                       {aiBankResult.negatives.length > 0 && (
                         <div className="p-4 bg-rose-50 rounded-2xl border border-rose-200">
-                          <h5 className="font-black text-rose-800 text-sm mb-3 flex items-center gap-2">
+                          <h5 className="font-bold text-rose-800 text-sm mb-3 flex items-center gap-2">
                             <AlertTriangle className="w-4 h-4"/> Riskli Alanlar
                           </h5>
                           <ul className="space-y-1.5">
@@ -3487,7 +3487,7 @@ Signature: _______________     Date: ${today}`;
                       {/* Öneriler */}
                       {aiBankResult.tips.length > 0 && (
                         <div className="p-4 bg-blue-50 rounded-2xl border border-blue-200">
-                          <h5 className="font-black text-blue-800 text-sm mb-3 flex items-center gap-2">
+                          <h5 className="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2">
                             <Info className="w-4 h-4"/> Öneriler
                           </h5>
                           <ul className="space-y-1.5">
@@ -3502,7 +3502,7 @@ Signature: _______________     Date: ${today}`;
 
                       {/* Genel Değerlendirme */}
                       <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200">
-                        <h5 className="font-black text-slate-800 text-sm mb-2">Genel Değerlendirme</h5>
+                        <h5 className="font-bold text-slate-800 text-sm mb-2">Genel Değerlendirme</h5>
                         <p className="text-sm text-slate-700 leading-relaxed">{aiBankResult.summary}</p>
                       </div>
 
@@ -3538,7 +3538,7 @@ Signature: _______________     Date: ${today}`;
                       <div className="flex items-center gap-2 text-rose-200 text-xs font-bold uppercase tracking-widest mb-2">
                         <XCircle className="w-4 h-4" /> Mantıksal Tutarsızlık Dedektörü
                       </div>
-                      <h3 className="text-2xl font-black">Başvuru Risk Tarayıcısı</h3>
+                      <h3 className="text-2xl font-bold">Başvuru Risk Tarayıcısı</h3>
                       <p className="text-rose-100 text-sm mt-1">ChatGPT'nin yapamadığı şey: dosyanızdaki mantıksal çelişkileri bulur, konsolosluğun göreceği kırmızı bayrakları işaretler.</p>
                     </div>
                     <button onClick={() => { setIsRedFlagOpen(false); setRfAnalyzed(false); setRedFlagResult([]); }}
@@ -3676,7 +3676,7 @@ Signature: _______________     Date: ${today}`;
                       <div className="flex items-center gap-2 text-blue-200 text-xs font-bold uppercase tracking-widest mb-2">
                         <Globe className="w-4 h-4" /> Profil Bazlı Analiz
                       </div>
-                      <h3 className="text-2xl font-black">Schengen Ülke Kıyaslayıcısı</h3>
+                      <h3 className="text-2xl font-bold">Schengen Ülke Kıyaslayıcısı</h3>
                       <p className="text-blue-100 text-sm mt-1">
                         Profilinize göre onay şansınız en yüksek ülkeler — 2026 ret oranları ile sıralanmış.
                       </p>
@@ -3710,12 +3710,12 @@ Signature: _______________     Date: ${today}`;
                       <div className="p-5 bg-emerald-50 border-2 border-emerald-300 rounded-2xl flex items-start gap-4 mb-2">
                         <div className="text-3xl">{best.flag}</div>
                         <div className="flex-1">
-                          <div className="text-xs font-black text-emerald-600 uppercase tracking-widest mb-1">
+                          <div className="text-xs font-bold text-emerald-600 uppercase tracking-widest mb-1">
                             🎯 Profiliniz İçin #1 Öneri — Algoritma Seçimi
                           </div>
-                          <div className="font-black text-slate-900 text-lg">{best.name}</div>
+                          <div className="font-bold text-slate-900 text-lg">{best.name}</div>
                           <div className="flex items-center gap-3 mt-1">
-                            <span className="text-xs bg-emerald-200 text-emerald-800 font-black px-2 py-0.5 rounded-lg">Profil Uyumu: %{best.matchScore}</span>
+                            <span className="text-xs bg-emerald-200 text-emerald-800 font-bold px-2 py-0.5 rounded-lg">Profil Uyumu: %{best.matchScore}</span>
                             <span className="text-xs bg-rose-100 text-rose-700 font-bold px-2 py-0.5 rounded-lg">2026 Ret: %{best.rejectionRate}</span>
                             <span className="text-xs bg-blue-100 text-blue-700 font-bold px-2 py-0.5 rounded-lg">{best.trend}</span>
                           </div>
@@ -3758,9 +3758,9 @@ Signature: _______________     Date: ${today}`;
                             <div className="flex items-center gap-3">
                               <span className="text-3xl">{country.flag}</span>
                               <div>
-                                <div className="font-black text-slate-900 text-base">{country.name}</div>
+                                <div className="font-bold text-slate-900 text-base">{country.name}</div>
                                 <div className="flex items-center gap-1.5 mt-0.5">
-                                  <span className={`text-[10px] font-black px-2 py-0.5 rounded-md ${'matchScore' in country && (country as {matchScore:number}).matchScore >= 70 ? 'bg-emerald-100 text-emerald-700' : 'matchScore' in country && (country as {matchScore:number}).matchScore >= 50 ? 'bg-amber-100 text-amber-700' : 'bg-rose-100 text-rose-700'}`}>
+                                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${'matchScore' in country && (country as {matchScore:number}).matchScore >= 70 ? 'bg-emerald-100 text-emerald-700' : 'matchScore' in country && (country as {matchScore:number}).matchScore >= 50 ? 'bg-amber-100 text-amber-700' : 'bg-rose-100 text-rose-700'}`}>
                                     Uyum {'matchScore' in country ? `%${(country as {matchScore:number}).matchScore}` : '—'}
                                   </span>
                                   <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md ${country.trend === 'İyileşiyor' ? 'bg-emerald-50 text-emerald-600' : country.trend === 'Kötüleşiyor' ? 'bg-rose-50 text-rose-600' : 'bg-slate-100 text-slate-500'}`}>
@@ -3771,7 +3771,7 @@ Signature: _______________     Date: ${today}`;
                               </div>
                             </div>
                             <div className="text-right">
-                              <div className={`text-xs font-black px-3 py-1 rounded-lg ${badgeColors[country.difficultyColor]}`}>
+                              <div className={`text-xs font-bold px-3 py-1 rounded-lg ${badgeColors[country.difficultyColor]}`}>
                                 {country.difficulty}
                               </div>
                               <div className="text-xs text-slate-400 mt-1 font-mono">
@@ -3786,7 +3786,7 @@ Signature: _______________     Date: ${today}`;
                             <div>
                               <div className="flex justify-between text-xs font-bold text-slate-500 mb-1">
                                 <span className="flex items-center gap-1">🇹🇷 Türklerin ret oranı (2025-2026)</span>
-                                <span className={`font-black ${country.rejectionRate > 30 ? 'text-rose-600' : country.rejectionRate > 20 ? 'text-orange-600' : country.rejectionRate > 12 ? 'text-amber-600' : 'text-emerald-600'}`}>
+                                <span className={`font-bold ${country.rejectionRate > 30 ? 'text-rose-600' : country.rejectionRate > 20 ? 'text-orange-600' : country.rejectionRate > 12 ? 'text-amber-600' : 'text-emerald-600'}`}>
                                   %{country.rejectionRate}
                                 </span>
                               </div>
@@ -3809,12 +3809,12 @@ Signature: _______________     Date: ${today}`;
                                   <div className="flex justify-between text-xs font-bold mb-1">
                                     <span className="flex items-center gap-1 text-slate-500">👤 Sizin tahmini riskiniz</span>
                                     <div className="flex items-center gap-1.5">
-                                      <span className={`font-black ${isBetter ? 'text-emerald-600' : isWorse ? 'text-rose-600' : 'text-slate-600'}`}>
+                                      <span className={`font-bold ${isBetter ? 'text-emerald-600' : isWorse ? 'text-rose-600' : 'text-slate-600'}`}>
                                         %{personalRate}
                                       </span>
-                                      {isBetter && <span className="text-[9px] font-black bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-md">Ortalamadan İyi</span>}
-                                      {isWorse && <span className="text-[9px] font-black bg-rose-100 text-rose-700 px-1.5 py-0.5 rounded-md">Ortalamadan Yüksek</span>}
-                                      {!isBetter && !isWorse && <span className="text-[9px] font-black bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded-md">Ortalama</span>}
+                                      {isBetter && <span className="text-[9px] font-bold bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-md">Ortalamadan İyi</span>}
+                                      {isWorse && <span className="text-[9px] font-bold bg-rose-100 text-rose-700 px-1.5 py-0.5 rounded-md">Ortalamadan Yüksek</span>}
+                                      {!isBetter && !isWorse && <span className="text-[9px] font-bold bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded-md">Ortalama</span>}
                                     </div>
                                   </div>
                                   <div className="w-full bg-white/60 rounded-full h-2">
@@ -3857,7 +3857,7 @@ Signature: _______________     Date: ${today}`;
                           {/* Günlük bütçe + onay oranı */}
                           <div className="mt-3 flex items-center justify-between">
                             <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Günlük Bütçe Kriteri</div>
-                            <div className="text-sm font-black text-slate-700">€{country.dailyBudgetReq}/gün</div>
+                            <div className="text-sm font-bold text-slate-700">€{country.dailyBudgetReq}/gün</div>
                           </div>
 
                           {/* 2026 Trend notu */}
@@ -3865,7 +3865,7 @@ Signature: _______________     Date: ${today}`;
                             <div className="mt-3 p-2.5 bg-blue-50 border border-blue-200 rounded-xl flex items-start gap-2">
                               <TrendingUp className="w-3.5 h-3.5 text-blue-600 shrink-0 mt-0.5"/>
                               <p className="text-[11px] text-blue-800 leading-snug font-medium">
-                                <span className="font-black text-blue-700">2026 Trendi: </span>
+                                <span className="font-bold text-blue-700">2026 Trendi: </span>
                                 {(country as {update2026?: string}).update2026}
                               </p>
                             </div>
@@ -3909,7 +3909,7 @@ Signature: _______________     Date: ${today}`;
                     <div>
                       <div className="flex items-center gap-2 mb-1">
                         <ShieldCheck className="w-5 h-5 text-violet-600" />
-                        <h3 className="text-lg font-black text-slate-900">Sosyal Medya Denetim Rehberi</h3>
+                        <h3 className="text-lg font-bold text-slate-900">Sosyal Medya Denetim Rehberi</h3>
                       </div>
                       <p className="text-sm text-slate-500">
                         Her maddeyi yapınca işaretleyin — güvenlik skoru otomatik yükselir.
@@ -3945,7 +3945,7 @@ Signature: _______________     Date: ${today}`;
                       <div className="mt-4 space-y-2">
                         <div className="flex items-center justify-between text-sm">
                           <span className="font-semibold text-slate-600">Güvenlik Skoru</span>
-                          <span className={`font-black text-base ${textColor}`}>{score}/100 — {label}</span>
+                          <span className={`font-bold text-base ${textColor}`}>{score}/100 — {label}</span>
                         </div>
                         <div className="w-full bg-slate-100 rounded-full h-2.5">
                           <div
@@ -3970,7 +3970,7 @@ Signature: _______________     Date: ${today}`;
                   <section>
                     <div className="flex items-center gap-2 mb-3">
                       <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0" />
-                      <h4 className="text-xs font-black text-rose-600 uppercase tracking-widest">
+                      <h4 className="text-xs font-bold text-rose-600 uppercase tracking-widest">
                         Kritik Riskler — Sil veya Gizle
                       </h4>
                     </div>
@@ -3999,13 +3999,13 @@ Signature: _______________     Date: ${today}`;
                                   {item.title}
                                 </span>
                                 {!done && (
-                                  <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 ${
+                                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md shrink-0 ${
                                     item.severity === 'critical' ? 'bg-rose-100 text-rose-600' : 'bg-amber-100 text-amber-600'
                                   }`}>
                                     {item.severity === 'critical' ? 'Kritik' : 'Uyarı'}
                                   </span>
                                 )}
-                                {done && <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md bg-emerald-100 text-emerald-600 shrink-0">Temizlendi</span>}
+                                {done && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-emerald-100 text-emerald-600 shrink-0">Temizlendi</span>}
                               </div>
                               <p className="text-xs text-slate-500 leading-relaxed">{item.description}</p>
                               <span className="text-[10px] text-slate-400 mt-1 block">{item.platform}</span>
@@ -4020,7 +4020,7 @@ Signature: _______________     Date: ${today}`;
                   <section>
                     <div className="flex items-center gap-2 mb-3">
                       <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0" />
-                      <h4 className="text-xs font-black text-blue-600 uppercase tracking-widest">
+                      <h4 className="text-xs font-bold text-blue-600 uppercase tracking-widest">
                         Yapılması Gerekenler
                       </h4>
                     </div>
@@ -4060,7 +4060,7 @@ Signature: _______________     Date: ${today}`;
                   <section>
                     <div className="flex items-center gap-2 mb-3">
                       <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
-                      <h4 className="text-xs font-black text-emerald-600 uppercase tracking-widest">
+                      <h4 className="text-xs font-bold text-emerald-600 uppercase tracking-widest">
                         Profili Güçlendiren İçerikler
                       </h4>
                     </div>
@@ -4088,7 +4088,7 @@ Signature: _______________     Date: ${today}`;
                                 <span className={`text-sm font-bold ${done ? 'line-through text-slate-400' : 'text-slate-900'}`}>
                                   {item.title}
                                 </span>
-                                <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md bg-emerald-100 text-emerald-600 shrink-0">Avantaj</span>
+                                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-emerald-100 text-emerald-600 shrink-0">Avantaj</span>
                               </div>
                               <p className="text-xs text-slate-500 leading-relaxed">{item.description}</p>
                               <span className="text-[10px] text-slate-400 mt-1 block">{item.platform}</span>
@@ -4228,7 +4228,7 @@ Signature: _______________     Date: ${today}`;
             >
               {/* Üst bar */}
               <div className="w-full max-w-6xl mx-auto flex items-center justify-between py-5">
-                <div className="flex items-center gap-2 font-display font-black text-lg text-white">
+                <div className="flex items-center gap-2 font-display font-bold text-lg text-white">
                   <div className="w-8 h-8 bg-brand-600 rounded-xl flex items-center justify-center">
                     <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
@@ -4266,7 +4266,7 @@ Signature: _______________     Date: ${today}`;
                     initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.15 }}
-                    className="text-4xl sm:text-5xl md:text-[3.5rem] font-black tracking-tight text-white leading-[1.08]"
+                    className="text-4xl sm:text-5xl md:text-[3.5rem] font-bold tracking-tight text-white leading-[1.08]"
                   >
                     Vize başvurunuz{' '}
                     <span className="text-gradient">ne kadar güçlü?</span>
@@ -4378,7 +4378,7 @@ Signature: _______________     Date: ${today}`;
                   </div>
 
                   <div>
-                    <h2 className="text-2xl sm:text-3xl font-black text-slate-900 leading-tight">Profilinizi seçin</h2>
+                    <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 leading-tight">Profilinizi seçin</h2>
                     <p className="text-sm text-slate-500 mt-1">Her profil farklı değerlendirilir — doğru seçim, doğru analiz.</p>
                   </div>
 
@@ -4428,7 +4428,7 @@ Signature: _______________     Date: ${today}`;
                     </div>
 
                     <div>
-                      <div className={`text-6xl sm:text-7xl font-black score-num ${
+                      <div className={`text-6xl sm:text-7xl font-bold score-num ${
                         currentScore >= 82 ? 'text-emerald-500' :
                         currentScore >= 65 ? 'text-amber-500' : 'text-rose-500'
                       }`}>
@@ -4656,7 +4656,7 @@ Signature: _______________     Date: ${today}`;
               className="relative w-full max-w-2xl bg-white rounded-[2.5rem] shadow-2xl flex flex-col max-h-[90vh] overflow-hidden">
               <div className="p-7 border-b border-slate-100 flex justify-between items-center shrink-0">
                 <div>
-                  <h3 className="text-xl font-black text-slate-900">Kullanım Koşulları</h3>
+                  <h3 className="text-xl font-bold text-slate-900">Kullanım Koşulları</h3>
                   <p className="text-xs text-slate-400 mt-0.5">Son güncelleme: Nisan 2026</p>
                 </div>
                 <button type="button" onClick={() => setIsTermsOpen(false)} className="p-2 hover:bg-slate-100 rounded-full"><X className="w-5 h-5" /></button>
@@ -4693,7 +4693,7 @@ Signature: _______________     Date: ${today}`;
                   },
                 ].map(({ title, body }) => (
                   <div key={title}>
-                    <h4 className="font-black text-slate-900 mb-2">{title}</h4>
+                    <h4 className="font-bold text-slate-900 mb-2">{title}</h4>
                     <p className="text-slate-600">{body}</p>
                   </div>
                 ))}
@@ -4715,7 +4715,7 @@ Signature: _______________     Date: ${today}`;
               className="relative w-full max-w-2xl bg-white rounded-[2.5rem] shadow-2xl flex flex-col max-h-[90vh] overflow-hidden">
               <div className="p-7 border-b border-slate-100 flex justify-between items-center shrink-0">
                 <div>
-                  <h3 className="text-xl font-black text-slate-900">KVKK Aydınlatma Metni</h3>
+                  <h3 className="text-xl font-bold text-slate-900">KVKK Aydınlatma Metni</h3>
                   <p className="text-xs text-slate-400 mt-0.5">6698 sayılı Kişisel Verilerin Korunması Kanunu kapsamında</p>
                 </div>
                 <button type="button" onClick={() => setIsKvkkOpen(false)} className="p-2 hover:bg-slate-100 rounded-full"><X className="w-5 h-5" /></button>
@@ -4748,7 +4748,7 @@ Signature: _______________     Date: ${today}`;
                   },
                 ].map(({ title, body }) => (
                   <div key={title}>
-                    <h4 className="font-black text-slate-900 mb-2">{title}</h4>
+                    <h4 className="font-bold text-slate-900 mb-2">{title}</h4>
                     <p className="text-slate-600">{body}</p>
                   </div>
                 ))}
@@ -4770,7 +4770,7 @@ Signature: _______________     Date: ${today}`;
               className="relative w-full max-w-2xl bg-white rounded-[2.5rem] shadow-2xl flex flex-col max-h-[90vh] overflow-hidden">
               <div className="p-7 border-b border-slate-100 flex justify-between items-center shrink-0">
                 <div>
-                  <h3 className="text-xl font-black text-slate-900">Sık Sorulan Sorular</h3>
+                  <h3 className="text-xl font-bold text-slate-900">Sık Sorulan Sorular</h3>
                   <p className="text-xs text-slate-400 mt-0.5">Aklınızdaki her sorunun cevabı</p>
                 </div>
                 <button type="button" onClick={() => setIsFaqOpen(false)} className="p-2 hover:bg-slate-100 rounded-full"><X className="w-5 h-5" /></button>
@@ -4856,7 +4856,7 @@ Signature: _______________     Date: ${today}`;
                 <div className="flex justify-between items-start">
                   <div>
                     <div className="text-brand-200 text-xs font-bold uppercase tracking-widest mb-1">Başlangıç Rehberi</div>
-                    <h3 className="text-xl font-black">VizeAkıl Nasıl Kullanılır?</h3>
+                    <h3 className="text-xl font-bold">VizeAkıl Nasıl Kullanılır?</h3>
                     <p className="text-brand-100 text-xs mt-1">Ülke seçiminden başvuruya — 3 adımda tam hazırlık</p>
                   </div>
                   <button type="button" onClick={() => setIsHowToOpen(false)} className="p-2 hover:bg-white/10 rounded-full"><X className="w-5 h-5" /></button>
@@ -4904,10 +4904,10 @@ Signature: _______________     Date: ${today}`;
                 ].map(({ step, title, color, items }) => (
                   <div key={step} className="flex gap-5">
                     <div className={`w-12 h-12 bg-${color}-50 rounded-2xl flex items-center justify-center shrink-0 border border-${color}-100`}>
-                      <span className={`text-${color}-600 font-black text-sm`}>{step}</span>
+                      <span className={`text-${color}-600 font-bold text-sm`}>{step}</span>
                     </div>
                     <div className="flex-1">
-                      <h4 className="font-black text-slate-900 mb-3">{title}</h4>
+                      <h4 className="font-bold text-slate-900 mb-3">{title}</h4>
                       <ul className="space-y-2">
                         {items.map((item, i) => (
                           <li key={i} className="flex items-start gap-2 text-sm text-slate-600">
@@ -4933,7 +4933,7 @@ Signature: _______________     Date: ${today}`;
 
                 <button type="button"
                   onClick={() => { setIsHowToOpen(false); setOnboardingStep(0); setStep('onboarding'); }}
-                  className="w-full py-4 bg-gradient-to-r from-brand-600 to-indigo-600 text-white font-black rounded-2xl flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
+                  className="w-full py-4 bg-gradient-to-r from-brand-600 to-indigo-600 text-white font-bold rounded-2xl flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
                   Hemen Başla <ChevronRight className="w-5 h-5" />
                 </button>
               </div>
@@ -4959,10 +4959,10 @@ Signature: _______________     Date: ${today}`;
               <div className="p-7 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-t-[2.5rem] shrink-0">
                 <div className="flex justify-between items-start">
                   <div>
-                    <div className="text-amber-200 text-xs font-black uppercase tracking-widest mb-1 flex items-center gap-2">
+                    <div className="text-amber-200 text-xs font-bold uppercase tracking-widest mb-1 flex items-center gap-2">
                       <Brain className="w-4 h-4"/> Mülakat Simülatörü — Gerçek Konsolosluk Soruları
                     </div>
-                    <h3 className="text-2xl font-black">Vize Mülakatına Hazırlan</h3>
+                    <h3 className="text-2xl font-bold">Vize Mülakatına Hazırlan</h3>
                     {interviewPhase === 'question' && (
                       <p className="text-amber-100 text-sm mt-1">
                         Soru {interviewCurrentQ + 1} / {interviewQuestions[interviewVisaType].length}
@@ -4999,7 +4999,7 @@ Signature: _______________     Date: ${today}`;
                   <div className="p-8 space-y-6">
                     <div className="text-center space-y-3">
                       <div className="text-5xl">🎯</div>
-                      <h4 className="text-xl font-black text-slate-900">Gerçek konsolosluk soruları, anında geri bildirim</h4>
+                      <h4 className="text-xl font-bold text-slate-900">Gerçek konsolosluk soruları, anında geri bildirim</h4>
                       <p className="text-slate-500 text-sm leading-relaxed">Ex-konsolosluk görevlilerinin sorduğu sorularla pratik yapın. Her cevabınız analiz edilir, zayıf noktalarınız için spesifik tavsiye alırsınız.</p>
                     </div>
                     <div className="grid grid-cols-3 gap-3">
@@ -5011,7 +5011,7 @@ Signature: _______________     Date: ${today}`;
                         <button key={v.id} onClick={() => setInterviewVisaType(v.id)}
                           className={`p-4 rounded-2xl border-2 text-center transition-all ${interviewVisaType === v.id ? `border-${v.color}-500 bg-${v.color}-50` : 'border-slate-100 bg-white hover:border-slate-200'}`}>
                           <div className="text-3xl mb-2">{v.flag}</div>
-                          <div className="font-black text-slate-900 text-sm">{v.label}</div>
+                          <div className="font-bold text-slate-900 text-sm">{v.label}</div>
                           <div className="text-xs text-slate-400 mt-0.5">{v.count} soru</div>
                         </button>
                       ))}
@@ -5020,7 +5020,7 @@ Signature: _______________     Date: ${today}`;
                       <strong>Nasıl çalışır?</strong> Her soruya gerçek mülakata gibi cevap yazın. Sistem Türkçe cevabınızı analiz eder, not verir ve güçlendirilmesi gereken alanları gösterir. Mülakata gitmeden önce tüm soru kategorilerini pratiğe yapın.
                     </div>
                     <button onClick={() => { resetInterviewSim(); setInterviewPhase('question'); }}
-                      className="w-full py-4 bg-gradient-to-r from-amber-500 to-orange-600 text-white font-black rounded-2xl hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
+                      className="w-full py-4 bg-gradient-to-r from-amber-500 to-orange-600 text-white font-bold rounded-2xl hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
                       Mülakata Başla ({interviewQuestions[interviewVisaType].length} Soru) <ChevronRight className="w-5 h-5"/>
                     </button>
                   </div>
@@ -5034,9 +5034,9 @@ Signature: _______________     Date: ${today}`;
                     <div className="p-8 space-y-5">
                       {/* Kategori badge */}
                       <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-black uppercase tracking-widest bg-amber-100 text-amber-700 px-3 py-1 rounded-xl">{q.category}</span>
+                        <span className="text-[10px] font-bold uppercase tracking-widest bg-amber-100 text-amber-700 px-3 py-1 rounded-xl">{q.category}</span>
                         {interviewCurrentQ > 0 && prevAns && (
-                          <span className={`text-[10px] font-black px-2 py-1 rounded-xl ${prevAns.score >= 6.5 ? 'bg-emerald-100 text-emerald-700' : prevAns.score >= 4.5 ? 'bg-amber-100 text-amber-700' : 'bg-rose-100 text-rose-700'}`}>
+                          <span className={`text-[10px] font-bold px-2 py-1 rounded-xl ${prevAns.score >= 6.5 ? 'bg-emerald-100 text-emerald-700' : prevAns.score >= 4.5 ? 'bg-amber-100 text-amber-700' : 'bg-rose-100 text-rose-700'}`}>
                             Önceki: {prevAns.grade} ({prevAns.score.toFixed(1)}/10)
                           </span>
                         )}
@@ -5062,7 +5062,7 @@ Signature: _______________     Date: ${today}`;
 
                       {/* Cevap alanı */}
                       <div className="space-y-3">
-                        <label className="text-xs font-black text-slate-500 uppercase tracking-widest">Cevabınız:</label>
+                        <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Cevabınız:</label>
                         <textarea
                           value={interviewAnswer}
                           onChange={e => setInterviewAnswer(e.target.value)}
@@ -5084,7 +5084,7 @@ Signature: _______________     Date: ${today}`;
                         </button>
                         <button onClick={submitInterviewAnswer}
                           disabled={interviewAnswer.trim().length < 5}
-                          className="flex-1 py-3 bg-gradient-to-r from-amber-500 to-orange-600 text-white font-black rounded-2xl hover:opacity-90 transition-opacity disabled:opacity-40">
+                          className="flex-1 py-3 bg-gradient-to-r from-amber-500 to-orange-600 text-white font-bold rounded-2xl hover:opacity-90 transition-opacity disabled:opacity-40">
                           {interviewCurrentQ + 1 === interviewQuestions[interviewVisaType].length ? 'Testi Bitir & Sonuçları Gör' : 'Cevapla & İlerle →'}
                         </button>
                       </div>
@@ -5106,13 +5106,13 @@ Signature: _______________     Date: ${today}`;
                       {/* Genel Skor */}
                       <div className="p-6 bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl text-center text-white">
                         <div className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-2">Mülakat Hazırlık Skoru</div>
-                        <div className={`text-6xl font-black mb-1 ${gradeColor}`}>%{pct}</div>
+                        <div className={`text-6xl font-bold mb-1 ${gradeColor}`}>%{pct}</div>
                         <div className="text-xl font-bold text-white">{grade}</div>
                         <div className="text-slate-400 text-xs mt-2">{totalScore.toFixed(1)} / {maxScore} puan</div>
                         {/* Soru kartları */}
                         <div className="flex flex-wrap justify-center gap-1 mt-4">
                           {interviewAnswers.map((a,i) => (
-                            <div key={i} className={`w-5 h-5 rounded-md text-[10px] font-black flex items-center justify-center ${a.score>=8?'bg-emerald-500':a.score>=6.5?'bg-amber-500':a.score>=4.5?'bg-orange-500':'bg-rose-500'}`}>
+                            <div key={i} className={`w-5 h-5 rounded-md text-[10px] font-bold flex items-center justify-center ${a.score>=8?'bg-emerald-500':a.score>=6.5?'bg-amber-500':a.score>=4.5?'bg-orange-500':'bg-rose-500'}`}>
                               {i+1}
                             </div>
                           ))}
@@ -5122,7 +5122,7 @@ Signature: _______________     Date: ${today}`;
                       {/* Güçlü cevaplar */}
                       {strongAnswers.length > 0 && (
                         <div>
-                          <h4 className="font-black text-slate-900 text-sm flex items-center gap-2 mb-3">
+                          <h4 className="font-bold text-slate-900 text-sm flex items-center gap-2 mb-3">
                             <CheckCircle2 className="w-4 h-4 text-emerald-500"/> Güçlü Cevaplarınız
                           </h4>
                           <div className="space-y-2">
@@ -5139,14 +5139,14 @@ Signature: _______________     Date: ${today}`;
                       {/* Geliştirme alanları */}
                       {weakAnswers.length > 0 && (
                         <div>
-                          <h4 className="font-black text-slate-900 text-sm flex items-center gap-2 mb-3">
+                          <h4 className="font-bold text-slate-900 text-sm flex items-center gap-2 mb-3">
                             <AlertTriangle className="w-4 h-4 text-amber-500"/> Geliştirmeniz Gereken Alanlar
                           </h4>
                           <div className="space-y-3">
                             {weakAnswers.map((a,i) => (
                               <div key={i} className="p-4 bg-amber-50 border border-amber-100 rounded-2xl space-y-2">
                                 <div className="flex items-center gap-2">
-                                  <span className={`text-xs font-black px-2 py-0.5 rounded-lg ${a.score<4.5?'bg-rose-100 text-rose-700':'bg-amber-100 text-amber-700'}`}>{a.grade} • {a.score.toFixed(1)}/10</span>
+                                  <span className={`text-xs font-bold px-2 py-0.5 rounded-lg ${a.score<4.5?'bg-rose-100 text-rose-700':'bg-amber-100 text-amber-700'}`}>{a.grade} • {a.score.toFixed(1)}/10</span>
                                 </div>
                                 <p className="text-xs font-bold text-slate-700">❓ {a.q}</p>
                                 <p className="text-xs text-slate-500 italic">📝 Sizin cevabınız: "{a.a.substring(0,100)}{a.a.length>100?'...':''}"</p>
@@ -5169,11 +5169,11 @@ Signature: _______________     Date: ${today}`;
                       {/* Aksiyonlar */}
                       <div className="flex gap-3">
                         <button onClick={resetInterviewSim}
-                          className="flex-1 py-3 bg-slate-100 text-slate-700 font-black rounded-2xl hover:bg-slate-200 transition-colors flex items-center justify-center gap-2">
+                          className="flex-1 py-3 bg-slate-100 text-slate-700 font-bold rounded-2xl hover:bg-slate-200 transition-colors flex items-center justify-center gap-2">
                           <RefreshCw className="w-4 h-4"/> Tekrar Dene
                         </button>
                         <button onClick={() => setIsInterviewSimOpen(false)}
-                          className="flex-1 py-3 bg-gradient-to-r from-amber-500 to-orange-600 text-white font-black rounded-2xl hover:opacity-90 transition-opacity">
+                          className="flex-1 py-3 bg-gradient-to-r from-amber-500 to-orange-600 text-white font-bold rounded-2xl hover:opacity-90 transition-opacity">
                           Tamamlandı ✓
                         </button>
                       </div>
@@ -5203,10 +5203,10 @@ Signature: _______________     Date: ${today}`;
               <div className="p-7 bg-gradient-to-r from-cyan-600 to-teal-600 text-white rounded-t-[2.5rem] shrink-0">
                 <div className="flex justify-between items-start mb-4">
                   <div>
-                    <div className="text-cyan-200 text-xs font-black uppercase tracking-widest mb-1 flex items-center gap-2">
+                    <div className="text-cyan-200 text-xs font-bold uppercase tracking-widest mb-1 flex items-center gap-2">
                       <Plane className="w-4 h-4"/> Seyahat Planlayıcı
                     </div>
-                    <h3 className="text-2xl font-black">Kaç Vize Lazım?</h3>
+                    <h3 className="text-2xl font-bold">Kaç Vize Lazım?</h3>
                     <p className="text-cyan-100 text-sm mt-1">Gitmek istediğin ülkeleri seç → kaç başvuru gerektiğini anında hesapla</p>
                   </div>
                   <button onClick={() => setIsMultiCountryOpen(false)} className="p-2 hover:bg-white/10 rounded-full"><X className="w-6 h-6"/></button>
@@ -5215,7 +5215,7 @@ Signature: _______________     Date: ${today}`;
                 <div className="p-3 bg-white/15 rounded-2xl border border-white/20 flex items-start gap-3 mb-4">
                   <span className="text-2xl shrink-0">🇪🇺</span>
                   <div>
-                    <div className="font-black text-white text-sm">Schengen = 27 Ülke, 1 Vize!</div>
+                    <div className="font-bold text-white text-sm">Schengen = 27 Ülke, 1 Vize!</div>
                     <div className="text-cyan-100 text-xs mt-0.5 leading-relaxed">Almanya, Fransa, İtalya, İspanya ve daha 23 ülkeye TEK bir Schengen vizesiyle girebilirsin. Ayrı ayrı başvurman gerekmez.</div>
                   </div>
                 </div>
@@ -5232,8 +5232,8 @@ Signature: _______________     Date: ${today}`;
                 {/* ADIM 1: Ülke seçimi */}
                 <div>
                   <div className="flex items-center justify-between mb-3">
-                    <h4 className="font-black text-slate-900 text-base flex items-center gap-2">
-                      <span className="w-6 h-6 bg-cyan-600 text-white rounded-full flex items-center justify-center text-xs font-black">1</span>
+                    <h4 className="font-bold text-slate-900 text-base flex items-center gap-2">
+                      <span className="w-6 h-6 bg-cyan-600 text-white rounded-full flex items-center justify-center text-xs font-bold">1</span>
                       Gitmek istediğin ülkeleri seç
                     </h4>
                     {mcSelected.length > 0 && (
@@ -5257,7 +5257,7 @@ Signature: _______________     Date: ${today}`;
                               <span className="text-xl">{d.flag}</span>
                               {isSelected && <CheckCircle2 className="w-4 h-4 text-white"/>}
                             </div>
-                            <div className={`font-black text-sm ${isSelected ? 'text-white' : 'text-slate-900'}`}>{name}</div>
+                            <div className={`font-bold text-sm ${isSelected ? 'text-white' : 'text-slate-900'}`}>{name}</div>
                             <div className={`text-[10px] font-bold mt-0.5 ${isSelected ? 'text-cyan-100' : textColors[d.visaType]}`}>{typeLabel}</div>
                             <div className={`text-[10px] mt-1 ${isSelected ? 'text-cyan-200' : 'text-slate-500'}`}>Max {d.maxDays} gün</div>
                           </button>
@@ -5279,8 +5279,8 @@ Signature: _______________     Date: ${today}`;
                   return (
                     <div className="space-y-4">
                       <div className="flex items-center gap-2">
-                        <span className="w-6 h-6 bg-cyan-600 text-white rounded-full flex items-center justify-center text-xs font-black">2</span>
-                        <h4 className="font-black text-slate-900 text-base">Senin Planın</h4>
+                        <span className="w-6 h-6 bg-cyan-600 text-white rounded-full flex items-center justify-center text-xs font-bold">2</span>
+                        <h4 className="font-bold text-slate-900 text-base">Senin Planın</h4>
                       </div>
 
                       {/* Seçilen ülkeler etiketleri */}
@@ -5292,7 +5292,7 @@ Signature: _______________     Date: ${today}`;
                             <div key={c} className="flex items-center gap-1.5 bg-slate-100 rounded-xl px-2.5 py-1.5">
                               <span className="text-sm">{d?.flag}</span>
                               <span className="text-xs font-bold text-slate-800">{c}</span>
-                              {isSchengen && <span className="text-[9px] text-cyan-600 font-black bg-cyan-50 px-1 rounded">Schengen</span>}
+                              {isSchengen && <span className="text-[9px] text-cyan-600 font-bold bg-cyan-50 px-1 rounded">Schengen</span>}
                               <button onClick={() => setMcSelected(p=>p.filter(x=>x!==c))} className="text-slate-400 hover:text-rose-500 ml-0.5"><X className="w-3 h-3"/></button>
                             </div>
                           );
@@ -5301,9 +5301,9 @@ Signature: _______________     Date: ${today}`;
 
                       {/* Sonuç kartı */}
                       <div className="p-5 bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl text-white">
-                        <div className="text-slate-400 text-xs font-black uppercase tracking-widest mb-3">Toplam Başvuru Sayısı</div>
+                        <div className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-3">Toplam Başvuru Sayısı</div>
                         <div className="flex items-baseline gap-3 mb-4">
-                          <div className="text-5xl font-black text-white">{totalApplications}</div>
+                          <div className="text-5xl font-bold text-white">{totalApplications}</div>
                           <div className="text-slate-300 text-sm leading-tight">{mcSelected.length} ülke için<br/><span className="text-white font-bold">{totalApplications} ayrı başvuru</span></div>
                         </div>
 
@@ -5311,12 +5311,12 @@ Signature: _______________     Date: ${today}`;
                           {selectedSchengen.length > 0 && (
                             <div className="flex items-center justify-between p-3 bg-white/10 rounded-xl">
                               <div>
-                                <div className="font-black text-white text-sm">🇪🇺 Schengen Vizesi</div>
+                                <div className="font-bold text-white text-sm">🇪🇺 Schengen Vizesi</div>
                                 <div className="text-slate-300 text-xs mt-0.5">{selectedSchengen.map(c => `${multiCountryVisaData[c]?.flag} ${c}`).join(' · ')}</div>
                                 <div className="text-emerald-300 text-[11px] font-bold mt-1">✓ {selectedSchengen.length} ülke için TEK başvuru!</div>
                               </div>
                               <div className="text-right shrink-0 ml-3">
-                                <div className="text-2xl font-black text-white">1</div>
+                                <div className="text-2xl font-bold text-white">1</div>
                                 <div className="text-slate-400 text-[10px]">başvuru</div>
                               </div>
                             </div>
@@ -5324,12 +5324,12 @@ Signature: _______________     Date: ${today}`;
                           {needsConsulatVisa.map(c => (
                             <div key={c} className="flex items-center justify-between p-3 bg-rose-900/40 border border-rose-700/30 rounded-xl">
                               <div>
-                                <div className="font-black text-white text-sm">{multiCountryVisaData[c]?.flag} {c} Vizesi</div>
+                                <div className="font-bold text-white text-sm">{multiCountryVisaData[c]?.flag} {c} Vizesi</div>
                                 <div className="text-rose-200 text-xs mt-0.5">📋 Konsolosluk başvurusu gerekli</div>
                                 <div className="text-slate-400 text-[10px] mt-0.5">{multiCountryVisaData[c]?.note}</div>
                               </div>
                               <div className="text-right shrink-0 ml-3">
-                                <div className="text-2xl font-black text-white">1</div>
+                                <div className="text-2xl font-bold text-white">1</div>
                                 <div className="text-slate-400 text-[10px]">başvuru</div>
                               </div>
                             </div>
@@ -5337,26 +5337,26 @@ Signature: _______________     Date: ${today}`;
                           {needsEvisa.map(c => (
                             <div key={c} className="flex items-center justify-between p-3 bg-blue-900/30 border border-blue-700/30 rounded-xl">
                               <div>
-                                <div className="font-black text-white text-sm">{multiCountryVisaData[c]?.flag} {c}</div>
+                                <div className="font-bold text-white text-sm">{multiCountryVisaData[c]?.flag} {c}</div>
                                 <div className="text-blue-200 text-xs mt-0.5">🖥 Online e-Vize (kolay!)</div>
                                 <div className="text-slate-400 text-[10px] mt-0.5">{multiCountryVisaData[c]?.note}</div>
                               </div>
                               <div className="text-right shrink-0 ml-3">
-                                <div className="text-2xl font-black text-white">1</div>
+                                <div className="text-2xl font-bold text-white">1</div>
                                 <div className="text-slate-400 text-[10px]">başvuru</div>
                               </div>
                             </div>
                           ))}
                           {kapida.length > 0 && (
                             <div className="p-3 bg-amber-900/30 border border-amber-700/30 rounded-xl">
-                              <div className="font-black text-white text-sm">🛂 Kapıda Vize</div>
+                              <div className="font-bold text-white text-sm">🛂 Kapıda Vize</div>
                               <div className="text-amber-200 text-xs mt-0.5">{kapida.map(c=>`${multiCountryVisaData[c]?.flag} ${c}`).join(', ')} — havalimanında ödeme yap, geç!</div>
                               <div className="text-emerald-300 text-[11px] font-bold mt-1">✓ Önceden başvuru gerekmez</div>
                             </div>
                           )}
                           {vizsiz.length > 0 && (
                             <div className="p-3 bg-emerald-900/30 border border-emerald-700/30 rounded-xl">
-                              <div className="font-black text-white text-sm">✅ Vizesiz</div>
+                              <div className="font-bold text-white text-sm">✅ Vizesiz</div>
                               <div className="text-emerald-200 text-xs mt-0.5">{vizsiz.map(c=>`${multiCountryVisaData[c]?.flag} ${c}`).join(', ')} — pasaportunla direkt git!</div>
                             </div>
                           )}
@@ -5367,47 +5367,47 @@ Signature: _______________     Date: ${today}`;
                       {totalApplications > 0 && (
                         <div>
                           <div className="flex items-center gap-2 mb-3">
-                            <span className="w-6 h-6 bg-cyan-600 text-white rounded-full flex items-center justify-center text-xs font-black">3</span>
-                            <h4 className="font-black text-slate-900 text-base">Ne Yapmalısın?</h4>
+                            <span className="w-6 h-6 bg-cyan-600 text-white rounded-full flex items-center justify-center text-xs font-bold">3</span>
+                            <h4 className="font-bold text-slate-900 text-base">Ne Yapmalısın?</h4>
                           </div>
                           <div className="space-y-2">
                             {selectedSchengen.length > 0 && (
                               <div className="flex items-start gap-3 p-4 bg-blue-50 border border-blue-200 rounded-2xl">
-                                <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-black text-sm shrink-0">1</div>
+                                <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-sm shrink-0">1</div>
                                 <div>
-                                  <div className="font-black text-blue-900 text-sm">Schengen Vizesi Başvur</div>
+                                  <div className="font-bold text-blue-900 text-sm">Schengen Vizesi Başvur</div>
                                   <div className="text-blue-700 text-xs mt-1 leading-relaxed">
                                     En çok gün geçireceğin ülkenin konsolosluğuna başvur.{' '}
                                     <span className="font-bold">{selectedSchengen.length > 1 ? `${selectedSchengen[0]}'dan başvurabilirsin — geri kalan ${selectedSchengen.length-1} ülkeye de aynı vizeyle girersin.` : `${selectedSchengen[0]} konsolosluğuna başvur.`}</span>
                                   </div>
                                   <div className="flex items-center gap-2 mt-2 flex-wrap">
-                                    <span className="text-[10px] font-black bg-blue-100 text-blue-700 px-2 py-1 rounded-xl">⏱ 15 gün önceden başvur</span>
-                                    <span className="text-[10px] font-black bg-blue-100 text-blue-700 px-2 py-1 rounded-xl">💰 ~€80-120 vize ücreti</span>
+                                    <span className="text-[10px] font-bold bg-blue-100 text-blue-700 px-2 py-1 rounded-xl">⏱ 15 gün önceden başvur</span>
+                                    <span className="text-[10px] font-bold bg-blue-100 text-blue-700 px-2 py-1 rounded-xl">💰 ~€80-120 vize ücreti</span>
                                   </div>
                                 </div>
                               </div>
                             )}
                             {needsEvisa.map((c, i) => (
                               <div key={c} className="flex items-start gap-3 p-4 bg-slate-50 border border-slate-200 rounded-2xl">
-                                <div className="w-8 h-8 bg-slate-700 text-white rounded-full flex items-center justify-center font-black text-sm shrink-0">{(selectedSchengen.length > 0 ? 1 : 0) + i + 1}</div>
+                                <div className="w-8 h-8 bg-slate-700 text-white rounded-full flex items-center justify-center font-bold text-sm shrink-0">{(selectedSchengen.length > 0 ? 1 : 0) + i + 1}</div>
                                 <div>
-                                  <div className="font-black text-slate-900 text-sm">{multiCountryVisaData[c]?.flag} {c} e-Vizesi</div>
+                                  <div className="font-bold text-slate-900 text-sm">{multiCountryVisaData[c]?.flag} {c} e-Vizesi</div>
                                   <div className="text-slate-600 text-xs mt-1">Resmi e-devlet/konsolosluk sitesinden online başvur. 3-7 gün içinde onaylanır.</div>
                                   <div className="flex items-center gap-2 mt-2 flex-wrap">
-                                    <span className="text-[10px] font-black bg-slate-100 text-slate-600 px-2 py-1 rounded-xl">⏱ Seyahatten 1 hafta önce</span>
-                                    <span className="text-[10px] font-black bg-slate-100 text-slate-600 px-2 py-1 rounded-xl">🖥 Online — evden çıkmadan</span>
+                                    <span className="text-[10px] font-bold bg-slate-100 text-slate-600 px-2 py-1 rounded-xl">⏱ Seyahatten 1 hafta önce</span>
+                                    <span className="text-[10px] font-bold bg-slate-100 text-slate-600 px-2 py-1 rounded-xl">🖥 Online — evden çıkmadan</span>
                                   </div>
                                 </div>
                               </div>
                             ))}
                             {needsConsulatVisa.map((c, i) => (
                               <div key={c} className="flex items-start gap-3 p-4 bg-rose-50 border border-rose-200 rounded-2xl">
-                                <div className="w-8 h-8 bg-rose-600 text-white rounded-full flex items-center justify-center font-black text-sm shrink-0">{(selectedSchengen.length > 0 ? 1 : 0) + needsEvisa.length + i + 1}</div>
+                                <div className="w-8 h-8 bg-rose-600 text-white rounded-full flex items-center justify-center font-bold text-sm shrink-0">{(selectedSchengen.length > 0 ? 1 : 0) + needsEvisa.length + i + 1}</div>
                                 <div>
-                                  <div className="font-black text-rose-900 text-sm">{multiCountryVisaData[c]?.flag} {c} Vizesi</div>
+                                  <div className="font-bold text-rose-900 text-sm">{multiCountryVisaData[c]?.flag} {c} Vizesi</div>
                                   <div className="text-rose-700 text-xs mt-1">{multiCountryVisaData[c]?.note} — Konsoloslukla randevu alman gerekiyor.</div>
                                   <div className="flex items-center gap-2 mt-2 flex-wrap">
-                                    <span className="text-[10px] font-black bg-rose-100 text-rose-700 px-2 py-1 rounded-xl">⏱ 30+ gün önceden planla</span>
+                                    <span className="text-[10px] font-bold bg-rose-100 text-rose-700 px-2 py-1 rounded-xl">⏱ 30+ gün önceden planla</span>
                                   </div>
                                 </div>
                               </div>
@@ -5454,8 +5454,8 @@ Signature: _______________     Date: ${today}`;
               <div className="p-7 bg-gradient-to-r from-slate-800 to-slate-900 text-white rounded-t-[2.5rem] shrink-0">
                 <div className="flex justify-between items-start">
                   <div>
-                    <div className="text-slate-400 text-xs font-black uppercase tracking-widest mb-1 flex items-center gap-2"><Star className="w-4 h-4"/> Topluluk Deneyimleri</div>
-                    <h3 className="text-2xl font-black">Gerçek Başvuru Deneyimleri</h3>
+                    <div className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1 flex items-center gap-2"><Star className="w-4 h-4"/> Topluluk Deneyimleri</div>
+                    <h3 className="text-2xl font-bold">Gerçek Başvuru Deneyimleri</h3>
                     <p className="text-slate-400 text-sm mt-1">VizeAkıl kullanıcılarının gerçek başvuru sonuçları</p>
                   </div>
                   <button onClick={() => setIsCommunityOpen(false)} className="p-2 hover:bg-white/10 rounded-full"><X className="w-6 h-6"/></button>
@@ -5481,7 +5481,7 @@ Signature: _______________     Date: ${today}`;
                         { label:'Ort. Bekleme', value: `${Math.round(communityEntries.reduce((s,e)=>s+e.waitDays,0)/communityEntries.length)} gün` },
                       ].map(s => (
                         <div key={s.label} className="p-3 bg-slate-50 rounded-2xl text-center">
-                          <div className="text-xl font-black text-slate-900">{s.value}</div>
+                          <div className="text-xl font-bold text-slate-900">{s.value}</div>
                           <div className="text-[10px] font-bold text-slate-400">{s.label}</div>
                         </div>
                       ))}
@@ -5494,8 +5494,8 @@ Signature: _______________     Date: ${today}`;
                         <div key={e.id} className={`p-5 rounded-2xl border-2 ${e.result==='onaylandi'?'bg-emerald-50 border-emerald-100':e.result==='reddedildi'?'bg-rose-50 border-rose-100':'bg-amber-50 border-amber-100'}`}>
                           <div className="flex items-start justify-between mb-2">
                             <div className="flex items-center gap-2 flex-wrap">
-                              <span className="font-black text-slate-900 text-sm">{e.consulate} — {e.city}</span>
-                              <span className={`text-[10px] font-black px-2 py-0.5 rounded-xl ${e.result==='onaylandi'?'bg-emerald-100 text-emerald-700':e.result==='reddedildi'?'bg-rose-100 text-rose-700':'bg-amber-100 text-amber-700'}`}>
+                              <span className="font-bold text-slate-900 text-sm">{e.consulate} — {e.city}</span>
+                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-xl ${e.result==='onaylandi'?'bg-emerald-100 text-emerald-700':e.result==='reddedildi'?'bg-rose-100 text-rose-700':'bg-amber-100 text-amber-700'}`}>
                                 {e.result==='onaylandi'?'✓ Onaylandı':e.result==='reddedildi'?'✗ Reddedildi':'📋 Ek Evrak'}
                               </span>
                               <span className="text-[10px] text-slate-400 font-bold">{e.visaType}</span>
@@ -5511,7 +5511,7 @@ Signature: _______________     Date: ${today}`;
                       ))}
 
                     <button onClick={() => setCommunityPhase('submit')}
-                      className="w-full py-3 bg-slate-900 text-white font-black rounded-2xl hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
+                      className="w-full py-3 bg-slate-900 text-white font-bold rounded-2xl hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
                       + Deneyimimi Paylaş
                     </button>
 
@@ -5524,7 +5524,7 @@ Signature: _______________     Date: ${today}`;
 
                 {communityPhase === 'submit' && (
                   <div className="p-6 space-y-5">
-                    <h4 className="font-black text-slate-900">Başvuru Deneyiminizi Paylaşın</h4>
+                    <h4 className="font-bold text-slate-900">Başvuru Deneyiminizi Paylaşın</h4>
                     <div className="space-y-4">
                       <div className="grid grid-cols-2 gap-3">
                         <div>
@@ -5577,7 +5577,7 @@ Signature: _______________     Date: ${today}`;
                       <button onClick={() => setCommunityPhase('feed')} className="px-5 py-3 bg-slate-100 text-slate-700 font-bold rounded-2xl hover:bg-slate-200 transition-colors">İptal</button>
                       <button onClick={submitCommunityEntry}
                         disabled={!communityForm.consulate || !communityForm.notes || !communityForm.waitDays}
-                        className="flex-1 py-3 bg-slate-900 text-white font-black rounded-2xl hover:opacity-90 disabled:opacity-40 transition-opacity">
+                        className="flex-1 py-3 bg-slate-900 text-white font-bold rounded-2xl hover:opacity-90 disabled:opacity-40 transition-opacity">
                         Deneyimi Paylaş →
                       </button>
                     </div>
@@ -5605,10 +5605,10 @@ Signature: _______________     Date: ${today}`;
               <div className="p-7 bg-gradient-to-r from-slate-800 to-slate-900 text-white rounded-t-2xl shrink-0">
                 <div className="flex justify-between items-start mb-3">
                   <div>
-                    <div className="text-slate-400 text-xs font-black uppercase tracking-widest mb-1 flex items-center gap-2">
+                    <div className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1 flex items-center gap-2">
                       <Bell className="w-4 h-4"/> Randevu Takip Botu
                     </div>
-                    <h3 className="text-2xl font-black">Anlık Vize Randevu Takip Sistemi</h3>
+                    <h3 className="text-2xl font-bold">Anlık Vize Randevu Takip Sistemi</h3>
                     <p className="text-slate-400 text-sm mt-1 leading-relaxed">
                       Randevu takip botu ile gerçek zamanlı veri ile Schengen vize randevusu, VFS randevu bulma ve VFS Global randevu takip durumlarını anında öğrenin.
                     </p>
@@ -5625,7 +5625,7 @@ Signature: _______________     Date: ${today}`;
                   ].map(({ icon, title, desc }) => (
                     <div key={title} className="bg-white/5 rounded-xl p-3 text-center">
                       <div className="text-xl mb-1">{icon}</div>
-                      <div className="text-xs font-black text-white mb-0.5">{title}</div>
+                      <div className="text-xs font-bold text-white mb-0.5">{title}</div>
                       <div className="text-[10px] text-slate-400 leading-relaxed">{desc}</div>
                     </div>
                   ))}
@@ -5639,9 +5639,9 @@ Signature: _______________     Date: ${today}`;
                     { n: '3', b: 'Randevu Bul', d: 'Randevu açıldığında bildirimi alın, anında başvuru merkezine gidin.' },
                   ].map(({ n, b, d }) => (
                     <div key={n} className="flex-1 flex items-start gap-2">
-                      <span className="w-6 h-6 bg-brand-500 text-white rounded-full flex items-center justify-center font-black text-xs shrink-0 mt-0.5">{n}</span>
+                      <span className="w-6 h-6 bg-brand-500 text-white rounded-full flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">{n}</span>
                       <div>
-                        <div className="text-xs font-black text-white">{b}</div>
+                        <div className="text-xs font-bold text-white">{b}</div>
                         <div className="text-[10px] text-slate-400 leading-relaxed mt-0.5">{d}</div>
                       </div>
                     </div>
@@ -5686,7 +5686,7 @@ Signature: _______________     Date: ${today}`;
                     { label:'Maks. Tahmini Bekleme', value:`~${Math.max(...APPOINTMENT_TARGETS.map(t=>t.avgWaitDays))} gün`, color:'text-rose-600' },
                   ].map(s => (
                     <div key={s.label} className="p-3 bg-slate-50 rounded-2xl text-center">
-                      <div className={`text-lg font-black ${s.color ?? 'text-slate-900'}`}>{s.value}</div>
+                      <div className={`text-lg font-bold ${s.color ?? 'text-slate-900'}`}>{s.value}</div>
                       <div className="text-[10px] font-bold text-slate-400">{s.label}</div>
                     </div>
                   ))}
@@ -5695,7 +5695,7 @@ Signature: _______________     Date: ${today}`;
                 {/* Konsolosluk listesi */}
                 <div>
                   <div className="flex items-center justify-between mb-3">
-                    <h4 className="font-black text-slate-900 text-sm">Takip etmek istediğin merkezleri seç</h4>
+                    <h4 className="font-bold text-slate-900 text-sm">Takip etmek istediğin merkezleri seç</h4>
                     {apptSelected.length > 0 && (
                       <span className="text-xs font-bold text-brand-600">{apptSelected.length} seçildi</span>
                     )}
@@ -5728,15 +5728,15 @@ Signature: _______________     Date: ${today}`;
                               <div className="flex items-center gap-2">
                                 <span className="text-xl">{t.flag}</span>
                                 <div>
-                                  <div className="font-black text-slate-900 text-sm">{t.country}</div>
+                                  <div className="font-bold text-slate-900 text-sm">{t.country}</div>
                                   <div className="text-xs text-slate-500">{t.city} — {t.visaType}</div>
                                 </div>
                               </div>
                               <div className="flex items-center gap-1.5">
-                                <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-md ${centerBadgeColor}`}>
+                                <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md ${centerBadgeColor}`}>
                                   {t.centerType}
                                 </span>
-                                <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${isMüsait ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>
+                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${isMüsait ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>
                                   {isMüsait ? '● Müsait' : '○ Dolu'}
                                 </span>
                                 {isSelected && <CheckCircle2 className="w-4 h-4 text-brand-500"/>}
@@ -5761,7 +5761,7 @@ Signature: _______________     Date: ${today}`;
                               <div className="mt-2">
                                 <a href={t.vfsUrl} target="_blank" rel="noopener noreferrer"
                                   onClick={e => e.stopPropagation()}
-                                  className="text-[10px] font-black text-brand-600 hover:text-brand-800 flex items-center gap-0.5">
+                                  className="text-[10px] font-bold text-brand-600 hover:text-brand-800 flex items-center gap-0.5">
                                   {t.centerType === 'TLS' ? 'TLS' : t.centerType === 'Konsolosluk' ? 'Elçilik' : 'VFS'}'e Git →
                                 </a>
                               </div>
@@ -5794,7 +5794,7 @@ Signature: _______________     Date: ${today}`;
                 {apptSubStatus === 'success' ? (
                   <div className="p-5 bg-emerald-50 border border-emerald-200 rounded-2xl text-center">
                     <div className="text-3xl mb-2">✅</div>
-                    <div className="font-black text-emerald-800">Abonelik Oluşturuldu!</div>
+                    <div className="font-bold text-emerald-800">Abonelik Oluşturuldu!</div>
                     <div className="text-sm text-emerald-700 mt-1">
                       Seçtiğin merkezlerde slot açıldığında <strong>{apptSubEmail}</strong> adresine bildirileceğiz.
                     </div>
@@ -5805,7 +5805,7 @@ Signature: _______________     Date: ${today}`;
                   </div>
                 ) : (
                   <div className="p-5 bg-slate-50 border border-slate-200 rounded-2xl space-y-3">
-                    <h4 className="font-black text-slate-900 text-sm flex items-center gap-2">
+                    <h4 className="font-bold text-slate-900 text-sm flex items-center gap-2">
                       <Bell className="w-4 h-4 text-brand-600"/> Slot açılınca haber ver
                     </h4>
                     <div className="flex gap-2">
@@ -5819,7 +5819,7 @@ Signature: _______________     Date: ${today}`;
                       <button
                         onClick={handleApptSubscribe}
                         disabled={!apptSubEmail || apptSelected.length === 0 || apptSubStatus === 'loading'}
-                        className="px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-black rounded-xl text-sm disabled:opacity-40 transition-colors">
+                        className="px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-xl text-sm disabled:opacity-40 transition-colors">
                         {apptSubStatus === 'loading' ? '...' : 'Bildir'}
                       </button>
                     </div>
@@ -5855,7 +5855,7 @@ Signature: _______________     Date: ${today}`;
                 <div>
                   <div className="flex items-center gap-2 mb-1">
                     <Banknote className="w-5 h-5 text-green-600" />
-                    <h3 className="text-lg font-black text-slate-900">Banka Hesabı Hazırlık Planı</h3>
+                    <h3 className="text-lg font-bold text-slate-900">Banka Hesabı Hazırlık Planı</h3>
                   </div>
                   <p className="text-sm text-slate-500">Başvuruya kadar kaç ay var? Aylık ne kadar giriş/çıkış yapmalısınız?</p>
                 </div>
@@ -5945,15 +5945,15 @@ Signature: _______________     Date: ${today}`;
 
                       <div className="grid grid-cols-3 gap-2 text-center">
                         <div className="bg-slate-50 rounded-xl p-3 border border-slate-100">
-                          <div className="text-base font-black text-green-600">+{(monthlyDeposit/1000).toFixed(0)}K</div>
+                          <div className="text-base font-bold text-green-600">+{(monthlyDeposit/1000).toFixed(0)}K</div>
                           <div className="text-[10px] text-slate-500 font-bold uppercase mt-0.5">Aylık Min. Giriş</div>
                         </div>
                         <div className="bg-slate-50 rounded-xl p-3 border border-slate-100">
-                          <div className="text-base font-black text-rose-600">max {(maxWithdraw/1000).toFixed(0)}K</div>
+                          <div className="text-base font-bold text-rose-600">max {(maxWithdraw/1000).toFixed(0)}K</div>
                           <div className="text-[10px] text-slate-500 font-bold uppercase mt-0.5">Aylık Max. Çıkış</div>
                         </div>
                         <div className="bg-slate-50 rounded-xl p-3 border border-slate-100">
-                          <div className="text-base font-black text-slate-800">{params.minDays} gün</div>
+                          <div className="text-base font-bold text-slate-800">{params.minDays} gün</div>
                           <div className="text-[10px] text-slate-500 font-bold uppercase mt-0.5">Min. Hesap Özeti</div>
                         </div>
                       </div>
@@ -5996,7 +5996,7 @@ Signature: _______________     Date: ${today}`;
 
                       {/* Kritik kurallar */}
                       <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-2">
-                        <div className="text-xs font-black text-slate-700 uppercase tracking-wider mb-2">Kritik Kurallar</div>
+                        <div className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Kritik Kurallar</div>
                         {[
                           `Son 28 günde tek seferde ${(requiredTL * 0.2 / 1000).toFixed(0)}K TL üzeri yatırım yapmayın`,
                           'Her ay düzenli maaş/gelir girişi olsun (aynı günler ideal)',
@@ -6004,7 +6004,7 @@ Signature: _______________     Date: ${today}`;
                           'Giriş-çıkış oranı %40\'ı geçmesin (aktif ama şüpheli değil)',
                         ].map((r, i) => (
                           <div key={i} className="flex items-start gap-2 text-xs text-slate-600">
-                            <div className="w-4 h-4 rounded-full bg-slate-200 flex items-center justify-center text-[9px] font-black shrink-0 mt-0.5">{i+1}</div>
+                            <div className="w-4 h-4 rounded-full bg-slate-200 flex items-center justify-center text-[9px] font-bold shrink-0 mt-0.5">{i+1}</div>
                             {r}
                           </div>
                         ))}
@@ -6041,7 +6041,7 @@ Signature: _______________     Date: ${today}`;
                 <div>
                   <div className="flex items-center gap-2 mb-1">
                     <AlertCircle className="w-5 h-5 text-orange-600" />
-                    <h3 className="text-lg font-black text-slate-900">Ret Nedeni Haritası</h3>
+                    <h3 className="text-lg font-bold text-slate-900">Ret Nedeni Haritası</h3>
                   </div>
                   <p className="text-sm text-slate-500">2021–2026 gerçek ret kodları — Schengen · İngiltere · ABD</p>
                 </div>
@@ -6055,7 +6055,7 @@ Signature: _______________     Date: ${today}`;
 
                 {/* ── Ülke seçimi ── */}
                 <div className="space-y-2">
-                  <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Schengen</div>
+                  <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Schengen</div>
                   <div className="flex gap-1.5 flex-wrap">
                     {['Almanya','Fransa','İspanya','İtalya','Hollanda','Avusturya','Belçika','Danimarka','İsveç','Norveç','Yunanistan','Portekiz','Polonya','İsviçre'].map(c => (
                       <button key={c} onClick={() => setRefusalMapCountry(c)}
@@ -6064,7 +6064,7 @@ Signature: _______________     Date: ${today}`;
                       </button>
                     ))}
                   </div>
-                  <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-2">Diğer</div>
+                  <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2">Diğer</div>
                   <div className="flex gap-1.5 flex-wrap">
                     {['İngiltere','ABD'].map(c => (
                       <button key={c} onClick={() => setRefusalMapCountry(c)}
@@ -6103,9 +6103,9 @@ Signature: _______________     Date: ${today}`;
                             return (
                               <div key={rc.code} className={`p-3 rounded-2xl border ${isRisk ? 'bg-orange-50 border-orange-200' : 'bg-slate-50 border-slate-100'}`}>
                                 <div className="flex items-center gap-3 mb-2">
-                                  <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 ${isRisk ? 'bg-orange-100 text-orange-700' : 'bg-slate-200 text-slate-600'}`}>{rc.code}</span>
+                                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md shrink-0 ${isRisk ? 'bg-orange-100 text-orange-700' : 'bg-slate-200 text-slate-600'}`}>{rc.code}</span>
                                   <span className="text-xs font-bold text-slate-800 flex-1">{rc.label}</span>
-                                  <span className="text-sm font-black text-slate-700 shrink-0">%{rc.pct}</span>
+                                  <span className="text-sm font-bold text-slate-700 shrink-0">%{rc.pct}</span>
                                 </div>
                                 <div className="w-full bg-slate-200 rounded-full h-1.5 mb-1">
                                   <div className={`h-1.5 rounded-full ${isRisk ? 'bg-orange-400' : 'bg-slate-400'}`} style={{ width: `${barW}%` }} />
@@ -6143,9 +6143,9 @@ Signature: _______________     Date: ${today}`;
                             return (
                               <div key={rc.code} className={`p-3 rounded-2xl border ${isRisk ? 'bg-orange-50 border-orange-200' : 'bg-slate-50 border-slate-100'}`}>
                                 <div className="flex items-center gap-3 mb-2">
-                                  <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 ${isRisk ? 'bg-orange-100 text-orange-700' : 'bg-slate-200 text-slate-600'}`}>{rc.code}</span>
+                                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md shrink-0 ${isRisk ? 'bg-orange-100 text-orange-700' : 'bg-slate-200 text-slate-600'}`}>{rc.code}</span>
                                   <span className="text-xs font-bold text-slate-800 flex-1">{rc.label}</span>
-                                  <span className="text-sm font-black text-slate-700 shrink-0">%{rc.pct}</span>
+                                  <span className="text-sm font-bold text-slate-700 shrink-0">%{rc.pct}</span>
                                 </div>
                                 <div className="w-full bg-slate-200 rounded-full h-1.5 mb-1">
                                   <div className={`h-1.5 rounded-full ${isRisk ? 'bg-orange-400' : 'bg-slate-400'}`} style={{ width: `${barW}%` }} />
@@ -6202,9 +6202,9 @@ Signature: _______________     Date: ${today}`;
                             return (
                               <div key={rc.code} className={`p-3 rounded-2xl border ${isHighRisk ? 'bg-orange-50 border-orange-200' : 'bg-slate-50 border-slate-100'}`}>
                                 <div className="flex items-center gap-3 mb-2">
-                                  <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 ${isHighRisk ? 'bg-orange-100 text-orange-700' : 'bg-slate-200 text-slate-600'}`}>KOD {rc.code}</span>
+                                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md shrink-0 ${isHighRisk ? 'bg-orange-100 text-orange-700' : 'bg-slate-200 text-slate-600'}`}>KOD {rc.code}</span>
                                   <span className="text-xs font-bold text-slate-800 flex-1">{rc.label}</span>
-                                  <span className="text-sm font-black text-slate-700 shrink-0">%{val}</span>
+                                  <span className="text-sm font-bold text-slate-700 shrink-0">%{val}</span>
                                 </div>
                                 <div className="w-full bg-slate-200 rounded-full h-1.5 mb-1">
                                   <div className={`h-1.5 rounded-full ${isHighRisk ? 'bg-orange-400' : 'bg-slate-400'}`} style={{ width: `${barW}%` }} />
@@ -6249,7 +6249,7 @@ Signature: _______________     Date: ${today}`;
                 <div>
                   <div className="flex items-center gap-2 mb-1">
                     <TrendingUp className="w-5 h-5 text-purple-600" />
-                    <h3 className="text-lg font-black text-slate-900">Senin Gibi Kaç Kişi?</h3>
+                    <h3 className="text-lg font-bold text-slate-900">Senin Gibi Kaç Kişi?</h3>
                   </div>
                   <p className="text-sm text-slate-500">Benzer profillerin başvuru sonuçları</p>
                 </div>
@@ -6285,7 +6285,7 @@ Signature: _______________     Date: ${today}`;
                     <div className="space-y-5">
                       {/* Ana sayaç */}
                       <div className="text-center p-6 bg-purple-50 rounded-2xl border border-purple-100">
-                        <div className="text-4xl font-black text-slate-900">{bracket.total.toLocaleString()}</div>
+                        <div className="text-4xl font-bold text-slate-900">{bracket.total.toLocaleString()}</div>
                         <div className="text-sm text-slate-500 mt-1">Benzer profilli başvuru sahibi</div>
                         <div className="text-xs text-purple-600 font-bold mt-0.5">
                           Skor aralığı: {Math.max(0, score-10)}–{Math.min(100, score+10)} puan
@@ -6296,11 +6296,11 @@ Signature: _______________     Date: ${today}`;
                       <div>
                         <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Sonuç Dağılımı</div>
                         <div className="flex rounded-xl overflow-hidden h-10 mb-2">
-                          <div className="bg-emerald-500 flex items-center justify-center text-white font-black text-sm transition-all"
+                          <div className="bg-emerald-500 flex items-center justify-center text-white font-bold text-sm transition-all"
                             style={{ width: `${approvedPct}%` }}>
                             %{approvedPct}
                           </div>
-                          <div className="bg-rose-400 flex items-center justify-center text-white font-black text-sm transition-all"
+                          <div className="bg-rose-400 flex items-center justify-center text-white font-bold text-sm transition-all"
                             style={{ width: `${rejectedPct}%` }}>
                             %{rejectedPct}
                           </div>
@@ -6326,11 +6326,11 @@ Signature: _______________     Date: ${today}`;
                           <div className="space-y-2">
                             {displayReasons.map((r, i) => (
                               <div key={i} className="flex items-center gap-3 p-3 bg-rose-50 border border-rose-100 rounded-xl">
-                                <div className="w-5 h-5 rounded-full bg-rose-100 flex items-center justify-center text-[10px] font-black text-rose-600 shrink-0">
+                                <div className="w-5 h-5 rounded-full bg-rose-100 flex items-center justify-center text-[10px] font-bold text-rose-600 shrink-0">
                                   {i+1}
                                 </div>
                                 <span className="text-sm text-slate-700 flex-1">{r.reason}</span>
-                                <span className="text-sm font-black text-rose-600 shrink-0">%{r.pct}</span>
+                                <span className="text-sm font-bold text-rose-600 shrink-0">%{r.pct}</span>
                               </div>
                             ))}
                           </div>

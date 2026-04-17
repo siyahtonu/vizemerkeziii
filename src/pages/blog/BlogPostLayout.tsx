@@ -90,7 +90,7 @@ export default function BlogPostLayout({ post, schema, children }: BlogPostLayou
             </span>
           </div>
 
-          <h1 className="text-2xl sm:text-3xl font-display font-black text-slate-900 leading-tight mb-4">
+          <h1 className="text-2xl sm:text-3xl font-display font-bold text-slate-900 leading-tight mb-4">
             {post.title}
           </h1>
           <p className="text-base text-slate-600 leading-relaxed">{post.description}</p>

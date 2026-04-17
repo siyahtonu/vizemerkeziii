@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { ArrowLeft, BookOpen, Clock, ChevronRight, Tag, Search, X } from 'lucide-react';
+import { ArrowLeft, BookOpen, Clock, ChevronRight, Tag, Search, X, Plane, Stamp, Globe, Shield, MapPin } from 'lucide-react';
+import { motion } from 'motion/react';
 import { SEO } from '../../components/SEO';
 import Footer from '../../components/Footer';
 
@@ -283,6 +284,14 @@ const SCHEMA = {
 // ── Kategoriler (arama filtresi için) ──────────────────────────────────────
 const ALL_CATEGORIES = ['Tümü', ...Array.from(new Set(BLOG_POSTS.map((p) => p.category)))];
 
+// ── Visa Stats Section (scroll-triggered) ───────────────────────────────────
+const VISA_STATS = [
+  { icon: Globe, value: '27', label: 'Schengen Ülkesi', suffix: '' },
+  { icon: Shield, value: '52K', label: 'Profil Analiz Edildi', suffix: '+' },
+  { icon: Plane, value: '26', label: 'Ülke Rehberi', suffix: '' },
+  { icon: Stamp, value: '98', label: 'Ret Kodu Analizi', suffix: '%' },
+];
+
 // ── Bileşen ─────────────────────────────────────────────────────────────────
 export default function BlogIndex() {
   const location = useLocation();
@@ -334,11 +343,44 @@ export default function BlogIndex() {
         </div>
       </div>
 
-      {/* ── Hero + Arama ── */}
-      <div className="bg-gradient-to-b from-brand-700 to-brand-600">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
+      {/* ── Hero + Arama (animated) ── */}
+      <div className="bg-gradient-to-b from-brand-700 to-brand-600 overflow-hidden relative">
+        {/* Decorative floating elements */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <motion.div
+            initial={{ opacity: 0, x: -40 }}
+            animate={{ opacity: 0.06, x: 0 }}
+            transition={{ duration: 1.2, delay: 0.5 }}
+            className="absolute top-8 left-[10%] text-white"
+          >
+            <Plane className="w-16 h-16 rotate-[-20deg]" />
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 0.05, y: 0 }}
+            transition={{ duration: 1, delay: 0.8 }}
+            className="absolute bottom-12 right-[8%] text-white"
+          >
+            <Globe className="w-24 h-24" />
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 0.04, scale: 1 }}
+            transition={{ duration: 1, delay: 1 }}
+            className="absolute top-1/2 right-[25%] text-white"
+          >
+            <Stamp className="w-20 h-20 rotate-12" />
+          </motion.div>
+        </div>
+
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 relative z-10">
           {/* Badge */}
-          <div className="flex items-center gap-2 mb-5">
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="flex items-center gap-2 mb-5"
+          >
             <div className="w-8 h-8 bg-white/20 rounded-xl flex items-center justify-center">
               <BookOpen className="w-4 h-4 text-white" />
             </div>
@@ -348,18 +390,33 @@ export default function BlogIndex() {
             <span className="ml-auto text-white/60 text-xs">
               {BLOG_POSTS.length} yazı
             </span>
-          </div>
+          </motion.div>
 
-          <h1 className="text-3xl sm:text-4xl font-display font-black text-white mb-2 leading-tight">
+          <motion.h1
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="text-3xl sm:text-4xl font-display font-bold text-white mb-2 leading-tight"
+          >
             Vize Rehberleri & İpuçları
-          </h1>
-          <p className="text-brand-100 text-base max-w-2xl leading-relaxed mb-8">
+          </motion.h1>
+          <motion.p
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.15 }}
+            className="text-brand-100 text-base max-w-2xl leading-relaxed mb-8"
+          >
             Schengen, ABD, Almanya ve daha fazlası için güncel rehberler.
             Belge listeleri, ret sebepleri, başarılı başvuru stratejileri.
-          </p>
+          </motion.p>
 
-          {/* ── Arama kutusu — büyük, belirgin ── */}
-          <div className="relative max-w-2xl">
+          {/* ── Arama kutusu ── */}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="relative max-w-2xl"
+          >
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none" />
             <input
               type="search"
@@ -382,11 +439,16 @@ export default function BlogIndex() {
                 ⌘K
               </div>
             )}
-          </div>
+          </motion.div>
 
-          {/* Hızlı etiketler — query yokken göster */}
+          {/* Hızlı etiketler */}
           {!query && (
-            <div className="flex flex-wrap gap-2 mt-3">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+              className="flex flex-wrap gap-2 mt-3"
+            >
               <span className="text-xs text-white/50 self-center mr-1">Popüler:</span>
               {['Schengen', 'Almanya', 'banka ekstresi', 'niyet mektubu', 'ret itirazı', 'randevu'].map(tag => (
                 <button
@@ -397,12 +459,40 @@ export default function BlogIndex() {
                   {tag}
                 </button>
               ))}
-            </div>
+            </motion.div>
           )}
         </div>
       </div>
 
-      {/* ── Kategori filtreleri (kendi satırında, sticky) ── */}
+      {/* ── Visa Stats Strip (scroll-triggered) ── */}
+      <div className="bg-white border-b border-slate-200">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-8">
+            {VISA_STATS.map((stat, i) => (
+              <motion.div
+                key={stat.label}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: '-40px' }}
+                transition={{ duration: 0.4, delay: i * 0.08 }}
+                className="flex items-center gap-3"
+              >
+                <div className="w-10 h-10 rounded-xl bg-brand-50 flex items-center justify-center shrink-0">
+                  <stat.icon className="w-5 h-5 text-brand-600" />
+                </div>
+                <div>
+                  <div className="text-lg font-bold text-slate-900 font-mono tabular-nums">
+                    {stat.value}{stat.suffix}
+                  </div>
+                  <div className="text-xs text-slate-500">{stat.label}</div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ── Kategori filtreleri (sticky) ── */}
       <div className="sticky top-0 z-10 bg-white border-b border-slate-200 shadow-sm">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
           <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide pb-0.5">
@@ -452,7 +542,11 @@ export default function BlogIndex() {
         )}
 
         {filtered.length === 0 ? (
-          <div className="text-center py-16">
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center py-16"
+          >
             <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-5">
               <Search className="w-7 h-7 text-slate-400" />
             </div>
@@ -460,7 +554,6 @@ export default function BlogIndex() {
             <p className="text-slate-500 text-sm max-w-xs mx-auto mb-5">
               Farklı anahtar kelimeler deneyin veya popüler konulara göz atın.
             </p>
-            {/* Öneri etiketleri */}
             <div className="flex flex-wrap justify-center gap-2 mb-6">
               {['Schengen', 'Almanya', 'ABD', 'banka', 'niyet mektubu', 'ret itirazı'].map(t => (
                 <button
@@ -478,67 +571,144 @@ export default function BlogIndex() {
             >
               Tüm Yazıları Göster
             </button>
-          </div>
+          </motion.div>
         ) : (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {filtered.map((post) => (
-              <Link
+            {filtered.map((post, idx) => (
+              <motion.div
                 key={post.slug}
-                to={`/blog/${post.slug}`}
-                className="group bg-white rounded-2xl border border-slate-200 hover:border-brand-300 hover:shadow-lg transition-all duration-200 overflow-hidden flex flex-col"
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: '-60px' }}
+                transition={{ duration: 0.4, delay: (idx % 3) * 0.08 }}
               >
-                {/* Kategori bandı */}
-                <div className="h-1.5 bg-brand-600 w-full" />
+                <Link
+                  to={`/blog/${post.slug}`}
+                  className="group bg-white rounded-2xl border border-slate-200 hover:border-brand-300 hover:shadow-lg transition-all duration-200 overflow-hidden flex flex-col h-full"
+                >
+                  {/* Kategori bandı */}
+                  <div className="h-1.5 bg-brand-600 w-full" />
 
-                <div className="p-6 flex flex-col flex-1">
-                  {/* Kategori + okuma süresi */}
-                  <div className="flex items-center justify-between mb-3">
-                    <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full ${categoryColor(post.category)}`}>
-                      <Tag className="w-3 h-3" />
-                      {post.category}
-                    </span>
-                    <span className="flex items-center gap-1 text-xs text-slate-400">
-                      <Clock className="w-3.5 h-3.5" />
-                      {post.readingTime} dk
-                    </span>
-                  </div>
-
-                  {/* Başlık */}
-                  <h2 className="text-base font-bold text-slate-900 group-hover:text-brand-700 transition-colors leading-snug mb-2 flex-1">
-                    {post.title}
-                  </h2>
-
-                  {/* Açıklama */}
-                  <p className="text-sm text-slate-500 leading-relaxed line-clamp-3 mb-4">
-                    {post.description}
-                  </p>
-
-                  {/* Etiketler */}
-                  {post.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mb-3">
-                      {post.tags.slice(0, 3).map((tag) => (
-                        <button
-                          key={tag}
-                          onClick={(e) => { e.preventDefault(); setQuery(tag); setActiveCategory('Tümü'); }}
-                          className="text-[10px] px-2 py-0.5 bg-slate-50 border border-slate-200 text-slate-500 rounded-full hover:bg-brand-50 hover:text-brand-700 hover:border-brand-200 transition-colors"
-                        >
-                          #{tag}
-                        </button>
-                      ))}
+                  <div className="p-6 flex flex-col flex-1">
+                    {/* Kategori + okuma süresi */}
+                    <div className="flex items-center justify-between mb-3">
+                      <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full ${categoryColor(post.category)}`}>
+                        <Tag className="w-3 h-3" />
+                        {post.category}
+                      </span>
+                      <span className="flex items-center gap-1 text-xs text-slate-400">
+                        <Clock className="w-3.5 h-3.5" />
+                        {post.readingTime} dk
+                      </span>
                     </div>
-                  )}
 
-                  {/* Alt satır: tarih + oku */}
-                  <div className="flex items-center justify-between pt-3 border-t border-slate-100 mt-auto">
-                    <span className="text-xs text-slate-400">{formatDate(post.date)}</span>
-                    <span className="flex items-center gap-1 text-xs font-semibold text-brand-600 group-hover:gap-2 transition-all">
-                      Oku <ChevronRight className="w-3.5 h-3.5" />
-                    </span>
+                    {/* Başlık */}
+                    <h2 className="text-base font-bold text-slate-900 group-hover:text-brand-700 transition-colors leading-snug mb-2 flex-1">
+                      {post.title}
+                    </h2>
+
+                    {/* Açıklama */}
+                    <p className="text-sm text-slate-500 leading-relaxed line-clamp-3 mb-4">
+                      {post.description}
+                    </p>
+
+                    {/* Etiketler */}
+                    {post.tags.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mb-3">
+                        {post.tags.slice(0, 3).map((tag) => (
+                          <button
+                            key={tag}
+                            onClick={(e) => { e.preventDefault(); setQuery(tag); setActiveCategory('Tümü'); }}
+                            className="text-[10px] px-2 py-0.5 bg-slate-50 border border-slate-200 text-slate-500 rounded-full hover:bg-brand-50 hover:text-brand-700 hover:border-brand-200 transition-colors"
+                          >
+                            #{tag}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Alt satır: tarih + oku */}
+                    <div className="flex items-center justify-between pt-3 border-t border-slate-100 mt-auto">
+                      <span className="text-xs text-slate-400">{formatDate(post.date)}</span>
+                      <span className="flex items-center gap-1 text-xs font-semibold text-brand-600 group-hover:gap-2 transition-all">
+                        Oku <ChevronRight className="w-3.5 h-3.5" />
+                      </span>
+                    </div>
                   </div>
-                </div>
-              </Link>
+                </Link>
+              </motion.div>
             ))}
           </div>
+        )}
+
+        {/* ── Visa-themed CTA section (scroll-triggered) ── */}
+        {filtered.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 32 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-80px' }}
+            transition={{ duration: 0.5 }}
+            className="mt-16 relative overflow-hidden rounded-2xl bg-gradient-to-br from-brand-600 to-brand-700 p-8 sm:p-12 text-center"
+          >
+            {/* Decorative elements */}
+            <div className="absolute inset-0 pointer-events-none overflow-hidden">
+              <motion.div
+                initial={{ opacity: 0, x: -60 }}
+                whileInView={{ opacity: 0.08, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.8, delay: 0.3 }}
+                className="absolute -left-4 top-1/2 -translate-y-1/2"
+              >
+                <Plane className="w-32 h-32 text-white rotate-[-15deg]" />
+              </motion.div>
+              <motion.div
+                initial={{ opacity: 0, scale: 0.6 }}
+                whileInView={{ opacity: 0.06, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.8, delay: 0.5 }}
+                className="absolute -right-6 -bottom-6"
+              >
+                <Globe className="w-40 h-40 text-white" />
+              </motion.div>
+              <motion.div
+                initial={{ opacity: 0, rotate: -30 }}
+                whileInView={{ opacity: 0.07, rotate: 12 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: 0.4 }}
+                className="absolute right-[20%] top-4"
+              >
+                <Stamp className="w-16 h-16 text-white" />
+              </motion.div>
+            </div>
+
+            <div className="relative z-10">
+              <motion.div
+                initial={{ opacity: 0, y: 12 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4, delay: 0.2 }}
+              >
+                <div className="inline-flex items-center gap-2 bg-white/15 rounded-full px-4 py-1.5 mb-4">
+                  <MapPin className="w-3.5 h-3.5 text-white/80" />
+                  <span className="text-xs font-medium text-white/90">Profilini analiz et</span>
+                </div>
+                <h3 className="text-xl sm:text-2xl font-display font-bold text-white mb-3">
+                  Vize başvurun ne kadar güçlü?
+                </h3>
+                <p className="text-sm text-white/70 max-w-md mx-auto mb-6 leading-relaxed">
+                  AI motorumuz profilini 6 boyutta analiz eder, zayıf noktalarını tespit eder ve
+                  skor artırma stratejileri önerir.
+                </p>
+                <Link
+                  to="/"
+                  className="inline-flex items-center gap-2 bg-white text-brand-700 font-semibold px-6 py-3 rounded-xl text-sm hover:bg-brand-50 transition-colors shadow-lg"
+                >
+                  Ücretsiz Analiz Yap
+                  <ChevronRight className="w-4 h-4" />
+                </Link>
+              </motion.div>
+            </div>
+          </motion.div>
         )}
       </div>
 

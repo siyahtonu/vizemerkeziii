@@ -23,7 +23,7 @@ export function TacticsStep({ onNavigate }: Props) {
                     <ArrowLeft className="w-6 h-6" />
                   </button>
                   <div>
-                    <h2 className="text-4xl font-black text-slate-900">Kabul Oranı Taktikleri</h2>
+                    <h2 className="text-4xl font-bold text-slate-900">Kabul Oranı Taktikleri</h2>
                     <p className="text-slate-500 text-lg">Sahadan 7 gizli taktik ile başvurunuzu profesyonelleştirin.</p>
                   </div>
                 </div>
@@ -84,7 +84,7 @@ export function TacticsStep({ onNavigate }: Props) {
                         <tactic.icon className="w-8 h-8" />
                       </div>
                       <div className="space-y-2">
-                        <h3 className="font-black text-xl text-slate-900">{tactic.title}</h3>
+                        <h3 className="font-bold text-xl text-slate-900">{tactic.title}</h3>
                         <p className="text-slate-500 leading-relaxed">{tactic.desc}</p>
                       </div>
                     </motion.div>
@@ -93,7 +93,7 @@ export function TacticsStep({ onNavigate }: Props) {
   
                 <div className="p-10 bg-amber-600 rounded-[3rem] text-white flex flex-col lg:flex-row items-center justify-between gap-8 shadow-2xl shadow-amber-900/20">
                   <div className="space-y-2 text-center lg:text-left">
-                    <h4 className="text-2xl font-black">Bu taktikleri uyguladınız mı?</h4>
+                    <h4 className="text-2xl font-bold">Bu taktikleri uyguladınız mı?</h4>
                     <p className="text-amber-100 text-lg">Tüm adımları tamamladıysanız başvurunuz hazır demektir.</p>
                   </div>
                   <button 

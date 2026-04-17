@@ -10,7 +10,7 @@ const CerezPolitikasi: React.FC = () => (
           <ArrowLeft className="w-5 h-5" /> Ana Sayfa
         </Link>
         <div className="h-4 w-px bg-slate-300" />
-        <div className="flex items-center gap-2 text-slate-700 font-display font-black text-lg">
+        <div className="flex items-center gap-2 text-slate-700 font-display font-bold text-lg">
           <ShieldCheck className="w-5 h-5 text-brand-600" /> VizeAkıl
         </div>
       </div>
@@ -18,7 +18,7 @@ const CerezPolitikasi: React.FC = () => (
 
     <main className="max-w-4xl mx-auto px-4 sm:px-6 py-12 space-y-8 text-slate-700">
       <div>
-        <h1 className="text-3xl font-black text-slate-900 mb-2">Çerez Politikası</h1>
+        <h1 className="text-3xl font-bold text-slate-900 mb-2">Çerez Politikası</h1>
         <p className="text-sm text-slate-400">Son güncelleme: Nisan 2026</p>
       </div>
 

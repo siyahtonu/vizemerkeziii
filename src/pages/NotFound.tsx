@@ -34,7 +34,7 @@ export default function NotFound() {
 
           {/* Animated 404 number */}
           <div className="relative mb-8 inline-block">
-            <div className="text-[120px] sm:text-[160px] font-black text-slate-100 leading-none select-none">
+            <div className="text-[120px] sm:text-[160px] font-bold text-slate-100 leading-none select-none">
               404
             </div>
             <div className="absolute inset-0 flex items-center justify-center">
@@ -44,7 +44,7 @@ export default function NotFound() {
             </div>
           </div>
 
-          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 mb-3">
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-3">
             Sayfa bulunamadı
           </h1>
           <p className="text-slate-500 text-base leading-relaxed mb-8">

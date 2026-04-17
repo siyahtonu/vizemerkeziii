@@ -166,7 +166,7 @@ export function AnalysisReportModal({
           {/* ── Modal başlık ────────────────────────────────────────── */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 no-print sticky top-0 bg-white rounded-t-2xl z-10">
             <div>
-              <h2 className="font-black text-slate-900 text-lg">Kişisel Vize Analiz Raporu</h2>
+              <h2 className="font-bold text-slate-900 text-lg">Kişisel Vize Analiz Raporu</h2>
               <p className="text-xs text-slate-400 mt-0.5">Tarayıcı yazdır menüsüyle PDF olarak kaydedin</p>
             </div>
             <div className="flex items-center gap-3">
@@ -190,8 +190,8 @@ export function AnalysisReportModal({
             <div className="border-b-2 border-indigo-600 pb-6">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <div className="text-xs font-black text-indigo-600 uppercase tracking-widest mb-2">VİZEAKIL — KİŞİSEL ANALİZ RAPORU</div>
-                  <h1 className="text-2xl font-black text-slate-900 leading-tight">
+                  <div className="text-xs font-bold text-indigo-600 uppercase tracking-widest mb-2">VİZEAKIL — KİŞİSEL ANALİZ RAPORU</div>
+                  <h1 className="text-2xl font-bold text-slate-900 leading-tight">
                     {FLAG[profile.targetCountry] || '🌍'} {profile.targetCountry || 'Hedef Ülke'} Vize Başvuru Analizi
                   </h1>
                   <p className="text-sm text-slate-500 mt-1">
@@ -200,14 +200,14 @@ export function AnalysisReportModal({
                 </div>
                 <div className="text-right shrink-0">
                   <div
-                    className="text-4xl font-black font-mono"
+                    className="text-4xl font-bold font-mono"
                     style={{ color: scoreColor(targetScore) }}
                   >
                     %{targetScore}
                   </div>
                   <div className="text-xs font-bold text-slate-500 mt-1">Başarı Skoru</div>
                   <div
-                    className="text-xs font-black mt-1 px-2 py-0.5 rounded-full inline-block"
+                    className="text-xs font-bold mt-1 px-2 py-0.5 rounded-full inline-block"
                     style={{ backgroundColor: scoreColor(targetScore) + '20', color: scoreColor(targetScore) }}
                   >
                     {scoreLabel(targetScore)}
@@ -232,7 +232,7 @@ export function AnalysisReportModal({
 
             {/* ── 2. YÜRÜTÜCÜ ÖZET ───────────────────────────────────── */}
             <section>
-              <h2 className="text-base font-black text-slate-900 uppercase tracking-wide mb-4 flex items-center gap-2">
+              <h2 className="text-base font-bold text-slate-900 uppercase tracking-wide mb-4 flex items-center gap-2">
                 <span className="w-1 h-5 bg-indigo-600 rounded-full inline-block" />
                 Yürütücü Özet
               </h2>
@@ -240,7 +240,7 @@ export function AnalysisReportModal({
                 {/* Genel durum */}
                 <div className="rounded-xl border border-slate-200 p-4">
                   <div className="text-xs font-bold text-slate-400 uppercase mb-1">Genel Durum</div>
-                  <div className="font-black text-slate-900">{scoreLabel(targetScore)}</div>
+                  <div className="font-bold text-slate-900">{scoreLabel(targetScore)}</div>
                   <div className="text-xs text-slate-500 mt-1">
                     {targetScore >= 82
                       ? 'Profiliniz başvuruya hazır. Belgelerinizi hazırlayın.'
@@ -252,7 +252,7 @@ export function AnalysisReportModal({
                 {/* En iyi ülke */}
                 <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
                   <div className="text-xs font-bold text-emerald-600 uppercase mb-1">En Uygun Ülke</div>
-                  <div className="font-black text-slate-900">{bestCountry.flag} {bestCountry.country}</div>
+                  <div className="font-bold text-slate-900">{bestCountry.flag} {bestCountry.country}</div>
                   <div className="text-xs text-slate-500 mt-1">
                     %{bestCountry.score} tahmini onay · %{bestCountry.rejRate} ret oranı · {bestCountry.waitDays} gün bekleme
                   </div>
@@ -262,7 +262,7 @@ export function AnalysisReportModal({
                   <div className="text-xs font-bold text-rose-600 uppercase mb-1">
                     {topRisks.length > 0 ? 'Kritik Risk' : 'Risk Durumu'}
                   </div>
-                  <div className="font-black text-slate-900">
+                  <div className="font-bold text-slate-900">
                     {topRisks.length > 0 ? topRisks[0].name : 'Risk Tespit Edilmedi'}
                   </div>
                   <div className="text-xs text-slate-500 mt-1">
@@ -287,7 +287,7 @@ export function AnalysisReportModal({
 
             {/* ── 3. PROFİL BOYUT ANALİZİ ───────────────────────────── */}
             <section>
-              <h2 className="text-base font-black text-slate-900 uppercase tracking-wide mb-4 flex items-center gap-2">
+              <h2 className="text-base font-bold text-slate-900 uppercase tracking-wide mb-4 flex items-center gap-2">
                 <span className="w-1 h-5 bg-indigo-600 rounded-full inline-block" />
                 6 Boyutlu Profil Analizi
               </h2>
@@ -300,15 +300,15 @@ export function AnalysisReportModal({
                     <div key={key} className="rounded-xl border border-slate-200 p-4">
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2">
-                          <span className="font-black text-slate-900 text-sm">{DIMENSION_LABELS[key]}</span>
+                          <span className="font-bold text-slate-900 text-sm">{DIMENSION_LABELS[key]}</span>
                           <span
-                            className="text-[10px] font-black px-2 py-0.5 rounded-full"
+                            className="text-[10px] font-bold px-2 py-0.5 rounded-full"
                             style={{ backgroundColor: color + '20', color }}
                           >
                             {status}
                           </span>
                         </div>
-                        <span className="text-lg font-black font-mono" style={{ color }}>%{score}</span>
+                        <span className="text-lg font-bold font-mono" style={{ color }}>%{score}</span>
                       </div>
                       <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden mb-2">
                         <div className="h-full rounded-full" style={{ width: `${score}%`, backgroundColor: color }} />
@@ -328,7 +328,7 @@ export function AnalysisReportModal({
 
             {/* ── 4. ÜLKE BAŞARI SIRALAMASI ─────────────────────────────── */}
             <section className="print-page-break">
-              <h2 className="text-base font-black text-slate-900 uppercase tracking-wide mb-4 flex items-center gap-2">
+              <h2 className="text-base font-bold text-slate-900 uppercase tracking-wide mb-4 flex items-center gap-2">
                 <Globe className="w-4 h-4 text-indigo-600" />
                 Profilinize Göre Ülke Başarı Sıralaması
               </h2>
@@ -340,12 +340,12 @@ export function AnalysisReportModal({
                 <table className="w-full text-sm border-collapse">
                   <thead>
                     <tr className="bg-slate-50 border-b border-slate-200">
-                      <th className="text-left px-3 py-2.5 text-xs font-black text-slate-500 uppercase w-6">#</th>
-                      <th className="text-left px-3 py-2.5 text-xs font-black text-slate-500 uppercase">Ülke</th>
-                      <th className="text-center px-3 py-2.5 text-xs font-black text-slate-500 uppercase">Başarı Tahmini</th>
-                      <th className="text-center px-3 py-2.5 text-xs font-black text-slate-500 uppercase">Ret Oranı</th>
-                      <th className="text-center px-3 py-2.5 text-xs font-black text-slate-500 uppercase">Zorluk</th>
-                      <th className="text-center px-3 py-2.5 text-xs font-black text-slate-500 uppercase">Bekleme</th>
+                      <th className="text-left px-3 py-2.5 text-xs font-bold text-slate-500 uppercase w-6">#</th>
+                      <th className="text-left px-3 py-2.5 text-xs font-bold text-slate-500 uppercase">Ülke</th>
+                      <th className="text-center px-3 py-2.5 text-xs font-bold text-slate-500 uppercase">Başarı Tahmini</th>
+                      <th className="text-center px-3 py-2.5 text-xs font-bold text-slate-500 uppercase">Ret Oranı</th>
+                      <th className="text-center px-3 py-2.5 text-xs font-bold text-slate-500 uppercase">Zorluk</th>
+                      <th className="text-center px-3 py-2.5 text-xs font-bold text-slate-500 uppercase">Bekleme</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -356,19 +356,19 @@ export function AnalysisReportModal({
                           key={c.country}
                           className={`border-b border-slate-100 last:border-0 ${isTarget ? 'bg-indigo-50' : i % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'}`}
                         >
-                          <td className="px-3 py-2.5 text-xs font-black text-slate-400">{i + 1}</td>
+                          <td className="px-3 py-2.5 text-xs font-bold text-slate-400">{i + 1}</td>
                           <td className="px-3 py-2.5">
                             <div className="flex items-center gap-2">
                               <span className="text-base">{c.flag}</span>
                               <span className={`font-bold text-sm ${isTarget ? 'text-indigo-700' : 'text-slate-800'}`}>
                                 {c.country}
-                                {isTarget && <span className="ml-1 text-[9px] font-black text-indigo-600 bg-indigo-100 px-1.5 py-0.5 rounded-full">Seçili</span>}
+                                {isTarget && <span className="ml-1 text-[9px] font-bold text-indigo-600 bg-indigo-100 px-1.5 py-0.5 rounded-full">Seçili</span>}
                               </span>
                             </div>
                           </td>
                           <td className="px-3 py-2.5 text-center">
                             <span
-                              className="font-black text-sm"
+                              className="font-bold text-sm"
                               style={{ color: scoreColor(c.score) }}
                             >
                               %{c.score}
@@ -382,7 +382,7 @@ export function AnalysisReportModal({
                           </td>
                           <td className="px-3 py-2.5 text-center">
                             <span
-                              className="text-[10px] font-black px-2 py-0.5 rounded-full"
+                              className="text-[10px] font-bold px-2 py-0.5 rounded-full"
                               style={{ backgroundColor: DIFF_COLOR[c.difficulty] + '20', color: DIFF_COLOR[c.difficulty] }}
                             >
                               {c.difficulty}
@@ -402,7 +402,7 @@ export function AnalysisReportModal({
 
             {/* ── 5. RİSK FAKTÖRLERİ ────────────────────────────────────── */}
             <section>
-              <h2 className="text-base font-black text-slate-900 uppercase tracking-wide mb-4 flex items-center gap-2">
+              <h2 className="text-base font-bold text-slate-900 uppercase tracking-wide mb-4 flex items-center gap-2">
                 <AlertTriangle className="w-4 h-4 text-rose-500" />
                 Tespit Edilen Risk Faktörleri ({topRisks.length})
               </h2>
@@ -419,14 +419,14 @@ export function AnalysisReportModal({
                   {topRisks.map((risk, i) => (
                     <div key={i} className="rounded-xl border border-rose-200 bg-rose-50 p-4">
                       <div className="flex items-start gap-3">
-                        <div className="w-6 h-6 rounded-lg bg-rose-500 text-white text-xs font-black flex items-center justify-center shrink-0 mt-0.5">
+                        <div className="w-6 h-6 rounded-lg bg-rose-500 text-white text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">
                           {i + 1}
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
-                            <span className="font-black text-rose-800 text-sm">{risk.name}</span>
+                            <span className="font-bold text-rose-800 text-sm">{risk.name}</span>
                             {risk.legalCode && (
-                              <span className="text-[9px] font-black bg-rose-200 text-rose-700 px-1.5 py-0.5 rounded-full uppercase">
+                              <span className="text-[9px] font-bold bg-rose-200 text-rose-700 px-1.5 py-0.5 rounded-full uppercase">
                                 {risk.legalCode}
                               </span>
                             )}
@@ -448,19 +448,19 @@ export function AnalysisReportModal({
             {/* ── 6. MEVSİMSEL ZAMANLAMA ─────────────────────────────────── */}
             {timing && (
               <section>
-                <h2 className="text-base font-black text-slate-900 uppercase tracking-wide mb-4 flex items-center gap-2">
+                <h2 className="text-base font-bold text-slate-900 uppercase tracking-wide mb-4 flex items-center gap-2">
                   <span className="w-1 h-5 bg-amber-500 rounded-full inline-block" />
                   Mevsimsel Zamanlama Analizi
                 </h2>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div className="rounded-xl border border-slate-200 p-4">
                     <div className="text-xs font-bold text-slate-400 uppercase mb-1">Güncel Pencere</div>
-                    <div className="font-black text-slate-900 text-lg">{timing.currentWindowScore >= 0.65 ? 'Uygun' : 'Dikkatli'}</div>
+                    <div className="font-bold text-slate-900 text-lg">{timing.currentWindowScore >= 0.65 ? 'Uygun' : 'Dikkatli'}</div>
                     <div className="text-xs text-slate-500 mt-1">Pencere skoru: {(timing.currentWindowScore * 100).toFixed(0)}%</div>
                   </div>
                   <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
                     <div className="text-xs font-bold text-emerald-600 uppercase mb-1">Optimum Ay</div>
-                    <div className="font-black text-slate-900">
+                    <div className="font-bold text-slate-900">
                       {timing.recommendation === 'apply_now' ? 'Şu an uygun' :
                        timing.targetMonthName ?? (timing.bestWindowMonth
                          ? ['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'][timing.bestWindowMonth - 1]
@@ -470,7 +470,7 @@ export function AnalysisReportModal({
                   </div>
                   <div className="rounded-xl border border-slate-200 p-4">
                     <div className="text-xs font-bold text-slate-400 uppercase mb-1">Tahmini Randevu Bekleme</div>
-                    <div className="font-black text-slate-900">{timing.appointmentWaitEst ?? WAIT_DAYS[profile.targetCountry ?? ''] ?? 14} Gün</div>
+                    <div className="font-bold text-slate-900">{timing.appointmentWaitEst ?? WAIT_DAYS[profile.targetCountry ?? ''] ?? 14} Gün</div>
                     <div className="text-xs text-slate-500 mt-1">Mevsimsel talep dahil tahmin</div>
                   </div>
                 </div>
@@ -489,7 +489,7 @@ export function AnalysisReportModal({
 
             {/* ── 7. ÖNCELİKLİ AKSİYON PLANI ───────────────────────────── */}
             <section>
-              <h2 className="text-base font-black text-slate-900 uppercase tracking-wide mb-4 flex items-center gap-2">
+              <h2 className="text-base font-bold text-slate-900 uppercase tracking-wide mb-4 flex items-center gap-2">
                 <TrendingUp className="w-4 h-4 text-indigo-600" />
                 Öncelikli Aksiyon Planı
               </h2>
@@ -502,7 +502,7 @@ export function AnalysisReportModal({
                 <div className="space-y-2">
                   {actionItems.slice(0, 7).map((item, i) => (
                     <div key={i} className="flex items-start gap-3 rounded-xl border border-slate-200 p-3">
-                      <div className={`shrink-0 w-8 h-8 rounded-xl flex items-center justify-center text-xs font-black text-white ${
+                      <div className={`shrink-0 w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold text-white ${
                         item.gain === '⚠️' ? 'bg-rose-500' : 'bg-indigo-600'
                       }`}>
                         {item.gain === '⚠️' ? '!' : item.gain}
@@ -519,7 +519,7 @@ export function AnalysisReportModal({
 
             {/* ── 8. ALGORİTMİK NOTLAR ───────────────────────────────────── */}
             <section className="border-t border-slate-200 pt-6">
-              <h2 className="text-base font-black text-slate-900 uppercase tracking-wide mb-4 flex items-center gap-2">
+              <h2 className="text-base font-bold text-slate-900 uppercase tracking-wide mb-4 flex items-center gap-2">
                 <span className="w-1 h-5 bg-slate-400 rounded-full inline-block" />
                 Algoritmik Metedoloji
               </h2>

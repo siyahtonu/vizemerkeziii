@@ -135,7 +135,7 @@ export function CountryCompareWidget({ defaultLeft = 'Almanya', defaultRight = '
               ))}
             </select>
           </div>
-          <div className="text-slate-400 font-black text-sm mt-4">VS</div>
+          <div className="text-slate-400 font-bold text-sm mt-4">VS</div>
           <div className="flex-1">
             <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">2. Ülke</label>
             <select
@@ -154,13 +154,13 @@ export function CountryCompareWidget({ defaultLeft = 'Almanya', defaultRight = '
         <div className="flex items-center gap-2 text-center">
           <div className={`flex-1 py-2 rounded-xl border-2 transition-all ${recommend === 'left' ? 'border-emerald-400 bg-emerald-50' : 'border-slate-100 bg-slate-50'}`}>
             <div className="text-2xl">{L.flag}</div>
-            <div className="text-xs font-black text-slate-800 mt-0.5">{left}</div>
+            <div className="text-xs font-bold text-slate-800 mt-0.5">{left}</div>
             <div className="text-[10px] text-slate-400">{L.visaType}</div>
           </div>
-          <div className="text-slate-300 font-black text-sm">VS</div>
+          <div className="text-slate-300 font-bold text-sm">VS</div>
           <div className={`flex-1 py-2 rounded-xl border-2 transition-all ${recommend === 'right' ? 'border-emerald-400 bg-emerald-50' : 'border-slate-100 bg-slate-50'}`}>
             <div className="text-2xl">{R.flag}</div>
-            <div className="text-xs font-black text-slate-800 mt-0.5">{right}</div>
+            <div className="text-xs font-bold text-slate-800 mt-0.5">{right}</div>
             <div className="text-[10px] text-slate-400">{R.visaType}</div>
           </div>
         </div>
@@ -208,7 +208,7 @@ export function CountryCompareWidget({ defaultLeft = 'Almanya', defaultRight = '
 
         {/* Recommendation */}
         <div className={`rounded-xl p-3 text-center ${recommend === 'left' ? 'bg-emerald-50 border border-emerald-100' : 'bg-emerald-50 border border-emerald-100'}`}>
-          <p className="text-xs font-black text-emerald-700">
+          <p className="text-xs font-bold text-emerald-700">
             {recommend === 'left' ? `← ${L.flag} ${left}` : `${R.flag} ${right} →`} önce başvur
           </p>
           <p className="text-[10px] text-emerald-600 mt-0.5">
