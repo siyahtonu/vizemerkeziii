@@ -1,198 +1,295 @@
 import React from 'react';
-import { CheckCircle2, Info, Calendar, AlertTriangle, Calculator } from 'lucide-react';
+import { CheckCircle2, Info, Calendar, AlertTriangle, Calculator, XCircle, Sparkles } from 'lucide-react';
 import BlogPostLayout from './BlogPostLayout';
 import { BlogPost } from './BlogIndex';
 
 export const POST: BlogPost = {
   slug: '90-180-gun-kurali-nasil-hesaplanir',
-  title: '90/180 Gün Kuralı Nasıl Hesaplanır? Schengen 2026 Rehberi',
-  description: 'Schengen 90/180 gün kuralı nedir, EES sistemi ile otomatik hesaplama, aşım durumunda cezalar ve kalan günlerinizi nasıl takip edersiniz.',
+  title: '90/180 Gün Kuralı Nasıl Hesaplanır? Schengen Kalış Süresi Rehberi',
+  description: 'Schengen vizesi ile en fazla kaç gün kalabilirsiniz? 90/180 gün kuralı nasıl hesaplanır, EES sistemi, fazla kalma cezaları rehberi.',
   category: 'Schengen',
-  readingTime: 7,
+  readingTime: 9,
   date: '2026-04-17',
   tags: ['90/180 gün', 'Schengen', 'EES', 'vize süresi'],
 };
 
+const HESAP_ARACI_ADIMLARI = [
+  'Sayfaya girin',
+  '"Date of entry" ve "Date of exit" alanlarına tüm önceki Schengen girişlerinizi ve çıkışlarınızı girin',
+  '"Date of planned control" alanına planladığınız yeni seyahat tarihini girin',
+  '"Calculate" butonuna basın',
+  'Size kalabileceğiniz gün sayısı bildirilir',
+];
+
+const EES_AKIS = [
+  'Parmak iziniz alınır',
+  'Yüz fotoğrafınız çekilir',
+  'Pasaport bilgileriniz sisteme işlenir',
+  'Giriş/çıkış tarihleriniz otomatik kaydedilir',
+  '90/180 kuralı otomatik takip edilir',
+];
+
+const UZUN_SURELI_SECENEKLER = [
+  {
+    baslik: 'Ulusal Vize (D-Tipi)',
+    aciklama:
+      'Her Schengen ülkesi kendi ulusal vizesini verir. Bu vizeyle 90 günden uzun kalış mümkündür. Genellikle çalışma, eğitim, aile birleşimi gibi özel amaçlar içindir.',
+  },
+  {
+    baslik: 'İkamet İzni (Residence Permit)',
+    aciklama:
+      "Uzun vadeli oturum için ikamet izni gerekir. Her ülkenin kendi kuralları vardır. Örneğin Almanya Blue Card (çalışma), Fransa Long Stay Visa, İspanya Non-Lucrative Visa.",
+  },
+  {
+    baslik: 'Portekiz D7 Vizesi',
+    aciklama:
+      "Pasif gelirli (emekli, kira geliri vb.) Türk vatandaşlar için popüler seçenek. Aylık 870 € garantili gelir ile Portekiz'de yaşama hakkı verir.",
+  },
+  {
+    baslik: 'İspanya Dijital Nomad Vizesi',
+    aciklama:
+      'Uzaktan çalışan profesyoneller için. Aylık 2.646 € minimum gelir gerekir. 3 yıla kadar yenilenebilir.',
+  },
+];
+
+const CEZALAR = [
+  'Para cezası: 500-1.000 € arası (ülkeye göre değişir)',
+  "Schengen'e giriş yasağı: 1-3 yıl",
+  'SIS (Schengen Information System) kaydı: Tüm Schengen ülkelerine bildirilir',
+  'Gelecekteki vize başvurularında red riski: Ciddi şekilde artar',
+  'Sınır dışı edilme (deportasyon) durumunda havaalanı masrafları başvurucuya yüklenir',
+];
+
+const YANILGI_HATALAR = [
+  '"Başka ülkeye geçince sayaç sıfırlanır" yanılgısı — Schengen tek bir bölge olarak sayılır, ülke değiştirmek kalış süresini etkilemez',
+  '"90 gün çıktıktan sonra yine 90 gün girebilirim" yanılgısı — kaydırmalı sistem bunu engelleyebilir',
+  '"Pasaport damgası yoksa kayıt da yoktur" yanılgısı — EES ile tüm giriş-çıkışlar dijital kaydedilir',
+  '"Uçakla değil kara yolundan geçsem hesaba girmez" yanılgısı — tüm Schengen sınırlarında (kara, hava, deniz) aynı sistem işler',
+  'Avrupa Komisyonu hesap aracını kullanmadan seyahat planlamak',
+];
+
+const SCHENGEN_DISI = [
+  'İngiltere (Brexit sonrası ayrıldı)',
+  "İrlanda (hiç Schengen'e girmedi)",
+  'Bulgaristan, Romanya (kısmi Schengen — kara sınırları hariç Schengen)',
+  'Kıbrıs',
+  'Sırbistan, Kuzey Makedonya, Bosna Hersek, Arnavutluk, Karadağ, Kosova',
+  'Ukrayna, Moldova, Belarus',
+];
+
+const SSS = [
+  {
+    q: "Schengen'den 90 gün kaldıktan sonra ne zaman tekrar girebilirim?",
+    a: "Tam 90 gün kaldıysanız ve son giriş tarihiniz 1 Ocak ise, teorik olarak 3 Temmuz'da yeni 90 gün hakkınız tamamlanır. Ancak gerçek hesaplama kaydırmalı sistemdedir — Avrupa Komisyonu hesap aracını kullanın.",
+  },
+  {
+    q: '90/180 kuralı çok girişli vizeyi etkiler mi?',
+    a: 'Evet. 5 yıllık çok girişli vizeniz olsa bile 90/180 kuralına uymak zorundasınız. Vize sadece "Schengen\'e giriş hakkı" verir, sınırsız kalış değil.',
+  },
+  {
+    q: 'Hava durumu nedeniyle fazla kaldım, ceza alır mıyım?',
+    a: 'Uçuş iptalleri, doğal afetler gibi mücbir sebeplerle fazla kalma durumunda konsolosluktan uzatma alabilirsiniz. Uçak iptalinin belgesi (havayolu resmi yazısı) gereklidir.',
+  },
+  {
+    q: '90 gün üzerinde kaldım ama kimse fark etmedi, sorun var mı?',
+    a: 'Eskiden mümkündü, artık değil. EES sistemi dijital kayıt tutar. Bir sonraki Schengen başvurunuzda overstay geçmişiniz görünür ve büyük ihtimalle reddedilirsiniz.',
+  },
+  {
+    q: 'Türk vatandaşı olarak 90/180 kuralına tabi miyim?',
+    a: 'Evet, çünkü Türkiye vize gerektiren ülkeler listesindedir. Vizesiz ülkelerden gelen vatandaşlar (ABD, Kanada, Japonya) da 90/180 kuralına tabidir, sadece vize başvurusu yapmaz.',
+  },
+  {
+    q: '90 günden fazla kalmak isteyen tüm seçeneklerim neler?',
+    a: 'Ulusal vize (D-tipi), oturum izni, çalışma izni, öğrenci izni, emekli vizesi, dijital nomad vizesi, yatırımcı vizesi (Gold Visa), aile birleşimi — her biri farklı şartlar ve belgeler gerektirir.',
+  },
+];
+
 const SCHEMA = {
   '@context': 'https://schema.org',
-  '@type': 'Article',
-  headline: POST.title,
-  description: POST.description,
-  author: { '@type': 'Organization', name: 'VizeAkıl', url: 'https://vizeakil.com' },
-  publisher: { '@type': 'Organization', name: 'VizeAkıl' },
-  datePublished: POST.date,
-  dateModified: POST.date,
-  url: `https://vizeakil.com/blog/${POST.slug}`,
+  '@graph': [
+    {
+      '@type': 'Article',
+      headline: POST.title,
+      description: POST.description,
+      author: { '@type': 'Organization', name: 'VizeAkıl', url: 'https://vizeakil.com' },
+      publisher: { '@type': 'Organization', name: 'VizeAkıl' },
+      datePublished: POST.date,
+      dateModified: POST.date,
+      url: `https://vizeakil.com/blog/${POST.slug}`,
+    },
+    {
+      '@type': 'FAQPage',
+      mainEntity: SSS.map((item) => ({
+        '@type': 'Question',
+        name: item.q,
+        acceptedAnswer: { '@type': 'Answer', text: item.a },
+      })),
+    },
+  ],
 };
 
 export default function Kurali90180NasilHesaplanir() {
   return (
     <BlogPostLayout post={POST} schema={SCHEMA}>
       <p className="text-slate-700 leading-relaxed text-base mb-6">
-        Schengen bölgesine seyahat eden her Türk vatandaşının bilmesi gereken en kritik kural:
-        "Son 180 gün içinde maksimum 90 gün kalma" kuralıdır. Bu kural yanlış anlaşıldığında
-        vize sahibi olsanız bile sınırdan geri çevrilebilir, ileride Schengen yasağı alabilirsiniz.
-        2026'da aktive olan EES sistemi ile bu kural artık otomatik olarak takip ediliyor — hata
-        affedilmiyor. Bu rehber kuralın nasıl hesaplandığını, kalan günlerinizi nasıl öğrenebileceğinizi
-        ve aşım durumunda ne olacağını açıklar.
+        Schengen vizesinin en çok yanlış anlaşılan kuralı 90/180 gün kuralıdır. "3 ay kaldım, şimdi
+        3 ay çıkıp yine girebilirim" diye düşünen binlerce kişi var — ama bu yanlıştır. 90/180
+        kuralı, kaydırmalı bir sistem olarak çalışır ve 2025-2026'da devreye giren EES (Entry/Exit
+        System) ile artık otomatik takip ediliyor. Bu rehber, kuralı doğru anlamanızı ve ceza
+        yemeden seyahat etmenizi sağlar.
       </p>
 
-      <div className="bg-brand-50 border border-brand-200 rounded-xl p-5 mb-8 flex gap-3">
-        <Calculator className="w-5 h-5 text-brand-600 shrink-0 mt-0.5" />
-        <p className="text-brand-900 text-sm leading-relaxed">
-          <strong>Temel formül:</strong> "Bugünün tarihinden geriye doğru 180 gün geri gidin, bu
-          pencerede Schengen'de toplam kaldığınız gün sayısı 90'ı geçemez." Bu kayan (rolling)
-          bir penceredir — her gün yeniden hesaplanır.
+      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">90/180 Kuralı Nedir?</h2>
+      <p className="text-slate-700 leading-relaxed mb-4">
+        Schengen kuralı şu şekilde özetlenir: Herhangi bir 180 günlük dönem içinde, toplam en
+        fazla 90 gün Schengen bölgesinde kalabilirsiniz. Bu 90 gün bir tek seyahatte
+        tüketilebileceği gibi, birkaç seyahate de bölünebilir.
+      </p>
+      <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-8 flex gap-3">
+        <XCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+        <p className="text-red-900 text-sm leading-relaxed">
+          <strong>Yanlış anlama:</strong> "90 gün kaldım, 90 gün çıktım, tekrar 90 gün kalabilirim"
+          — bu yanlıştır. Kural kaydırmalı (rolling) bir sistemle çalışır. Her günde, geriye doğru
+          son 180 güne bakılır ve toplam Schengen'de geçirilen gün sayısı hesaplanır.
         </p>
       </div>
 
-      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">1. Kural Nasıl İşler?</h2>
+      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">Kaydırmalı (Rolling) Sistem Nasıl İşler?</h2>
       <p className="text-slate-700 leading-relaxed mb-4">
-        90/180 kuralı kayan bir penceredir; takvim yılı değil, son 180 gündür. Örnek:
+        Örnek ile anlatalım. Bugünün tarihi: 16 Nisan 2026. Geriye 180 gün saydığımızda: 19 Ekim
+        2025'e geliriz. Demek ki "referans dönem" 19 Ekim 2025 - 16 Nisan 2026 arasıdır. Bu 180
+        gün içinde toplam kaç gün Schengen'deydiniz? Eğer 85 gün ise 5 gün daha kalabilirsiniz.
+        Eğer 90 günün üstünde ise hemen çıkmalısınız.
       </p>
-      <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 mb-6 text-sm text-slate-700">
-        <p className="mb-2"><strong>Örnek 1 — Yeterli boşluk:</strong></p>
-        <ul className="space-y-1 mb-3">
-          <li>• Ocak: 30 gün kaldınız</li>
-          <li>• Mart: 30 gün kaldınız</li>
-          <li>• Haziran: 30 gün kaldınız → 90 gün doldu, yeni giriş yok</li>
-          <li>• Ekim: Temmuz başındaki 30 gün penceresinden düştü → 30 gün hakkınız oldu</li>
-        </ul>
-        <p className="mb-2"><strong>Örnek 2 — Aşım:</strong></p>
-        <ul className="space-y-1">
-          <li>• Mayıs: 60 gün kaldınız</li>
-          <li>• Ağustos: 40 gün kalmak istiyorsunuz</li>
-          <li>• Hesap: 60 + 40 = 100 gün — 10 gün aşım!</li>
-          <li>• Sonuç: Sınırdan geri çevrilir veya aşım cezası alırsınız</li>
-        </ul>
+      <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-8 flex gap-3">
+        <Info className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+        <p className="text-amber-900 text-sm leading-relaxed">
+          <strong>Önemli:</strong> Bu hesap her gün yeniden yapılır. Bugün kalabileceğiniz süre,
+          dünün hesabından farklı olabilir. Çünkü 180 günün başındaki eski seyahatler tablo dışına
+          çıkar.
+        </p>
       </div>
 
-      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">2. Hangi Ülkeler Sayılır?</h2>
-      <div className="bg-blue-50 border border-blue-200 rounded-xl p-5 mb-6 flex gap-3">
-        <Info className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
-        <div>
-          <p className="font-semibold text-blue-900 text-sm mb-1">27 ülke tek havuzda</p>
-          <p className="text-blue-800 text-sm leading-relaxed mb-2">
-            Tüm Schengen ülkelerinde geçirilen süreler aynı havuzda toplanır. Fransa'da 30 + İtalya'da
-            30 + İspanya'da 30 = 90 gün.
-          </p>
-          <p className="text-blue-800 text-sm leading-relaxed">
-            <strong>Schengen dahil:</strong> Almanya, Avusturya, Belçika, Bulgaristan (2024'ten),
-            Çekya, Danimarka, Estonya, Finlandiya, Fransa, Hırvatistan (2023'ten), Hollanda,
-            İspanya, İsveç, İtalya, İzlanda, Letonya, Litvanya, Lüksemburg, Macaristan, Malta,
-            Norveç, Polonya, Portekiz, Romanya (2024'ten), Slovakya, Slovenya, İsviçre, Yunanistan.
-          </p>
-        </div>
+      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">Pratik Hesaplama Örneği</h2>
+      <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 mb-8 flex gap-3">
+        <Calendar className="w-5 h-5 text-slate-600 shrink-0 mt-0.5" />
+        <p className="text-slate-800 text-sm leading-relaxed">
+          <strong>Senario:</strong> 2025 Ekim'de 30 gün İtalya'da kaldınız. 2026 Ocak'ta 40 gün
+          Almanya'da kaldınız. 2026 Mart'ta 25 gün Fransa'da kaldınız. Toplam: 95 gün. Fransa'dan
+          çıkarken sınır memuru hesaplar: son 180 gün içinde 95 gün Schengen'desiniz. Bu ihlal
+          sebebidir. 5 gün fazla kaldığınız için cezalandırılırsınız.
+        </p>
       </div>
 
-      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">3. Schengen Dışı Ülkelere Çıkış</h2>
+      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">Hesaplama Araçları</h2>
       <p className="text-slate-700 leading-relaxed mb-4">
-        Eğer Schengen'den çıkıp 180 günlük pencereyi "sıfırlamaya" çalışırsanız bu işe yaramaz.
-        Hesap sadece "fiziksel olarak Schengen'de olduğunuz günler"i sayar:
+        Avrupa Komisyonu'nun resmi hesaplama aracı:{' '}
+        <a
+          href="https://ec.europa.eu/home-affairs/content/visa-calculator_en"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-brand-600 underline hover:text-brand-900"
+        >
+          ec.europa.eu/home-affairs/content/visa-calculator_en
+        </a>
       </p>
-      <ul className="space-y-2 mb-6">
-        {[
-          'Fransa\'dan çıkıp İngiltere\'ye gitseniz bile hesap duraklar',
-          'İngiltere\'de geçen süre Schengen 90 gününden düşülmez',
-          'Dönüş yaptığınızda kaldığınız gün sayısı oradan devam eder',
-          'Schengen + Croatia = aynı havuz (Hırvatistan 2023\'ten itibaren)',
-          'Bulgaristan + Romanya = aynı havuz (2024\'ten itibaren)',
-        ].map((b) => (
-          <li key={b} className="flex items-start gap-2 text-sm text-slate-700">
-            <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-            {b}
+      <p className="text-slate-700 leading-relaxed mb-4">Bu aracı kullanmak için:</p>
+      <ol className="list-decimal list-inside space-y-2 text-slate-700 mb-6 pl-2">
+        {HESAP_ARACI_ADIMLARI.map((a) => (
+          <li key={a}>{a}</li>
+        ))}
+      </ol>
+      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-8 flex gap-3">
+        <Calculator className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
+        <p className="text-blue-900 text-sm leading-relaxed">
+          Bu aracı seyahat öncesinde mutlaka kullanın. Tahmini hesaplamalar yapmayın — kaydırmalı
+          sistem karmaşıktır.
+        </p>
+      </div>
+
+      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">EES Sistemi ile Otomatik Takip</h2>
+      <p className="text-slate-700 leading-relaxed mb-4">
+        10 Nisan 2026 itibarıyla, tüm Schengen sınır kapılarında EES (Entry/Exit System) tam
+        devreye girdi. Bu, kağıt damgalarının yerini alan dijital bir sistemdir. Her girişinizde ve
+        çıkışınızda:
+      </p>
+      <ul className="space-y-2 mb-4">
+        {EES_AKIS.map((e) => (
+          <li key={e} className="flex gap-2 text-slate-700">
+            <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
+            <span>{e}</span>
           </li>
         ))}
       </ul>
+      <p className="text-slate-700 leading-relaxed mb-8">
+        EES öncesinde sınır memurunun gözden kaçırdığı damgalar, kağıt kayıtların karışması gibi
+        sorunlar vardı. Şimdi her şey dijital ve milisaniyede kontrol ediliyor. Fazla kalma
+        durumunuz derhal sisteme yansır.
+      </p>
 
-      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">4. EES Sistemi ile Otomatik Takip</h2>
-      <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-5 mb-6 flex gap-3">
-        <Calendar className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
-        <div>
-          <p className="font-semibold text-emerald-800 text-sm mb-1">Nisan 2026: EES tamamen aktive</p>
-          <p className="text-emerald-700 text-sm leading-relaxed">
-            EES (Entry/Exit System) her giriş ve çıkışı biyometrik olarak kayıt alır. Pasaport
-            damgası yerine elektronik kayıt. Bu sayede:
-          </p>
-          <ul className="text-emerald-700 text-sm mt-2 space-y-1">
-            <li>• Giriş anında kaç gün kaldığınız otomatik hesaplanır</li>
-            <li>• Kalan gün sayısı sınır memuruna anında görünür</li>
-            <li>• Aşım varsa sınırdan hemen reddedilirsiniz</li>
-            <li>• "Bilmiyordum" savunması artık geçerli değil</li>
-          </ul>
-        </div>
-      </div>
-
-      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">5. Kalan Günleri Nasıl Hesaplayabilirsiniz?</h2>
-      <div className="space-y-3 mb-8">
-        {[
-          { y: 'Resmi Schengen Hesaplama Aracı', d: 'ec.europa.eu/schengen-calculator — giriş/çıkış tarihlerini girip kalan gün sayısını görebilirsiniz.' },
-          { y: 'EES Self-Service Kiosk', d: 'Havalimanında giriş/çıkış anında kaç gün kaldığınızı gösterir.' },
-          { y: 'Mobil Uygulamalar', d: 'SchengenCalc, 90/180 Days gibi uygulamalar seyahat planlamasında yardımcı.' },
-          { y: 'Excel Tablosu', d: 'Her seyahat için giriş-çıkış tarihlerini tablolayın — manuel takip de işe yarar.' },
-        ].map(({ y, d }) => (
-          <div key={y} className="bg-white border border-slate-200 rounded-xl p-4 text-sm">
-            <p className="font-semibold text-slate-800 mb-1">{y}</p>
-            <p className="text-slate-600">{d}</p>
+      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">90 Gün Üzerinde Kalmak İsterseniz</h2>
+      <p className="text-slate-700 leading-relaxed mb-4">
+        Eğer 90 günden fazla Schengen'de kalmak istiyorsanız, kısa süreli vize (C-tipi) yeterli
+        değildir. Aşağıdaki seçeneklere ihtiyacınız olur:
+      </p>
+      <div className="space-y-4 mb-8">
+        {UZUN_SURELI_SECENEKLER.map((s) => (
+          <div key={s.baslik} className="border border-slate-200 rounded-xl p-5 bg-white">
+            <div className="flex items-center gap-2 mb-2">
+              <Sparkles className="w-5 h-5 text-brand-600" />
+              <h3 className="font-semibold text-slate-900">{s.baslik}</h3>
+            </div>
+            <p className="text-slate-700 text-sm leading-relaxed">{s.aciklama}</p>
           </div>
         ))}
       </div>
 
-      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">6. Aşım Durumunda Cezalar</h2>
-      <div className="bg-red-50 border border-red-200 rounded-xl p-5 mb-6 flex gap-3">
-        <AlertTriangle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
-        <div>
-          <p className="font-semibold text-red-800 text-sm mb-1">Ceza miktarları (2026 güncel)</p>
-          <ul className="text-red-700 text-sm space-y-1 mt-1">
-            <li>• 1-5 gün aşım: Uyarı veya €50-200 para cezası</li>
-            <li>• 5-30 gün aşım: €500-1.000 ceza + 1 yıl Schengen yasağı</li>
-            <li>• 30+ gün aşım: €1.500+ ceza + 3 yıl Schengen yasağı</li>
-            <li>• 90+ gün aşım: Sınır dışı + 5 yıl Schengen yasağı + ileride vize reddi</li>
-            <li>• Kasıtlı gizleme: Madde 8 (sahte beyan) + kalıcı kayıt</li>
-          </ul>
-        </div>
-      </div>
-
-      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">7. Multiple-Entry Vize ile 90/180</h2>
+      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">Fazla Kalma (Overstay) Cezaları</h2>
       <p className="text-slate-700 leading-relaxed mb-4">
-        5 yıllık multiple-entry Schengen vize almanız, 5 yıl boyunca sürekli kalabileceğiniz
-        anlamına gelmez. 90/180 kuralı her zaman geçerlidir. Sadece vizeniz uzun süreli olduğu
-        için her girişte yeni vize almanıza gerek kalmaz.
+        90/180 kuralını ihlal ederseniz ciddi sonuçları olur:
+      </p>
+      <ul className="space-y-2 mb-8">
+        {CEZALAR.map((c) => (
+          <li key={c} className="flex gap-2 text-slate-700">
+            <AlertTriangle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+            <span>{c}</span>
+          </li>
+        ))}
+      </ul>
+
+      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">Sık Yapılan Hatalar</h2>
+      <ol className="list-decimal list-inside space-y-2 text-slate-700 mb-8 pl-2">
+        {YANILGI_HATALAR.map((y) => (
+          <li key={y}>{y}</li>
+        ))}
+      </ol>
+
+      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">Schengen Dışı Avrupa Ülkeleri</h2>
+      <p className="text-slate-700 leading-relaxed mb-4">
+        Bu ülkeler Schengen'e dahil değildir ve 90/180 kuralına girmez:
+      </p>
+      <ul className="space-y-2 mb-4">
+        {SCHENGEN_DISI.map((s) => (
+          <li key={s} className="flex gap-2 text-slate-700">
+            <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
+            <span>{s}</span>
+          </li>
+        ))}
+      </ul>
+      <p className="text-slate-700 leading-relaxed mb-8">
+        Bu ülkelere giriş çıkış Schengen sayacınızı etkilemez. Yani 85 gün İspanya'da kaldıysanız,
+        Sırbistan'a geçerek orada 30 gün daha kalabilirsiniz. Sonra tekrar Schengen'e girebilmek
+        için 180 günlük dönem içinde kalan hakkınızı beklemeniz gerekir.
       </p>
 
-      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">8. Vize Sahibi İçin de Kural Geçerli mi?</h2>
-      <div className="bg-amber-50 border border-amber-200 rounded-xl p-5 mb-6 flex gap-3">
-        <Info className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-        <div>
-          <p className="font-semibold text-amber-800 text-sm mb-1">Evet, her zaman</p>
-          <p className="text-amber-700 text-sm leading-relaxed">
-            Tip C (kısa süreli) Schengen vizesi ne kadar geçerli olursa olsun, kullanım süresi
-            maksimum 90 gün / 180 gündür. Tip D (uzun süreli) eğitim veya çalışma vizesi ise
-            farklıdır — o durum oturma izni sayılır, 90/180 kuralı uygulanmaz.
-          </p>
-        </div>
-      </div>
-
-      <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-5 mb-8 flex gap-3">
-        <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
-        <div>
-          <p className="font-semibold text-emerald-800 text-sm mb-1">Danışman İpucu</p>
-          <p className="text-emerald-700 text-sm leading-relaxed">
-            Her Schengen seyahatinden sonra pasaportunuza giriş/çıkış tarihlerini kaydedin
-            (artık damga olmadığı için EES kaydınızı pasaportunuz.com üzerinden PDF olarak
-            da alabilirsiniz). Hesap tutmadığınız bir gün, sonraki seyahatinizi tehlikeye atabilir.
-          </p>
-        </div>
-      </div>
-
-      <div className="mt-12 bg-brand-50 border border-brand-200 rounded-2xl p-6">
-        <h3 className="font-bold text-brand-900 mb-2">Özet</h3>
-        <p className="text-brand-800 text-sm leading-relaxed">
-          90/180 gün kuralı Schengen'e seyahat eden herkes için bağlayıcıdır. Son 180 günde
-          maksimum 90 gün — kayan pencere ile hesaplanır. EES sistemi ile artık otomatik takip
-          ediliyor ve aşımlar anında yakalanıyor. Her seyahati kayıt altına alın, şüpheliyseniz
-          resmi hesaplama aracını kullanın.
-        </p>
+      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">Sık Sorulan Sorular (SSS)</h2>
+      <div className="space-y-4 mb-10">
+        {SSS.map((item) => (
+          <div key={item.q} className="border border-slate-200 rounded-xl p-5 bg-white">
+            <h3 className="font-semibold text-slate-900 mb-2">{item.q}</h3>
+            <p className="text-slate-700 text-sm leading-relaxed">{item.a}</p>
+          </div>
+        ))}
       </div>
     </BlogPostLayout>
   );

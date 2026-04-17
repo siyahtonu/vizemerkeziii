@@ -1,16 +1,16 @@
 import React from 'react';
-import { CheckCircle2, GraduationCap, Info, BookOpen, AlertTriangle } from 'lucide-react';
+import { CheckCircle2, GraduationCap, Info, AlertTriangle, BookOpen } from 'lucide-react';
 import BlogPostLayout from './BlogPostLayout';
 import { BlogPost } from './BlogIndex';
 
 export const POST: BlogPost = {
   slug: 'ogrenciler-icin-vize-rehberi-2026',
-  title: 'Öğrenciler İçin Vize Rehberi 2026 — Turist, Staj ve Eğitim Vizesi',
-  description: 'Üniversite öğrencileri için turist, eğitim ve staj vize başvurusu: aile sponsorluğu, öğrenci belgesi, GKS/burs durumu ve en uygun ülkeler.',
+  title: 'Öğrenci Vizesi Nasıl Alınır? Erasmus, ABD, Kanada Rehberi 2026',
+  description: 'Öğrenciler için tüm vize türlerinin rehberi: Erasmus, F-1, Kanada Study Permit, İngiltere Student. Başvuru süreci, belgeler, ipuçları.',
   category: 'Genel',
-  readingTime: 10,
+  readingTime: 12,
   date: '2026-04-17',
-  tags: ['öğrenci vizesi', 'eğitim vizesi', 'staj vizesi', '2026'],
+  tags: ['öğrenci vizesi', 'F-1', 'Erasmus', 'Study Permit', 'Student Visa'],
 };
 
 const SCHEMA = {
@@ -26,61 +26,85 @@ const SCHEMA = {
       dateModified: POST.date,
       url: `https://vizeakil.com/blog/${POST.slug}`,
     },
+    {
+      '@type': 'FAQPage',
+      mainEntity: [
+        { '@type': 'Question', name: 'Öğrenci vizesi için dil yeterliliği şart mı?', acceptedAnswer: { '@type': 'Answer', text: 'Çoğu ülkede evet. İngilizce programlar için IELTS/TOEFL, Almanya için TestDaF/DSH, Fransa için DELF/DALF gerekir. Bazı ülkelerde (özellikle Kanada) minimum puan şartı kesindir.' } },
+        { '@type': 'Question', name: 'Ebeveynim sponsor olabilir mi?', acceptedAnswer: { '@type': 'Answer', text: 'Evet. Ebeveyn sponsorluğu tüm öğrenci vize türlerinde kabul edilir. Ebeveynin finansal gücünü belgelemesi ve noter onaylı sponsor taahhüdü vermesi gerekir.' } },
+        { '@type': 'Question', name: 'Burs almış bir öğrenciyim, finansal belgelere gerek var mı?', acceptedAnswer: { '@type': 'Answer', text: 'Burs belgesi tam finansmanı kapsıyorsa (eğitim + yaşam masrafı), ek finansal belge istenmeyebilir. Kısmi burslarda kalan masrafı karşılayacak finansal kanıt gerekir.' } },
+        { '@type': 'Question', name: 'Öğrenci vizesi ile çalışabilir miyim?', acceptedAnswer: { '@type': 'Answer', text: 'Çoğu ülkede kısıtlı çalışma hakkı vardır (genellikle haftada 20 saat). Ancak çalışma izni için öğrenci vizesi yeterli değildir — ek iş izni gerekir. Bu kural her ülkede farklıdır.' } },
+        { '@type': 'Question', name: 'Mezuniyet sonrası ülkede kalabilir miyim?', acceptedAnswer: { '@type': 'Answer', text: 'Çoğu ülkede evet: Kanada PGWP (1-3 yıl), İngiltere Graduate Route (2 yıl), Almanya iş arama vizesi (18 ay), ABD OPT (12-36 ay).' } },
+        { '@type': 'Question', name: 'Öğrenci vizesi red alabilir mi?', acceptedAnswer: { '@type': 'Answer', text: 'Evet. En yaygın red sebepleri: yetersiz finansal kanıt, zayıf akademik profil, şüpheli dönüş niyeti, eksik belgeler. İlk red sonrası doğru strateji ile yeniden başvuru başarılı olabilir.' } },
+      ],
+    },
   ],
 };
+
+const VIZE_TURLERI = [
+  { ulke: 'ABD', kod: 'F-1 (akademik), M-1 (mesleki)', sure: 'Eğitim süresi boyunca', calisma: 'Kampüs içi haftada 20 saat' },
+  { ulke: 'Kanada', kod: 'Study Permit', sure: 'Eğitim süresi + kalış izni', calisma: 'Kampüs dışı haftada 20 saat' },
+  { ulke: 'İngiltere', kod: 'Student Visa', sure: 'Eğitim süresi + 3 ay', calisma: 'Haftada 20 saat' },
+  { ulke: 'Almanya', kod: 'Ulusal Vize (D-Tipi)', sure: 'Eğitim süresi + 4 ay', calisma: 'Yılda 120 tam / 240 yarım gün' },
+  { ulke: 'Hollanda', kod: 'MVV + İkamet İzni', sure: 'Eğitim süresi', calisma: 'Haftada 16 saat' },
+  { ulke: 'İtalya', kod: 'Ulusal Vize', sure: 'Eğitim süresi', calisma: 'Haftada 20 saat' },
+  { ulke: 'Avustralya', kod: 'Subclass 500', sure: 'Eğitim süresi', calisma: '2 haftada 48 saat' },
+];
 
 export default function OgrencilerIcinVize2026() {
   return (
     <BlogPostLayout post={POST} schema={SCHEMA}>
       <p className="text-slate-700 leading-relaxed text-base mb-6">
-        Öğrenciler vize başvurusunda hem avantajlı hem dezavantajlıdır. Avantaj: Türkiye'de okul
-        kaydı güçlü bir "geri dönüş güvencesi" sinyalidir. Dezavantaj: düzenli geliri yoktur,
-        banka hesabı zayıftır, iş belgesi yerine sadece öğrenci belgesi vardır. Bu rehber, yaz
-        tatili turist vizesi, Erasmus staj vizesi ve uzun dönem eğitim vizesi farklarını açıklar
-        ve her biri için başvuru stratejisini gösterir.
+        Yurtdışı eğitimi, Türk gençlerinin en büyük hayallerinden biri. Ama hayalden gerçeğe
+        giden yolda bir engel var: vize. Öğrenci vizesi, turist vizesinden farklı bir süreç ve
+        farklı belgeler gerektiriyor. Erasmus'a mı gidiyorsunuz, ABD'de master mı yapacaksınız,
+        Kanada'da study permit mi arıyorsunuz — her biri ayrı dünya. Bu rehber, öğrenci
+        vizesinin tüm türlerini ve süreçlerini açıklıyor.
       </p>
 
-      <div className="bg-brand-50 border border-brand-200 rounded-xl p-5 mb-8 flex gap-3">
-        <GraduationCap className="w-5 h-5 text-brand-600 shrink-0 mt-0.5" />
-        <p className="text-brand-900 text-sm leading-relaxed">
-          <strong>Altın kural:</strong> Öğrenci başvurularında öğrenci belgesi + aile banka dökümü
-          ikilisi çalışanların maaş bordrosu + işveren izni kadar güçlüdür. Türkiye'deki okul
-          kaydınızı öne çıkarın.
-        </p>
+      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">Öğrenci Vizesi Türleri</h2>
+      <div className="overflow-x-auto mb-8">
+        <table className="w-full text-sm border border-slate-200 rounded-xl overflow-hidden">
+          <thead className="bg-slate-100">
+            <tr>
+              <th className="text-left px-3 py-2 font-semibold text-slate-700">Ülke</th>
+              <th className="text-left px-3 py-2 font-semibold text-slate-700">Vize Kodu</th>
+              <th className="text-left px-3 py-2 font-semibold text-slate-700">Süre</th>
+              <th className="text-left px-3 py-2 font-semibold text-slate-700">Çalışma İzni</th>
+            </tr>
+          </thead>
+          <tbody>
+            {VIZE_TURLERI.map(({ ulke, kod, sure, calisma }) => (
+              <tr key={ulke} className="border-t border-slate-200">
+                <td className="px-3 py-2 font-semibold text-slate-800">{ulke}</td>
+                <td className="px-3 py-2 text-slate-700">{kod}</td>
+                <td className="px-3 py-2 text-slate-600 text-xs">{sure}</td>
+                <td className="px-3 py-2 text-slate-600 text-xs">{calisma}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
 
-      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">1. Öğrenci Vize Türleri</h2>
-      <div className="space-y-3 mb-8">
-        {[
-          { tur: 'Turist Vizesi (C Tipi)', sure: '1-90 gün', amac: 'Tatil, yaz okulu, kültürel gezi, kısa ziyaret.' },
-          { tur: 'Staj Vizesi', sure: '3-12 ay', amac: 'Zorunlu staj (üniversite onayı gerekli), Erasmus+.' },
-          { tur: 'Eğitim Vizesi (D Tipi)', sure: '3+ ay', amac: 'Üniversite öğrencisi, yüksek lisans, doktora.' },
-          { tur: 'Dil Okulu Vizesi', sure: '3-12 ay', amac: 'Yabancı dil eğitimi (C veya D tipi, süreye göre).' },
-        ].map(({ tur, sure, amac }) => (
-          <div key={tur} className="bg-white border border-slate-200 rounded-xl p-4 text-sm">
-            <div className="flex justify-between items-center mb-1">
-              <p className="font-semibold text-slate-800">{tur}</p>
-              <span className="text-brand-600 font-medium text-xs">{sure}</span>
-            </div>
-            <p className="text-slate-600">{amac}</p>
-          </div>
-        ))}
-      </div>
-
-      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">2. Turist Vizesi İçin Öğrenci Belgeleri</h2>
+      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">Erasmus+ Vize Rehberi (Schengen)</h2>
       <p className="text-slate-700 leading-relaxed mb-4">
-        Yaz tatili ya da kısa ziyaret için turist vizesine başvuruyorsanız:
+        Erasmus programı kapsamında AB üniversitelerine giden öğrenciler, Schengen turistik
+        vize değil, öğrenci amaçlı kısa süreli Schengen vizesi (C-tipi) alır. Süresi 90 güne
+        kadar ise C-tipi, daha uzun ise ulusal vize (D-tipi) gerekir.
       </p>
+      <h3 className="text-lg font-semibold text-slate-900 mt-6 mb-3">Erasmus İçin Gerekli Belgeler</h3>
       <ul className="space-y-2 mb-6">
         {[
-          'Öğrenci belgesi (son 1 ay içinde alınmış, e-devletten çıktı kabul edilir)',
-          'Transkript (son yılın notları)',
-          'Kayıt tarihini gösteren okul diploması (varsa)',
-          'Okulun başlangıç/bitiş tarihi (dönüş bilet tarihi bu süreyle uyumlu olmalı)',
-          'Aile (anne-baba) sponsorluk mektubu noter onaylı',
-          'Anne-baba son 3 ay banka dökümü',
-          'Anne-baba SGK hizmet dökümü + maaş bordrosu veya vergi levhası',
-          'Akrabalık belgesi (nüfus kayıt örneği)',
+          'Pasaport (6+ ay geçerli)',
+          '2 biyometrik fotoğraf',
+          'Schengen başvuru formu',
+          'Seyahat sağlık sigortası (30.000 € + Erasmus süresini kapsayan)',
+          'Erasmus kabul mektubu (Learning Agreement)',
+          'Ev sahibi üniversitenin kabul yazısı (Invitation Letter)',
+          'Türkiye\'deki üniversiteden öğrenci belgesi',
+          'Transkript',
+          'Ebeveyn sponsor dilekçesi (noter onaylı)',
+          'Ebeveynin finansal belgeleri (banka dökümü, maaş)',
+          'Konaklama belgesi (yurt veya ev kiralama sözleşmesi)',
         ].map((b) => (
           <li key={b} className="flex items-start gap-2 text-sm text-slate-700">
             <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
@@ -88,102 +112,203 @@ export default function OgrencilerIcinVize2026() {
           </li>
         ))}
       </ul>
-
-      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">3. Erasmus ve Staj Vizesi</h2>
-      <div className="bg-blue-50 border border-blue-200 rounded-xl p-5 mb-6 flex gap-3">
+      <div className="bg-blue-50 border border-blue-200 rounded-xl p-5 mb-8 flex gap-3">
         <BookOpen className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
         <div>
-          <p className="font-semibold text-blue-900 text-sm mb-1">Erasmus+ ek belgeleri</p>
+          <p className="font-semibold text-blue-900 text-sm mb-1">Erasmus İçin İpuçları</p>
           <ul className="text-blue-800 text-sm space-y-1 mt-1">
-            <li>• Üniversitenin gönderdiği kabul mektubu (Letter of Acceptance)</li>
-            <li>• Hibe sözleşmesi (Grant Agreement)</li>
-            <li>• Staj sözleşmesi / Learning Agreement</li>
-            <li>• Konaklama (öğrenci yurdu sözleşmesi veya kira kontratı)</li>
-            <li>• Erasmus hibe bilgisinin banka dökümünde görünmesi avantajlı</li>
+            <li>• Erasmus kabul mektubunuzu aldıktan sonra hemen randevu alın (Nisan-Ağustos yoğun dönem)</li>
+            <li>• Banka hesap bakiyesi: aylık 600-800 € × kalış süresi</li>
+            <li>• Türkiye'deki bağlar vurgulanmalı: "Erasmus sonrası dönüş" motivasyonu güçlü olmalı</li>
+            <li>• Yurt rezervasyonu hazır olmalı — "evim yok" başvuruları riskli</li>
+            <li>• Learning Agreement ve Invitation Letter tarihleri uçak biletiyle uyumlu olmalı</li>
           </ul>
         </div>
       </div>
 
-      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">4. Eğitim Vizesi (Full-Time)</h2>
+      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">ABD F-1 Öğrenci Vizesi</h2>
       <p className="text-slate-700 leading-relaxed mb-4">
-        Almanya'da master, ABD'de F-1, İngiltere'de Student Visa başvuruları için:
+        ABD'de eğitim almak için F-1 vizesi gerekir. Üniversite, kolej, yüksek lisans, doktora
+        programları için standart yoldur. Süreç: I-20 formu → SEVIS ücreti → DS-160 → Mülakat.
       </p>
-      <div className="space-y-3 mb-6">
+      <h3 className="text-lg font-semibold text-slate-900 mt-6 mb-3">F-1 İçin Adım Adım Süreç</h3>
+      <ol className="space-y-2 mb-6 list-decimal list-inside text-sm text-slate-700">
+        <li>Üniversiteye kabul alın — üniversite size I-20 formunu gönderecek</li>
+        <li>SEVIS ücreti ödeyin (350 USD, online)</li>
+        <li>DS-160 formu doldurun</li>
+        <li>Vize başvuru ücreti ödeyin (185 USD)</li>
+        <li>Ankara veya İstanbul konsolosluğundan mülakat randevusu alın</li>
+        <li>Mülakat günü belgelerinizle gidin</li>
+      </ol>
+      <h3 className="text-lg font-semibold text-slate-900 mt-6 mb-3">F-1 İçin Gerekli Belgeler</h3>
+      <ul className="space-y-2 mb-6">
         {[
-          { u: 'Almanya (Visum zum Studium)', b: 'Kabul mektubu + 11.208€ blocked account (Sperrkonto) veya sponsor taahhüdü + TestDaF/DSH dil belgesi + sağlık sigortası.' },
-          { u: 'ABD (F-1)', b: 'I-20 formu + SEVIS ücreti ($350) + MRV ücreti + DS-160 + mülakat + kabul edilen üniversitenin yazışması + finansal yeterlilik.' },
-          { u: 'İngiltere (Student Visa)', b: 'CAS (Confirmation of Acceptance) + TB testi + IELTS + finansal kanıt 9 ay £1.334/ay (Londra) veya £1.023/ay (dışı).' },
-          { u: 'Kanada (Study Permit)', b: 'Letter of Acceptance + GIC hesabı CAD 10.000+ + SIN + biyometrik + medikal muayene.' },
-        ].map(({ u, b }) => (
-          <div key={u} className="bg-white border border-slate-200 rounded-xl p-4 text-sm">
-            <p className="font-semibold text-slate-800 mb-1">{u}</p>
-            <p className="text-slate-600">{b}</p>
-          </div>
+          'Pasaport (gelecek 6 ay geçerli minimum)',
+          'I-20 formu (üniversite tarafından verilen)',
+          'DS-160 onay sayfası (barkod)',
+          'SEVIS ödeme makbuzu',
+          'Vize başvuru ücreti makbuzu',
+          'Fotoğraf (51x51mm, beyaz arka plan)',
+          'Akademik transkript',
+          'İngilizce yeterlilik belgesi (TOEFL/IELTS)',
+          'Finansal belgeler (banka dökümü, sponsor beyanı, burs yazısı vb.)',
+          'Türkiye\'ye dönüş amacını kanıtlayan belgeler',
+        ].map((b) => (
+          <li key={b} className="flex items-start gap-2 text-sm text-slate-700">
+            <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+            {b}
+          </li>
         ))}
+      </ul>
+      <div className="bg-amber-50 border border-amber-200 rounded-xl p-5 mb-8 flex gap-3">
+        <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+        <div>
+          <p className="font-semibold text-amber-800 text-sm mb-1">F-1 Mülakat İpuçları</p>
+          <p className="text-amber-700 text-sm leading-relaxed mb-2">
+            F-1 mülakatı ABD vizelerinin en zorudur. Memurun endişesi: "Bu öğrenci mezuniyet
+            sonrası ABD'de kalmaya çalışabilir mi?"
+          </p>
+          <ul className="text-amber-800 text-sm space-y-1">
+            <li>• Türkiye'ye dönüş planınızı net anlatın — "aile işi, iş imkanı, kariyer planı"</li>
+            <li>• Eğitim amacınızı spesifik yapın — "Neden bu üniversite, neden bu program?"</li>
+            <li>• Finansmanı net gösterin — "Eğitimim tamamen finanse edilmiş"</li>
+            <li>• ABD'deki akrabaları gizlemeyin ama vurgulamayın</li>
+            <li>• Kısa, net ve dürüst cevaplar verin — mülakat 2-5 dakika sürer</li>
+          </ul>
+        </div>
       </div>
 
-      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">5. Sponsor Mektubu Nasıl Yazılır?</h2>
-      <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 mb-6 text-sm text-slate-700">
-        <p className="font-semibold mb-2">Anne/Baba sponsor mektubu örneği:</p>
-        <p className="italic leading-relaxed">
-          "Ben [Ad Soyad], TC [...], [Ad Soyad]'ın babasıyım/annesiyim. Oğlum/kızım [Ad Soyad]'ın
-          [Tarih] – [Tarih] tarihleri arasında [Ülke]'ye yapacağı seyahatin tüm masraflarını
-          (uçak, konaklama, günlük harcamalar, sağlık sigortası) karşılayacağımı taahhüt ederim.
-          Ekte banka dökümüm ve gelir belgelerim yer almaktadır."
+      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">Kanada Study Permit</h2>
+      <p className="text-slate-700 leading-relaxed mb-4">
+        Kanada'da eğitim için Study Permit (Öğrenci İzni) alınır. Üniversite veya DLI
+        (Designated Learning Institution) listesindeki kurumlardan kabul gerekir.
+      </p>
+      <h3 className="text-lg font-semibold text-slate-900 mt-6 mb-3">Kanada Study Permit İçin Belgeler</h3>
+      <ul className="space-y-2 mb-6">
+        {[
+          'Pasaport',
+          'DLI kabul mektubu',
+          'GIC (Guaranteed Investment Certificate) — 20.635 CAD yatırım (2026)',
+          'Öğrenim ücreti ödeme makbuzu (ilk yıl)',
+          'Dil yeterlilik (TOEFL, IELTS, CELPIP)',
+          'Eğitim geçmişi belgeleri (transkript)',
+          'Motivasyon mektubu (SOP — Statement of Purpose)',
+          'Finansal belgeler',
+          'Biyometri ve tıbbi muayene',
+        ].map((b) => (
+          <li key={b} className="flex items-start gap-2 text-sm text-slate-700">
+            <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+            {b}
+          </li>
+        ))}
+      </ul>
+      <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 mb-8 text-sm text-emerald-900">
+        <p className="font-semibold mb-2">Kanada Avantajları</p>
+        <ul className="space-y-1">
+          <li>• Mezuniyet sonrası 1-3 yıl çalışma izni (PGWP)</li>
+          <li>• Daimi ikamet için yol açar</li>
+          <li>• Eş ve çocuğu getirme imkanı</li>
+          <li>• Kampüs dışı haftada 20 saat çalışma</li>
+        </ul>
+      </div>
+
+      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">İngiltere Student Visa</h2>
+      <p className="text-slate-700 leading-relaxed mb-4">
+        İngiltere'de eğitim için Student Visa (eski Tier 4) gerekir. 2026 itibarıyla İngilizce
+        seviyesi B2'ye yükseltilmiştir.
+      </p>
+      <h3 className="text-lg font-semibold text-slate-900 mt-6 mb-3">İngiltere Student Visa İçin Belgeler</h3>
+      <ul className="space-y-2 mb-6">
+        {[
+          'CAS (Confirmation of Acceptance for Studies) — üniversite tarafından',
+          'Pasaport',
+          'Online başvuru formu',
+          'Finansal belgeler (28 gün boyunca hesapta duran para)',
+          'İngilizce yeterlilik (IELTS UKVI, B2 minimum)',
+          'TB testi (tüberküloz tarama, akciğer filmi)',
+          'ATAS sertifikası (bazı teknoloji alanları için)',
+          'Akademik transkript',
+          'Motivasyon mektubu',
+        ].map((b) => (
+          <li key={b} className="flex items-start gap-2 text-sm text-slate-700">
+            <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+            {b}
+          </li>
+        ))}
+      </ul>
+      <div className="bg-blue-50 border border-blue-200 rounded-xl p-5 mb-8 text-sm text-blue-900">
+        <p className="font-semibold mb-2">İngiltere Finansal Kanıt</p>
+        <p className="leading-relaxed">
+          Londra'da yaşayacaksanız aylık <strong>1.334 £</strong>, dışında <strong>1.023 £</strong>
+          {' '}hesabınızda göstermeniz gerekir (2026 güncel). Bu para 28 gün kesintisiz hesapta
+          durmalıdır. İngilizce kursu ve çift programlar için ayrı finansal hesaplamalar vardır.
         </p>
       </div>
 
-      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">6. Öğrenciler İçin En Uygun Ülkeler</h2>
-      <div className="space-y-3 mb-8">
+      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">Almanya Öğrenci Vizesi</h2>
+      <p className="text-slate-700 leading-relaxed mb-4">
+        Almanya'da eğitim için Ulusal Vize (D-tipi) gerekir. Almanya, öğrenci vizelerinde hem
+        katı hem cömert bir ülkedir: şartlar sıkı, ancak kabul alan öğrencilere pek çok avantaj
+        sunar.
+      </p>
+      <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 mb-8 text-sm text-slate-700">
+        <p className="font-semibold text-slate-800 mb-2">Almanya Öğrenci Vizesi İçin Finansal Kanıt</p>
+        <p className="leading-relaxed mb-2">
+          Almanya'da eğitim için en bilinen finansal kanıt yöntemi "Sperrkonto" (bloke hesap)
+          açmaktır. 2026 yılı için minimum yıllık tutar: <strong>11.904 €</strong>. Bu tutar Alman
+          bankasında bloke hesabına yatırılır ve aylık 992 € olarak öğrenciye serbest bırakılır.
+        </p>
+        <ul className="space-y-1">
+          <li>• Sperrkonto açan bankalar: Fintiba, Expatrio, Deutsche Bank</li>
+          <li>• Alternatif: ebeveyn resmi taahhüdü (Verpflichtungserklärung)</li>
+          <li>• Burs kabul yazısı da finansal kanıt olarak kullanılabilir</li>
+        </ul>
+      </div>
+
+      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">Ortak Başarı İpuçları (Tüm Öğrenci Vizeleri İçin)</h2>
+      <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-5 mb-8 flex gap-3">
+        <GraduationCap className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
+        <ol className="text-emerald-900 text-sm space-y-2 list-decimal list-inside">
+          <li>Kabul mektubunuzu aldıktan sonra vize süreçlerine 3-4 ay önceden başlayın</li>
+          <li>Finansal belgeleriniz en az 6 aydır düzenli ve şeffaf olmalı</li>
+          <li>Dil sınavı sertifikanızın geçerlilik süresi vize başvuru tarihine kadar devam etmeli</li>
+          <li>Motivasyon mektubunuzu (SOP) dikkatle yazın — kopyala-yapıştır belli olur</li>
+          <li>Türkiye'deki bağlarınızı vurgulayın — aile, yatırım, kariyer planı</li>
+          <li>Mülakata hazırlanırken olası soruları önceden prova edin</li>
+          <li>Sosyal medyanızda uygunsuz içerikleri temizleyin (vize memurları kontrol edebilir)</li>
+        </ol>
+      </div>
+
+      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">Sık Sorulan Sorular (SSS)</h2>
+      <div className="space-y-4 mb-8">
         {[
-          { u: 'Yunanistan, İtalya', n: 'Yaz tatili için kolay onay, kısa mesafe, uygun maliyet.' },
-          { u: 'Almanya', n: 'Eğitim vizesi ucret 75€, 3-4 yıl öğrenci oturması alınabilir.' },
-          { u: 'Polonya, Çekya', n: 'Az bilinen ama onay oranı yüksek, ucuz yaşam.' },
-          { u: 'Hollanda', n: 'Staj başvurularına toleranslı, İngilizce programlar.' },
-          { u: 'İngiltere', n: 'Student Visa ile çalışma hakkı (20 saat/hafta).' },
-        ].map(({ u, n }) => (
-          <div key={u} className="bg-white border border-slate-200 rounded-xl p-4 text-sm">
-            <p className="font-semibold text-slate-800 mb-1">{u}</p>
-            <p className="text-slate-600">{n}</p>
+          { q: 'Öğrenci vizesi için dil yeterliliği şart mı?', a: 'Çoğu ülkede evet. İngilizce programlar için IELTS/TOEFL, Almanya için TestDaF/DSH, Fransa için DELF/DALF gerekir. Bazı ülkelerde (özellikle Kanada) minimum puan şartı kesindir.' },
+          { q: 'Ebeveynim sponsor olabilir mi?', a: 'Evet. Ebeveyn sponsorluğu tüm öğrenci vize türlerinde kabul edilir. Ebeveynin finansal gücünü belgelemesi ve noter onaylı sponsor taahhüdü vermesi gerekir.' },
+          { q: 'Burs almış bir öğrenciyim, finansal belgelere gerek var mı?', a: 'Burs belgesi tam finansmanı kapsıyorsa (eğitim + yaşam masrafı), ek finansal belge istenmeyebilir. Kısmi burslarda kalan masrafı karşılayacak finansal kanıt gerekir.' },
+          { q: 'Öğrenci vizesi ile çalışabilir miyim?', a: 'Çoğu ülkede kısıtlı çalışma hakkı vardır (genellikle haftada 20 saat). Ancak çalışma izni için öğrenci vizesi yeterli değildir — ek iş izni gerekir. Bu kural her ülkede farklıdır.' },
+          { q: 'Mezuniyet sonrası ülkede kalabilir miyim?', a: 'Çoğu ülkede evet: Kanada PGWP (1-3 yıl), İngiltere Graduate Route (2 yıl), Almanya iş arama vizesi (18 ay), ABD OPT (12-36 ay). Bu sistemler kariyer ve yerleşme için köprü işlevi görür.' },
+          { q: 'Öğrenci vizesi red alabilir mi?', a: 'Evet. En yaygın red sebepleri: yetersiz finansal kanıt, zayıf akademik profil, şüpheli dönüş niyeti, eksik belgeler. İlk red sonrası doğru strateji ile yeniden başvuru başarılı olabilir.' },
+        ].map(({ q, a }) => (
+          <div key={q} className="bg-slate-50 border border-slate-200 rounded-xl p-4">
+            <p className="font-semibold text-slate-800 text-sm mb-1 flex items-start gap-2">
+              <Info className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" /> {q}
+            </p>
+            <p className="text-slate-600 text-sm leading-relaxed pl-6">{a}</p>
           </div>
         ))}
       </div>
 
-      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">7. En Sık Reddedilen Öğrenci Başvuruları</h2>
-      <div className="bg-red-50 border border-red-200 rounded-xl p-5 mb-6 flex gap-3">
-        <AlertTriangle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+      <div className="mt-12 bg-brand-50 border border-brand-200 rounded-2xl p-6 flex gap-3">
+        <BookOpen className="w-5 h-5 text-brand-600 shrink-0 mt-0.5" />
         <div>
-          <p className="font-semibold text-red-800 text-sm mb-1">Kaçınılması gereken durumlar</p>
-          <ul className="text-red-700 text-sm space-y-1 mt-1">
-            <li>• Öğrenci belgesi olmadan turist başvurusu</li>
-            <li>• Akademik kayıtta ayrıtıltı veya dondurma</li>
-            <li>• Sosyal medyada kalıcı göç niyeti belirten paylaşımlar</li>
-            <li>• Aile banka dökümünün zayıf olması</li>
-            <li>• Okul tatili dışında 3+ aylık başvuru</li>
-          </ul>
-        </div>
-      </div>
-
-      <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-5 mb-8 flex gap-3">
-        <Info className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
-        <div>
-          <p className="font-semibold text-emerald-800 text-sm mb-1">Strateji İpucu</p>
-          <p className="text-emerald-700 text-sm leading-relaxed">
-            Yaz tatilinde önce kolay bir Schengen ülkesi (İtalya/Yunanistan) ile vize geçmişi
-            oluşturun. Mezun olduktan sonra Almanya/Hollanda gibi eğitim vizesi başvurularında
-            bu geçmiş büyük avantaj sağlar. ABD F-1 başvurusu yapacak öğrenciler Schengen
-            geçmişinden faydalanır çünkü "yurtdışına gitti, döndü" kaydınız olur.
+          <h3 className="font-bold text-brand-900 mb-2">Özet</h3>
+          <p className="text-brand-800 text-sm leading-relaxed">
+            Öğrenci vizesi hayalinizin anahtarıdır — her ülkenin kendi kapısı ve anahtarı var.
+            Erasmus için Schengen C-tipi, Almanya için Sperrkonto, Kanada için GIC 20.635 CAD,
+            İngiltere için 28-gün kuralı ve ABD için F-1 mülakatı. Kabul mektubunu aldıktan sonra
+            3-4 ay öncesinden süreci başlatın ve Türkiye'ye dönüş güvencenizi ön plana çıkarın.
           </p>
         </div>
-      </div>
-
-      <div className="mt-12 bg-brand-50 border border-brand-200 rounded-2xl p-6">
-        <h3 className="font-bold text-brand-900 mb-2">Özet</h3>
-        <p className="text-brand-800 text-sm leading-relaxed">
-          Öğrenciler için vize = öğrenci belgesi + aile sponsorluğu + güçlü niyet mektubu. Turist
-          vizesinde aile banka dökümü, eğitim vizesinde finansal yeterlilik kanıtı merkezi rol oynar.
-          İlk başvurunuzu Yunanistan veya İtalya ile yapın; sonrasında kapılar açılır.
-        </p>
       </div>
     </BlogPostLayout>
   );

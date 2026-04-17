@@ -1,192 +1,330 @@
 import React from 'react';
-import { CheckCircle2, Info, AlertTriangle, Users, Heart } from 'lucide-react';
+import { CheckCircle2, Info, AlertTriangle, Users, Heart, Sparkles, XCircle } from 'lucide-react';
 import BlogPostLayout from './BlogPostLayout';
 import { BlogPost } from './BlogIndex';
 
 export const POST: BlogPost = {
   slug: 'issizler-ve-calismayanlar-icin-vize',
-  title: 'İşsizler ve Çalışmayanlar İçin Vize Başvurusu — 2026 Rehberi',
-  description: 'İş kaybı sonrası, mezun olmuş ama iş bulamamış veya kendi isteğiyle çalışmayan kişiler için Schengen ve diğer ülkelere vize başvurusu stratejisi.',
+  title: 'İşsizler ve Çalışmayanlar İçin Vize Alabilir misiniz? 2026 Rehber',
+  description: 'İşsizler, çalışmayanlar, iş arayanlar vize başvurusu yapabilir mi? Sponsor desteği ile Schengen, ABD, İngiltere vizesi nasıl alınır?',
   category: 'Genel',
   readingTime: 9,
   date: '2026-04-17',
   tags: ['işsiz vize', 'çalışmayan', 'sponsor', 'Schengen'],
 };
 
+const PROFILLER = [
+  'İşten çıkarılmış, yeni iş arayanlar',
+  'Emekli olmamış ama çalışmayan gençler',
+  'Doğum sonrası çalışmayan anneler',
+  'Üniversite mezunu, henüz iş bulamayanlar',
+  'İstifa etmiş, seyahat sonrası yeni işe başlayacak olanlar',
+  'Ev hanımları (ayrı kategori, farklı rehberimiz var)',
+  'Engelli bireyler, çalışamama raporu olanlar',
+];
+
+const SPONSORLAR = [
+  {
+    tip: '1. Eş Sponsorluğu',
+    aciklama:
+      'Evliyseniz ve eşiniz çalışıyorsa, en güçlü sponsorluk seçeneğidir. Aile bağı ve ortak finansal sorumluluk, konsolosluk gözünde güven sinyali verir.',
+  },
+  {
+    tip: '2. Ebeveyn Sponsorluğu',
+    aciklama:
+      'Ebeveynleriniz çalışıyor veya emekliyse, sponsor olabilirler. Özellikle 25 yaş altı gençler için uygun seçenektir.',
+  },
+  {
+    tip: '3. Kardeş Sponsorluğu',
+    aciklama:
+      'Kardeşlerinizin finansal durumu sağlamsa sponsor olabilirler. Ancak birinci derece akraba olan ebeveynler veya eş kadar güçlü değildir.',
+  },
+  {
+    tip: '4. Yurtdışı Akraba Sponsorluğu (Davet Üzerine)',
+    aciklama:
+      'Gitmek istediğiniz ülkede akrabalarınız varsa, onlar sizi davet edebilir. Bu durumda "davet üzerine ziyaret" başvurusu yapılır ve farklı belge gerektirir.',
+  },
+];
+
+const BIREYSEL_PROFIL = [
+  'Banka hesabında 100.000-200.000 TL birikim (tutarın uzun süredir orada olduğu kanıtlanmalı)',
+  'Mülk sahipliği (ev, arsa — tapu belgeleri)',
+  'Düzenli ek gelir (kira, yatırım, temettü)',
+  'Eski çalışma geçmişi (işten çıkarıldıysanız önceki çalışma belgeleri)',
+  'Eğitim durumu (yüksek lisans, doktora gibi kıymetli belgeler)',
+];
+
+const BELGE_BLOKLARI = [
+  {
+    baslik: 'Standart Belgeler',
+    items: [
+      'Pasaport, fotoğraf, başvuru formu',
+      'Seyahat sigortası (30.000 € Schengen için)',
+      'Uçak ve otel rezervasyonu',
+      'Seyahat planı',
+    ],
+  },
+  {
+    baslik: 'Çalışmadığınızı Gösteren Belgeler',
+    items: [
+      'SGK Hizmet Dökümü (son 5 yıl)',
+      'Önceki çalışma belgeleriniz (varsa)',
+      'İstifa/işten çıkış belgesi (son iş için)',
+      'İşsizlik ödeneği belgesi (alıyorsanız)',
+    ],
+  },
+  {
+    baslik: 'Finansal Güç Kanıtı',
+    items: [
+      'Kendi banka hesap dökümünüz (son 6 ay)',
+      'Yatırım hesaplarınız (varsa)',
+      'Tapu belgeleri',
+      'Araç ruhsatı',
+    ],
+  },
+  {
+    baslik: 'Sponsor Belgeleri',
+    items: [
+      'Sponsor taahhüdü (noter onaylı)',
+      'Sponsorun kimlik bilgileri',
+      'Sponsorun banka dökümü (son 6 ay)',
+      'Sponsorun çalışma belgesi, maaş bordroları',
+      'Sponsorla akrabalık belgesi',
+    ],
+  },
+];
+
+const SEYAHAT_AMACLARI = [
+  'Kültürel gezi: Floransa müzeleri, Paris sanat turları, Roma tarihi',
+  'Aile ziyareti: Yakın akraba, arkadaş ziyareti (davet mektubu ile)',
+  'Sağlık turizmi: Belirli sağlık hizmetleri, tıbbi kontrol',
+  'Fuar veya etkinlik: Uluslararası fuar, konferans, festival katılımı',
+  'Dil kursu: Kısa süreli dil eğitimi',
+  'Düğün, cenaze, aile olayı: Spesifik aile olayı için ziyaret',
+];
+
+const HATALAR = [
+  '"İşsizim ama maddi durumum iyi" demekle yetinmek — kanıt gerekir',
+  'Sponsor belgelerini yetersiz hazırlamak',
+  'Belirsiz seyahat amacı ("gezmek") beyan etmek',
+  "Türkiye'de bağlarınızı kanıtlamamak (ev, aile, mülk belgelerini atlamak)",
+  'Uzun süreli seyahat planı (20-30 gün) — konsolosluk şüphelenir',
+  '"İş bulduğumda gelirim" gibi muğlak vaatler',
+];
+
+const ULKE_KATEGORILERI = [
+  { renk: 'emerald', baslik: 'Daha kolay', ulkeler: 'İtalya, Yunanistan, İspanya (turizm odaklı, esnek)' },
+  { renk: 'amber', baslik: 'Orta', ulkeler: 'Fransa, Portekiz, Macaristan' },
+  { renk: 'orange', baslik: 'Daha sıkı', ulkeler: 'Almanya, Hollanda, Belçika, Norveç (göçmenlik riskine hassas)' },
+  { renk: 'red', baslik: 'Çok sıkı', ulkeler: 'ABD, İngiltere, Kanada (iş geçmişi titizlikle incelenir)' },
+];
+
+const SSS = [
+  {
+    q: 'Hiç çalışmadım, hayatımda SGK kaydım yok, vize alabilir miyim?',
+    a: "Evet ama zor. Sponsor (ebeveyn veya eş) olmalı ve Türkiye'deki güçlü bağlarınız gösterilmeli. Kolay ülkeler (İtalya, Yunanistan) tercih edilmeli.",
+  },
+  {
+    q: 'İşsizlik ödeneği alıyorum, bu kanıt olur mu?',
+    a: 'Kısmen. İşsizlik ödeneği resmi bir gelir gibi görülür ama tek başına yeterli değildir. Ek birikim veya sponsor gerekir.',
+  },
+  {
+    q: 'Yeni istifa ettim, ay sonunda başka işe başlayacağım, ne yapmalıyım?',
+    a: 'Yeni iş sözleşmeniz varsa mükemmel bir kanıttır. "Hem ayrıldım hem döneceğim" durumu göstermek, Türkiye\'ye bağlılık kanıtıdır. Yeni iş sözleşmesini mutlaka başvuruya ekleyin.',
+  },
+  {
+    q: 'Eşim iş yapmıyor, kendi başıma vize nasıl alırım?',
+    a: 'Sizin veya eşinizin ebeveynleri sponsor olabilir. Alternatif olarak, birikimleriniz, mülkleriniz ve aile bağlarınız (çocuklarınızın okul kaydı) güçlü gösterilmelidir.',
+  },
+  {
+    q: 'Borçluyum, vize alabilir miyim?',
+    a: 'Borçlu olmak tek başına engel değildir. Kredi kartı borcu, konut kredisi, ihtiyaç kredisi gibi normal borçlar sorun değildir. Ancak icra takibi, haciz gibi ciddi borç durumları konsoloslukça değerlendirilir.',
+  },
+  {
+    q: 'Engelli raporum var, nasıl başvurmalıyım?',
+    a: 'Engellilik vize başvurusuna engel değildir. Sağlık raporunuz, engellilik belgeniz eklenir. Seyahat sigortası, engellilik durumunu kapsayacak özel bir poliçe olmalıdır. Refakatçi ile seyahat etmeniz tavsiye edilir (ona ayrı başvuru).',
+  },
+];
+
 const SCHEMA = {
   '@context': 'https://schema.org',
-  '@type': 'Article',
-  headline: POST.title,
-  description: POST.description,
-  author: { '@type': 'Organization', name: 'VizeAkıl', url: 'https://vizeakil.com' },
-  publisher: { '@type': 'Organization', name: 'VizeAkıl' },
-  datePublished: POST.date,
-  dateModified: POST.date,
-  url: `https://vizeakil.com/blog/${POST.slug}`,
+  '@graph': [
+    {
+      '@type': 'Article',
+      headline: POST.title,
+      description: POST.description,
+      author: { '@type': 'Organization', name: 'VizeAkıl', url: 'https://vizeakil.com' },
+      publisher: { '@type': 'Organization', name: 'VizeAkıl' },
+      datePublished: POST.date,
+      dateModified: POST.date,
+      url: `https://vizeakil.com/blog/${POST.slug}`,
+    },
+    {
+      '@type': 'FAQPage',
+      mainEntity: SSS.map((item) => ({
+        '@type': 'Question',
+        name: item.q,
+        acceptedAnswer: { '@type': 'Answer', text: item.a },
+      })),
+    },
+  ],
+};
+
+const COLOR_MAP: Record<string, string> = {
+  emerald: 'border-emerald-200 bg-emerald-50',
+  amber: 'border-amber-200 bg-amber-50',
+  orange: 'border-orange-200 bg-orange-50',
+  red: 'border-red-200 bg-red-50',
 };
 
 export default function IssizlerVizeBasvurusu() {
   return (
     <BlogPostLayout post={POST} schema={SCHEMA}>
       <p className="text-slate-700 leading-relaxed text-base mb-6">
-        "Çalışmıyorum, vize alamam" — bu yaygın yanılgı pek çok iyi başvuruyu daha başlamadan
-        engelliyor. Gerçek şu: İşsizlik tek başına ret sebebi değildir. Konsolosluk "çalışıyor
-        mu çalışmıyor mu" sorusunun ötesine bakar ve asıl cevabını "dönüş güvencesi ve masrafların
-        nasıl karşılanacağı" sorusunda arar. Bu rehber, geçici veya kalıcı olarak çalışmayan
-        kişilerin başvuru stratejisini gösterir.
+        "İşim yok, vize alamam" — bu cümleyi binlerce kişi söylüyor ve seyahat etmekten
+        vazgeçiyor. Oysa işsiz veya çalışmayan bir birey de, doğru stratejiyle vize alabilir.
+        İşsizlik tek başına bir ret sebebi değildir — asıl önemli olan, Türkiye'de güçlü
+        bağlarınızın olması ve seyahat süresince kendinizi finanse edebileceğinizdir. Bu rehber,
+        çalışmayan profillerin vize başvurusunu başarıyla nasıl tamamlayabileceğini anlatıyor.
       </p>
 
-      <div className="bg-brand-50 border border-brand-200 rounded-xl p-5 mb-8 flex gap-3">
-        <Heart className="w-5 h-5 text-brand-600 shrink-0 mt-0.5" />
-        <p className="text-brand-900 text-sm leading-relaxed">
-          <strong>Altın kural:</strong> İşsizlik = finansal eksikliktir; bağ eksikliği değil.
-          Finansal eksikliği sponsor ile, bağ eksikliğini aile, mülk, okul ile kapatın.
-        </p>
-      </div>
+      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">İşsizlik Vize Başvurusunda Ne Demek?</h2>
+      <p className="text-slate-700 leading-relaxed mb-4">
+        Vize başvurusunda "çalışmayan" kategorisine giren profiller:
+      </p>
+      <ul className="space-y-2 mb-6">
+        {PROFILLER.map((p) => (
+          <li key={p} className="flex gap-2 text-slate-700">
+            <Users className="w-5 h-5 text-brand-600 shrink-0 mt-0.5" />
+            <span>{p}</span>
+          </li>
+        ))}
+      </ul>
+      <p className="text-slate-700 leading-relaxed mb-8">
+        Her profilin farklı dinamikleri vardır. Ancak ortak noktada finansal kanıt, ailesel bağ ve
+        seyahat amacı netliği ön plandadır.
+      </p>
 
-      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">1. İşsizlik Türleri ve Yaklaşım</h2>
-      <div className="space-y-3 mb-8">
-        {[
-          { tur: 'Yeni mezun (iş aramada)', s: 'Diploma + aile sponsoru + ebeveyn banka dökümü. Yaş genç olduğu için tolerans yüksek.' },
-          { tur: 'İşten çıkarılmış (son 6 ay)', s: 'İşsizlik maaşı belgesi + eski işverenden tavsiye mektubu + birikim dökümü.' },
-          { tur: 'Uzun süreli işsiz (1+ yıl)', s: 'Sponsor şart. Sağlam mülk belgesi, aile bağı ve birikim kritik.' },
-          { tur: 'Kendi isteğiyle çalışmayan', s: 'Mülk geliri, yatırım getirisi, eş geliri belgeleri ön plana çıkarılmalı.' },
-          { tur: 'Ev hanımı', s: 'Eş sponsorluğu + çocuklar + evlilik cüzdanı tam belge seti.' },
-          { tur: 'Emekli', s: 'SGK emekli belgesi + maaşın düzenli yattığı banka + torunlar.' },
-        ].map(({ tur, s }) => (
-          <div key={tur} className="bg-white border border-slate-200 rounded-xl p-4 text-sm">
-            <p className="font-semibold text-slate-800 mb-1">{tur}</p>
-            <p className="text-slate-600">{s}</p>
+      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">Kritik Faktör: Sponsorun Kim Olacağı</h2>
+      <p className="text-slate-700 leading-relaxed mb-4">
+        Çalışmayan başvurucular için sponsorluk zorunlu değildir ama önemli ölçüde avantajlıdır.
+        Sponsor tipleri:
+      </p>
+      <div className="space-y-4 mb-8">
+        {SPONSORLAR.map((s) => (
+          <div key={s.tip} className="border border-slate-200 rounded-xl p-5 bg-white">
+            <h3 className="font-semibold text-slate-900 mb-2">{s.tip}</h3>
+            <p className="text-slate-700 text-sm leading-relaxed">{s.aciklama}</p>
           </div>
         ))}
       </div>
 
-      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">2. Sponsor Olmazsa Olmaz</h2>
+      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">Bireysel Başvuru İçin Güçlü Finansal Profil</h2>
       <p className="text-slate-700 leading-relaxed mb-4">
-        İşsizseniz banka dökümünüz tek başına genelde yeterli değildir. Sponsor paketinizi tam
-        sunun:
+        Sponsor olmadan, kendi adınıza başvurmak da mümkündür. Ancak çok güçlü bir finansal
+        profil gerekir:
       </p>
-      <ul className="space-y-2 mb-6">
-        {[
-          'Noter onaylı sponsor taahhüt mektubu (Türkçe + İngilizce)',
-          'Sponsorun 6 aylık banka dökümü (kaşeli)',
-          'Sponsorun SGK hizmet dökümü veya vergi levhası',
-          'Sponsorun son 3 maaş bordrosu',
-          'Sponsorun tapu/araç ruhsatı (varlık kanıtı)',
-          'Akrabalık belgesi (1. derece akraba idealdir)',
-          'Akrabalık 1. derece değilse nüfus kayıt örneği ile ilişki göster',
-        ].map((b) => (
-          <li key={b} className="flex items-start gap-2 text-sm text-slate-700">
-            <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-            {b}
+      <ul className="space-y-2 mb-4">
+        {BIREYSEL_PROFIL.map((b) => (
+          <li key={b} className="flex gap-2 text-slate-700">
+            <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
+            <span>{b}</span>
+          </li>
+        ))}
+      </ul>
+      <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-8 flex gap-3">
+        <XCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+        <p className="text-red-900 text-sm leading-relaxed">
+          "Hiç param yok, işim yok, ama gezmek istiyorum" başvurusu, konsolosluk için yüksek risk
+          sinyalidir.
+        </p>
+      </div>
+
+      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">İşsiz Başvurucu İçin Gerekli Belgeler</h2>
+      <div className="space-y-4 mb-8">
+        {BELGE_BLOKLARI.map((b) => (
+          <div key={b.baslik} className="border border-slate-200 rounded-xl p-5 bg-white">
+            <h3 className="font-semibold text-slate-900 mb-3">{b.baslik}</h3>
+            <ul className="space-y-2">
+              {b.items.map((i) => (
+                <li key={i} className="flex gap-2 text-slate-700 text-sm">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-1" />
+                  <span>{i}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+
+      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">Seyahat Amacı Nasıl Formüle Edilmeli?</h2>
+      <p className="text-slate-700 leading-relaxed mb-4">
+        Çalışmayan birey için en kritik soru "neden gidiyorsunuz?" olacaktır. Genel "turizm"
+        ifadesi yetersizdir. Daha spesifik amaçlar:
+      </p>
+      <ul className="space-y-2 mb-8">
+        {SEYAHAT_AMACLARI.map((a) => (
+          <li key={a} className="flex gap-2 text-slate-700">
+            <Sparkles className="w-5 h-5 text-brand-600 shrink-0 mt-0.5" />
+            <span>{a}</span>
           </li>
         ))}
       </ul>
 
-      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">3. Türkiye'ye Bağ Kanıtları</h2>
-      <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-5 mb-6 flex gap-3">
-        <Users className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
-        <div>
-          <p className="font-semibold text-emerald-800 text-sm mb-1">İşsiz ama "bağlı" olmanızı kanıtlayan belgeler</p>
-          <ul className="text-emerald-700 text-sm space-y-1 mt-1">
-            <li>• Tapu (kendi adınıza veya yakın aileye ait)</li>
-            <li>• Araç ruhsatı</li>
-            <li>• Evlilik cüzdanı</li>
-            <li>• Çocukların okul kayıt belgesi</li>
-            <li>• Türkiye'deki yaşlı anne/baba bakımı belgesi</li>
-            <li>• Kira kontratı (kiracı iseniz de stabiliteyi gösterir)</li>
-            <li>• Kredili mülk alımı — ileride ödenecek kredi Türkiye\'de kalma sebebi</li>
-          </ul>
-        </div>
-      </div>
-
-      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">4. Banka Dökümü Stratejisi</h2>
+      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">"İş Arıyorum" Beyanı Risk mi?</h2>
       <p className="text-slate-700 leading-relaxed mb-4">
-        İşsiz olsanız da banka hareketleriniz hikayenizi anlatır. Önerilen yaklaşım:
+        Bazı başvurucular, "yeni iş aradığım için seyahat ediyorum" diye beyan verir. Bu, çok
+        riskli bir stratejidir. Konsolosluk bu beyanı "kaçıp kalmaya çalışabilir" olarak algılar.
+        Çalışma amaçlı seyahat için zaten farklı vize türleri vardır (iş arama vizesi — Jobseeker
+        Visa).
       </p>
-      <div className="space-y-3 mb-8">
-        {[
-          { n: '1', b: 'Birikim hesabı açın', d: 'En az 50.000-100.000 TL birikim yaparak "birikim kültürü" gösterin.' },
-          { n: '2', b: 'Düzenli hareket yaratın', d: 'Aile desteği bile olsa aylık düzenli giriş görünsün.' },
-          { n: '3', b: 'Fatura ödemeleri', d: 'Kart ekstresinde elektrik, su, telefon, kira ödemeleri "yaşıyorum" sinyali.' },
-          { n: '4', b: 'Son dakika büyük para yatırmayın', d: 'Başvurudan 1 ay önce birden 200.000 TL yatmak = kırmızı bayrak.' },
-        ].map(({ n, b, d }) => (
-          <div key={n} className="flex gap-3 text-sm">
-            <span className="w-7 h-7 bg-brand-600 text-white rounded-full flex items-center justify-center font-bold shrink-0 text-xs mt-0.5">{n}</span>
-            <div>
-              <p className="font-semibold text-slate-800 mb-1">{b}</p>
-              <p className="text-slate-600 leading-relaxed">{d}</p>
-            </div>
-          </div>
-        ))}
-      </div>
+      <p className="text-slate-700 leading-relaxed mb-8">
+        Eğer gerçekten Almanya, Hollanda, İrlanda gibi ülkelere iş aramaya gidiyorsanız, özel "iş
+        arama vizesi" için başvurmanız gerekir (6-12 ay geçerli, farklı belgeler).
+      </p>
 
-      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">5. Başvuru Formundaki "Meslek" Sorusu</h2>
-      <div className="bg-amber-50 border border-amber-200 rounded-xl p-5 mb-6 flex gap-3">
-        <Info className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-        <div>
-          <p className="font-semibold text-amber-800 text-sm mb-1">Doğru ifade önemlidir</p>
-          <ul className="text-amber-700 text-sm space-y-1 mt-1">
-            <li>• "İşsiz" yerine "İş arayan" (Seeking employment)</li>
-            <li>• "Çalışmıyor" yerine "Ev hanımı" (Homemaker) — kadınlar için</li>
-            <li>• "Boşta" yerine "Özel sebepli ara" (Career break)</li>
-            <li>• Mezun olmuş iş arıyorsanız "Recent graduate" yazın</li>
-            <li>• "Student (mezun)" — bazı ülkeler için kullanılabilir</li>
-          </ul>
-        </div>
-      </div>
-
-      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">6. En Uygun Ülkeler</h2>
-      <div className="space-y-3 mb-8">
-        {[
-          { u: 'Yunanistan', n: 'Kapı vizesi seçeneği sezonluk; onay oranı yüksek.' },
-          { u: 'İtalya', n: 'Sponsor belgelerine toleranslı, ev hanımlarına kolay.' },
-          { u: 'İspanya', n: 'Aile ziyareti başvurularında esnek.' },
-          { u: 'Letonya/Litvanya', n: '%95 onay oranı, düşük yoğunluk.' },
-          { u: 'Hırvatistan', n: 'Yeni Schengen üyesi, Türklere olumlu yaklaşım.' },
-        ].map(({ u, n }) => (
-          <div key={u} className="bg-white border border-slate-200 rounded-xl p-4 text-sm">
-            <p className="font-semibold text-slate-800 mb-1">{u}</p>
-            <p className="text-slate-600">{n}</p>
-          </div>
-        ))}
-      </div>
-
-      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">7. Kaçınılması Gereken Ülkeler</h2>
-      <div className="bg-red-50 border border-red-200 rounded-xl p-5 mb-6 flex gap-3">
-        <AlertTriangle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
-        <div>
-          <p className="font-semibold text-red-800 text-sm mb-1">İşsizlerin en çok reddedildiği ülkeler</p>
-          <ul className="text-red-700 text-sm space-y-1 mt-1">
-            <li>• Belçika — %30+ ret oranı işsizler için</li>
-            <li>• Almanya — maddi yeterlilik çok sıkı</li>
-            <li>• Hollanda — sponsor formu (garantstelling) gerektiriyor</li>
-            <li>• Danimarka — en yüksek ret oranı</li>
-            <li>• İsveç — işsizlik yüksek risk olarak görülüyor</li>
-          </ul>
-        </div>
-      </div>
-
+      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">Başarı Hikayesi: Can Bey'in Stratejisi</h2>
       <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-5 mb-8 flex gap-3">
-        <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
-        <div>
-          <p className="font-semibold text-emerald-800 text-sm mb-1">Danışman İpucu</p>
-          <p className="text-emerald-700 text-sm leading-relaxed">
-            İşsiz değilseniz ama işvereninizle aranız iyi değilse, başvurudan önce pozisyonu
-            netleştirin. İşverenden izin belgesi alamayacağınız zor bir durumdaysanız, başvurudan
-            önce işten ayrılıp "emeklilik planı" veya "kendi işini kurma" gibi bir durum belgesi
-            hazırlamak ret riskini azaltır.
-          </p>
-        </div>
+        <Heart className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
+        <p className="text-emerald-900 text-sm leading-relaxed">
+          32 yaşında, son 8 ayda işsiz, henüz iş bulamamış Can Bey, ilk başvurusunda reddedildi.
+          İkinci başvurusunda şu stratejiyi uyguladı: (1) babası emekli ve sponsor oldu (aylık
+          25.000 TL emekli maaşı), (2) kendi banka hesabında iki yıldır 80.000 TL birikim
+          gösterdi, (3) ailenin İstanbul'da 3 dairesi var (tapu belgeleri eklendi), (4) Roma'da 7
+          günlük net seyahat planı hazırladı (müzeler, turlar), (5) iki yıl önceki çalıştığı yerden
+          "geri dönüş teklifi" alındığını gösteren bir mesaj. Başvurusu onaylandı.
+        </p>
       </div>
 
-      <div className="mt-12 bg-brand-50 border border-brand-200 rounded-2xl p-6">
-        <h3 className="font-bold text-brand-900 mb-2">Özet</h3>
-        <p className="text-brand-800 text-sm leading-relaxed">
-          İşsiz olmak vize başvurusunda otomatik ret değildir. Sponsor + sağlam Türkiye bağları +
-          stratejik ülke seçimi üçlüsüyle onay oranı %80'e kadar çıkabilir. Önemli olan "İşsizim
-          ama geri dönecek düzenim var" hikayesini belgelerle kanıtlamaktır.
-        </p>
+      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">Sık Yapılan Hatalar</h2>
+      <ol className="list-decimal list-inside space-y-2 text-slate-700 mb-8 pl-2">
+        {HATALAR.map((h) => (
+          <li key={h}>{h}</li>
+        ))}
+      </ol>
+
+      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">Hangi Ülkeler İşsizlere Daha Toleranslı?</h2>
+      <p className="text-slate-700 leading-relaxed mb-4">
+        Tüm ülkeler için kural teknik olarak aynı olsa da, bazı ülkeler çalışmayan başvurculara
+        daha esnek yaklaşır:
+      </p>
+      <div className="grid gap-3 sm:grid-cols-2 mb-8">
+        {ULKE_KATEGORILERI.map((k) => (
+          <div key={k.baslik} className={`border rounded-xl p-4 ${COLOR_MAP[k.renk]}`}>
+            <h3 className="font-semibold text-slate-900 mb-1">{k.baslik}</h3>
+            <p className="text-slate-700 text-sm">{k.ulkeler}</p>
+          </div>
+        ))}
+      </div>
+
+      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">Sık Sorulan Sorular (SSS)</h2>
+      <div className="space-y-4 mb-10">
+        {SSS.map((item) => (
+          <div key={item.q} className="border border-slate-200 rounded-xl p-5 bg-white">
+            <h3 className="font-semibold text-slate-900 mb-2">{item.q}</h3>
+            <p className="text-slate-700 text-sm leading-relaxed">{item.a}</p>
+          </div>
+        ))}
       </div>
     </BlogPostLayout>
   );

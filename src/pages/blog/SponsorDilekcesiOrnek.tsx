@@ -1,217 +1,334 @@
 import React from 'react';
-import { CheckCircle2, Info, FileText, AlertTriangle, PenLine } from 'lucide-react';
+import { CheckCircle2, Info, FileText, AlertTriangle, PenLine, Users, Briefcase } from 'lucide-react';
 import BlogPostLayout from './BlogPostLayout';
 import { BlogPost } from './BlogIndex';
 
 export const POST: BlogPost = {
   slug: 'sponsor-dilekcesi-nasil-yazilir-ornek',
-  title: 'Sponsor Dilekçesi Nasıl Yazılır? Örnek Metin ve 2026 Rehber',
-  description: 'Vize başvurusu için sponsor dilekçesi (taahhütname) nasıl yazılır, hangi bilgiler zorunludur, noter onayı gerekir mi — indirilebilir şablon ve örnekler.',
+  title: 'Sponsor Dilekçesi Nasıl Yazılır? Örnek Şablonlar ve İpuçları',
+  description: 'Vize başvurusu için sponsor dilekçesi nasıl yazılır? Noter onaylı örnek şablonlar, İngilizce sürüm, sık yapılan hatalar ve pratik ipuçları.',
   category: 'İpucu',
-  readingTime: 7,
+  readingTime: 9,
   date: '2026-04-17',
   tags: ['sponsor dilekçesi', 'taahhütname', 'vize belgeleri', 'şablon'],
 };
 
+const BIRINCI_DERECE = ['Eş', 'Anne ve baba', '18 yaş üstü çocuk'];
+const IKINCI_DERECE = ['Kardeş', 'Büyükanne, büyükbaba', 'Torun'];
+const UCUNCU_DERECE = [
+  'Amca, dayı, hala, teyze',
+  'Yeğen',
+  'Yakın arkadaşlar (zayıf sponsor, destekleyici olarak kabul edilir)',
+  'İş arkadaşları, yöneticiler (iş amaçlı başvurular için)',
+];
+
+const SPONSOR_BILGILERI = [
+  'Tam adı ve soyadı',
+  'TC kimlik numarası',
+  'Doğum tarihi ve yeri',
+  'Ev adresi',
+  'Telefon numarası',
+  'E-posta adresi',
+  'Mesleği ve çalıştığı yer',
+];
+
+const BASVURUCU_BILGILERI = [
+  'Tam adı ve soyadı',
+  'TC kimlik numarası',
+  'Doğum tarihi',
+  'Pasaport numarası',
+  'Akrabalık bağı (eş, oğul/kız, vb.)',
+];
+
+const SEYAHAT_BILGILERI = [
+  'Hedef ülke (veya Schengen bölgesi)',
+  'Seyahat tarihleri (gidiş-dönüş)',
+  'Seyahat süresi',
+  'Seyahat amacı (turizm, aile ziyareti, vb.)',
+];
+
+const FINANSAL_TAAHHUT = [
+  '"Tüm masrafları karşılayacağım" beyanı',
+  'Konaklama, yol, günlük harcama, sağlık masraflarını kapsadığı',
+  'Başvurucunun ülkesine döneceğine dair garanti',
+  'Sponsorun finansal sorumluluk aldığı açıklaması',
+];
+
+const HATALAR = [
+  'Noter onayı yaptırmamak — en büyük hata, geçersiz kabul edilir',
+  'Genel ifadelerle yazmak ("masrafları karşılarım") — detaylı kalem kalem belirtilmeli',
+  'Finansal sorumluluğu belirsiz bırakmak — "kısmen" veya "gerekirse" gibi ifadelerden kaçının',
+  'Başvurucunun bilgilerini eksik yazmak — TC kimlik no, pasaport no unutulmamalı',
+  'Dönüş garantisi vermemek — "Türkiye\'ye döneceğine kefalet ediyorum" cümlesi mutlaka olmalı',
+  'Tarihleri kontrol etmemek — gezi tarihleri ve sponsor dilekçesi uçak rezervasyonu ile uyumlu olmalı',
+  'İmzanın eksik olması — dilekçe sponsor tarafından imzalanmalı, noter tarafından onaylanmalı',
+];
+
+const EK_BELGELER = [
+  'Sponsorun kimlik belgesi fotokopisi (nüfus cüzdanı)',
+  'Sponsorun son 6 aylık banka hesap dökümü',
+  'Sponsorun çalışma belgesi (şirket antetli kağıtta)',
+  'Sponsorun son 3 aylık maaş bordroları',
+  'Sponsorun vergi levhası (şirket sahibiyse)',
+  'Akrabalık bağını gösteren belgeler (vukuatlı nüfus kayıt örneği, evlilik cüzdanı)',
+];
+
+const ISVEREN_TAAHHUT = [
+  'Şirket antetli kağıt',
+  'Şirketin ticari unvanı, adresi, vergi numarası',
+  'Çalışanın seyahat amacı ve süresi',
+  'Seyahat masraflarının şirket tarafından karşılandığı beyanı',
+  'İmza yetkilisinin imzası ve kaşesi',
+];
+
+const SSS = [
+  {
+    q: 'Sponsor dilekçesi noter onaylı olmazsa kabul edilir mi?',
+    a: 'Çoğunlukla hayır. Schengen ve ABD gibi büyük vize başvuruları için noter onayı şarttır. Kabul edilen istisnalar: işveren sponsorluğu (şirket imza sirküsü yeterli).',
+  },
+  {
+    q: 'Birden fazla sponsor olabilir mi?',
+    a: 'Evet. Örneğin hem anne hem baba birlikte sponsor olabilir. Her biri ayrı dilekçe yazar, kendi banka dökümleri ve finansal belgeleri ekler. Bu, daha güçlü bir başvuru profili oluşturur.',
+  },
+  {
+    q: 'Sponsor yurtdışında yaşıyorsa ne olur?',
+    a: 'Yurtdışındaki akraba sponsorluk yapabilir. Bu durumda "davet üzerine ziyaret" başvurusu yapılır. Örneğin Almanya\'da yaşayan bir akraba, Verpflichtungserklärung ile sponsor olur. Başvurucu, davet amaçlı Schengen vizesi için başvurur.',
+  },
+  {
+    q: 'Sponsor ne kadar banka bakiyesi göstermeli?',
+    a: 'Başvurucunun seyahat maliyetinin en az 2-3 katı. Örneğin 10 günlük Almanya seyahati için sponsor, yaklaşık 150.000-200.000 TL banka bakiyesi göstermelidir.',
+  },
+  {
+    q: 'Kendi adıma hiç belge yoksa, tamamen sponsor üzerinden başvurabilir miyim?',
+    a: "Evet ama riskli. Sponsor belgeleri yeterli olsa bile, kendi adınıza da Türkiye'deki bağlarınızı gösteren belgeler (aile kaydı, ev tapusu) sunmanız başarı şansını artırır.",
+  },
+  {
+    q: 'Dilekçeyi İngilizce yazabilir miyim, noter Türkçe mi onaylar?',
+    a: 'Noter Türkçe yazılmış dilekçeyi onaylar. İngilizce versiyonu yeminli tercüman tarafından ayrı olarak hazırlanır. İki dilde de aynı içerik bulunmalıdır.',
+  },
+];
+
 const SCHEMA = {
   '@context': 'https://schema.org',
-  '@type': 'Article',
-  headline: POST.title,
-  description: POST.description,
-  author: { '@type': 'Organization', name: 'VizeAkıl', url: 'https://vizeakil.com' },
-  publisher: { '@type': 'Organization', name: 'VizeAkıl' },
-  datePublished: POST.date,
-  dateModified: POST.date,
-  url: `https://vizeakil.com/blog/${POST.slug}`,
+  '@graph': [
+    {
+      '@type': 'HowTo',
+      name: POST.title,
+      description: POST.description,
+      step: [
+        { '@type': 'HowToStep', name: 'Sponsor bilgilerini ekleyin', text: 'Ad, TC kimlik, adres, meslek, banka dökümü için gerekli bilgileri hazırlayın.' },
+        { '@type': 'HowToStep', name: 'Başvurucu bilgilerini ekleyin', text: 'TC kimlik, pasaport numarası, akrabalık bağı mutlaka yer almalıdır.' },
+        { '@type': 'HowToStep', name: 'Seyahat ve finansal taahhüdü yazın', text: 'Kalem kalem karşılanacak masraflar (ulaşım, konaklama, yaşam, sağlık) detaylı belirtilmeli.' },
+        { '@type': 'HowToStep', name: 'Noter onayı alın', text: 'Sponsor dilekçesini noter tasdiki ile onaylatın, ardından yeminli tercüme yaptırın.' },
+      ],
+    },
+    {
+      '@type': 'FAQPage',
+      mainEntity: SSS.map((item) => ({
+        '@type': 'Question',
+        name: item.q,
+        acceptedAnswer: { '@type': 'Answer', text: item.a },
+      })),
+    },
+  ],
 };
 
 export default function SponsorDilekcesiOrnek() {
   return (
     <BlogPostLayout post={POST} schema={SCHEMA}>
       <p className="text-slate-700 leading-relaxed text-base mb-6">
-        Sponsor dilekçesi (taahhütname), vize başvurusunda kişinin masraflarını başkasının
-        karşılayacağını beyan eden resmi bir belgedir. Ev hanımları, öğrenciler, işsizler ve
-        düşük gelirli başvurucular için kritiktir. Yanlış yazılmış veya eksik bilgili bir sponsor
-        dilekçesi tüm başvuruyu geçersiz kılabilir. Bu rehber sponsor dilekçesinin nasıl
-        yazılması gerektiğini, örnek metinleri ve yaygın hataları gösterir.
+        Sponsor dilekçesi, vize başvurusunun en önemli belgelerinden biridir — ama aynı zamanda
+        en yanlış yazılanı da. İnternette dolaşan hatalı şablonlar, eksik bilgilendirmeler yüzünden
+        pek çok başvuru gereksiz yere reddediliyor. Bu rehberde, geçerli bir sponsor dilekçesinin
+        nasıl yazılacağını, hangi bilgilerin mutlaka bulunması gerektiğini ve örnek şablonlarla
+        birlikte anlatıyoruz.
       </p>
 
-      <div className="bg-brand-50 border border-brand-200 rounded-xl p-5 mb-8 flex gap-3">
-        <PenLine className="w-5 h-5 text-brand-600 shrink-0 mt-0.5" />
-        <p className="text-brand-900 text-sm leading-relaxed">
-          <strong>Kritik nokta:</strong> Sponsor dilekçesi tek başına yeterli değildir.
-          Sponsor'un banka dökümü, gelir belgesi ve akrabalık belgesi ile desteklenmek zorundadır.
-          Dilekçe bir "giriş", belgeler ise "ispat"tır.
-        </p>
-      </div>
+      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">Sponsor Dilekçesi Nedir?</h2>
+      <p className="text-slate-700 leading-relaxed mb-8">
+        Sponsor dilekçesi (sponsorship letter), başvurucunun seyahat giderlerini üçüncü bir kişinin
+        karşılayacağını beyan eden resmi taahhüt belgesidir. Genellikle aile üyeleri (eş, ebeveyn,
+        kardeş, çocuk) veya yakın akrabalar tarafından verilir. Hem Schengen, hem ABD, hem
+        İngiltere, hem Kanada başvurularında kabul edilir.
+      </p>
 
-      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">1. Sponsor Dilekçesinde Olması Gerekenler</h2>
+      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">Sponsor Olarak Kim Beyan Verebilir?</h2>
+      <p className="text-slate-700 leading-relaxed mb-4">Sponsor olma hakkı genellikle şu kişilerdedir:</p>
+
+      <h3 className="text-lg font-semibold text-slate-900 mt-6 mb-3">Birinci Derece Akrabalar (En Güçlü)</h3>
       <ul className="space-y-2 mb-6">
-        {[
-          'Sponsorun tam kimlik bilgileri (ad, soyad, TC kimlik no, doğum tarihi, adres)',
-          'Sponsorun mesleği ve işyeri bilgisi',
-          'Başvurucunun kimlik bilgileri (ad, soyad, pasaport no)',
-          'Başvurucu ile sponsor arasındaki akrabalık ilişkisi',
-          'Seyahat tarihleri (gidiş-dönüş) ve gidilecek ülke',
-          'Hangi masrafları karşılayacak (uçak, otel, günlük, sigorta)',
-          'Kısmi/tam sponsorluk olduğu',
-          'Dilekçenin yazıldığı tarih ve imza',
-        ].map((b) => (
-          <li key={b} className="flex items-start gap-2 text-sm text-slate-700">
-            <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-            {b}
+        {BIRINCI_DERECE.map((b) => (
+          <li key={b} className="flex gap-2 text-slate-700">
+            <Users className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
+            <span>{b}</span>
           </li>
         ))}
       </ul>
 
-      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">2. Örnek Sponsor Dilekçesi (Türkçe)</h2>
-      <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 mb-6 text-sm text-slate-700 leading-relaxed">
-        <p className="font-semibold mb-3">[Tarih: ...]</p>
-        <p className="font-semibold mb-3">Sayın İtalya Büyükelçiliği Konsolosluk Birimi'ne,</p>
-        <p className="mb-3">
-          Ben, <strong>[Ad Soyad]</strong>, TC Kimlik No: <strong>[... 11 hane ...]</strong>,
-          <strong> [Doğum Tarihi]</strong> doğumlu, <strong>[Ev Adresi]</strong> ikametgahında,
-          <strong> [Meslek]</strong> olarak <strong>[İşyeri]</strong>'nde çalışmaktayım.
-          Aşağıda bilgileri yer alan kişinin eşim/kızım/oğlum/babam/... olduğunu beyan ederim:
-        </p>
-        <div className="bg-white border border-slate-200 rounded p-3 mb-3">
-          <p>Ad Soyad: <strong>[Başvurucu Ad Soyad]</strong></p>
-          <p>TC Kimlik No: <strong>[...]</strong></p>
-          <p>Pasaport No: <strong>[...]</strong></p>
-          <p>Doğum Tarihi: <strong>[...]</strong></p>
-          <p>Akrabalık: <strong>Eşim / Kızım / Oğlum / ...</strong></p>
-        </div>
-        <p className="mb-3">
-          Eşimin/Kızımın/Oğlumun <strong>[Gidiş Tarihi] - [Dönüş Tarihi]</strong> tarihleri arasında
-          <strong> [Ülke]</strong>'ye yapacağı turistik seyahatin tüm masraflarını (uçak bileti,
-          konaklama, günlük harcamalar, seyahat sağlık sigortası) tarafımdan karşılanacağını
-          kabul, beyan ve taahhüt ederim.
-        </p>
-        <p className="mb-3">
-          Ekte banka hesap dökümüm, maaş bordrom, SGK hizmet dökümüm ve nüfus kayıt örneğim yer
-          almaktadır.
-        </p>
-        <p className="mb-3">Saygılarımla,</p>
-        <p className="mt-4">
-          <strong>[Ad Soyad]</strong><br />
-          İmza: _____________<br />
-          Telefon: [...]<br />
-          E-posta: [...]
-        </p>
-      </div>
-
-      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">3. İngilizce Versiyonu</h2>
-      <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 mb-6 text-sm text-slate-700 leading-relaxed">
-        <p className="font-semibold mb-3">To the Consulate of [Country],</p>
-        <p className="mb-3">
-          I, <strong>[Full Name]</strong>, Turkish ID No: <strong>[...]</strong>, born on
-          <strong> [DOB]</strong>, residing at <strong>[Address]</strong>, working as
-          <strong> [Occupation]</strong> at <strong>[Employer]</strong>, hereby declare and
-          undertake that I will fully cover all travel expenses (including flight tickets,
-          accommodation, daily expenses, travel health insurance) of my <strong>spouse /
-          daughter / son / ...</strong>, <strong>[Applicant Name]</strong> (Passport No:
-          <strong> [...]</strong>), during his/her trip to <strong>[Country]</strong> between
-          <strong> [Start Date]</strong> and <strong>[End Date]</strong>.
-        </p>
-        <p className="mb-3">
-          Attached please find my bank statement, salary slip, employment certificate and
-          family registry document.
-        </p>
-        <p className="mb-3">Sincerely,</p>
-        <p>
-          <strong>[Full Name]</strong><br />
-          Signature: _____________<br />
-          Phone: [...]<br />
-          E-mail: [...]
-        </p>
-      </div>
-
-      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">4. Noter Onayı Gerekli mi?</h2>
-      <div className="bg-amber-50 border border-amber-200 rounded-xl p-5 mb-6 flex gap-3">
-        <Info className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-        <div>
-          <p className="font-semibold text-amber-800 text-sm mb-1">Ülkeye göre değişir</p>
-          <ul className="text-amber-700 text-sm space-y-1 mt-1">
-            <li>• <strong>Schengen çoğu:</strong> Noter onayı önerilir ama zorunlu değildir.</li>
-            <li>• <strong>Almanya, Hollanda:</strong> "Verpflichtungserklärung" / "Garantstelling" — resmi formda, belediyeden onaylı gerekli.</li>
-            <li>• <strong>İngiltere:</strong> Noter onayı gerekli değil, imza yeterli.</li>
-            <li>• <strong>ABD:</strong> I-134 formu (Affidavit of Support) önerilir ama zorunlu değildir.</li>
-            <li>• <strong>Kanada:</strong> Noter onayı şiddetle önerilir.</li>
-          </ul>
-        </div>
-      </div>
-
-      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">5. Dilekçeye Eklenecek Belgeler</h2>
+      <h3 className="text-lg font-semibold text-slate-900 mt-6 mb-3">İkinci Derece Akrabalar</h3>
       <ul className="space-y-2 mb-6">
-        {[
-          'Sponsorun son 6 aylık banka dökümü (kaşeli, imzalı)',
-          'Sponsorun SGK hizmet dökümü',
-          'Sponsorun son 3 maaş bordrosu VEYA vergi levhası (serbest meslek)',
-          'Sponsorun işveren yazısı (antetli, çalıştığına dair)',
-          'Sponsorun pasaport fotokopisi veya kimlik fotokopisi',
-          'Tapu fotokopisi (varsa — mülk kanıtı)',
-          'Akrabalık belgesi (nüfus kayıt örneği, evlilik cüzdanı vs.)',
-        ].map((b) => (
-          <li key={b} className="flex items-start gap-2 text-sm text-slate-700">
-            <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-            {b}
+        {IKINCI_DERECE.map((b) => (
+          <li key={b} className="flex gap-2 text-slate-700">
+            <Users className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+            <span>{b}</span>
           </li>
         ))}
       </ul>
 
-      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">6. En Sık Yapılan Hatalar</h2>
-      <div className="bg-red-50 border border-red-200 rounded-xl p-5 mb-6 flex gap-3">
-        <AlertTriangle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
-        <div>
-          <p className="font-semibold text-red-800 text-sm mb-1">Dilekçeniz geçersiz sayılmasın</p>
-          <ul className="text-red-700 text-sm space-y-1 mt-1">
-            <li>• Tarih eksik veya güncel değil (1 aydan eski)</li>
-            <li>• Sponsor'un imzası yok veya kopyalandığı belli</li>
-            <li>• Akrabalık belirtilmemiş veya "arkadaş" yazılmış (kabul edilmeyebilir)</li>
-            <li>• Hangi masrafları karşılayacağı spesifik değil</li>
-            <li>• Başvurucunun kimlik bilgisi yanlış yazılmış</li>
-            <li>• Banka dökümü ile dilekçe tutarsız (bakiye vaat edilenin altında)</li>
-          </ul>
-        </div>
+      <h3 className="text-lg font-semibold text-slate-900 mt-6 mb-3">Üçüncü Derece ve Yakın Kişiler</h3>
+      <ul className="space-y-2 mb-6">
+        {UCUNCU_DERECE.map((b) => (
+          <li key={b} className="flex gap-2 text-slate-700">
+            <Users className="w-5 h-5 text-slate-500 shrink-0 mt-0.5" />
+            <span>{b}</span>
+          </li>
+        ))}
+      </ul>
+      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-8 flex gap-3">
+        <Info className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
+        <p className="text-blue-900 text-sm leading-relaxed">
+          <strong>Önemli:</strong> Sponsor ne kadar yakın akrabaysa, başvurunun başarı şansı o
+          kadar artar. Konsolosluk, birinci derece aile üyelerinin taahhütlerine daha çok güvenir.
+        </p>
       </div>
 
-      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">7. Kimler Sponsor Olabilir?</h2>
-      <div className="space-y-3 mb-8">
-        {[
-          { k: '1. Derece Akraba', n: 'Eş, anne, baba, oğul, kız — her konsoloslukta kabul edilir.' },
-          { k: '2. Derece Akraba', n: 'Kardeş, dede, nine, amca, teyze — akrabalık belgesi ile.' },
-          { k: '3. Derece Akraba', n: 'Kuzen — kabul edilir ama daha detaylı akrabalık belgesi gerekir.' },
-          { k: 'Eş sayılan ilişki', n: 'Nikahsız birlikte yaşama — bazı ülkelerde (Hollanda, Almanya) tanınır; noter belgesi gerekir.' },
-          { k: 'Arkadaş veya işveren', n: 'Çok zor. İş gezisi değilse kabul görmeyebilir.' },
-        ].map(({ k, n }) => (
-          <div key={k} className="bg-white border border-slate-200 rounded-xl p-4 text-sm">
-            <p className="font-semibold text-slate-800 mb-1">{k}</p>
-            <p className="text-slate-600">{n}</p>
+      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">Sponsor Dilekçesinde Olması Gerekenler</h2>
+      <p className="text-slate-700 leading-relaxed mb-4">
+        Geçerli bir sponsor dilekçesinde aşağıdaki bilgiler bulunmalıdır:
+      </p>
+
+      <h3 className="text-lg font-semibold text-slate-900 mt-6 mb-3">Sponsorun Bilgileri</h3>
+      <ul className="space-y-2 mb-6">
+        {SPONSOR_BILGILERI.map((b) => (
+          <li key={b} className="flex gap-2 text-slate-700"><CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" /><span>{b}</span></li>
+        ))}
+      </ul>
+
+      <h3 className="text-lg font-semibold text-slate-900 mt-6 mb-3">Başvurucunun Bilgileri</h3>
+      <ul className="space-y-2 mb-6">
+        {BASVURUCU_BILGILERI.map((b) => (
+          <li key={b} className="flex gap-2 text-slate-700"><CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" /><span>{b}</span></li>
+        ))}
+      </ul>
+
+      <h3 className="text-lg font-semibold text-slate-900 mt-6 mb-3">Seyahat Bilgileri</h3>
+      <ul className="space-y-2 mb-6">
+        {SEYAHAT_BILGILERI.map((b) => (
+          <li key={b} className="flex gap-2 text-slate-700"><CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" /><span>{b}</span></li>
+        ))}
+      </ul>
+
+      <h3 className="text-lg font-semibold text-slate-900 mt-6 mb-3">Finansal Taahhüt</h3>
+      <ul className="space-y-2 mb-6">
+        {FINANSAL_TAAHHUT.map((b) => (
+          <li key={b} className="flex gap-2 text-slate-700"><CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" /><span>{b}</span></li>
+        ))}
+      </ul>
+
+      <h3 className="text-lg font-semibold text-slate-900 mt-6 mb-3">Noter Onayı</h3>
+      <p className="text-slate-700 leading-relaxed mb-8">
+        Sponsor dilekçesi, noter tarafından tasdiklenmiş olmalıdır. Ev ve özel noterler bu işlemi
+        15-30 dakika içinde yapabilir. Noter harcı 2026 yılı için yaklaşık 600-900 TL'dir.
+      </p>
+
+      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">Sponsor Dilekçesi Örnek Şablon 1: Eş Sponsorluğu</h2>
+      <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 mb-8">
+        <p className="text-slate-800 text-sm leading-relaxed whitespace-pre-line font-mono">
+{`Sayın [Ülke] Başkonsolosluğu'na,
+
+Ben, [Sponsor Tam Ad], [TC Kimlik No] kimlik numaralı, [Adres] adresinde ikamet eden, [Meslek] mesleğini icra etmekteyim. Eşim [Başvurucu Tam Ad] ([TC Kimlik No], Pasaport No: [Pasaport No])'un [Başlangıç Tarihi] - [Bitiş Tarihi] tarihleri arasında [Ülke] ülkesine yapacağı [Seyahat Amacı] amaçlı seyahati süresince;
+
+1. Konaklama masraflarını,
+2. Ulaşım masraflarını,
+3. Günlük yaşam harcamalarını,
+4. Sağlık ve acil durum masraflarını
+
+tarafımdan karşılayacağımı, eşimin seyahat sonunda Türkiye'ye döneceğine kefalet ettiğimi ve bu konuda tüm finansal sorumluluğu üstlendiğimi beyan ederim.
+
+Ek belgelerimle birlikte bu taahhütnameyi saygılarımla sunarım.
+
+[Sponsor Tam Ad], İmza, Tarih`}
+        </p>
+      </div>
+
+      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">Sponsor Dilekçesi Örnek Şablon 2: Ebeveyn Sponsorluğu (Öğrenci İçin)</h2>
+      <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 mb-8">
+        <p className="text-slate-800 text-sm leading-relaxed whitespace-pre-line font-mono">
+{`Sayın [Ülke] Başkonsolosluğu'na,
+
+Ben, [Ebeveyn Adı], [TC Kimlik No], [Adres] adresinde ikamet etmekteyim ve [Meslek] mesleğini icra ediyorum. Kızım/Oğlum [Öğrenci Adı] ([TC Kimlik No]), [Pasaport No] numaralı pasaporta sahiptir ve [Üniversite] adlı üniversitede [Program]'de eğitim görmektedir. Çocuğumun [Seyahat Tarihleri] tarihleri arasında [Ülke] ülkesinde [Seyahat Amacı] amacıyla bulunacağı süre zarfında;
+
+1. Uçak biletleri,
+2. Konaklama giderleri,
+3. Günlük yaşam giderleri,
+4. Sağlık sigortası ve acil sağlık masrafları,
+5. Tüm diğer seyahat masrafları
+
+tarafımdan karşılanacak olup, ekte sunulan banka dökümlerimde bu masrafları karşılayabileceğim ispat edilmektedir. Çocuğumun eğitim faaliyetleri sonrası Türkiye'ye kesin olarak döneceğini tekeffül ediyorum.
+
+Saygılarımla.
+
+[Ebeveyn Adı], İmza, Tarih`}
+        </p>
+      </div>
+
+      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">Sponsor Dilekçesinde Sık Yapılan Hatalar</h2>
+      <ol className="list-decimal list-inside space-y-2 text-slate-700 mb-8 pl-2">
+        {HATALAR.map((h) => (
+          <li key={h}>{h}</li>
+        ))}
+      </ol>
+
+      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">İngilizce Çeviri Gerekli mi?</h2>
+      <p className="text-slate-700 leading-relaxed mb-8">
+        Evet, çoğu ülkede tavsiye edilir. Türkçe noter onaylı dilekçenin yanı sıra, yeminli
+        tercüman tarafından yapılmış İngilizce veya hedef ülkenin dilindeki (Almanca, Fransızca,
+        İspanyolca) çevirisi eklenmelidir. Yeminli tercüme ücreti genellikle 200-500 TL arasıdır.
+      </p>
+
+      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">Sponsor Dilekçesine Eklenmesi Gereken Belgeler</h2>
+      <p className="text-slate-700 leading-relaxed mb-4">
+        Sponsor dilekçesi tek başına yeterli değildir. Ekinde şu belgeler olmalıdır:
+      </p>
+      <ul className="space-y-2 mb-8">
+        {EK_BELGELER.map((b) => (
+          <li key={b} className="flex gap-2 text-slate-700">
+            <FileText className="w-5 h-5 text-brand-600 shrink-0 mt-0.5" />
+            <span>{b}</span>
+          </li>
+        ))}
+      </ul>
+
+      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">Almanya İçin Özel Durum: Verpflichtungserklärung</h2>
+      <p className="text-slate-700 leading-relaxed mb-8">
+        Almanya, sponsor dilekçesi için kendi standart formunu kullanır: Verpflichtungserklärung.
+        Bu form Almanya'daki sponsor (akraba, arkadaş) tarafından Alman yetkililerden alınır ve
+        Türkiye'deki başvurucuya gönderilir. Normal Türkçe sponsor dilekçesinin yerine geçmez —
+        Almanya'nın kendi formu gereklidir.
+      </p>
+
+      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">İş Amaçlı Sponsor (İşveren Taahhütnamesi)</h2>
+      <p className="text-slate-700 leading-relaxed mb-4">
+        İş amaçlı seyahatlerde sponsor genellikle işveren olur. İşveren tarafından verilen sponsor
+        dilekçesinde:
+      </p>
+      <ul className="space-y-2 mb-8">
+        {ISVEREN_TAAHHUT.map((b) => (
+          <li key={b} className="flex gap-2 text-slate-700">
+            <Briefcase className="w-5 h-5 text-brand-600 shrink-0 mt-0.5" />
+            <span>{b}</span>
+          </li>
+        ))}
+      </ul>
+
+      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">Sık Sorulan Sorular (SSS)</h2>
+      <div className="space-y-4 mb-10">
+        {SSS.map((item) => (
+          <div key={item.q} className="border border-slate-200 rounded-xl p-5 bg-white">
+            <h3 className="font-semibold text-slate-900 mb-2">{item.q}</h3>
+            <p className="text-slate-700 text-sm leading-relaxed">{item.a}</p>
           </div>
         ))}
-      </div>
-
-      <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-5 mb-8 flex gap-3">
-        <FileText className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
-        <div>
-          <p className="font-semibold text-emerald-800 text-sm mb-1">Danışman İpucu</p>
-          <p className="text-emerald-700 text-sm leading-relaxed">
-            Dilekçenizi el yazısıyla değil, bilgisayarda yazıp sadece imzayı elle atın. Mümkünse
-            noterde onaylatın (50-100 TL). Konsolosluk "bu kişi gerçekten imzaladı mı"
-            şüphesine düşmesin. İngilizce tercümesini de mutlaka ekleyin — bazı görevliler
-            Türkçe anlamıyor ve önemli detayları kaçırabilir.
-          </p>
-        </div>
-      </div>
-
-      <div className="mt-12 bg-brand-50 border border-brand-200 rounded-2xl p-6">
-        <h3 className="font-bold text-brand-900 mb-2">Özet</h3>
-        <p className="text-brand-800 text-sm leading-relaxed">
-          Sponsor dilekçesi iyi yazıldığında başvurunun belkemiğidir. 8 zorunlu bilgi +
-          destekleyici belgeler + (gerekirse) noter onayı üçlüsüyle hazırlanan dilekçe,
-          ev hanımı/öğrenci/işsiz başvurularının onay oranını %70'ten %90'a çıkarabilir.
-          Şablonu kopyalayıp bilgilerinizi girerek hızlıca hazırlayabilirsiniz.
-        </p>
       </div>
     </BlogPostLayout>
   );

@@ -1,206 +1,292 @@
 import React from 'react';
-import { CheckCircle2, Info, Briefcase, AlertTriangle, TrendingUp } from 'lucide-react';
+import { CheckCircle2, Info, Briefcase, AlertTriangle, TrendingUp, FileText, Sparkles } from 'lucide-react';
 import BlogPostLayout from './BlogPostLayout';
 import { BlogPost } from './BlogIndex';
 
 export const POST: BlogPost = {
   slug: 'serbest-meslek-sahipleri-icin-vize-rehberi',
-  title: 'Serbest Meslek Sahipleri İçin Vize Rehberi 2026',
-  description: 'Avukat, doktor, mimar, mali müşavir gibi serbest meslek sahipleri için Schengen ve diğer ülkeler vize başvurusu: vergi levhası, faaliyet belgesi, gelir tablosu.',
+  title: 'Serbest Meslek Sahipleri İçin Vize: Freelance ve Bireysel Çalışanlar İçin Rehber',
+  description: 'Serbest meslek sahipleri, freelancer, esnaf ve şirket sahipleri vize başvurusunu nasıl yapar? Gerekli belgeler, ipuçları ve kritik detaylar.',
   category: 'Genel',
-  readingTime: 9,
+  readingTime: 10,
   date: '2026-04-17',
-  tags: ['serbest meslek', 'vergi levhası', 'Schengen', 'freelance'],
+  tags: ['serbest meslek', 'vergi levhası', 'freelance', 'şirket sahibi'],
 };
+
+const GRUPLAR = [
+  'Serbest muhasebeci mali müşavirler (SMMM)',
+  'Avukatlar, hukuk müşavirleri',
+  'Özel muayenehane hekimleri, diş hekimleri',
+  'Mimarlar, mühendisler (proje bazlı)',
+  'Freelance web tasarımcıları, yazılımcılar, grafik tasarımcılar',
+  'Çevirmenler, içerik üreticileri',
+  'Fotoğrafçılar, video yapımcıları',
+  'Sanatçılar (ressam, heykeltraş, müzisyen)',
+  'Emlak danışmanları (bireysel)',
+  'Şahıs şirketi sahipleri, esnaf',
+];
+
+const VERGI_LEVHASI_ICERIK = [
+  'Faaliyet türü (meslek kodu)',
+  'Şirket/muayenehane adı',
+  'Vergi numarası',
+  'Faaliyet başlangıç tarihi',
+  'Adres ve iletişim bilgileri',
+];
+
+const GELIR_SEVIYELERI = [
+  { seviye: 'Alt limit tavsiyesi', deger: 'Yıllık 200.000 TL + gelir beyanı (Schengen için)' },
+  { seviye: 'Orta seviye', deger: '500.000 TL-1 milyon TL (güçlü başvuru)' },
+  { seviye: 'Üst seviye', deger: '1 milyon TL+ (ABD, İngiltere dahil her ülke için ideal)' },
+];
+
+const BANKA_KURALLARI = [
+  'Bireysel hesap: Son 6 ay',
+  'İş hesabı (varsa): Son 6 ay',
+  'Düzenli gelir girişleri görünür olmalı (müşteri ödemeleri)',
+  "Toplam bakiye: yıllık gelirin %15-25'i tavsiye edilir",
+];
+
+const FREELANCER_ONERILER = [
+  'Şahıs şirketi kurun: Kuruluş kolaydır (SMMM ile 1-2 hafta), aylık maliyeti düşüktür',
+  'Sigortalı olun: Bağ-Kur kaydı resmi sinyal verir',
+  'Fatura kesin ve kayıt altına alın: Banka üzerinden gelir kanıtı birikir',
+  'Her ay düzenli gelir beyanı yapın: Yıllık beyannamede tutarlılık gösterir',
+  'Yabancı müşterileriniz varsa bunu vurgulayın: Uluslararası gelir = uluslararası bağ demek',
+];
+
+const SIRKET_BELGELERI = [
+  'Ticaret sicil gazetesi (son 3 ay içinde)',
+  'İmza sirküleri (noter onaylı)',
+  'Ticaret Odası faaliyet belgesi',
+  'Son 1 yıl kurumlar vergisi beyannamesi',
+  'Şirket bilançosu (bilirkişi onaylı)',
+  'Ticari taahhütname',
+  'Kendinize ödenen maaşın bordrosu',
+];
+
+const BANKA_STRATEJISI = [
+  'Toplam yıllık tutara bakar (beyanname üzerinden)',
+  'Ortalamayı hesaplar (düzensiz ama yıllık istikrarlı görürse olumludur)',
+  'Büyük tek seferlik ödemeler şüphelidir (sahte fatura algısı)',
+  'Düzenli küçük-orta ödemeler güven verir (müşteri ağı izlenimi)',
+];
+
+const BASARI_IPUCLARI = [
+  'Başvurudan 1 yıl önce resmi yapıyı kurun — kayıt dışı profil hep zordur',
+  'Yıllık vergi beyannamenizi düzenli verin, eksik bırakmayın',
+  'Banka işlemlerinizin çoğunluğunu havale ile yapın (nakit risklidir)',
+  'Yurtdışında müşteriniz varsa bunu sponsorluk belgesi gibi kullanın',
+  'Uluslararası sertifikalarınız varsa ekleyin (CPA, PMP, Adobe gibi)',
+  'Web sitesi, profesyonel e-posta, LinkedIn profili gibi dijital izler de destek belgesi olabilir',
+];
+
+const SSS = [
+  {
+    q: 'Şahıs şirketim var ama kazancım düşük, vize alabilir miyim?',
+    a: "Alabilirsiniz. Düşük gelir tek başına engel değildir. Sponsor (eş, ebeveyn) desteği, banka birikimleriniz ve Türkiye'deki bağlarınız (mülk, aile) başvurunuzu güçlendirir.",
+  },
+  {
+    q: 'Vergi levham yok, ne yapmalıyım?',
+    a: 'Vergi mükellefi değilseniz, serbest meslek sahibi olarak başvurmak zordur. Ya başvurudan önce vergi mükellefi olun (SMMM yardımıyla kolay), ya da sponsor (eş, ebeveyn) üzerinden başvurun.',
+  },
+  {
+    q: "Yabancı bir şirkete çalışan Türk freelancer'ım, vize nasıl alırım?",
+    a: "Bu özel bir durum. Yabancı müşterinizle yapılan sözleşme ve aylık ödemelerinizin banka kayıtları değerli belgelerdir. Ayrıca Türkiye'de vergi beyanında bulunduğunuza dair kanıtlar da olumludur.",
+  },
+  {
+    q: 'Şirketimin bilançosu zayıf, ne yapmalıyım?',
+    a: 'Şirket bilançosundan daha önemli olan kişisel finansal durumunuzdur. Bireysel banka hesabınız güçlüyse ve düzenli gelir görünüyorsa, şirket bilançosu zayıf olsa bile başarılı olabilirsiniz.',
+  },
+  {
+    q: 'Birden fazla mesleğim var (doktor + yazar), hangisini yazmalıyım?',
+    a: 'Başvuru formunda "ana mesleğiniz" sorulur. En yüksek gelirli ve kayıtlı olduğunuz mesleği ana meslek olarak yazın. Diğerlerini "ek gelir" veya "hobi olarak yapılan aktivite" olarak belirtebilirsiniz.',
+  },
+  {
+    q: 'Yeni kurulan şirketim var (6 aylık), vize alabilir miyim?',
+    a: 'Teoride evet ama zor. Yeni şirket, konsolosluk gözünde henüz "kurulu değil, istikrarlı değil" algısı yaratır. 1 yıllık şirket geçmişiniz varsa çok daha güçlü bir başvuru yapabilirsiniz. Bu süreye kadar eşi sponsor olarak göstermek iyi bir seçenektir.',
+  },
+];
 
 const SCHEMA = {
   '@context': 'https://schema.org',
-  '@type': 'Article',
-  headline: POST.title,
-  description: POST.description,
-  author: { '@type': 'Organization', name: 'VizeAkıl', url: 'https://vizeakil.com' },
-  publisher: { '@type': 'Organization', name: 'VizeAkıl' },
-  datePublished: POST.date,
-  dateModified: POST.date,
-  url: `https://vizeakil.com/blog/${POST.slug}`,
+  '@graph': [
+    {
+      '@type': 'Article',
+      headline: POST.title,
+      description: POST.description,
+      author: { '@type': 'Organization', name: 'VizeAkıl', url: 'https://vizeakil.com' },
+      publisher: { '@type': 'Organization', name: 'VizeAkıl' },
+      datePublished: POST.date,
+      dateModified: POST.date,
+      url: `https://vizeakil.com/blog/${POST.slug}`,
+    },
+    {
+      '@type': 'FAQPage',
+      mainEntity: SSS.map((item) => ({
+        '@type': 'Question',
+        name: item.q,
+        acceptedAnswer: { '@type': 'Answer', text: item.a },
+      })),
+    },
+  ],
 };
 
 export default function SerbestMeslekVize() {
   return (
     <BlogPostLayout post={POST} schema={SCHEMA}>
       <p className="text-slate-700 leading-relaxed text-base mb-6">
-        Avukat, doktor, mimar, mühendis, mali müşavir, diş hekimi gibi serbest meslek sahipleri
-        için vize başvurusu, maaşlı çalışanlardan farklı bir belge setiyle yürür. Düzenli aylık
-        bordro yerine vergi levhası, oda kaydı, aylık gelir tablosu ve müşteri sözleşmeleri gerekir.
-        Bu rehber serbest meslek sahiplerinin başvurusunu konsolosluğa nasıl güçlü bir profil
-        olarak sunacağını adım adım gösterir.
+        Serbest meslek, bağımsızlık ve esneklik demek. Ancak vize başvurusunda bu bağımsızlık,
+        bazen dezavantaja dönüşür. "Maaşlı çalışan gibi sabit gelirim yok" diye endişelenen
+        freelancer'lar, SMMM'ler, avukatlar, doktorlar, web tasarımcıları vize alabilir mi? Cevap
+        kesinlikle evet. Ama farklı bir strateji gerekir. Bu rehber, serbest çalışan profesyoneller
+        için özel hazırlanmıştır.
       </p>
 
-      <div className="bg-brand-50 border border-brand-200 rounded-xl p-5 mb-8 flex gap-3">
-        <Briefcase className="w-5 h-5 text-brand-600 shrink-0 mt-0.5" />
-        <p className="text-brand-900 text-sm leading-relaxed">
-          <strong>Avantaj:</strong> Serbest meslek sahipleri genelde SGK 4/a değil 4/b sigortalısıdır.
-          Konsolosluk gözünde kendi işinin patronu olmak Türkiye'de sahip olunan yatırım ve bağ
-          demektir — bu güçlü bir dönüş güvencesi sinyalidir.
-        </p>
-      </div>
-
-      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">1. Temel Belge Seti</h2>
-      <ul className="space-y-2 mb-6">
-        {[
-          'Vergi Levhası (güncel, 1 yıllık — vergi dairesinden veya e-devletten)',
-          'Faaliyet Belgesi (Baro, Oda, TTB gibi meslek odasından son 1 ay içinde)',
-          'Vergi dairesi mükellef bilgi yazısı',
-          'Son yıl gelir tablosu (yıllık beyanname)',
-          'Son 3 aylık KDV beyannameleri',
-          'SGK 4/b (Bağ-Kur) hizmet dökümü',
-          'İmza sirküleri (varsa)',
-        ].map((b) => (
-          <li key={b} className="flex items-start gap-2 text-sm text-slate-700">
-            <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-            {b}
+      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">Serbest Meslek Grupları Kimler?</h2>
+      <p className="text-slate-700 leading-relaxed mb-4">Bu kategoride yer alanlar:</p>
+      <ul className="space-y-2 mb-8">
+        {GRUPLAR.map((g) => (
+          <li key={g} className="flex gap-2 text-slate-700">
+            <Briefcase className="w-5 h-5 text-brand-600 shrink-0 mt-0.5" />
+            <span>{g}</span>
           </li>
         ))}
       </ul>
 
-      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">2. Meslek Bazlı Ek Belgeler</h2>
-      <div className="space-y-3 mb-8">
-        {[
-          { meslek: 'Avukat', ek: 'Baro kimlik kartı fotokopisi, güncel Baro faaliyet belgesi, son 3 ay dava listesi (tercihli).' },
-          { meslek: 'Doktor / Diş Hekimi', ek: 'Tabip Odası / Diş Hekimleri Odası kimliği, muayene açılış izni, son 3 ay randevu listesi.' },
-          { meslek: 'Mimar / Mühendis', ek: 'Mimar/Mühendis Odası kaydı, SMM (serbest mühendislik müşavirlik) yetki belgesi, devam eden proje sözleşmeleri.' },
-          { meslek: 'Mali Müşavir', ek: 'SMMM kimliği, oda kaydı, müşteri sözleşmeleri listesi (isim saklanabilir).' },
-          { meslek: 'Eczacı', ek: 'Eczacılar Odası kimliği, eczane ruhsatı, SGK sözleşmesi.' },
-          { meslek: 'Freelancer / Dijital', ek: 'Vergi levhası, Upwork/Fiverr gelir ekran görüntüleri, müşteri sözleşmeleri, faturalar.' },
-        ].map(({ meslek, ek }) => (
-          <div key={meslek} className="bg-white border border-slate-200 rounded-xl p-4 text-sm">
-            <p className="font-semibold text-slate-800 mb-1">{meslek}</p>
-            <p className="text-slate-600">{ek}</p>
+      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">Serbest Meslek Sahibi İçin Vize Neden Daha Karmaşık?</h2>
+      <p className="text-slate-700 leading-relaxed mb-8">
+        Maaşlı çalışan için "her ay aynı tarihte aynı maaş yatar" basit bir gelir sinyalidir.
+        Serbest meslek sahibi için gelir düzensiz olabilir — bir ay yüksek, bir ay düşük.
+        Konsolosluk memuru için bu tablo anlaşılması zor olabilir. Bu yüzden daha detaylı ve çok
+        yönlü belge desteği gereklidir.
+      </p>
+
+      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">Gerekli Ana Belgeler</h2>
+
+      <h3 className="text-lg font-semibold text-slate-900 mt-6 mb-3">1. Vergi Levhası (En Kritik Belge)</h3>
+      <p className="text-slate-700 leading-relaxed mb-4">
+        Vergi levhası, serbest meslek sahibi olduğunuzu resmi olarak kanıtlayan ana belgedir.
+        Güncel (son 1 yıl içinde alınmış) ve onaylı olmalıdır. Levhada:
+      </p>
+      <ul className="space-y-2 mb-6">
+        {VERGI_LEVHASI_ICERIK.map((v) => (
+          <li key={v} className="flex gap-2 text-slate-700">
+            <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
+            <span>{v}</span>
+          </li>
+        ))}
+      </ul>
+
+      <h3 className="text-lg font-semibold text-slate-900 mt-6 mb-3">2. Oda Kaydı Belgesi</h3>
+      <p className="text-slate-700 leading-relaxed mb-6">
+        Mesleki odaya kayıtlıysanız (SMMM Odası, Tabip Odası, Baro, Mimarlar Odası), oda
+        tarafından verilen üyelik belgesi çok değerlidir. Bu belge, mesleği meşru şekilde
+        yaptığınızın kanıtıdır.
+      </p>
+
+      <h3 className="text-lg font-semibold text-slate-900 mt-6 mb-3">3. Son 1 Yıllık Gelir Vergi Beyannamesi</h3>
+      <p className="text-slate-700 leading-relaxed mb-4">
+        Geçen yıl beyan ettiğiniz toplam gelir. Bu, mali profilinizin en güçlü göstergesidir.
+        Yıllık geliriniz ne kadar yüksekse, vize şansınız o kadar artar.
+      </p>
+      <div className="space-y-2 mb-6">
+        {GELIR_SEVIYELERI.map((g) => (
+          <div key={g.seviye} className="flex gap-3 items-start border border-slate-200 rounded-lg p-3 bg-white">
+            <TrendingUp className="w-5 h-5 text-brand-600 shrink-0 mt-0.5" />
+            <div>
+              <p className="font-semibold text-slate-900">{g.seviye}</p>
+              <p className="text-slate-700 text-sm">{g.deger}</p>
+            </div>
           </div>
         ))}
       </div>
 
-      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">3. Banka Ekstresinin Önemi</h2>
-      <div className="bg-amber-50 border border-amber-200 rounded-xl p-5 mb-6 flex gap-3">
-        <Info className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-        <div>
-          <p className="font-semibold text-amber-800 text-sm mb-1">Serbest meslek için ekstra dikkat</p>
-          <p className="text-amber-700 text-sm leading-relaxed">
-            Düzenli maaş bordrosu olmadığı için banka dökümünüz maaşlı çalışandan daha
-            kritiktir. Konsolosluk "geliriniz nereden geliyor, düzenli mi" sorusuna banka
-            hareketlerinizden cevap arar. Müşteri faturalarının karşılığı olan transferleri
-            ekstrenizde göstermek büyük avantajdır.
-          </p>
-        </div>
-      </div>
+      <h3 className="text-lg font-semibold text-slate-900 mt-6 mb-3">4. Banka Hesap Dökümleri</h3>
+      <p className="text-slate-700 leading-relaxed mb-4">
+        Serbest meslekte çoğu zaman hem bireysel hem de iş banka hesapları bulunur. Her ikisi de
+        sunulmalıdır:
+      </p>
       <ul className="space-y-2 mb-6">
-        {[
-          '6 aylık banka dökümü (3 ay minimum, 6 ay ideal)',
-          'Hem kişisel hem ticari hesapları sunun (ayrıysa)',
-          'Büyük müşteri ödemelerinin yanına faturayı ekleyin',
-          'Düzenli aylık gelir akışı görünür olmalı',
-          'Her ayın ortalama gelirinin yıllık 150.000 TL+ olması tercihli',
-        ].map((b) => (
-          <li key={b} className="flex items-start gap-2 text-sm text-slate-700">
-            <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-            {b}
+        {BANKA_KURALLARI.map((b) => (
+          <li key={b} className="flex gap-2 text-slate-700">
+            <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
+            <span>{b}</span>
           </li>
         ))}
       </ul>
 
-      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">4. Faaliyet Geçmişi ve Oturmuşluk</h2>
-      <p className="text-slate-700 leading-relaxed mb-4">
-        Konsolosluk "oturmuş bir iş mi" kontrolü yapar. Güçlü sinyaller:
+      <h3 className="text-lg font-semibold text-slate-900 mt-6 mb-3">5. Fatura Örnekleri</h3>
+      <p className="text-slate-700 leading-relaxed mb-6">
+        Son 6-12 aya ait kestiğiniz bazı faturaların örnekleri, aktif olarak çalıştığınızı
+        kanıtlar. 10-15 farklı müşteriye kesilmiş fatura iyi bir örnektir.
       </p>
-      <div className="space-y-3 mb-8">
-        {[
-          { s: '3+ yıl faaliyet', n: 'Vergi levhasının 3 yıldan eski olması kabul görmüş iş sinyalidir.' },
-          { s: 'Yükselen gelir', n: 'Son 3 yılın gelir beyannamesinde artış trendi idealdir.' },
-          { s: 'Ofis / muayenehane / atölye', n: 'Mülk sahipliği veya uzun vadeli kira kontratı.' },
-          { s: 'Yanında çalışan personel', n: '1+ SGK\'lı çalışanınız varsa bu çok güçlü bir bağdır.' },
-          { s: 'Aynı müşterilerle devam eden ilişki', n: 'Tekrar eden faturalar / uzun vadeli sözleşmeler.' },
-        ].map(({ s, n }) => (
-          <div key={s} className="bg-white border border-slate-200 rounded-xl p-4 text-sm">
-            <p className="font-semibold text-slate-800 mb-1">{s}</p>
-            <p className="text-slate-600">{n}</p>
+
+      <h3 className="text-lg font-semibold text-slate-900 mt-6 mb-3">6. Müşteri Sözleşmeleri (Varsa)</h3>
+      <p className="text-slate-700 leading-relaxed mb-6">
+        Devam eden sözleşmeleriniz varsa, bu sözleşmelerin örnekleri (kişisel bilgiler karartılmış
+        olabilir) çok güçlü bir kanıttır. Uzun vadeli müşteri ilişkileri, sürekli gelir demek.
+      </p>
+
+      <h3 className="text-lg font-semibold text-slate-900 mt-6 mb-3">7. Sosyal Güvenlik Belgeleri</h3>
+      <p className="text-slate-700 leading-relaxed mb-8">
+        SGK Bağ-Kur kaydınızın hizmet dökümü. Bağ-Kur, serbest meslek sahiplerinin sosyal güvenlik
+        sistemidir ve resmi olarak çalıştığınızın kanıtıdır.
+      </p>
+
+      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">Freelancer'lar İçin Özel Durumlar</h2>
+      <p className="text-slate-700 leading-relaxed mb-8">
+        Türkiye'de freelance çalışan gençlerin vize almakta zorlandığı bilinir — çünkü resmi
+        çalışma yapıları sıklıkla eksiktir. Eğer şirketleşmediyseniz veya vergi mükellefi olarak
+        kaydolmadıysanız, vize başvurusu riskli olur.
+      </p>
+
+      <h3 className="text-lg font-semibold text-slate-900 mt-6 mb-3">Freelancer'lar İçin Öneriler</h3>
+      <ol className="list-decimal list-inside space-y-2 text-slate-700 mb-8 pl-2">
+        {FREELANCER_ONERILER.map((o) => (
+          <li key={o}>{o}</li>
+        ))}
+      </ol>
+
+      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">Şirket Sahipleri İçin Ek Belgeler</h2>
+      <p className="text-slate-700 leading-relaxed mb-4">
+        Şahıs şirketi, limited şirket veya anonim şirket sahibiyseniz, ek belgeler istenir:
+      </p>
+      <ul className="space-y-2 mb-8">
+        {SIRKET_BELGELERI.map((s) => (
+          <li key={s} className="flex gap-2 text-slate-700">
+            <FileText className="w-5 h-5 text-brand-600 shrink-0 mt-0.5" />
+            <span>{s}</span>
+          </li>
+        ))}
+      </ul>
+
+      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">Serbest Meslek Sahipleri İçin Banka Hesabı Stratejisi</h2>
+      <p className="text-slate-700 leading-relaxed mb-4">
+        Serbest mesleğin en hassas konusu gelir düzensizliğidir. Bazı aylar 50.000 TL gelirken,
+        bazı aylar 200.000 TL olabilir. Konsolosluk bu tabloya nasıl bakar?
+      </p>
+      <ol className="list-decimal list-inside space-y-2 text-slate-700 mb-8 pl-2">
+        {BANKA_STRATEJISI.map((b) => (
+          <li key={b}>{b}</li>
+        ))}
+      </ol>
+
+      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">Başarı İpuçları</h2>
+      <ol className="list-decimal list-inside space-y-2 text-slate-700 mb-8 pl-2">
+        {BASARI_IPUCLARI.map((b) => (
+          <li key={b}>{b}</li>
+        ))}
+      </ol>
+
+      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">Sık Sorulan Sorular (SSS)</h2>
+      <div className="space-y-4 mb-10">
+        {SSS.map((item) => (
+          <div key={item.q} className="border border-slate-200 rounded-xl p-5 bg-white">
+            <h3 className="font-semibold text-slate-900 mb-2">{item.q}</h3>
+            <p className="text-slate-700 text-sm leading-relaxed">{item.a}</p>
           </div>
         ))}
-      </div>
-
-      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">5. Seyahat Süresi ve "Kim İşe Bakıyor?" Sorusu</h2>
-      <div className="bg-blue-50 border border-blue-200 rounded-xl p-5 mb-6 flex gap-3">
-        <Info className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
-        <div>
-          <p className="font-semibold text-blue-900 text-sm mb-1">Konsolosluk özel sorar</p>
-          <p className="text-blue-800 text-sm leading-relaxed">
-            Serbest meslek sahipleri için sık sorulan soru: "İşinizin sahibisiniz, seyahatte
-            kim bakacak?" Cevap hazır olmalı:
-          </p>
-          <ul className="text-blue-800 text-sm mt-2 space-y-1">
-            <li>• Ortak varsa: "Ortağım yönetecek"</li>
-            <li>• Personel varsa: "Sekreterim/stajyerim tutacak"</li>
-            <li>• Tek çalışansanız: "10 günlük ara, müşterilerime duyurdum"</li>
-          </ul>
-        </div>
-      </div>
-
-      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">6. "İşsiz Görünmemek" İçin Taktikler</h2>
-      <p className="text-slate-700 leading-relaxed mb-4">
-        Bazı serbest meslek sahipleri resmi belgelerde düşük gelir görünür ama gerçekte refah
-        seviyeleri yüksektir. Bunu konsolosluğa "gizlenmiş zenginlik" değil, "gerçek profil"
-        olarak sunmak için:
-      </p>
-      <ul className="space-y-2 mb-6">
-        {[
-          'Tapu ve araç ruhsatı ekleyin (mülk varlığı)',
-          'BES, hisse, fon hesaplarının dökümü',
-          'Eş gelirinin belgelenmesi (ev geliri ortaklığı)',
-          'Aylık harcama düzeni (kart ekstresi, kira, aile masrafları)',
-          'Son 1 yılın yurtdışı seyahatleri (varsa)',
-        ].map((b) => (
-          <li key={b} className="flex items-start gap-2 text-sm text-slate-700">
-            <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-            {b}
-          </li>
-        ))}
-      </ul>
-
-      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">7. En Sık Yapılan Hatalar</h2>
-      <div className="bg-red-50 border border-red-200 rounded-xl p-5 mb-6 flex gap-3">
-        <AlertTriangle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
-        <div>
-          <p className="font-semibold text-red-800 text-sm mb-1">Kaçınılması gereken durumlar</p>
-          <ul className="text-red-700 text-sm space-y-1 mt-1">
-            <li>• Vergi levhasında çok düşük gelir beyanı</li>
-            <li>• Faaliyet belgesinin 1 aydan eski olması</li>
-            <li>• Ticari hesap ile kişisel hesabın karışması</li>
-            <li>• Bağ-Kur prim borcu (konsolosluk e-devletten görebilir)</li>
-            <li>• Ana işin dışında "sosyal medya influencer" gibi açıklanmayan ek gelir</li>
-          </ul>
-        </div>
-      </div>
-
-      <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-5 mb-8 flex gap-3">
-        <TrendingUp className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
-        <div>
-          <p className="font-semibold text-emerald-800 text-sm mb-1">Danışman İpucu</p>
-          <p className="text-emerald-700 text-sm leading-relaxed">
-            Serbest meslek sahipleri için en güçlü başvuru şekli "iş gezisi" olarak değil, "meslek
-            seminerine katılım" olarak sunmaktır. Konferans kaydı, kurs katılım mektubu veya iş
-            görüşme e-postası başvurunuza profesyonel bir kimlik kazandırır ve onay oranını
-            yükseltir.
-          </p>
-        </div>
-      </div>
-
-      <div className="mt-12 bg-brand-50 border border-brand-200 rounded-2xl p-6">
-        <h3 className="font-bold text-brand-900 mb-2">Özet</h3>
-        <p className="text-brand-800 text-sm leading-relaxed">
-          Serbest meslek sahipleri için vize başvurusu, doğru belge setiyle maaşlı çalışanlardan
-          daha güçlüdür. Vergi levhası + oda kaydı + banka dökümü üçlüsü temel; profesyonel sözleşmeler
-          ve mülk belgeleri güçlendirici. 3+ yıl faaliyet göstermiş bir serbest meslek sahibinin
-          onay oranı %88-92 arasındadır.
-        </p>
       </div>
     </BlogPostLayout>
   );

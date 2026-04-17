@@ -1,88 +1,173 @@
 import React from 'react';
-import { CheckCircle2, AlertTriangle, FileText, Info, FileCheck } from 'lucide-react';
+import { CheckCircle2, AlertTriangle, FileText, Info } from 'lucide-react';
 import BlogPostLayout from './BlogPostLayout';
 import { BlogPost } from './BlogIndex';
 
 export const POST: BlogPost = {
   slug: 'schengen-vizesi-gerekli-belgeler-2026',
-  title: 'Schengen Vizesi Gerekli Belgeler 2026 — Tam Kontrol Listesi',
-  description: '2026 güncel Schengen vize başvurusu için eksiksiz belge listesi: zorunlu evraklar, opsiyonel güçlendiriciler ve ülkeye özel farklılıklar.',
+  title: 'Schengen Vizesi Gerekli Belgeler 2026 | Çalışan, Öğrenci, Emekli',
+  description: 'Schengen vizesi için gereken tüm belgelerin profil bazlı listesi. Çalışan, öğrenci, emekli, ev hanımı için özel evrak rehberi.',
   category: 'Schengen',
-  readingTime: 9,
+  readingTime: 11,
   date: '2026-04-17',
   tags: ['Schengen belgeleri', 'vize belgeleri', 'kontrol listesi', '2026'],
 };
 
 const SCHEMA = {
   '@context': 'https://schema.org',
-  '@type': 'Article',
-  headline: POST.title,
-  description: POST.description,
-  author: { '@type': 'Organization', name: 'VizeAkıl', url: 'https://vizeakil.com' },
-  publisher: { '@type': 'Organization', name: 'VizeAkıl' },
-  datePublished: POST.date,
-  dateModified: POST.date,
-  url: `https://vizeakil.com/blog/${POST.slug}`,
+  '@graph': [
+    {
+      '@type': 'Article',
+      headline: POST.title,
+      description: POST.description,
+      author: { '@type': 'Organization', name: 'VizeAkıl', url: 'https://vizeakil.com' },
+      publisher: { '@type': 'Organization', name: 'VizeAkıl' },
+      datePublished: POST.date,
+      dateModified: POST.date,
+      url: `https://vizeakil.com/blog/${POST.slug}`,
+    },
+    {
+      '@type': 'FAQPage',
+      mainEntity: [
+        { '@type': 'Question', name: 'Belgelerin hepsi İngilizce mi olmalı?', acceptedAnswer: { '@type': 'Answer', text: 'Hayır, tüm belgeler Türkçe olabilir ancak resmi yeminli tercüme İngilizce versiyonu sunulması güçlü şekilde tavsiye edilir. Bazı konsolosluklar çeviri zorunluluğu aramaz, bazıları arar.' } },
+        { '@type': 'Question', name: 'Tercüman olmadan belgelerimi nasıl çevirebilirim?', acceptedAnswer: { '@type': 'Answer', text: 'Resmi başvurularda mutlaka yeminli tercüman kullanılmalıdır. Google Translate veya kendi çeviriniz kabul edilmez. İstanbul ve Ankara\'da yeminli tercümanlık hizmetleri kolayca bulunabilir.' } },
+        { '@type': 'Question', name: 'Belgelerimin hepsi eksiksiz ama yine de reddedildim, neden?', acceptedAnswer: { '@type': 'Answer', text: 'Belgeler tek başına yeterli değildir; belgelerin tutarlılığı da önemlidir. Başvuru formu, banka dökümü, seyahat planı birbiriyle uyumlu olmalıdır. Tutarsızlıklar red sebebidir.' } },
+        { '@type': 'Question', name: 'Noter onayı tüm belgelere gerekli mi?', acceptedAnswer: { '@type': 'Answer', text: 'Hayır. Sadece sponsor dilekçesi, muvafakatname, vekaletname gibi resmi taahhüt içeren belgeler için noter onayı gerekir. Çalışma belgesi, maaş bordrosu gibi şirket belgeleri için şirket kaşesi yeterlidir.' } },
+        { '@type': 'Question', name: 'Seyahat sigortası poliçesini nereden almalıyım?', acceptedAnswer: { '@type': 'Answer', text: 'Güvenilir, Schengen bölgesi tarafından tanınan büyük şirketlerden almalısınız: Allianz, AXA, Mapfre, AK Sigorta, Türkiye Sigorta. 30.000 € kapsamı ve acil tıbbi müdahale koşulu olduğundan emin olun.' } },
+        { '@type': 'Question', name: 'Belge dosyasını nasıl düzenlemeliyim?', acceptedAnswer: { '@type': 'Answer', text: 'Standart sıra: başvuru formu, pasaport, fotoğraf, seyahat sigortası, uçak rezervasyonu, otel rezervasyonu, banka dökümü, çalışma belgesi, maaş bordrosu, ek belgeler. Hepsi ayrı plastik poşetlerde, düzenli olmalıdır.' } },
+      ],
+    },
+  ],
 };
+
+const STANDART_BELGELER = [
+  { t: '1. Pasaport', items: ['En az 6 ay geçerli (seyahat bitiş tarihinden sonra)', 'Minimum 2 boş sayfa', 'Son 10 yıl içinde alınmış olmalı', 'İyi durumda, yırtılmamış, sayfası eksik olmayan'] },
+  { t: '2. Biyometrik Fotoğraf', items: ['Boyut: 35mm x 45mm', 'Arka plan: Beyaz', 'Son 6 ay içinde çekilmiş', 'Gözlüksüz (sağlık gerekmedikçe), doğal ifade', '2 adet (1 forma yapıştırılır, 1 yedek)'] },
+  { t: '3. Vize Başvuru Formu', items: ['Online (genellikle) veya matbu', 'İngilizce veya seyahat edilecek ülkenin dilinde doldurulmuş', 'Tüm alanlar eksiksiz (boş bırakılan alan ret sebebi olabilir)', 'Son sayfada başvurucunun imzası'] },
+  { t: '4. Seyahat Sağlık Sigortası', items: ['Minimum 30.000 € teminat', 'Tüm Schengen ülkelerini kapsayan', 'Seyahat süresini tam karşılayan tarih aralığı', 'Acil tıbbi müdahale, hastaneye nakil, ölüm halinde memlekete gönderme kapsamı'] },
+  { t: '5. Uçak Rezervasyonu', items: ['Gidiş-dönüş (round-trip) rezervasyonu', 'Ad, soyad, tarih, uçuş numarası görünür olmalı', 'Bilet almak zorunlu değil — sadece rezervasyon yeterli', 'Opsiyonlu rezervasyon (seyahat acentesinden) kabul edilir'] },
+  { t: '6. Konaklama Belgesi', items: ['Otel rezervasyonu (Booking.com, Hotels.com gibi)', 'İptal edilebilir olması önerilir', 'Tüm seyahat süresini kapsamalı', 'Davet üzerine kalacaksanız: resmi davet mektubu (Einladung vb.)'] },
+  { t: '7. Seyahat Planı (Itinerary)', items: ['Gün gün detaylı program', 'Hangi şehirde hangi tarihte kalacağınız', 'Ziyaret edilecek yerler, turistik aktiviteler', 'Tavsiye edilen format: PDF, 1-2 sayfa'] },
+  { t: '8. Banka Hesap Dökümü', items: ['Son 3-6 aylık, bankanın resmi antetli kağıdında', 'İmzalı ve kaşeli (şube tarafından onaylı)', 'Minimum önerilen bakiye: günlük 60-100 € × seyahat süresi × 1,5'] },
+];
+
+const PROFILLER = [
+  {
+    ulke: 'Çalışanlar İçin Ek Belgeler', renk: 'blue', items: [
+      'Çalışma belgesi: Şirketin antetli kağıdında, pozisyon, başlangıç tarihi, maaş bilgisi içeren',
+      'Son 3 aylık maaş bordroları: İmzalı ve kaşeli orijinal veya onaylı kopyalar',
+      'SGK hizmet dökümü: SGK e-Devlet üzerinden alınmış son 12 ay',
+      'İzin yazısı: İşveren tarafından izin tarihlerinizin onaylandığına dair yazı',
+      'Vergi levhası: Şirket sahibi/serbest meslek sahibi iseniz',
+    ],
+  },
+  {
+    ulke: 'Öğrenciler İçin Ek Belgeler', renk: 'emerald', items: [
+      'Öğrenci belgesi: Üniversite/lisenin son 1 ay içinde vermiş olduğu resmi belge',
+      'Transkript: Güncel dönem not durumunu gösteren belge',
+      'Ebeveyn sponsor dilekçesi: Noter onaylı, masrafları karşılama taahhüdü',
+      'Ebeveynin finansal belgeleri: Banka dökümü, çalışma belgesi, maaş bordrosu',
+      'Aile bağları: Vukuatlı nüfus kayıt örneği',
+      'Seyahat amacı belgesi: Erasmus kabul mektubu, dil okulu kaydı vb. (varsa)',
+    ],
+  },
+  {
+    ulke: 'Emekliler İçin Ek Belgeler', renk: 'amber', items: [
+      'Emekli maaş belgesi: SGK/Bağ-Kur\'dan alınmış son 3 aylık gelir belgesi',
+      'Emekli kimlik kartı: Fotokopisi',
+      'Emeklilik yazısı: İlk emeklilik tarihi ve kurumu gösteren',
+      'Tapu belgeleri: Mülkleriniz için',
+      'Ek gelir belgeleri: Kira geliri, temettü vb. varsa',
+    ],
+  },
+  {
+    ulke: 'Ev Hanımları İçin Ek Belgeler', renk: 'pink', items: [
+      'Eş sponsor dilekçesi: Noter onaylı, tüm masrafları karşılama taahhüdü',
+      'Eşin çalışma belgesi: İşvereni tarafından antetli kağıtta',
+      'Eşin maaş bordroları: Son 3 aylık',
+      'Eşin banka dökümü: Son 6 aylık',
+      'Evlilik cüzdanı fotokopisi: Akrabalık bağını kanıtlar',
+      'Varsa çocuğun okul belgesi: Türkiye\'deki yaşamınızın kanıtı',
+    ],
+  },
+  {
+    ulke: 'Serbest Meslek Sahipleri İçin Ek Belgeler', renk: 'slate', items: [
+      'Vergi levhası: Güncel tarihli, onaylı',
+      'Oda kaydı: Mesleki oda (SMMM, tabip, avukat vb.) üyelik belgesi',
+      'Son 1 yıllık vergi beyannamesi: Gelir durumunu gösterir',
+      'Şirket banka hesap dökümü: Eğer şirket hesabı varsa',
+      'Bireysel banka hesap dökümü: Son 6 ay',
+      'Faaliyet gösterdiğinizin kanıtı: Fatura örnekleri, müşteri sözleşmeleri',
+    ],
+  },
+  {
+    ulke: 'Şirket Sahipleri İçin Ek Belgeler', renk: 'indigo', items: [
+      'Ticaret sicil gazetesi: Şirket sahipliğini gösteren',
+      'İmza sirküleri: Noter onaylı',
+      'Şirket vergi levhası: Güncel',
+      'Şirket faaliyet belgesi: Ticaret Odası\'ndan',
+      'Son 1 yıl kurumlar vergi beyannamesi: Şirketin ciro durumunu gösterir',
+      'Kendine ait maaş bordrosu: Şirketinizden aldığınız maaşı gösteren',
+    ],
+  },
+];
 
 export default function SchengenGerekliBelgeler2026() {
   return (
     <BlogPostLayout post={POST} schema={SCHEMA}>
       <p className="text-slate-700 leading-relaxed text-base mb-6">
-        Schengen vize başvurusunun %40'ı belge eksikliği nedeniyle reddedilir ya da geri çevrilir.
-        Bu yüzden <strong>tam ve doğru belge seti</strong> başarıya giden yolun yarısıdır.
-        2026 itibarıyla AB ortak kurallarıyla tüm Schengen ülkelerinde zorunlu 10 ana belge vardır,
-        ek olarak her ülkenin kendi ek taleplerini bilmek gerekir. Bu kontrol listesi son güncel
-        duruma göre hazırlanmıştır.
+        Schengen vize başvurusunun <strong>%70'i evrak aşamasında belirlenir</strong>. Doğru
+        belgelerle gelen başvurucunun mülakatta sorun yaşama ihtimali %90 azalır. Bu rehber,
+        tüm profiller için eksiksiz bir Schengen belge listesini içeriyor. Sadece "standart
+        liste" değil, her profil için özelleştirilmiş belgeleri adım adım anlatıyoruz.
       </p>
 
-      <div className="bg-brand-50 border border-brand-200 rounded-xl p-5 mb-8 flex gap-3">
-        <FileCheck className="w-5 h-5 text-brand-600 shrink-0 mt-0.5" />
-        <p className="text-brand-900 text-sm leading-relaxed">
-          <strong>Ana kural:</strong> Tüm belgeleri <em>orijinal + fotokopi</em> şeklinde götürün.
-          Yabancı dildeki belgelere İngilizce/konsolosluk dili tercümesi ekleyin. Noter onayı her
-          belge için gerekli değildir ama imzalı ve tarihli olması zorunludur.
-        </p>
-      </div>
-
-      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">1. Zorunlu Ana Belgeler (Tüm Schengen Ülkeleri İçin)</h2>
-      <div className="space-y-2 mb-8">
-        {[
-          { b: 'Başvuru Formu', d: 'Tam doldurulmuş, imzalı; başvuru sahibinin bizzat imzalaması şart.' },
-          { b: 'Pasaport', d: 'En az 6 ay geçerli, en az 2 boş sayfa. Son 10 yıl içinde düzenlenmiş olmalı.' },
-          { b: 'Biyometrik Fotoğraf', d: '2 adet, 35x45 mm, son 6 ay içinde çekilmiş, beyaz arka plan.' },
-          { b: 'Seyahat Sağlık Sigortası', d: 'Min. €30.000 teminat, tüm Schengen\'de geçerli, seyahat süresini kapsar.' },
-          { b: 'Uçak Rezervasyonu', d: 'Gidiş-dönüş, teyit edilebilir ama ödenmemiş olabilir.' },
-          { b: 'Otel / Konaklama Rezervasyonu', d: 'Tüm Schengen süresini kapsayan otel rezervasyonu veya davet belgesi.' },
-          { b: 'Banka Hesap Dökümü', d: 'Son 3 ay (veya 6 ay), kaşeli-imzalı, en az €3.000-5.000 bakiye tercihli.' },
-          { b: 'Gelir Belgesi', d: 'SGK hizmet dökümü + maaş bordrosu veya vergi levhası.' },
-          { b: 'İşveren İzin Belgesi', d: 'Çalışanlar için. İşyerinin antetli kağıdı, tatil onayı, dönüş tarihi.' },
-          { b: 'Nüfus Kayıt Örneği', d: 'e-devletten son 1 ay içinde alınmış, aile bireyleri görünür.' },
-        ].map(({ b, d }, i) => (
-          <div key={b} className="bg-white border border-slate-200 rounded-xl p-4 flex items-start gap-3 text-sm">
-            <span className="w-7 h-7 bg-brand-600 text-white rounded-full flex items-center justify-center font-bold shrink-0 text-xs">{i + 1}</span>
-            <div>
-              <p className="font-semibold text-slate-800 mb-1">{b}</p>
-              <p className="text-slate-600">{d}</p>
-            </div>
+      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">Herkes İçin Zorunlu Standart Belgeler</h2>
+      <p className="text-slate-700 leading-relaxed mb-4">
+        Profiliniz ne olursa olsun, aşağıdaki belgeler tüm Schengen başvurularında zorunludur:
+      </p>
+      <div className="space-y-4 mb-8">
+        {STANDART_BELGELER.map(({ t, items }) => (
+          <div key={t} className="bg-white border border-slate-200 rounded-xl p-4">
+            <p className="font-semibold text-slate-800 mb-2 flex items-center gap-2">
+              <FileText className="w-4 h-4 text-brand-600" /> {t}
+            </p>
+            <ul className="space-y-1 pl-6">
+              {items.map((i) => (
+                <li key={i} className="flex items-start gap-2 text-sm text-slate-600">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-1" /> {i}
+                </li>
+              ))}
+            </ul>
           </div>
         ))}
       </div>
 
-      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">2. Destekleyici Belgeler (Güçlendirici)</h2>
+      {PROFILLER.map(({ ulke, items }) => (
+        <React.Fragment key={ulke}>
+          <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">{ulke}</h2>
+          <ul className="space-y-2 mb-6">
+            {items.map((b) => (
+              <li key={b} className="flex items-start gap-2 text-sm text-slate-700">
+                <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                {b}
+              </li>
+            ))}
+          </ul>
+        </React.Fragment>
+      ))}
+
+      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">Davet Üzerine Gidiyorsanız</h2>
       <p className="text-slate-700 leading-relaxed mb-4">
-        Bu belgeler zorunlu değildir ama başvurunuzu önemli ölçüde güçlendirir:
+        Akraba veya arkadaş davetiyle gidiyorsanız, normal turistik belgeler yerine davet
+        belgeleri gerekir:
       </p>
-      <ul className="space-y-2 mb-6">
+      <ul className="space-y-2 mb-8">
         {[
-          'Tapu fotokopisi (mülk sahipliği = Türkiye\'ye bağ)',
-          'Araç ruhsatı fotokopisi',
-          'Çocukların okul kayıt belgesi',
-          'Seyahat planı / itinerary (günlük program)',
-          'Gidilecek müze-etkinlik rezervasyonları',
-          'Önceki Schengen/ABD/İngiltere vizelerinin fotokopisi',
-          'Evlilik cüzdanı (aile ziyaretinde)',
-          'Emekli belgesi (emekliyseniz)',
+          'Resmi davet mektubu: Almanya için Verpflichtungserklärung, Hollanda için Garantverklaring gibi',
+          'Davet edenin kimlik belgesi: AB vatandaşı ise kimlik kartı, değilse oturum izni',
+          'Davet edenin mali belgeleri: Çalışma belgesi, maaş bordrosu, banka dökümü',
+          'Akrabalık bağı: Nüfus kaydı, evlilik belgesi, doğum belgesi',
         ].map((b) => (
           <li key={b} className="flex items-start gap-2 text-sm text-slate-700">
             <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
@@ -91,110 +176,49 @@ export default function SchengenGerekliBelgeler2026() {
         ))}
       </ul>
 
-      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">3. Ülkeye Özel Ek Belgeler</h2>
-      <div className="space-y-3 mb-8">
+      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">Tüm Belgelerin Ortak Kuralları</h2>
+      <div className="bg-amber-50 border border-amber-200 rounded-xl p-5 mb-8 flex gap-3">
+        <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+        <ol className="text-amber-900 text-sm space-y-2 list-decimal list-inside">
+          <li>Belgeler orijinal veya noter onaylı fotokopi olmalıdır</li>
+          <li>Türkçe belgelerin resmi İngilizce çevirisi sunulmalıdır (yeminli tercüman)</li>
+          <li>Tüm belgeler son 3 ay içinde alınmış olmalıdır</li>
+          <li>Fotokopi kalitesi yüksek olmalı, okunaklı olmalıdır</li>
+          <li>Belge sıralaması başvuru formunda belirtilen sıraya göre düzenlenmelidir</li>
+          <li>Eksik belge, otomatik red sebebidir — listeyi baş harfine kadar takip edin</li>
+        </ol>
+      </div>
+
+      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">Sık Sorulan Sorular (SSS)</h2>
+      <div className="space-y-4 mb-8">
         {[
-          { u: 'Almanya', e: '3 aylık detaylı banka hareket dökümü, seyahat planı zorunlu. Apostilli belgeler istenir.' },
-          { u: 'Fransa', e: 'France-Visas online başvuru gerekli. Detaylı itinerary, Paris dışı ziyaretler belgelensin.' },
-          { u: 'İtalya', e: 'Aile ziyaretinde Italyan tarafın invito letterası (Kaymakamlıkta vidimato).' },
-          { u: 'İspanya', e: 'BLS randevu sistemi. Aile ziyaretinde carta de invitación gerekli.' },
-          { u: 'Hollanda', e: 'VFS üzerinden başvuru. Kısa süreli ziyaret için sponsor bildirim formu (garantstelling).' },
-          { u: 'Yunanistan', e: 'Konsolosluğa direkt başvuru. Ada başvurularında otel rezervasyonu dikkat.' },
-        ].map(({ u, e }) => (
-          <div key={u} className="bg-white border border-slate-200 rounded-xl p-4 text-sm">
-            <p className="font-semibold text-slate-800 mb-1">{u}</p>
-            <p className="text-slate-600">{e}</p>
+          { q: 'Belgelerin hepsi İngilizce mi olmalı?', a: 'Hayır, tüm belgeler Türkçe olabilir ancak resmi yeminli tercüme İngilizce versiyonu sunulması güçlü şekilde tavsiye edilir. Bazı konsolosluklar (Hollanda, Almanya) çeviri zorunluluğu arar, bazıları aramaz.' },
+          { q: 'Tercüman olmadan belgelerimi nasıl çevirebilirim?', a: 'Resmi başvurularda mutlaka yeminli tercüman kullanılmalıdır. Google Translate veya kendi çeviriniz kabul edilmez. İstanbul ve Ankara\'da yeminli tercümanlık hizmetleri kolayca bulunabilir.' },
+          { q: 'Belgelerimin hepsi eksiksiz ama yine de reddedildim, neden?', a: 'Belgeler tek başına yeterli değildir; belgelerin tutarlılığı da önemlidir. Başvuru formu, banka dökümü, seyahat planı birbiriyle uyumlu olmalıdır. Tutarsızlıklar red sebebidir.' },
+          { q: 'Noter onayı tüm belgelere gerekli mi?', a: 'Hayır. Sadece sponsor dilekçesi, muvafakatname, vekaletname gibi resmi taahhüt içeren belgeler için noter onayı gerekir. Çalışma belgesi, maaş bordrosu gibi şirket belgeleri için şirket kaşesi yeterlidir.' },
+          { q: 'Seyahat sigortası poliçesini nereden almalıyım?', a: 'Güvenilir, Schengen bölgesi tarafından tanınan büyük şirketlerden almalısınız: Allianz, AXA, Mapfre, AK Sigorta, Türkiye Sigorta. Ucuz internet poliçeleri bazen kabul edilmez — 30.000 € kapsamı ve acil tıbbi müdahale koşulu olduğundan emin olun.' },
+          { q: 'Belge dosyasını nasıl düzenlemeliyim?', a: 'Standart sıra: başvuru formu, pasaport, fotoğraf, seyahat sigortası, uçak rezervasyonu, otel rezervasyonu, banka dökümü, çalışma belgesi, maaş bordrosu, ek belgeler. Hepsi ayrı plastik poşetlerde, düzenli olmalıdır.' },
+        ].map(({ q, a }) => (
+          <div key={q} className="bg-slate-50 border border-slate-200 rounded-xl p-4">
+            <p className="font-semibold text-slate-800 text-sm mb-1 flex items-start gap-2">
+              <Info className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" /> {q}
+            </p>
+            <p className="text-slate-600 text-sm leading-relaxed pl-6">{a}</p>
           </div>
         ))}
       </div>
 
-      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">4. Profile Göre Özel Belgeler</h2>
-      <div className="grid sm:grid-cols-2 gap-4 mb-8">
-        <div className="bg-slate-50 border border-slate-200 rounded-xl p-5">
-          <p className="font-semibold text-slate-800 mb-2">🎓 Öğrenciler</p>
-          <ul className="text-slate-700 text-sm space-y-1">
-            <li>• Öğrenci belgesi</li>
-            <li>• Transkript</li>
-            <li>• Anne/baba sponsor mektubu</li>
-            <li>• Anne/baba banka dökümü</li>
-          </ul>
-        </div>
-        <div className="bg-slate-50 border border-slate-200 rounded-xl p-5">
-          <p className="font-semibold text-slate-800 mb-2">🏠 Ev Hanımları</p>
-          <ul className="text-slate-700 text-sm space-y-1">
-            <li>• Eş sponsor mektubu</li>
-            <li>• Eş banka dökümü</li>
-            <li>• Evlilik cüzdanı</li>
-            <li>• Çocukların okul belgesi</li>
-          </ul>
-        </div>
-        <div className="bg-slate-50 border border-slate-200 rounded-xl p-5">
-          <p className="font-semibold text-slate-800 mb-2">👔 Serbest Meslek</p>
-          <ul className="text-slate-700 text-sm space-y-1">
-            <li>• Vergi levhası</li>
-            <li>• Faaliyet belgesi (oda kaydı)</li>
-            <li>• Son yıl gelir tablosu</li>
-            <li>• KDV beyannameleri</li>
-          </ul>
-        </div>
-        <div className="bg-slate-50 border border-slate-200 rounded-xl p-5">
-          <p className="font-semibold text-slate-800 mb-2">👴 Emekliler</p>
-          <ul className="text-slate-700 text-sm space-y-1">
-            <li>• SGK emekli belgesi</li>
-            <li>• Emekli cüzdanı</li>
-            <li>• Maaşın yattığı hesap dökümü</li>
-            <li>• Tapu (varsa)</li>
-          </ul>
-        </div>
-      </div>
-
-      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">5. En Sık Unutulan 8 Belge</h2>
-      <div className="bg-red-50 border border-red-200 rounded-xl p-5 mb-6">
-        <ol className="text-red-800 text-sm space-y-1 list-decimal list-inside">
-          <li>Tüm pasaport sayfalarının fotokopisi (boş sayfalar dahil)</li>
-          <li>Eski vize/damga fotokopisi</li>
-          <li>Sigorta poliçesinin İngilizce versiyonu</li>
-          <li>İşveren belgesinin başvuru tarihinde 1 aydan eski olması</li>
-          <li>Banka dökümünün kaşesiz/imzasız gelmesi</li>
-          <li>Otel rezervasyonunun sadece "hold" edilmiş olması — başvuru günü iptal edilmiş çıkabilir</li>
-          <li>Nüfus kayıt örneğinin 1 aydan eski olması</li>
-          <li>Biyometrik fotoğrafın 6 aydan eski olması</li>
-        </ol>
-      </div>
-
-      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">6. Belge Sıralama ve Sunum</h2>
-      <div className="bg-blue-50 border border-blue-200 rounded-xl p-5 mb-6 flex gap-3">
-        <Info className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
+      <div className="mt-12 bg-brand-50 border border-brand-200 rounded-2xl p-6 flex gap-3">
+        <FileText className="w-5 h-5 text-brand-600 shrink-0 mt-0.5" />
         <div>
-          <p className="font-semibold text-blue-900 text-sm mb-1">Görevliyi bunaltmayın, yönlendirin</p>
-          <ul className="text-blue-800 text-sm space-y-1 mt-1">
-            <li>• Belgeleri 3 ayrı dosyada toplayın: Kimlik/Seyahat, Finansal, Destekleyici</li>
-            <li>• Her dosyanın önüne kontrol listesi koyun</li>
-            <li>• Orijinal ve fotokopileri ayrı — fotokopiyi konsolosluğa bırakırsınız</li>
-            <li>• Staplersız — konsolosluk belgeleri ayırmak zorunda kalmasın</li>
-          </ul>
-        </div>
-      </div>
-
-      <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-5 mb-8 flex gap-3">
-        <FileText className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
-        <div>
-          <p className="font-semibold text-emerald-800 text-sm mb-1">Danışman İpucu</p>
-          <p className="text-emerald-700 text-sm leading-relaxed">
-            Belgeleri teslim etmeden önce <strong>tüm belgeleri cep telefonunuzda PDF olarak</strong>
-            yedekleyin. Başvuru sonrası eksik/ek belge istenirse hızla gönderebilirsiniz.
-            Ayrıca randevu günü belgelerden birini unutmanıza karşı dijital yedek kurtarıcıdır.
+          <h3 className="font-bold text-brand-900 mb-2">Özet</h3>
+          <p className="text-brand-800 text-sm leading-relaxed">
+            Schengen başvurusunda tam belge seti onayın %70'ini belirler. 8 standart zorunlu
+            belge + profilinize özel ek belgeler + tutarlılık üçlüsüyle başvurunuz güçlenir.
+            Tüm belgeler son 3 ay içinde alınmış, yeminli tercümeyle desteklenmiş, orijinal
+            veya noter onaylı olmalıdır.
           </p>
         </div>
-      </div>
-
-      <div className="mt-12 bg-brand-50 border border-brand-200 rounded-2xl p-6">
-        <h3 className="font-bold text-brand-900 mb-2">Özet Kontrol Listesi</h3>
-        <p className="text-brand-800 text-sm leading-relaxed">
-          Tam belge seti = %70 onay garantisi. Zorunlu 10 ana belge + profilinize özgü ek belgeler +
-          ülkeye özel farklılıklar — bu üçlü tamamsa onay oranınız ciddi anlamda yükselir.
-          Randevu tarihinden 2 hafta önce belgeleri tamamlayıp son 48 saatte yeniden kontrol edin.
-        </p>
       </div>
     </BlogPostLayout>
   );

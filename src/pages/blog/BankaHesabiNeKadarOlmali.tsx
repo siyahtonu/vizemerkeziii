@@ -5,10 +5,10 @@ import { BlogPost } from './BlogIndex';
 
 export const POST: BlogPost = {
   slug: 'vize-icin-banka-hesabi-ne-kadar-olmali',
-  title: 'Vize İçin Banka Hesabında Ne Kadar Para Olmalı? 2026 Ülke Bazlı Rehber',
-  description: 'Schengen, İngiltere, ABD ve Kanada vizesi için banka hesabında tutulması gereken minimum bakiye, günlük harcama kuralı ve 28 gün bekletme yöntemi.',
+  title: 'Vize İçin Bankada Ne Kadar Para Olmalı? 2026 Ülke Bazlı Liste',
+  description: 'Schengen, ABD, İngiltere, Kanada vizesi için gereken banka bakiyesi ne kadar? Hesap dökümü nasıl olmalı, kaç aylık, hangi format? 2026 ülke bazlı rehber.',
   category: 'İpucu',
-  readingTime: 9,
+  readingTime: 10,
   date: '2026-04-17',
   tags: ['banka hesabı', 'vize parası', 'banka ekstresi', 'günlük bütçe'],
 };
@@ -31,27 +31,50 @@ const SCHEMA = {
       mainEntity: [
         {
           '@type': 'Question',
-          name: 'Vize için banka hesabında ne kadar para olmalı?',
+          name: 'Vize için banka hesabımda 50.000 TL yeterli mi?',
           acceptedAnswer: {
             '@type': 'Answer',
-            text: 'Schengen için günlük €80–120, 10 günlük seyahatte asgari €1.200–1.500. İngiltere için günlük £80–100, 2 haftalık seyahatte ~£1.500. ABD için sabit kural olmasa da $3.000–5.000+ beklenir.',
-          },
-        },
-        {
-          '__type': 'Question',
-          '@type': 'Question',
-          name: 'Banka hesabına son dakika para yatırmak risk mi?',
-          acceptedAnswer: {
-            '@type': 'Answer',
-            text: 'Evet. Konsolosluklar 3–6 aylık hareketi inceler; başvurudan hemen önce yapılan büyük yatırışlar şüphe uyandırır ve red gerekçesi olabilir. İngiltere parayı 28 gün hesapta görmek ister.',
+            text: 'Hedef ülkeye göre değişir. Yunanistan veya İtalya için 7-10 günlük kısa bir seyahatte yeterli olabilir. Ancak Almanya, Fransa, İngiltere gibi daha pahalı ülkelerde en az 80.000-120.000 TL arası bir bakiye önerilir.',
           },
         },
         {
           '@type': 'Question',
-          name: 'Kendi hesabımda yeterli para yoksa ne yaparım?',
+          name: 'Başka birinin hesabından gelen para vizeyi etkiler mi?',
           acceptedAnswer: {
             '@type': 'Answer',
-            text: 'Sponsor ile başvurabilirsiniz. Sponsorun 6 aylık banka dökümü, gelir belgesi, taahhüt mektubu ve akrabalık belgesi gerekir.',
+            text: 'Evet, büyük tutarlı ani transferler sorgulanır. Bu transferler ailenizden geliyorsa, sponsor dilekçesi ile belgelendirmeniz gerekir. Açıklanamayan para girişleri başvurunuzu riske atar.',
+          },
+        },
+        {
+          '@type': 'Question',
+          name: 'Vadeli hesap veya döviz hesabı kabul edilir mi?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'Evet. Vadeli TL, Euro, Dolar hesapları kabul edilir. Hatta döviz hesabı genellikle daha güçlü bir sinyaldir. Altın hesabı ve yatırım fonları da ek belge olarak sunulabilir.',
+          },
+        },
+        {
+          '@type': 'Question',
+          name: 'Banka hesabımda hiç param yok ama eşim karşılayacak, vize alabilir miyim?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'Evet, eş sponsorluğu ile başvurabilirsiniz. Eşinizin finansal gücü yeterliyse, noter onaylı sponsor dilekçesi ve eşin banka dökümleriyle başvuru başarılı olabilir.',
+          },
+        },
+        {
+          '@type': 'Question',
+          name: 'Hesaptaki para Türk Lirası mı olmalı, yabancı para mı?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'Her ikisi de kabul edilir. Ancak son dönemde TL\'nin değer kaybı nedeniyle döviz hesabı (Euro, Dolar, Sterlin) bulundurmak konsolosluk gözünde daha güçlü bir finansal profil oluşturur.',
+          },
+        },
+        {
+          '@type': 'Question',
+          name: 'Son 3 ayda hesabım çok hareketliyse bu olumsuz mu?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'Hayır, aksine olumludur. Sürekli para giriş-çıkışı olan, maaş yatan, faturalar ödenen hareketli bir hesap, doğal ve gerçek bir ekonomik hayat olduğunu gösterir. Durgun hesaplar daha şüphelidir.',
           },
         },
       ],
@@ -59,118 +82,163 @@ const SCHEMA = {
   ],
 };
 
-const ULKE_MIKTARLARI = [
-  { ulke: 'Schengen (Ortalama)', gunluk: '€80–120', toplam: '10 gün: ~€1.200–1.500', not: 'Almanya ve Hollanda daha yüksek, Yunanistan ve İtalya daha toleranslı.' },
-  { ulke: 'İngiltere', gunluk: '£80–100', toplam: '2 hafta: ~£1.500', not: 'Paranın 28 gün boyunca hesapta kalması zorunlu.' },
-  { ulke: 'ABD (B1/B2)', gunluk: 'Sabit kural yok', toplam: '$3.000–5.000+', not: 'Seyahat planına ve yaşam standardına göre değişir. Düzenli gelir daha önemli.' },
-  { ulke: 'Kanada (TRV)', gunluk: 'CAD 100–150', toplam: '2 hafta: CAD 2.000–3.000', not: 'Son 4 aylık hareketin düzenli olması istenir.' },
-  { ulke: 'Dubai E-Vize', gunluk: 'AED 3.000 aylık gelir', toplam: 'Minimum 15.000–20.000 TL bakiye', not: 'Sürekli gelir ve son 3 ay dökümü yeterli.' },
+const SCHENGEN_TABLOSU = [
+  { ulke: 'Almanya',    gunluk: '45-65 €',   toplam10: '~85.000-100.000 TL' },
+  { ulke: 'Fransa',     gunluk: '65-100 €',  toplam10: '~110.000-140.000 TL' },
+  { ulke: 'İtalya',     gunluk: '40-50 €',   toplam10: '~75.000-90.000 TL' },
+  { ulke: 'İspanya',    gunluk: '70-90 €',   toplam10: '~95.000-115.000 TL' },
+  { ulke: 'Hollanda',   gunluk: '50-70 €',   toplam10: '~90.000-110.000 TL' },
+  { ulke: 'Yunanistan', gunluk: '30-50 €',   toplam10: '~55.000-75.000 TL' },
+  { ulke: 'Belçika',    gunluk: '95-120 €',  toplam10: '~130.000-160.000 TL' },
+  { ulke: 'Avusturya',  gunluk: '60-80 €',   toplam10: '~95.000-120.000 TL' },
+  { ulke: 'İsviçre',    gunluk: '100-150 €', toplam10: '~160.000-210.000 TL' },
+  { ulke: 'Portekiz',   gunluk: '40-60 €',   toplam10: '~70.000-90.000 TL' },
 ];
 
 export default function BankaHesabiNeKadarOlmali() {
   return (
     <BlogPostLayout post={POST} schema={SCHEMA}>
       <p className="text-slate-700 leading-relaxed text-base mb-6">
-        "Hesabımda X TL var, vize alabilir miyim?" vize danışmanlarının en sık karşılaştığı sorudur.
-        Yanıt basit değildir çünkü konsoloslukların ilan edilmiş tek bir alt sınırı yoktur.
-        Ancak 2026 güncel uygulamalara göre ülke bazında tavsiye edilen minimum tutarlar bellidir
-        ve bunun kadar önemli olan <strong>bakiyenin nasıl göründüğüdür</strong>.
+        Vize başvurusunda en çok kafa karıştıran sorulardan biri şudur: <strong>"Banka hesabımda ne kadar
+        para olmalı ki vizem onaylansın?"</strong> İnternette dolaşan rakamlar birbirinden çok farklı, forum
+        yorumları çelişkili, danışmanların her biri farklı tutarlar söylüyor. Bu rehberde, ülke ülke
+        gerçekçi rakamları, hesap dökümünün nasıl hazırlanması gerektiğini ve en çok yapılan
+        hataları net şekilde anlatıyoruz.
       </p>
 
-      <div className="bg-brand-50 border border-brand-200 rounded-xl p-5 mb-8 flex gap-3">
-        <Wallet className="w-5 h-5 text-brand-600 shrink-0 mt-0.5" />
-        <p className="text-brand-900 text-sm leading-relaxed">
-          <strong>Altın kural:</strong> Konsolosluk sizin "zengin mi fakir mi" olduğunuzu
-          değerlendirmez; "gidecek ve geri dönecek güvencesi var mı" diye bakar.
-          Miktardan çok paranın hikayesi belirleyicidir.
-        </p>
-      </div>
-
-      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">1. Ülke Bazında Önerilen Minimum Bakiye (2026)</h2>
-      <div className="space-y-3 mb-8">
-        {ULKE_MIKTARLARI.map(({ ulke, gunluk, toplam, not }) => (
-          <div key={ulke} className="bg-white border border-slate-200 rounded-xl p-4 text-sm">
-            <p className="font-semibold text-slate-800 mb-1">{ulke}</p>
-            <div className="grid sm:grid-cols-2 gap-2 text-slate-600">
-              <p><span className="font-medium text-slate-700">Günlük:</span> {gunluk}</p>
-              <p><span className="font-medium text-slate-700">Toplam:</span> {toplam}</p>
-            </div>
-            <p className="text-slate-500 text-xs mt-1 italic">{not}</p>
+      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">Banka Hesabı Vize Başvurusunda Neden Bu Kadar Önemli?</h2>
+      <p className="text-slate-700 leading-relaxed mb-4">
+        Konsolosluklar vize başvurunuzu incelerken tek bir soruya cevap arar: <em>"Bu kişi ülkesine geri
+        dönecek mi, yoksa bizim ülkemizde kalmaya mı çalışacak?"</em> Banka hesabınız bu sorunun en
+        önemli cevaplarından birini oluşturur. Yeterli maddi imkana sahip bir başvurucunun yasadışı
+        yollarla çalışmak için ülkede kalma olasılığı düşüktür — çünkü kendi ülkesinde zaten iyi bir
+        yaşam standardı vardır.
+      </p>
+      <p className="text-slate-700 leading-relaxed mb-6">
+        Ancak banka bakiyesi tek başına yeterli değildir. Konsoloslar özellikle şu üç şeye bakar:
+      </p>
+      <div className="grid sm:grid-cols-3 gap-3 mb-8">
+        {[
+          { n: '1', b: 'Hesabın geçmişi', d: 'Son 3-6 ayda hesabın nasıl hareket ettiği' },
+          { n: '2', b: 'Düzenli gelir girişi', d: 'Maaş ya da işletme geliri gibi sürekli bir kaynak' },
+          { n: '3', b: 'Bakiyenin doğallığı', d: 'Başvurudan önce aniden büyük para yatırılmaması' },
+        ].map(({ n, b, d }) => (
+          <div key={n} className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm">
+            <span className="inline-flex w-6 h-6 bg-brand-600 text-white rounded-full items-center justify-center font-bold text-xs mb-2">{n}</span>
+            <p className="font-semibold text-slate-800 mb-1">{b}</p>
+            <p className="text-slate-600 leading-relaxed">{d}</p>
           </div>
         ))}
       </div>
 
-      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">2. Günlük Harcama Kuralı Nasıl Hesaplanır?</h2>
+      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">Genel Kural: Günlük Harcama × Kalış Süresi</h2>
       <p className="text-slate-700 leading-relaxed mb-4">
-        Schengen konsoloslukları sıklıkla "günlük harcama × kalınacak gün sayısı" formülünü uygular.
-        Fransa için €120/gün, İtalya için €80-100/gün, Almanya için €60 zorunlu + otel masrafı baz
-        alınır. Bu rakam gidilecek şehrin maliyetine göre değişir — Paris veya Amsterdam gibi pahalı
-        şehirler için daha yüksek beklenti vardır.
+        Çoğu konsolosluğun kabul ettiği temel formül şudur: <strong>Seyahat edeceğiniz ülkenin günlük
+        yaşam maliyeti × planlanan kalış süreniz</strong> kadar paranın hesabınızda görünmesi gerekir.
+        Buna ek olarak <strong>acil durum fonu</strong> olarak bu tutarın en az 1,5 katına sahip olmanız
+        beklenir.
+      </p>
+      <div className="bg-brand-50 border border-brand-200 rounded-xl p-5 mb-8 flex gap-3">
+        <Wallet className="w-5 h-5 text-brand-600 shrink-0 mt-0.5" />
+        <p className="text-brand-900 text-sm leading-relaxed">
+          <strong>Örnek:</strong> 10 gün Almanya'ya gidecekseniz, günlük ortalama 60-80 Avro × 10 gün
+          = 600-800 Avro seyahat bütçeniz olmalı. Banka hesabınızda ise en az <strong>1.500-2.000 Avro</strong> karşılığı
+          TL görünmesi tavsiye edilir (15 gün × 75 Avro × 1,5 güvenlik katsayısı).
+        </p>
+      </div>
+
+      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">Schengen Ülkeleri İçin Gereken Banka Bakiyesi</h2>
+      <p className="text-slate-700 leading-relaxed mb-4">
+        Schengen ülkeleri için resmi olarak belirlenmiş tek bir rakam yoktur; her ülke kendi günlük
+        yaşam maliyetini baz alır. Aşağıdaki tablo, 2026 yılı için ülke bazlı tavsiye edilen minimum
+        banka bakiyesini gösterir (<strong>10 günlük seyahat varsayımıyla</strong>):
+      </p>
+      <div className="overflow-x-auto mb-6">
+        <table className="w-full text-sm border border-slate-200 rounded-xl overflow-hidden">
+          <thead className="bg-slate-50">
+            <tr>
+              <th className="text-left px-4 py-3 font-semibold text-slate-700">Ülke</th>
+              <th className="text-left px-4 py-3 font-semibold text-slate-700">Günlük Tavsiye (€)</th>
+              <th className="text-left px-4 py-3 font-semibold text-slate-700">10 Gün Minimum Bakiye</th>
+            </tr>
+          </thead>
+          <tbody>
+            {SCHENGEN_TABLOSU.map(({ ulke, gunluk, toplam10 }, i) => (
+              <tr key={ulke} className={i % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'}>
+                <td className="px-4 py-2.5 font-semibold text-slate-800">{ulke}</td>
+                <td className="px-4 py-2.5 text-slate-700">{gunluk}</td>
+                <td className="px-4 py-2.5 text-slate-700">{toplam10}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p className="text-slate-600 text-sm italic mb-8">
+        Bu rakamlar minimum tavsiyedir. Aile başvurularında her birey için ayrı bakiye gerekmez;
+        toplam aile bakiyesi yeterlidir. Ancak ana başvurucunun hesabında daha yüksek tutar
+        görünmesi avantajlıdır.
       </p>
 
-      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">3. İngiltere'nin "28 Gün Kuralı"</h2>
-      <div className="bg-amber-50 border border-amber-200 rounded-xl p-5 mb-6 flex gap-3">
+      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">ABD Vizesi İçin Banka Hesabı Gereksinimleri</h2>
+      <p className="text-slate-700 leading-relaxed mb-4">
+        ABD vizesi (B1/B2) başvurusunda, resmi bir minimum bakiye rakamı açıkça belirtilmez. Ancak
+        konsolosluk mülakat memurları, başvurucunun seyahat boyunca kendini finanse
+        edebileceğine ikna olmak ister. Pratikte, <strong>bir haftalık ABD seyahati için yaklaşık 4.000-5.000
+        USD</strong> (yaklaşık 170.000-215.000 TL) civarında bir bakiye önerilir.
+      </p>
+      <p className="text-slate-700 leading-relaxed mb-8">
+        ABD için daha önemli olan hususlar şunlardır: düzenli maaş girişi, Türkiye'deki güçlü bağlar
+        (iş, aile, mülk), önceki seyahat geçmişi ve seyahat amacının netliği. Büyük bir banka bakiyesi,
+        zayıf bağları olan bir başvurucuyu kurtarmaz; ancak yeterli bakiyenin olmaması güçlü bir profili
+        bile riske atar.
+      </p>
+
+      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">İngiltere Vizesi Banka Hesabı Şartları</h2>
+      <p className="text-slate-700 leading-relaxed mb-4">
+        İngiltere vizesi için "yeterli fon" kuralı geçerlidir. Standart Ziyaretçi Vizesi başvurusunda,
+        seyahat süresi boyunca kendinizi finanse edebileceğinizi kanıtlamanız gerekir. Günlük
+        <strong> 80-120 £</strong> arası bir bütçe makul kabul edilir.
+      </p>
+      <div className="bg-amber-50 border border-amber-200 rounded-xl p-5 mb-8 flex gap-3">
         <Info className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
         <div>
-          <p className="font-semibold text-amber-800 text-sm mb-1">UK Visitor Visa için özel kural</p>
+          <p className="font-semibold text-amber-800 text-sm mb-1">28 Gün Kuralı</p>
           <p className="text-amber-700 text-sm leading-relaxed">
-            İngiltere vizesi başvurusunda paranızın son <strong>28 gün</strong> boyunca
-            kesintisiz hesapta kalmış olması gerekir. 28 günden kısa süre önce yatırılan büyük
-            meblağlar açıklanamazsa başvuru reddedilir. Bu nedenle başvuru tarihinden en az
-            1 ay önce para planınızı netleştirin.
+            İngiltere'nin özel bir kuralı vardır: Paranın hesabınızda <strong>en az 28 gün</strong> boyunca
+            kesintisiz olarak durması gerekir. Bu kural özellikle öğrenci ve iş vizelerinde katı şekilde
+            uygulanır. Başvurudan 29 gün önce yatırılan büyük tutarlar başvurunuzu tehlikeye sokar.
           </p>
         </div>
       </div>
 
-      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">4. "Sahte Bakiye" Tuzağı</h2>
+      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">Kanada Vizesi Banka Hesabı</h2>
       <p className="text-slate-700 leading-relaxed mb-4">
-        Başvuru öncesi hesaba büyük miktar para yatırmak iyi niyetli görünebilir ama konsolosluk
-        gözünde en büyük kırmızı bayraktır. Görevli son 3-6 ayın hareketini karşılaştırır ve şunu sorar:
-        "Bu para nereden geldi, neden daha önce yoktu?"
+        Kanada Geçici Oturum Vizesi (TRV) başvurusunda, seyahat bütçesinin yanı sıra Türkiye'ye
+        dönüş garantisi olarak da banka bakiyesi incelenir. İki haftalık bir Kanada ziyareti için
+        <strong> 8.000-10.000 CAD</strong> (yaklaşık 250.000-310.000 TL) civarı bir bakiye tavsiye edilir.
       </p>
-      <div className="bg-red-50 border border-red-200 rounded-xl p-5 mb-6 flex gap-3">
-        <AlertTriangle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
-        <div>
-          <p className="font-semibold text-red-800 text-sm mb-1">Kaçınılması gerekenler</p>
-          <ul className="text-red-700 text-sm space-y-1 mt-1">
-            <li>• Başvurudan önceki 30 gün içinde büyük transfer/yatırım</li>
-            <li>• Arkadaş/akrabadan alınan kısa vadeli borcun hesaba girişi</li>
-            <li>• Başvuru sonrası çekilmesi planlanan "gösterme parası"</li>
-            <li>• Birden fazla hesap arası büyük EFT'ler (aynı kişiye ait bile olsa)</li>
-          </ul>
-        </div>
-      </div>
-
-      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">5. Konsolosluğun Aradığı 4 Özellik</h2>
-      <div className="space-y-3 mb-8">
-        {[
-          { n: '1', b: 'Düzenlilik', d: 'Her ay maaş giren, faturalar çıkan canlı bir hesap.' },
-          { n: '2', b: 'Stabil veya artan bakiye', d: 'Belirli bir alt limitin üzerinde kalan ve ara ara büyüyen bakiye.' },
-          { n: '3', b: 'Açıklanabilir hareketler', d: 'Büyük transferlerin arkasında net bir kaynak (satış, kira geliri, yatırım) olması.' },
-          { n: '4', b: 'Organik büyüklük', d: 'Başvurudan 3-6 ay önce başlayan, kademeli birikim.' },
-        ].map(({ n, b, d }) => (
-          <div key={n} className="flex gap-3 text-sm">
-            <span className="w-7 h-7 bg-brand-600 text-white rounded-full flex items-center justify-center font-bold shrink-0 text-xs mt-0.5">{n}</span>
-            <div>
-              <p className="font-semibold text-slate-800 mb-1">{b}</p>
-              <p className="text-slate-600 leading-relaxed">{d}</p>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">6. Yeterli Para Yoksa: Sponsor Seçeneği</h2>
-      <p className="text-slate-700 leading-relaxed mb-4">
-        Kendi hesabınızda yeterli bakiye yoksa sponsor desteği tamamen yasal ve kabul gören bir yoldur.
-        Ama tam belge seti şart:
+      <p className="text-slate-700 leading-relaxed mb-8">
+        Kanada başvurularında dikkat çeken nokta: Başvurucunun ailesinden destek aldığı
+        durumlarda, aile üyesinin hesap dökümü ve "taahhüt mektubu" da kabul edilir. Öğrenci
+        vizelerinde ise <strong>GIC (Guaranteed Investment Certificate)</strong> sistemi üzerinden
+        <strong> 20.635 CAD (2026)</strong> yatırmak zorunludur.
       </p>
+
+      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">Banka Hesap Dökümü Nasıl Olmalı?</h2>
+      <h3 className="text-lg font-semibold text-slate-800 mt-6 mb-3">Süre: Kaç Aylık Döküm Gerekir?</h3>
+      <p className="text-slate-700 leading-relaxed mb-6">
+        Çoğu konsolosluk son <strong>3-6 aylık</strong> banka hesap dökümü ister. Schengen ülkeleri
+        genellikle 3 ay kabul eder, ABD ve İngiltere 6 ay tercih eder, Kanada bazı durumlarda 4 ay
+        ister. Güvenli seçim: her zaman son 6 aylık döküm hazırlayın.
+      </p>
+
+      <h3 className="text-lg font-semibold text-slate-800 mt-6 mb-3">Format: Hangi Döküman Kabul Edilir?</h3>
       <ul className="space-y-2 mb-6">
         {[
-          'Sponsorun noter onaylı taahhüt/davet mektubu',
-          'Sponsorun son 6 aylık banka dökümü (kaşeli, imzalı)',
-          'Sponsorun maaş bordrosu veya gelir belgesi (SGK hizmet dökümü, vergi levhası)',
-          'Akrabalık belgesi (nüfus kayıt örneği, evlilik cüzdanı, pasaport sayfaları)',
-          'Sizin "masraflarımı [Ad Soyad] karşılayacaktır" beyanınız',
+          'Bankadan alınan, ıslak imzalı ve kaşeli resmi hesap hareketleri',
+          'İnternet bankacılığından alınan PDF dökümanlar (çoğu konsolosluk artık kabul ediyor)',
+          'İngilizce hesap bakiye mektubu (Schengen ve İngiltere için çok tavsiye edilir)',
+          'Son 3 aya ait maaş dekontları (düzenli gelir kanıtı olarak)',
         ].map((b) => (
           <li key={b} className="flex items-start gap-2 text-sm text-slate-700">
             <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
@@ -179,34 +247,80 @@ export default function BankaHesabiNeKadarOlmali() {
         ))}
       </ul>
 
-      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">7. Banka Ekstresi Nasıl Sunulmalı?</h2>
-      <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 mb-8 space-y-2 text-sm text-slate-700">
-        <p className="flex items-start gap-2"><CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5"/>Banka şubesinden kaşeli ve imzalı alın — ekran görüntüsü kabul edilmez</p>
-        <p className="flex items-start gap-2"><CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5"/>Son 3 ay minimum, İngiltere için son 6 ay şarttır</p>
-        <p className="flex items-start gap-2"><CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5"/>Tüm sayfaları eksiksiz sunun (1/5, 2/5, … şeklinde sayfa numaralı)</p>
-        <p className="flex items-start gap-2"><CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5"/>IBAN, ad-soyad, TC kimlik no görünür olmalı</p>
-        <p className="flex items-start gap-2"><CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5"/>Döviz hesabıysa o gün kuru ile TL/EUR karşılığını da hesaplayın</p>
+      <h3 className="text-lg font-semibold text-slate-800 mt-6 mb-3">Kredi Kartı Ekstresi Geçerli mi?</h3>
+      <p className="text-slate-700 leading-relaxed mb-8">
+        Kredi kartı ekstresi, banka hesap dökümünün yerini tutmaz. Konsolosluklar kredi kartı limitinizi
+        gerçek paranız olarak değerlendirmez. Ancak ekstresi ek belge olarak sunulabilir — özellikle
+        seyahat geçmişinizi gösterme konusunda destekleyici kanıt niteliğindedir.
+      </p>
+
+      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">Sık Yapılan Hatalar ve Kaçınılması Gerekenler</h2>
+      <div className="space-y-3 mb-8">
+        {[
+          { n: '1', b: 'Başvurudan 1-2 hafta önce hesaba büyük miktar para yatırmak', d: 'Bu, konsolosluk tarafından anında fark edilir ve başvurunuzu tehlikeye atar. En az 3-4 ay önceden hesabınıza düzenli olarak para girişi olmalıdır.' },
+          { n: '2', b: 'Hesapta sadece beklenen bakiyeyi tutmak', d: 'Eğer 100.000 TL tavsiye edilirse tam 100.000 TL değil, 150.000-180.000 TL bulundurmak daha ikna edici olur. Sınırda bakiye, "zorlanarak toplanmış para" izlenimi verir.' },
+          { n: '3', b: 'Döküman formatı hataları', d: 'Logo olmayan, imzasız, tarihsiz dökümler reddedilir. Her zaman bankanın resmi antetli kağıdında, ıslak imzalı dökümanlar alın.' },
+          { n: '4', b: 'Sadece maaş girişine güvenmek', d: 'Maaşınız yüksek olsa bile, her ay tüm maaşınızı çekiyorsanız ve hesapta bakiye tutmuyorsanız bu olumsuz bir sinyaldir. "Birikim yapabilen kişi" imajı vermelisiniz.' },
+          { n: '5', b: 'Başka birinin hesabından para transfer etmek', d: 'Başvurudan önce hesabınıza yapılan büyük havaleler (aileden bile olsa) sorgulanabilir. Bunun için noter onaylı sponsor dilekçesi hazırlamanız gerekir.' },
+        ].map(({ n, b, d }) => (
+          <div key={n} className="flex gap-3 text-sm bg-red-50/40 border border-red-100 rounded-xl p-4">
+            <AlertTriangle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+            <div>
+              <p className="font-semibold text-slate-800 mb-1">{n}. {b}</p>
+              <p className="text-slate-600 leading-relaxed">{d}</p>
+            </div>
+          </div>
+        ))}
       </div>
 
-      <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-5 mb-8 flex gap-3">
-        <TrendingUp className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
+      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">Sponsorlu Başvurularda Mali Belgeler</h2>
+      <p className="text-slate-700 leading-relaxed mb-4">
+        Ev hanımları, öğrenciler, işsiz kişiler veya yeterli bakiyesi olmayanlar sponsor üzerinden
+        başvurabilir. Sponsor; eş, ebeveyn, kardeş veya Türkiye'deki birinci derece akraba olabilir.
+        Sponsor başvurusunda şu belgeler istenir:
+      </p>
+      <ul className="space-y-2 mb-8">
+        {[
+          'Noter onaylı sponsor taahhüdü (masrafları karşılayacağını belirten)',
+          'Sponsorun son 3-6 aylık banka hesap dökümü',
+          'Sponsorun çalışma belgesi ve maaş bordroları',
+          'Akrabalık bağını gösteren belgeler (vukuatlı nüfus kayıt örneği)',
+          'Sponsorun pasaport fotokopisi ve kimlik bilgileri',
+        ].map((b) => (
+          <li key={b} className="flex items-start gap-2 text-sm text-slate-700">
+            <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+            {b}
+          </li>
+        ))}
+      </ul>
+
+      <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4">Sık Sorulan Sorular (SSS)</h2>
+      <div className="space-y-4 mb-8">
+        {[
+          { q: 'Vize için banka hesabımda 50.000 TL yeterli mi?', a: 'Hedef ülkeye göre değişir. Yunanistan veya İtalya için 7-10 günlük kısa bir seyahatte yeterli olabilir. Ancak Almanya, Fransa, İngiltere gibi daha pahalı ülkelerde en az 80.000-120.000 TL arası bir bakiye önerilir.' },
+          { q: 'Başka birinin hesabından gelen para vizeyi etkiler mi?', a: 'Evet, büyük tutarlı ani transferler sorgulanır. Bu transferler ailenizden geliyorsa, sponsor dilekçesi ile belgelendirmeniz gerekir. Açıklanamayan para girişleri başvurunuzu riske atar.' },
+          { q: 'Vadeli hesap veya döviz hesabı kabul edilir mi?', a: 'Evet. Vadeli TL, Euro, Dolar hesapları kabul edilir. Hatta döviz hesabı genellikle daha güçlü bir sinyaldir. Altın hesabı ve yatırım fonları da ek belge olarak sunulabilir.' },
+          { q: 'Banka hesabımda hiç param yok ama eşim karşılayacak, vize alabilir miyim?', a: 'Evet, eş sponsorluğu ile başvurabilirsiniz. Eşinizin finansal gücü yeterliyse, noter onaylı sponsor dilekçesi ve eşin banka dökümleriyle başvuru başarılı olabilir.' },
+          { q: 'Hesaptaki para Türk Lirası mı olmalı, yabancı para mı?', a: 'Her ikisi de kabul edilir. Ancak son dönemde TL\'nin değer kaybı nedeniyle döviz hesabı (Euro, Dolar, Sterlin) bulundurmak konsolosluk gözünde daha güçlü bir finansal profil oluşturur.' },
+          { q: 'Son 3 ayda hesabım çok hareketliyse bu olumsuz mu?', a: 'Hayır, aksine olumludur. Sürekli para giriş-çıkışı olan, maaş yatan, faturalar ödenen hareketli bir hesap, doğal ve gerçek bir ekonomik hayat olduğunu gösterir. Durgun hesaplar daha şüphelidir.' },
+        ].map(({ q, a }) => (
+          <div key={q} className="bg-white border border-slate-200 rounded-xl p-4">
+            <p className="font-semibold text-slate-800 text-sm mb-2">{q}</p>
+            <p className="text-slate-600 text-sm leading-relaxed">{a}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-12 bg-brand-50 border border-brand-200 rounded-2xl p-6 flex gap-3">
+        <TrendingUp className="w-5 h-5 text-brand-600 shrink-0 mt-0.5" />
         <div>
-          <p className="font-semibold text-emerald-800 text-sm mb-1">Uzman Tavsiyesi</p>
-          <p className="text-emerald-700 text-sm leading-relaxed">
-            Güçlü iş belgesi, düzenli gelir ve tutarlı seyahat planı olan bir başvurucu için 50.000 TL
-            bakiye yeterlidir. Tersine, belgeler zayıfsa 200.000 TL bakiye bile vizeyi garantilemez.
-            Para miktarı profilin <strong>bir parçasıdır</strong>, tamamı değil.
+          <p className="font-bold text-brand-900 mb-2">Özet: Para Miktarı Değil, Para Hikayesi</p>
+          <p className="text-brand-800 text-sm leading-relaxed">
+            Hesabınızdaki para bir rakam değil, konsolosluğa anlattığınız bir hikayedir.
+            Planlamaya başvurudan 3-6 ay önce başlayın, düzenli gelir akışı gösterin ve
+            büyük hareketleri açıklayabilecek belgeleri hazırda tutun.
           </p>
         </div>
-      </div>
-
-      <div className="mt-12 bg-brand-50 border border-brand-200 rounded-2xl p-6">
-        <h3 className="font-bold text-brand-900 mb-2">Özet: Para Miktarı Değil, Para Hikayesi</h3>
-        <p className="text-brand-800 text-sm leading-relaxed">
-          Hesabınızdaki para bir rakam değil, konsolosluğa anlattığınız bir hikayedir.
-          Planlamaya başvurudan 3-6 ay önce başlayın, düzenli gelir akışı gösterin ve
-          büyük hareketleri açıklayabilecek belgeleri hazırda tutun.
-        </p>
       </div>
     </BlogPostLayout>
   );
