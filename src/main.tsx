@@ -49,6 +49,23 @@ const AbdVizesi2026             = lazy(() => import('./pages/blog/AbdVizesi2026'
 const KapidaVizeUlkeler         = lazy(() => import('./pages/blog/KapidaVizeUlkeler'));
 const KanadaVizesi2026          = lazy(() => import('./pages/blog/KanadaVizesi2026'));
 const DijitalNomadVizesi        = lazy(() => import('./pages/blog/DijitalNomadVizesi'));
+// ── Blog — 2026 PDF Rehber Yazıları ────────────────────────────────────
+const BankaHesabiNeKadarOlmali  = lazy(() => import('./pages/blog/BankaHesabiNeKadarOlmali'));
+const EvHanimlariSchengenVizesi = lazy(() => import('./pages/blog/EvHanimlariSchengenVizesi'));
+const VizeReddiSonrasiNeYapmali = lazy(() => import('./pages/blog/VizeReddiSonrasiNeYapmali'));
+const Ds160NasilDoldurulur      = lazy(() => import('./pages/blog/Ds160NasilDoldurulur'));
+const EnKolaySchengen2026       = lazy(() => import('./pages/blog/EnKolaySchengen2026'));
+const EmekliVizeBasvurusu       = lazy(() => import('./pages/blog/EmekliVizeBasvurusu'));
+const SchengenGerekliBelgeler2026 = lazy(() => import('./pages/blog/SchengenGerekliBelgeler2026'));
+const OgrencilerIcinVize2026    = lazy(() => import('./pages/blog/OgrencilerIcinVize2026'));
+const DubaiEvizesi2026          = lazy(() => import('./pages/blog/DubaiEvizesi2026'));
+const VizeUcretleriKarsilastirma2026 = lazy(() => import('./pages/blog/VizeUcretleriKarsilastirma2026'));
+const SerbestMeslekVize         = lazy(() => import('./pages/blog/SerbestMeslekVize'));
+const IssizlerVizeBasvurusu     = lazy(() => import('./pages/blog/IssizlerVizeBasvurusu'));
+const YesilPasaportAvantajlari  = lazy(() => import('./pages/blog/YesilPasaportAvantajlari'));
+const SponsorDilekcesiOrnek     = lazy(() => import('./pages/blog/SponsorDilekcesiOrnek'));
+const Kurali90180NasilHesaplanir = lazy(() => import('./pages/blog/Kurali90180NasilHesaplanir'));
+const SeyahatSigortasiNasilSecilir = lazy(() => import('./pages/blog/SeyahatSigortasiNasilSecilir'));
 const NotFound                  = lazy(() => import('./pages/NotFound'));
 
 const LoadingSpinner = () => (
@@ -114,6 +131,23 @@ createRoot(document.getElementById('root')!).render(
             <Route path="/blog/kapida-vize-veren-ulkeler-2026"           element={<KapidaVizeUlkeler />} />
             <Route path="/blog/kanada-vizesi-nasil-alinir-2026"          element={<KanadaVizesi2026 />} />
             <Route path="/blog/dijital-nomad-vizesi-2026"                element={<DijitalNomadVizesi />} />
+            {/* Blog — 2026 PDF Rehber Yazıları */}
+            <Route path="/blog/vize-icin-banka-hesabi-ne-kadar-olmali"   element={<BankaHesabiNeKadarOlmali />} />
+            <Route path="/blog/ev-hanimlari-icin-schengen-vizesi"        element={<EvHanimlariSchengenVizesi />} />
+            <Route path="/blog/vize-reddi-sonrasi-ne-yapmali-itiraz-rehberi" element={<VizeReddiSonrasiNeYapmali />} />
+            <Route path="/blog/ds-160-formu-nasil-doldurulur-rehberi"    element={<Ds160NasilDoldurulur />} />
+            <Route path="/blog/en-kolay-schengen-vizesi-veren-ulkeler-2026" element={<EnKolaySchengen2026 />} />
+            <Route path="/blog/emekliler-icin-vize-basvurusu-rehberi"    element={<EmekliVizeBasvurusu />} />
+            <Route path="/blog/schengen-vizesi-gerekli-belgeler-2026"    element={<SchengenGerekliBelgeler2026 />} />
+            <Route path="/blog/ogrenciler-icin-vize-rehberi-2026"        element={<OgrencilerIcinVize2026 />} />
+            <Route path="/blog/dubai-e-vizesi-2026-basvuru-rehberi"      element={<DubaiEvizesi2026 />} />
+            <Route path="/blog/vize-ucretleri-karsilastirma-2026"        element={<VizeUcretleriKarsilastirma2026 />} />
+            <Route path="/blog/serbest-meslek-sahipleri-icin-vize-rehberi" element={<SerbestMeslekVize />} />
+            <Route path="/blog/issizler-ve-calismayanlar-icin-vize"      element={<IssizlerVizeBasvurusu />} />
+            <Route path="/blog/yesil-pasaport-avantajlari-vizesiz-ulkeler-2026" element={<YesilPasaportAvantajlari />} />
+            <Route path="/blog/sponsor-dilekcesi-nasil-yazilir-ornek"    element={<SponsorDilekcesiOrnek />} />
+            <Route path="/blog/90-180-gun-kurali-nasil-hesaplanir"       element={<Kurali90180NasilHesaplanir />} />
+            <Route path="/blog/vize-icin-seyahat-sigortasi-nasil-secilir" element={<SeyahatSigortasiNasilSecilir />} />
             <Route path="*"                    element={<NotFound />} />
             </Routes>
           </Suspense>
