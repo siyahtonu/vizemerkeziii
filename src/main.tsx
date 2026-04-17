@@ -66,6 +66,9 @@ const YesilPasaportAvantajlari  = lazy(() => import('./pages/blog/YesilPasaportA
 const SponsorDilekcesiOrnek     = lazy(() => import('./pages/blog/SponsorDilekcesiOrnek'));
 const Kurali90180NasilHesaplanir = lazy(() => import('./pages/blog/Kurali90180NasilHesaplanir'));
 const SeyahatSigortasiNasilSecilir = lazy(() => import('./pages/blog/SeyahatSigortasiNasilSecilir'));
+// ── Feedback loop sayfaları ─────────────────────────────────────────────
+const OutcomeReport             = lazy(() => import('./pages/OutcomeReport'));
+const OutcomesStats             = lazy(() => import('./pages/OutcomesStats'));
 const NotFound                  = lazy(() => import('./pages/NotFound'));
 
 const LoadingSpinner = () => (
@@ -148,6 +151,9 @@ createRoot(document.getElementById('root')!).render(
             <Route path="/blog/sponsor-dilekcesi-nasil-yazilir-ornek"    element={<SponsorDilekcesiOrnek />} />
             <Route path="/blog/90-180-gun-kurali-nasil-hesaplanir"       element={<Kurali90180NasilHesaplanir />} />
             <Route path="/blog/vize-icin-seyahat-sigortasi-nasil-secilir" element={<SeyahatSigortasiNasilSecilir />} />
+            {/* Feedback loop */}
+            <Route path="/sonuc-bildir"                 element={<OutcomeReport />} />
+            <Route path="/admin/outcomes-stats"         element={<OutcomesStats />} />
             <Route path="*"                    element={<NotFound />} />
             </Routes>
           </Suspense>
