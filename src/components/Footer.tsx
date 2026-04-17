@@ -27,9 +27,9 @@ const Footer: React.FC = () => {
             </p>
           </div>
 
-          {/* Ürün */}
+          {/* Keşfet */}
           <div>
-            <div className="text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-4">Ürün</div>
+            <div className="text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-4">Keşfet</div>
             <ul className="space-y-2.5">
               {[
                 { label: 'Blog', href: '/blog' },

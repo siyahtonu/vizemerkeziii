@@ -261,6 +261,140 @@
   }
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   ── Özel 2026 İmleci (yalnızca sivri pointer / desktop) ──
+   ═══════════════════════════════════════════════════════════════ */
+#vize-cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 9999;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  transition: opacity 200ms ease;
+  mix-blend-mode: normal;
+}
+
+#vize-cursor .cursor-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 34px;
+  height: 34px;
+  border: 1.5px solid rgba(108, 92, 231, 0.55);
+  border-radius: 9999px;
+  transform: translate(-50%, -50%);
+  transition:
+    width 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    height 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 220ms ease,
+    background 220ms ease,
+    opacity 220ms ease;
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.35) inset,
+    0 4px 18px -4px rgba(108, 92, 231, 0.45);
+}
+
+#vize-cursor .cursor-dot {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  background: #6c5ce7;
+  border-radius: 9999px;
+  transform: translate(-50%, -50%);
+  transition:
+    width 160ms ease,
+    height 160ms ease,
+    background 160ms ease,
+    opacity 160ms ease;
+}
+
+/* Etkinleştirildiğinde sistem imlecini gizle */
+@media (pointer: fine) {
+  body.use-custom-cursor,
+  body.use-custom-cursor * {
+    cursor: none !important;
+  }
+  body.use-custom-cursor #vize-cursor {
+    opacity: 1;
+  }
+}
+
+/* Hover — link / buton üstünde büyüyen yumuşak halka */
+body.use-custom-cursor.cursor-hover #vize-cursor .cursor-ring {
+  width: 56px;
+  height: 56px;
+  border-color: rgba(108, 92, 231, 0.85);
+  background: rgba(108, 92, 231, 0.08);
+}
+body.use-custom-cursor.cursor-hover #vize-cursor .cursor-dot {
+  width: 0;
+  height: 0;
+  opacity: 0;
+}
+
+/* Tıklama — anlık daralma */
+body.use-custom-cursor.cursor-click #vize-cursor .cursor-ring {
+  width: 22px;
+  height: 22px;
+  background: rgba(108, 92, 231, 0.22);
+}
+
+/* Metin alanları — dikey çubuk hissi */
+body.use-custom-cursor.cursor-text #vize-cursor .cursor-ring {
+  width: 4px;
+  height: 22px;
+  border-radius: 2px;
+  border-color: rgba(108, 92, 231, 0.85);
+  background: rgba(108, 92, 231, 0.55);
+}
+body.use-custom-cursor.cursor-text #vize-cursor .cursor-dot {
+  opacity: 0;
+}
+
+/* Premium kilitli — altın vurgu */
+body.use-custom-cursor.cursor-premium #vize-cursor .cursor-ring {
+  width: 56px;
+  height: 56px;
+  border-color: rgba(245, 158, 11, 0.9);
+  background: rgba(245, 158, 11, 0.12);
+  box-shadow: 0 6px 22px -6px rgba(245, 158, 11, 0.55);
+}
+body.use-custom-cursor.cursor-premium #vize-cursor .cursor-dot {
+  background: #f59e0b;
+}
+
+/* Tehlike / uyarı */
+body.use-custom-cursor.cursor-danger #vize-cursor .cursor-ring {
+  border-color: rgba(244, 63, 94, 0.85);
+  background: rgba(244, 63, 94, 0.1);
+}
+body.use-custom-cursor.cursor-danger #vize-cursor .cursor-dot {
+  background: #f43f5e;
+}
+
+/* Mobil / dokunmatik — özel imleç tamamen devre dışı */
+@media (hover: none), (pointer: coarse) {
+  #vize-cursor { display: none !important; }
+  body.use-custom-cursor,
+  body.use-custom-cursor * {
+    cursor: auto !important;
+  }
+}
+
+/* Hareket azaltma tercihi */
+@media (prefers-reduced-motion: reduce) {
+  #vize-cursor .cursor-ring,
+  #vize-cursor .cursor-dot {
+    transition: none !important;
+  }
+}
+
 /* ── Print ── */
 @media print {
   .engine-bg, .glass { background: white !important; }

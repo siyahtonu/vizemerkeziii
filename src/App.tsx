@@ -55,9 +55,8 @@ import {
   ClipboardList
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { jsPDF } from 'jspdf';
-import Footer from './components/Footer';
 import { SEO } from './components/SEO';
 import { apiUrl } from './lib/api';
 import { HelpModal } from './components/modals/HelpModal';
@@ -2346,9 +2345,19 @@ Signature: _______________     Date: ${today}`;
     }
   };
 
-  // ── Custom Cursor (localStorage'dan tercih okunur, default KAPALI) ──────
+  // ── Custom Cursor: masaüstünde varsayılan AÇIK, mobilde devre dışı ──────
   const [customCursorEnabled, setCustomCursorEnabled] = React.useState<boolean>(() => {
-    try { return localStorage.getItem('vizeakil_custom_cursor') === 'true'; } catch { return false; }
+    try {
+      // Mobilde / dokunmatik cihazlarda asla açma
+      if (typeof window !== 'undefined' && window.matchMedia) {
+        const isCoarse = window.matchMedia('(pointer: coarse)').matches;
+        const isNoHover = window.matchMedia('(hover: none)').matches;
+        if (isCoarse || isNoHover) return false;
+      }
+      const stored = localStorage.getItem('vizeakil_custom_cursor');
+      if (stored === null) return true; // ilk ziyarette masaüstünde açık
+      return stored === 'true';
+    } catch { return false; }
   });
 
   React.useEffect(() => {
@@ -4712,10 +4721,20 @@ Signature: _______________     Date: ${today}`;
         actionItems={actionItems}
       />
 
-      {/* Footer */}
-      <footer className="max-w-5xl mx-auto px-4 sm:px-6 py-12 space-y-6 mt-8 border-t border-slate-100">
-        {/* SSS + Nasıl Kullanılır teaser */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      {/* Footer — tek & birleşik */}
+      <footer className="max-w-5xl mx-auto px-4 sm:px-6 py-12 space-y-8 mt-8 border-t border-slate-100">
+        {/* Yardım / Nasıl Kullanılır / SSS teaser */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <button type="button" onClick={() => setIsHelpOpen(true)}
+            className="p-5 bg-white border border-slate-100 rounded-2xl text-left hover:border-emerald-200 hover:shadow-md transition-all group">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-9 h-9 bg-emerald-50 rounded-xl flex items-center justify-center group-hover:bg-emerald-100 transition-colors">
+                <Info className="w-5 h-5 text-emerald-600" />
+              </div>
+              <span className="font-bold text-slate-900">Yardım & Araçlar</span>
+            </div>
+            <p className="text-xs text-slate-400 leading-relaxed">VizeAkıl ne yapabilir? 20+ aracın neye yaradığını tek ekranda görün.</p>
+          </button>
           <button type="button" onClick={() => setIsHowToOpen(true)}
             className="p-5 bg-white border border-slate-100 rounded-2xl text-left hover:border-brand-200 hover:shadow-md transition-all group">
             <div className="flex items-center gap-3 mb-2">
@@ -4724,7 +4743,7 @@ Signature: _______________     Date: ${today}`;
               </div>
               <span className="font-bold text-slate-900">Nasıl Kullanılır?</span>
             </div>
-            <p className="text-xs text-slate-400 leading-relaxed">3 adımda vize başvurunuzu optimize etmeyi öğrenin. Sıfır vize deneyimi gerektirmez.</p>
+            <p className="text-xs text-slate-400 leading-relaxed">Ülke seçiminden başvuruya 5 adımda tam rehber. Sıfır vize deneyimi yeterli.</p>
           </button>
           <button type="button" onClick={() => setIsFaqOpen(true)}
             className="p-5 bg-white border border-slate-100 rounded-2xl text-left hover:border-indigo-200 hover:shadow-md transition-all group">
@@ -4734,22 +4753,57 @@ Signature: _______________     Date: ${today}`;
               </div>
               <span className="font-bold text-slate-900">Sık Sorulan Sorular</span>
             </div>
-            <p className="text-xs text-slate-400 leading-relaxed">Aklınızdaki tüm soruların cevabı burada. Başvurudan önce mutlaka okuyun.</p>
+            <p className="text-xs text-slate-400 leading-relaxed">Başvuru öncesi aklınıza takılanların cevapları — skor, veri gizliliği, premium, reddedilme.</p>
           </button>
         </div>
 
-        <div className="flex flex-col sm:flex-row justify-between items-center gap-4 text-slate-400 text-sm pt-2">
-          <div className="flex items-center gap-2 font-bold text-slate-600">
-            <ShieldCheck className="w-5 h-5 text-brand-600" />
-            <span>VizeAkıl © 2026 — vizeakil.com</span>
+        {/* Birleşik link gridi — marka + keşfet + yasal + iletişim */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-10 pt-4">
+          <div className="col-span-2 md:col-span-1">
+            <div className="flex items-center gap-2.5 font-display font-bold text-lg text-slate-900 mb-3">
+              <div className="w-8 h-8 bg-gradient-to-br from-brand-500 to-brand-600 rounded-xl flex items-center justify-center shadow-sm shadow-brand-500/15">
+                <ShieldCheck className="w-4 h-4 text-white" />
+              </div>
+              VizeAkıl
+            </div>
+            <p className="text-[13px] text-slate-400 leading-relaxed font-light">
+              Yapay zeka ile vize başvuru sürecinizi analiz eder, kişisel öneriler sunar.
+            </p>
+            <p className="text-[10px] text-slate-300 leading-relaxed font-light mt-2 italic">
+              Bilgilendirme amaçlıdır, resmi vize danışmanlığı yerine geçmez.
+            </p>
           </div>
-          <div className="flex flex-wrap justify-center gap-4 text-xs">
-            <button type="button" onClick={() => setIsHowToOpen(true)} className="hover:text-slate-600 transition-colors">Nasıl Kullanılır?</button>
-            <button type="button" onClick={() => setIsFaqOpen(true)} className="hover:text-slate-600 transition-colors">SSS</button>
-            <button type="button" onClick={() => setIsTermsOpen(true)} className="hover:text-slate-600 transition-colors">Kullanım Koşulları</button>
-            <button type="button" onClick={() => setIsKvkkOpen(true)} className="hover:text-slate-600 transition-colors">KVKK Aydınlatma</button>
+          <div>
+            <div className="text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-4">Keşfet</div>
+            <ul className="space-y-2.5">
+              <li><Link to="/blog" className="text-sm text-slate-500 hover:text-brand-600 transition-colors font-light">Blog</Link></li>
+              <li><Link to="/hakkimizda" className="text-sm text-slate-500 hover:text-brand-600 transition-colors font-light">Hakkımızda</Link></li>
+              <li><Link to="/iletisim" className="text-sm text-slate-500 hover:text-brand-600 transition-colors font-light">İletişim</Link></li>
+              <li><button type="button" onClick={() => setIsHelpOpen(true)} className="text-sm text-slate-500 hover:text-brand-600 transition-colors font-light text-left">Yardım</button></li>
+            </ul>
+          </div>
+          <div>
+            <div className="text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-4">Yasal</div>
+            <ul className="space-y-2.5">
+              <li><Link to="/kvkk" className="text-sm text-slate-500 hover:text-brand-600 transition-colors font-light">KVKK</Link></li>
+              <li><Link to="/gizlilik-politikasi" className="text-sm text-slate-500 hover:text-brand-600 transition-colors font-light">Gizlilik</Link></li>
+              <li><Link to="/kullanim-kosullari" className="text-sm text-slate-500 hover:text-brand-600 transition-colors font-light">Kullanım Koşulları</Link></li>
+              <li><Link to="/cerez-politikasi" className="text-sm text-slate-500 hover:text-brand-600 transition-colors font-light">Çerez Politikası</Link></li>
+            </ul>
+          </div>
+          <div>
+            <div className="text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-4">İletişim</div>
+            <ul className="space-y-2.5">
+              <li><a href="mailto:destek@vizeakil.com" className="text-sm text-slate-500 hover:text-brand-600 transition-colors font-light">destek@vizeakil.com</a></li>
+            </ul>
           </div>
         </div>
+
+        <div className="pt-6 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-3 text-[11px] text-slate-300 font-light">
+          <span>&copy; 2026 VizeAkıl. Tüm hakları saklıdır.</span>
+          <span>Kaynak: EU Commission Schengen Visa Statistics 2024-2026</span>
+        </div>
+
         <div className="p-5 bg-slate-50 rounded-2xl text-xs text-slate-400 leading-relaxed">
           <strong>Önemli Uyarı:</strong> VizeAkıl bir resmi kurum veya konsolosluk değildir. Sunulan başarı ihtimali ve tavsiyeler geçmiş verilere dayalı istatistiksel tahminlerdir. Vize kararı tamamen ilgili ülkenin konsolosluğuna aittir ve hiçbir şekilde garanti edilemez. Başvuru sahibi beyanlarından kendisi sorumludur.
         </div>
@@ -4889,52 +4943,84 @@ Signature: _______________     Date: ${today}`;
               <div className="flex-1 overflow-y-auto p-7 space-y-4">
                 {[
                   {
-                    q: 'Başarı skorum neden düşük çıktı?',
-                    a: 'Skor kartının altındaki "6 Eksen Profil" bölümüne bakın — hangi eksenin (Finansal, Mesleki, Bağlar, Seyahat, Başvuru, Güven) zayıf olduğunu yıldız sayısından anlayabilirsiniz. Her eksene tıklayınca somut aksiyon önerisi çıkar. "Puanınızı Nasıl Artırırsınız?" listesindeki her maddenin "Yaptım ✓" butonuna tıkladığınızda skor anlık yükselir. Banka düzenliliği, SGK belgesi ve seyahat sigortası en çok puan getiren 3 faktördür.'
+                    q: 'VizeAkıl tam olarak ne yapar?',
+                    a: 'VizeAkıl, Schengen, İngiltere ve ABD vize başvurularını yapay zeka ile analiz eden bir değerlendirme platformudur. Profil skorunuzu hesaplar, en riskli noktaları gösterir, evrak listesi oluşturur, niyet mektubu yazar, banka dökümünüzü değerlendirir, ret mektubunu analiz eder, mülakat soruları için pratik yaptırır ve 20+ araçla başvurunuzu baştan sona güçlendirir. Resmi konsolosluk değildir; bilgilendirme ve ön değerlendirme aracıdır.'
+                  },
+                  {
+                    q: 'Skorum yüksek çıkarsa vizem garantili mi?',
+                    a: 'Hayır. Hiçbir platform vize garantisi veremez — nihai karar her zaman ilgili ülkenin konsolosluğuna aittir. Skor, benzer profillerin geçmişteki onay/ret oranlarına dayalı istatistiksel bir tahmindir. %82+ "güçlü" profil anlamına gelir ve kabul ihtimali yüksektir; ama konsolos, beyanların tutarsızlığı ya da mülakat izlenimi gibi insan faktörlerine de bakar.'
+                  },
+                  {
+                    q: 'Başarı skorum neden düşük çıktı, nasıl artırırım?',
+                    a: 'Skor kartının altındaki 6 Eksen Profil\'e bakın — Finansal, Mesleki, Bağlar, Seyahat, Başvuru ve Güven eksenlerinden hangisinin yıldız sayısı düşükse o alanı güçlendirin. "Puanınızı Nasıl Artırırsınız?" listesindeki her adımı tamamladığınızda "Yaptım ✓" butonuna basarak skorunuzun anlık yükseldiğini görebilirsiniz. En hızlı etki veren 3 faktör genelde banka hesabı düzenliliği, işverenden alınan güncel yazı/SGK ve geçerli seyahat sigortasıdır.'
                   },
                   {
                     q: 'Bilgilerimi girmek güvenli mi? Verilerim nereye gidiyor?',
-                    a: 'Girdiğiniz tüm bilgiler yalnızca tarayıcınızda (cihazınızda) saklanır. Hiçbir bilginiz sunucularımıza iletilmez veya depolanmaz. Siteye bir sonraki girişinizde "Kaldığınız yerden devam edin" banneri görebilirsiniz — bu tamamen yerel bir özellik, sunucu tarafında kayıt yok. Tarayıcı geçmişini temizlediğinizde her şey silinir.'
+                    a: 'Girdiğiniz profil bilgilerinin tamamı yalnızca tarayıcınızın yerel belleğinde (localStorage) tutulur; sunucumuza iletilmez veya kaydedilmez. "Kaldığınız yerden devam edin" uyarısı bile tamamen cihazınızda çalışır. Tarayıcı geçmişini / site verilerini temizlediğinizde her şey silinir. Sadece e-posta ile randevu bildirimine abone olursanız ve Premium satın alırsanız bu işlemler için sınırlı veri işlenir (KVKK metnimizde ayrıntı var).'
                   },
                   {
-                    q: '6 Eksen Profil nedir? Radar skorları nasıl yorumlanır?',
-                    a: 'Skor kartındaki 6 Eksen Profil, başarı şansınızı bağımsız 6 boyutta değerlendirir: Finansal (banka düzeni, bakiye), Mesleki (SGK, işveren mektubu, kıdem), Bağlar (mülk, aile, sosyal), Seyahat (önceki vizeler, geçmiş), Başvuru (niyet mektubu, rezervasyon) ve Güven (pasaport, sigorta). Her eksen 0–100 arası puanlanır, yıldız sayısına (★★★★☆) dönüştürülür. Yeşil ≥80, sarı ≥50, kırmızı <50 anlamına gelir. Eksene tıklayarak o boyuta özel ipucu alabilirsiniz.'
+                    q: '6 Eksen Profil nedir ve nasıl yorumlanır?',
+                    a: 'Başarı şansınızı bağımsız 6 boyutta değerlendirir: Finansal (banka düzeni, bakiye), Mesleki (SGK, işveren mektubu, kıdem), Bağlar (mülk, aile, sosyal bağ), Seyahat (önceki vizeler, geçmiş), Başvuru (niyet mektubu, rezervasyon) ve Güven (pasaport, sigorta). Her eksen 0–100 arası puanlanır ve yıldız sayısına dönüşür. Yeşil ≥80 güçlü, sarı 50–79 geliştirilebilir, kırmızı <50 riskli alan demektir. Eksene dokunarak o boyuta özel ipucu alabilirsiniz.'
                   },
                   {
-                    q: 'Ülke Karşılaştırma (VS Modu) nasıl kullanılır?',
-                    a: 'Dashboard\'daki "Ülke Karşılaştırma" widget\'ında 2 ülke seçin. Sistem ret oranını, bekleme gününü ve zorluk seviyesini yan yana bar grafiklerle gösterir ve hangisine önce başvurmanız gerektiğini otomatik hesaplar. Örneğin Almanya vs. Yunanistan karşılaştırmasında Yunanistan için ret oranı ve bekleme süresi belirgin şekilde düşük çıkar.'
+                    q: 'Hangi ülkelere bakabiliyorum?',
+                    a: 'Tüm Schengen ülkeleri (Almanya, Fransa, İtalya, İspanya, Yunanistan, Hollanda, Belçika, Avusturya, Portekiz, Danimarka, İsveç, Norveç, Finlandiya, Çekya, Polonya, Macaristan vs.), Birleşik Krallık (UK) ve ABD B1/B2 desteklenir. Ayrıca Dubai e-Vize, Kanada ve dijital nomad vizeleri için blog rehberlerimiz mevcuttur.'
                   },
                   {
-                    q: 'Başvuru Zaman Çizelgesi nasıl çalışır?',
-                    a: 'Dashboard\'daki "Başvuru Zaman Çizelgesi" widget\'ına planlanan başvuru tarihinizi girin. Sistem geriye doğru sayarak her görevi (profil değerlendirmesi, banka belgesi, sigorta, randevu vb.) ideal başlangıç tarihiyle listeler. Her görevin solundaki daireye tıklayarak tamamlandı olarak işaretleyebilirsiniz — bu bilgi tarayıcınızda kalır ve ilerlemenizi takip eder. Tarihi geçmiş görevler kırmızı renkte "⚠️ gecikti" uyarısıyla işaretlenir.'
+                    q: 'Ülke Karşılaştırma widget\'ı nasıl çalışır?',
+                    a: '"Ülke Karşılaştırma" bölümünden 2 ülke seçin — sistem Türk başvurucular için ret oranını, randevu bekleme süresini ve genel zorluğu yan yana bar grafiklerle gösterir ve hangisine önce başvurmanızın daha güvenli olduğunu otomatik söyler. Ör. Almanya vs. Yunanistan karşılaştırmasında çoğu zaman Yunanistan daha elverişli çıkar.'
                   },
                   {
-                    q: 'Evrak Sihirbazı\'nda belge listesini nasıl kullanırım?',
-                    a: 'Ülke ve çalışma durumunuzu seçtikten sonra "Liste Oluştur" butonuna tıklayın. Her belgeye tıkladığınızda üzeri çizilir — hazırladıklarınızı böyle takip edebilirsiniz. Başvuru tipinize göre (işveren, öğrenci, emekli vb.) farklı belge setleri otomatik oluşturulur.'
+                    q: 'Başvuru Zaman Çizelgesi neye yarar?',
+                    a: 'Planladığınız başvuru tarihini girdiğinizde sistem geriye doğru sayarak her görevi (banka düzeni, sigorta, randevu, niyet mektubu, belge seti vb.) ideal başlangıç tarihiyle sıralar. Görevleri tamamladıkça işaretleyebilirsiniz; gecikmiş görevler kırmızı uyarıyla öne çıkar. Özellikle 8+ hafta önceden kullanmanız tavsiye edilir.'
                   },
                   {
-                    q: 'Ücretsiz araçlar neler? Premium ne kazandırıyor?',
-                    a: 'Ücretsiz: Profil Skoru, 6 Eksen Radar, Ülke Karşılaştırma, Başvuru Zaman Çizelgesi, Evrak Listesi, Senaryo Simülatörü, Randevu Takvimi, Ülke Sıralaması. Premium ile: Vize Danışmanım (yapay zeka), Ret Mektubu Analizi, AI Banka Dökümü, Kırmızı Bayrak Tarayıcı, Sosyal Medya Rehberi, Ret Nedeni Haritası (2021–2026) ve Banka Hazırlık Planı.'
-                  },
-                  {
-                    q: 'Başarı skorum nasıl hesaplanıyor?',
-                    a: 'Algoritma v3.0 üç aşamalıdır: (1) 6 boyutta ham skor — finansal, mesleki, bağlar, seyahat, başvuru, güven. (2) Temporal Decay — eski vizeler ve eski ret cezaları zamanla azalan bir ağırlıkla değerlenir. (3) Bayes harmanı — ham skor (%65) + hedef ülkenin Türk başvurucu ret oranı (%35). Ek olarak planlanan başvuru ayı girilirse mevsimsel faktör (yaz pikinde Yunanistan/Almanya için hafif ceza) devreye girer. Şüpheli büyük mevduat veto koşulu olarak skoru 30\'a kısıtlar.'
-                  },
-                  {
-                    q: 'Daha önce vize reddettim. Tekrar başvurabilir miyim?',
-                    a: 'Evet. Önceki ret bilgilerinizi işaretlediğinizde Dashboard\'daki "Ret Risk Analizi" en yüksek riskli kalıpları yasal kodlarıyla gösterir. Temporal Decay sayesinde eski retlerin etkisi zamanla azalır — 3+ yıl önceki ret bugün çok daha az ağırlık taşır. "Ret Nedeni Haritası" ile hedef ülkenin 2021–2026 ret istatistiklerini de görebilirsiniz.'
+                    q: 'Evrak Sihirbazı nedir?',
+                    a: 'Ülkeye ve başvuru tipinize (çalışan / çalışmayan / öğrenci / reşit olmayan / sponsor / emekli) göre eksiksiz bir belge listesi oluşturur. Her belgeye dokunarak "hazırlandı" işareti koyabilirsiniz — liste üstü çizilir, ilerleme çubuğu güncellenir. Listeyi PDF olarak da indirebilirsiniz.'
                   },
                   {
                     q: 'Niyet mektubunu Türkçe ve İngilizce indirebiliyor muyum?',
-                    a: 'Evet! 4 mektup türü (Başvuru Sahipliği, Sponsor, İşveren, Seyahat Planı) için hem 🇹🇷 Türkçe hem 🇬🇧 İngilizce PDF indirebilirsiniz. Skorunuz %65 üzerindeyse direkt "Niyet Mektubu Oluştur →" butonu skor kartında görünür.'
+                    a: 'Evet. 4 farklı profesyonel mektup türü — Başvuru Sahipliği, Finansal Sponsor, İşveren İzin, Seyahat Planı — için hem 🇹🇷 Türkçe hem 🇬🇧 İngilizce PDF üretilir. Skorunuz %65 üzerindeyse skor kartında doğrudan "Niyet Mektubu Oluştur" butonu görünür.'
                   },
                   {
-                    q: 'Ülke zorluk uyarısı (sarı/turuncu banner) ne anlama geliyor?',
-                    a: 'Almanya, Fransa, İngiltere, ABD, Danimarka, İsveç veya Norveç seçtiğinizde Dashboard\'da otomatik uyarı çıkar (örn. Danimarka %66, ABD ~%45 ret oranı). Banner, profilinize göre daha elverişli 3 alternatif ülkeyi onay tahminleriyle önerir. Bilgilendirme amaçlıdır; seçiminizi değiştirmeden devam edebilirsiniz.'
+                    q: 'Daha önce vize reddi aldım. Tekrar başvurabilir miyim?',
+                    a: 'Evet. Önceki ret bilgilerinizi işaretlediğinizde "Ret Risk Analizi" en yüksek riskli kalıpları yasal kodlarıyla gösterir. Eski retlerin etkisi zamanla azalır — 3+ yıl önceki ret bugün çok daha az ağırlık taşır. Premium "Ret Mektubu Analizi" ile ret gerekçenizin hangi maddeye (ör. Schengen C-kodları) denk geldiğini ve hangi belgeleri güçlendirmeniz gerektiğini de öğrenebilirsiniz.'
+                  },
+                  {
+                    q: 'Ücretsiz araçlar neler? Premium ne kazandırıyor?',
+                    a: 'Ücretsiz: Profil Skoru, 6 Eksen Radar, Ülke Karşılaştırma, Başvuru Zaman Çizelgesi, Evrak Sihirbazı, Senaryo Simülatörü, Randevu Takip Botu, Ülke Sıralaması, Vizesiz Ülkeler, Niyet Mektubu Oluşturucu, Benchmark ve Topluluk Deneyimleri. Premium ile: Vize Danışmanım (AI Copilot), Ret Mektubu Analizi, AI Banka Dökümü Analizi, Kırmızı Bayrak Tarayıcı, Sosyal Medya Rehberi, Mülakat Simülatörü, Çoklu Ülke Planlayıcı, Ret Nedeni Haritası (2021–2026), Banka Hazırlık Planı ve Schengen Ülke Kıyaslayıcı.'
+                  },
+                  {
+                    q: 'Randevu bildirimi gerçekten çalışıyor mu?',
+                    a: 'Evet. Randevu Takip Botu, VFS konsolosluklarını periyodik olarak tarar. E-posta adresinizi girip takip ettiğiniz ülkeler için abone olduğunuzda, slot açıldığında size anında e-posta bildirimi gönderilir. Abonelikten istediğiniz an çıkabilirsiniz.'
+                  },
+                  {
+                    q: 'Ülke "zorluk uyarısı" (turuncu banner) ne anlama geliyor?',
+                    a: 'Tarihsel olarak yüksek ret oranı gösteren ülkelerde (ör. Danimarka, ABD, Almanya) otomatik uyarı çıkar. Banner, profilinize göre onay ihtimaliniz daha yüksek olan 3 alternatif ülkeyi tahmini onay skorlarıyla önerir. Bilgilendirme amaçlıdır — seçiminizi değiştirmeden devam edebilirsiniz.'
+                  },
+                  {
+                    q: 'Mülakat Simülatörü ne işe yarar?',
+                    a: 'Schengen, UK ve ABD B1/B2 mülakatlarında ex-konsolosluk görevlilerinin sıklıkla sorduğu gerçek soruları içerir. Siz cevap yazarsınız, sistem Türkçe cevabınızı analiz edip not verir, zayıf noktaları ve "nasıl güçlendirirsin" ipuçlarını gösterir. Mülakat öncesi 2–3 tur yapmak vize gününde kekelememek için ciddi fark yaratır.'
+                  },
+                  {
+                    q: 'Kırmızı Bayrak Tarayıcı ne yapar?',
+                    a: 'Girdiğiniz profil bilgilerini, konsolosluğun olası ret gerekçeleriyle karşılaştırır ve kritik çelişkileri/riskleri işaretler — şüpheli son dakika mevduat, tutarsız adres, mesleğiniz ile maaşın uyumsuzluğu, seyahat geçmişindeki eksiklik gibi. Her bayrak için ciddiyet puanı ve aksiyon önerisi verir.'
+                  },
+                  {
+                    q: 'AI Banka Dökümü Analizi nasıl çalışır?',
+                    a: 'Banka ekstrenizi yükler ya da rakamları girersiniz; yapay zeka konsolosluk gözüyle son 3–6 ay hareketlerinizi değerlendirir. Son dakika mevduatı, düzensizlik, maaş girişi eksikliği veya şüpheli büyük transferleri işaretler ve somut düzeltme önerileri sunar. Özellikle UK başvurularında kritik olan 28 günlük kural için ayrıca kontrol eder.'
+                  },
+                  {
+                    q: 'Ödeme güvenli mi? İade alabilir miyim?',
+                    a: 'Ödemeler iyzico altyapısıyla SSL üzerinden alınır; kart bilgileriniz VizeAkıl sunucusuna düşmez. Dijital içeriklerin doğası gereği, premium araç açıldıktan sonra iade yapılmaz. Ödemeyle ilgili teknik bir sorun yaşarsanız destek@vizeakil.com ile iletişime geçebilirsiniz.'
                   },
                   {
                     q: 'Türkçe destek var mı?',
-                    a: 'Platform tamamen Türkçe\'dir ve Türk pasaportuna sahip başvuru sahipleri için özel geliştirilmiştir. Teknik destek için destek@vizeakil.com adresine yazabilirsiniz.'
+                    a: 'Evet, platform tamamen Türkçe geliştirildi ve Türk pasaportlu başvurucular için kalibre edildi. Niyet mektupları ikili dildedir. Teknik destek için destek@vizeakil.com — e-postalara genelde 24 saat içinde yanıt verilir.'
+                  },
+                  {
+                    q: 'Birden fazla ülke başvurusu için nasıl plan yaparım?',
+                    a: 'Premium "Çoklu Ülke Planlayıcı" birden fazla Schengen ülkesini gezmek istediğinizde "Cascade Kuralı" ve "Ana Destinasyon" mantığına göre hangi ülkeden başvurmanızın doğru olduğunu hesaplar. Aynı zamanda 90/180 gün kuralı hesaplayıcısı da mevcuttur.'
                   },
                 ].map(({ q, a }, i) => (
                   <details key={i} className="group border border-slate-100 rounded-2xl overflow-hidden">
@@ -4978,38 +5064,62 @@ Signature: _______________     Date: ${today}`;
                 {[
                   {
                     step: '01',
-                    title: 'Ülke Seçin — Anında Bilgi Alın',
+                    title: 'Ülke & Başvuru Tipinizi Seçin',
                     color: 'brand',
                     items: [
-                      '"Ücretsiz Analizi Başlat" butonuna tıklayın.',
-                      'Gelen bayrak ekranından başvuracağınız ülkeyi seçin — her ülkenin yanında ret oranı rozeti görünür.',
-                      'Seçtiğiniz ülkeye ait bilgi kartı açılır: bekleme günü, zorluk seviyesi, kritik ipucu.',
-                      '"Devam Et" ile analiz ekranına geçin. Daha önce ziyaret ettiyseniz "🔖 Kaldığınız yerden devam edin" banneri sizi doğrudan skor ekranına yönlendirir.',
-                      'Başvuru tipinizi seçin (İşveren/Çalışmayan/Öğrenci/Sponsor) — ekran buna göre ilgili alanları otomatik gösterir/gizler.',
+                      'Ana sayfada "Ücretsiz Analizi Başlat" butonuna tıklayın.',
+                      'Bayrak ekranından başvuracağınız ülkeyi seçin — her ülkenin yanında güncel ret oranı rozeti görünür.',
+                      'Açılan bilgi kartında ortalama bekleme günü, zorluk seviyesi ve kritik ipucunu okuyun.',
+                      'Başvuru tipinizi seçin: Çalışan / Çalışmayan / Öğrenci / Reşit olmayan / Sponsor / Emekli — ekran alanları buna göre otomatik düzenlenir.',
+                      'İlk ziyaretçi değilseniz "🔖 Kaldığınız yerden devam edin" banneri sizi doğrudan son skor ekranınıza götürür.',
                     ]
                   },
                   {
                     step: '02',
-                    title: 'Profil Doldurun — 6 Eksen Skor Alın',
+                    title: 'Profilinizi Doldurun',
                     color: 'indigo',
                     items: [
-                      'Temel kriterleri işaretleyin (mobilde kart kart, masaüstünde grid olarak görünür).',
-                      'Kalibrasyonlar bölümünde yaşınızı, kıdem sürenizi ve planlanan başvuru ayınızı girin — bu veriler temporal decay ve mevsimsel risk motorunu aktive eder.',
-                      'Skor kartının altındaki "6 Eksen Profil"de her eksene tıklayarak zayıf noktanızı ve aksiyon önerisini görün.',
-                      '"Puanınızı Nasıl Artırırsınız?" listesinde her adımı tamamladığınızda "Yaptım ✓" butonuna tıklayın — skor anında güncellenir, yeşil +X rozeti çıkar.',
-                      'Skor %82+ olduğunda yeşil renkte "✓ Başvuruya hazır" gösterilir ve konfeti animasyonu tetiklenir.',
+                      'Finansal bölümde bakiye aralığınızı, düzenli maaş girişini ve banka hareketlerinizin 3 aylık düzenini işaretleyin.',
+                      'Mesleki bölümde SGK, işveren izni, kıdem süresini seçin; serbest meslek / freelance / öğrenci iseniz ilgili alternatifleri işaretleyin.',
+                      'Bağlar ve seyahat geçmişinde mülk, aile, önceki vizeler ve Schengen ülke sayısını girin.',
+                      'Kalibrasyon bölümünde yaşınızı ve planlanan başvuru ayınızı belirtin — bu veriler mevsimsel risk motorunu etkinleştirir.',
+                      'İsteğe bağlı: Önceki red bilgilerinizi işaretlerseniz "Ret Risk Analizi" ve "Ret Nedeni Haritası" kalibre edilir.',
                     ]
                   },
                   {
                     step: '03',
-                    title: 'Dashboard — Karşılaştır, Planla, Başvur',
+                    title: 'Skoru Okuyun ve Güçlendirin',
                     color: 'violet',
                     items: [
-                      '"Ülke Karşılaştırma" widget\'ında 2 ülkeyi yan yana karşılaştırın; ret oranı, bekleme süresi ve zorluk barları otomatik hesaplanır.',
-                      '"Başvuru Zaman Çizelgesi"ne planlanan tarihinizi girin — görevler geriye doğru tarihlerle sıralanır, tamamladıklarınızı işaretleyin.',
-                      '"Ret Risk Analizi" ile profilinize özgü risk kalıplarını yasal kodlarıyla görün.',
-                      '"Niyet Mektubu" bölümünden 🇹🇷/🇬🇧 PDF indirin. Evrak Sihirbazı ile başvuru tipinize özel kontrol listesi oluşturun.',
-                      'Kırmızı Bayrak Tarayıcı ile dosyanızdaki çelişkileri tespit edin; %82+ skorla güçlü bir başvuru yapın.',
+                      'Skor kartınız üç renk kuşağında değerlendirilir: yeşil ≥82 güçlü, sarı 65–81 geliştirilebilir, kırmızı <65 riskli.',
+                      '"6 Eksen Profil" radarında zayıf ekseni (Finansal/Mesleki/Bağlar/Seyahat/Başvuru/Güven) tespit edin — tıklayınca ipuçları açılır.',
+                      '"Puanınızı Nasıl Artırırsınız?" listesindeki her eylemi tamamladıkça "Yaptım ✓" butonuna basın; skor ve yıldızlar anında güncellenir.',
+                      'Öncelik sırası: banka düzenliliği > sigorta > işveren izin / SGK > Schengen geçmişi > mülakat provası.',
+                      'Skor %82+ olduğunda yeşil "✓ Başvuruya hazır" rozeti ve konfeti görünür — bu aşamada başvuruya geçebilirsiniz.',
+                    ]
+                  },
+                  {
+                    step: '04',
+                    title: 'Belgeleri Hazırlayın & Mektubu Yazın',
+                    color: 'emerald',
+                    items: [
+                      'Evrak Sihirbazı\'nı açın — başvuru tipinize özel eksiksiz belge listesi oluşur. Hazırladığınız her belgeye tıklayarak üstünü çizin, PDF olarak indirin.',
+                      'Niyet Mektubu Oluşturucu\'da 4 mektup türünden ihtiyacınız olanı seçin (Başvuru Sahipliği, Sponsor, İşveren İzin, Seyahat Planı).',
+                      'Bilgilerinizi girin — Türkçe 🇹🇷 ve İngilizce 🇬🇧 PDF tek tıkla indirilir.',
+                      'Belge Tutarlılık Matrisi, ad-adres-işveren-tarih gibi alanların tüm belgelerinizde birbirini tutup tutmadığını kontrol eder.',
+                      'Premium kullanıcıysanız AI Banka Dökümü Analizi ile ekstrenizi, Kırmızı Bayrak Tarayıcı ile dosyanızı son kez taratın.',
+                    ]
+                  },
+                  {
+                    step: '05',
+                    title: 'Randevu Alın ve Mülakata Hazırlanın',
+                    color: 'amber',
+                    items: [
+                      'Başvuru Zaman Çizelgesi\'ne planlanan tarihinizi girin — görevler geriye doğru sıralanır, gecikmeler kırmızı uyarıyla işaretlenir.',
+                      'Randevu Takip Botu ile VFS müsait slotları için e-posta bildirimi abonesi olun.',
+                      'Mülakat Simülatörü\'nde seçtiğiniz ülke için 25–30 gerçek soruyu pratik yapın; her cevabınız puanlanır ve geliştirilmesi gereken noktalar gösterilir.',
+                      'Sosyal Medya Rehberi (Premium) ile LinkedIn / Instagram profillerindeki "vize-riskli" ifadeleri temizleyin.',
+                      'Son kontrol: Skor ≥%82, tüm belgeler ✓, sigorta geçerli, rezervasyonlar iptal edilebilir formatta, niyet mektubu tutarlı — artık başvuruya hazırsınız.',
                     ]
                   },
                 ].map(({ step, title, color, items }) => (
@@ -6551,8 +6661,6 @@ Signature: _______________     Date: ${today}`;
         isOpen={isHelpOpen}
         onClose={() => setIsHelpOpen(false)}
       />
-
-      <Footer />
 
       {/* WhatsApp Destek Butonu — sabit, sağ alt */}
       <a

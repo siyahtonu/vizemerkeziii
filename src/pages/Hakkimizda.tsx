@@ -54,10 +54,14 @@ const Hakkimizda: React.FC = () => (
             <h2 className="text-xl font-bold text-slate-900">Algoritmamız</h2>
           </div>
           <p className="text-slate-600 leading-relaxed">
-            Schengen Visa Statistics (AB Komisyonu 2024-2026) ve gerçek başvurucu deneyimlerinden
-            derlenen verilerle eğitilmiş çok katmanlı bir skorlama sistemi kullanıyoruz.
-            Finansal, mesleki ve seyahat faktörlerini ülke bazında kalibre ederek
-            kişiselleştirilmiş risk tahmini sunuyoruz.
+            Profilinizi birden çok boyutta değerlendiren, kamuya açık vize istatistikleri ve
+            gerçek başvuru deneyimleriyle kalibre edilmiş yapay zeka destekli bir skorlama
+            motoru kullanıyoruz. Hedef ülkeye göre ayrı ayrı ayarlanır ve size kişisel bir
+            başarı tahmini sunar.
+          </p>
+          <p className="text-slate-500 text-sm leading-relaxed mt-3">
+            Algoritmanın teknik ayrıntıları ticari sır kapsamındadır ve kötüye kullanımı
+            önlemek için paylaşılmaz.
           </p>
           <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800">
             <strong>Önemli:</strong> Tüm skorlar istatistiksel tahmindir. Konsolosluk kararını garanti etmez.
