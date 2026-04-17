@@ -110,6 +110,14 @@ const SeasonalRiskWidget: React.FC<Props> = ({
         </span>
       </div>
 
+      {/* Açıklama — widget ne işe yarar? */}
+      <div className="px-4 pt-3 pb-1 text-[11px] text-slate-500 leading-relaxed">
+        Konsolosluğun aylık iş yüküne, yoğunluk döngüsüne ve politik risk
+        pencerelerine göre; <strong className="text-slate-700">şimdi mi başvurmalısın yoksa
+        X ay beklemek mi daha avantajlı</strong> sorusunu cevaplar. Yeşil bar en yüksek
+        kabul şansı olan ayı, mavi bar seçili ayını gösterir.
+      </div>
+
       {/* Ana Öneri Kartı */}
       <div className={`mx-4 mt-4 rounded-lg border p-3 ${cfg.bg} ${cfg.border}`}>
         <div className="flex items-start gap-2.5">
