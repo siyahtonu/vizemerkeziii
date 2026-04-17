@@ -5,13 +5,9 @@
 import './env.js';  // MUST be first — loads .env.local before any module reads process.env
 import express from 'express';
 import rateLimit from 'express-rate-limit';
-import path from 'path';
-import { fileURLToPath } from 'url';
 import paymentRouter from './payment.js';
 import appointmentRouter from './appointmentWatcher.js';
 import outcomesRouter from './outcomes.js';
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const app = express();
 app.use(express.json());
@@ -89,17 +85,11 @@ app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', ts: Date.now() });
 });
 
-// ── Statik dosyalar (üretim) ──────────────────────────────
-// Express hem API hem frontend'i serve ediyorsa (VPS/Render/Railway):
-const distPath = path.join(__dirname, '..', 'dist');
-app.use(express.static(distPath));
-
-// SPA fallback — tüm API-dışı istekler index.html'e yönlenir
-// Bu sayede /panel, /basla, /sonuc gibi client-side route'lar
-// sayfayı yenilemede de çalışır.
+// API-dışı istekler → frontend'e (vizeakil.com) yönlendir.
+// Bu servis sadece api.vizeakil.com altında API sunar; frontend ayrı Static Site'da.
 app.get('*', (req, res) => {
   if (req.path.startsWith('/api/')) return res.status(404).json({ error: 'Not found' });
-  res.sendFile(path.join(distPath, 'index.html'));
+  res.redirect(301, `https://vizeakil.com${req.path}`);
 });
 
 const PORT = process.env.PORT ?? 3001;
