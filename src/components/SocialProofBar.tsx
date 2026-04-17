@@ -14,7 +14,7 @@ function AnimatedNumber({ target }: { target: number }) {
   const [n, setN] = useState(0);
   useEffect(() => {
     let frame = 0;
-    const steps = 40;
+    const steps = 50;
     const step = () => {
       frame++;
       setN(Math.round((frame / steps) * target));
@@ -42,13 +42,17 @@ export function SocialProofBar() {
   if (!visible) return null;
 
   return (
-    <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-10 text-[11px] sm:text-xs">
+    <div className="inline-flex items-center gap-3 sm:gap-4 bg-white/80 backdrop-blur-sm border border-slate-100 rounded-full px-5 py-2.5 shadow-sm">
       {stats.map((stat, i) => (
-        <div key={i} className="flex items-center gap-1.5 text-slate-500">
-          <span className="font-bold text-white score-num">
+        <div key={i} className="flex items-center gap-1.5 text-[11px] sm:text-xs">
+          <span className="font-bold text-brand-600 score-num">
             <AnimatedNumber target={stat.value} />{stat.suffix || ''}
           </span>
-          <span>{stat.label}</span>
+          <span className="text-slate-400 font-light hidden sm:inline">{stat.label}</span>
+          <span className="text-slate-400 font-light sm:hidden">{stat.label.split(' ')[0]}</span>
+          {i < stats.length - 1 && (
+            <span className="text-slate-200 ml-1 sm:ml-2">|</span>
+          )}
         </div>
       ))}
     </div>

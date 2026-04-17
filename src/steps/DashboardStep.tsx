@@ -385,31 +385,31 @@ export function DashboardStep({
                     <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                       {([
                         { tab: 'hazirlik', label: 'Evrak Listesi',         desc: 'Ülkenize özel belge listesi.',                     icon: FileCheck,    color: 'bg-emerald-500', id: 'docs',         setter: setIsDocumentListOpen },
-                        { tab: 'hazirlik', label: 'Belge Kontrol',         desc: 'Eksiksiz evrak listesini PDF olarak indirin.',      icon: FileCheck,    color: 'bg-indigo-600',  id: 'docchecklist', setter: setIsDocChecklistOpen },
-                        { tab: 'hazirlik', label: 'Randevu Takip Botu',    desc: 'VFS randevusu açılınca bildirim alın.',             icon: Calendar,     color: 'bg-teal-500',    id: 'appointment',  setter: setIsAppointmentOpen },
-                        { tab: 'hazirlik', label: 'Banka Hazırlık Planı',  desc: 'Aylık giriş/çıkış hedeflerini görün.',             icon: Banknote,     color: 'bg-green-600',   id: 'bankplan',     setter: setIsBankPlanOpen },
-                        { tab: 'hazirlik', label: 'Belge Tutarlılık',      desc: 'Pasaport, SGK, banka tarihleri uyuşuyor mu?',      icon: CheckCircle2, color: 'bg-slate-600',   id: 'consistency',  setter: setIsConsistencyOpen },
-                        { tab: 'hazirlik', label: 'Vizesiz Ülkeler',       desc: 'Türk pasaportuyla vize gerektirmeyen ülkeler.',    icon: Plane,        color: 'bg-emerald-600', id: 'visafree',     setter: setIsVisaFreeOpen },
-                        { tab: 'analiz',   label: 'Vize Danışmanım',       desc: 'Yapay zeka ile en kritik 3 adımı öğrenin.',        icon: MessageSquare, color: 'bg-blue-500',   id: 'copilot',      setter: setIsCopilotOpen },
-                        { tab: 'analiz',   label: 'Kırmızı Bayrak',        desc: 'Otomatik ret gerekçelerini önceden tespit edin.',  icon: XCircle,      color: 'bg-red-600',     id: 'redflag',      setter: setIsRedFlagOpen },
-                        { tab: 'analiz',   label: 'Banka Dökümü Analizi',  desc: 'Ekstrenizi konsolosluk gözüyle değerlendirin.',    icon: Sparkles,     color: 'bg-blue-700',    id: 'aibank',       setter: setIsAiBankOpen },
-                        { tab: 'analiz',   label: 'Senaryo Oluşturucu',    desc: '"Bakiyem şu kadar olsa" skora etkisini görün.',   icon: Zap,          color: 'bg-slate-800',   id: 'calculator',   setter: setIsCalculatorOpen },
-                        { tab: 'analiz',   label: 'Ret Mektubu Analizi',   desc: 'Ret kodunuzu yapıştırın, nedenini öğrenin.',      icon: AlertTriangle, color: 'bg-rose-500',   id: 'refusal',      setter: setIsRefusalOpen },
-                        { tab: 'analiz',   label: 'Ret Nedeni Haritası',   desc: '2021-2026 gerçek ret kodları — ülke bazında.',     icon: AlertCircle,  color: 'bg-orange-600',  id: 'refusalmap',   setter: setIsRefusalMapOpen },
-                        { tab: 'ulke',     label: 'Ülke Kıyaslayıcı',     desc: 'Ret oranı ve zorluk puanına göre ülke karşılaştır.', icon: Globe,     color: 'bg-indigo-500',  id: 'comparator',   setter: setIsSchengenComparatorOpen },
-                        { tab: 'ulke',     label: 'Nereye Gidebilirim?',   desc: 'Profilinizle en yüksek onay alacağınız 5 ülke.',  icon: Plane,        color: 'bg-sky-600',     id: 'countryguide', setter: setIsCountryGuideOpen },
-                        { tab: 'ulke',     label: 'Çoklu Ülke Planlayıcı', desc: 'Birden fazla ülke turu için optimum sıra.',      icon: Map,          color: 'bg-cyan-600',    id: 'multicountry', setter: setIsMultiCountryOpen },
-                        { tab: 'ulke',     label: 'Mülakat Pratiği',       desc: 'ABD/UK mülakatı — 78 soruluk simülatör.',         icon: Brain,        color: 'bg-amber-500',   id: 'interview',    setter: setIsInterviewSimOpen },
-                        { tab: 'ulke',     label: 'Sosyal Medya Denetimi', desc: 'Hesaplarınızdaki vize-riskli paylaşımları bulun.', icon: ShieldCheck, color: 'bg-violet-500',  id: 'socialmedia',  setter: setIsSocialMediaOpen },
-                        { tab: 'ulke',     label: 'Topluluk & Benchmark',  desc: 'Benzer profillerin onay/ret deneyimlerini okuyun.', icon: Star,      color: 'bg-slate-700',   id: 'community',    setter: setIsCommunityOpen },
+                        { tab: 'hazirlik', label: 'Belge Kontrol',         desc: 'Eksiksiz evrak listesini PDF olarak indirin.',      icon: FileCheck,    color: 'bg-gradient-to-br from-indigo-500 to-indigo-600',  id: 'docchecklist', setter: setIsDocChecklistOpen },
+                        { tab: 'hazirlik', label: 'Randevu Takip Botu',    desc: 'VFS randevusu açılınca bildirim alın.',             icon: Calendar,     color: 'bg-gradient-to-br from-teal-400 to-teal-500',    id: 'appointment',  setter: setIsAppointmentOpen },
+                        { tab: 'hazirlik', label: 'Banka Hazırlık Planı',  desc: 'Aylık giriş/çıkış hedeflerini görün.',             icon: Banknote,     color: 'bg-gradient-to-br from-emerald-400 to-emerald-600',   id: 'bankplan',     setter: setIsBankPlanOpen },
+                        { tab: 'hazirlik', label: 'Belge Tutarlılık',      desc: 'Pasaport, SGK, banka tarihleri uyuşuyor mu?',      icon: CheckCircle2, color: 'bg-gradient-to-br from-slate-400 to-slate-500',   id: 'consistency',  setter: setIsConsistencyOpen },
+                        { tab: 'hazirlik', label: 'Vizesiz Ülkeler',       desc: 'Türk pasaportuyla vize gerektirmeyen ülkeler.',    icon: Plane,        color: 'bg-gradient-to-br from-emerald-400 to-green-500', id: 'visafree',     setter: setIsVisaFreeOpen },
+                        { tab: 'analiz',   label: 'Vize Danışmanım',       desc: 'Yapay zeka ile en kritik 3 adımı öğrenin.',        icon: MessageSquare, color: 'bg-gradient-to-br from-blue-400 to-blue-500',   id: 'copilot',      setter: setIsCopilotOpen },
+                        { tab: 'analiz',   label: 'Kırmızı Bayrak',        desc: 'Otomatik ret gerekçelerini önceden tespit edin.',  icon: XCircle,      color: 'bg-gradient-to-br from-red-400 to-red-500',     id: 'redflag',      setter: setIsRedFlagOpen },
+                        { tab: 'analiz',   label: 'Banka Dökümü Analizi',  desc: 'Ekstrenizi konsolosluk gözüyle değerlendirin.',    icon: Sparkles,     color: 'bg-gradient-to-br from-blue-500 to-indigo-600',    id: 'aibank',       setter: setIsAiBankOpen },
+                        { tab: 'analiz',   label: 'Senaryo Oluşturucu',    desc: '"Bakiyem şu kadar olsa" skora etkisini görün.',   icon: Zap,          color: 'bg-gradient-to-br from-brand-500 to-brand-600',   id: 'calculator',   setter: setIsCalculatorOpen },
+                        { tab: 'analiz',   label: 'Ret Mektubu Analizi',   desc: 'Ret kodunuzu yapıştırın, nedenini öğrenin.',      icon: AlertTriangle, color: 'bg-gradient-to-br from-rose-400 to-rose-500',   id: 'refusal',      setter: setIsRefusalOpen },
+                        { tab: 'analiz',   label: 'Ret Nedeni Haritası',   desc: '2021-2026 gerçek ret kodları — ülke bazında.',     icon: AlertCircle,  color: 'bg-gradient-to-br from-orange-400 to-orange-500',  id: 'refusalmap',   setter: setIsRefusalMapOpen },
+                        { tab: 'ulke',     label: 'Ülke Kıyaslayıcı',     desc: 'Ret oranı ve zorluk puanına göre ülke karşılaştır.', icon: Globe,     color: 'bg-gradient-to-br from-indigo-400 to-indigo-500',  id: 'comparator',   setter: setIsSchengenComparatorOpen },
+                        { tab: 'ulke',     label: 'Nereye Gidebilirim?',   desc: 'Profilinizle en yüksek onay alacağınız 5 ülke.',  icon: Plane,        color: 'bg-gradient-to-br from-sky-400 to-sky-500',     id: 'countryguide', setter: setIsCountryGuideOpen },
+                        { tab: 'ulke',     label: 'Çoklu Ülke Planlayıcı', desc: 'Birden fazla ülke turu için optimum sıra.',      icon: Map,          color: 'bg-gradient-to-br from-cyan-400 to-cyan-500',    id: 'multicountry', setter: setIsMultiCountryOpen },
+                        { tab: 'ulke',     label: 'Mülakat Pratiği',       desc: 'ABD/UK mülakatı — 78 soruluk simülatör.',         icon: Brain,        color: 'bg-gradient-to-br from-amber-400 to-amber-500',   id: 'interview',    setter: setIsInterviewSimOpen },
+                        { tab: 'ulke',     label: 'Sosyal Medya Denetimi', desc: 'Hesaplarınızdaki vize-riskli paylaşımları bulun.', icon: ShieldCheck, color: 'bg-gradient-to-br from-violet-400 to-violet-500',  id: 'socialmedia',  setter: setIsSocialMediaOpen },
+                        { tab: 'ulke',     label: 'Topluluk & Benchmark',  desc: 'Benzer profillerin onay/ret deneyimlerini okuyun.', icon: Star,      color: 'bg-gradient-to-br from-slate-500 to-slate-600',   id: 'community',    setter: setIsCommunityOpen },
                       ] as const)
                         .filter(t => t.tab === dashToolTab)
                         .map(({ label, desc, icon: Icon, color, id, setter }) => {
                           const locked = PREMIUM_TOOLS.includes(id) && !isPremium;
                           return (
                             <button key={id} onClick={() => openTool(id, setter as (b: boolean) => void)}
-                              className={`group text-left rounded-xl border p-4 transition-all hover:shadow-md hover:-translate-y-0.5
-                                ${locked ? 'bg-slate-50 border-slate-200' : 'bg-white border-slate-200 hover:border-brand-200'}`}>
+                              className={`group text-left rounded-2xl border-2 p-4 transition-all duration-300 hover:shadow-lg hover:shadow-brand-500/[0.04] hover:-translate-y-1
+                                ${locked ? 'bg-slate-50/50 border-slate-100' : 'bg-white border-slate-100 hover:border-brand-200'}`}>
                               <div className="flex items-start gap-3">
                                 <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${locked ? 'bg-slate-200' : color}`}>
                                   <Icon className={`w-4 h-4 ${locked ? 'text-slate-400' : 'text-white'}`} />
@@ -972,25 +972,25 @@ export function DashboardStep({
                       </div>
   
                       {/* Persona Card */}
-                      <div className="p-8 bg-slate-900 rounded-[2.5rem] text-white relative overflow-hidden group">
-                        <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-brand-500/10 rounded-full blur-3xl group-hover:bg-brand-500/20 transition-all duration-700" />
+                      <div className="p-8 bg-white border-2 border-slate-100 rounded-[2.5rem] relative overflow-hidden group shadow-sm">
+                        <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-brand-500/[0.04] rounded-full blur-3xl group-hover:bg-brand-500/[0.08] transition-all duration-700" />
                         <div className="flex items-center gap-3 mb-6">
-                          <div className="w-12 h-12 bg-brand-600 rounded-2xl flex items-center justify-center shadow-lg shadow-brand-500/20">
-                            <Brain className="w-6 h-6" />
+                          <div className="w-12 h-12 bg-gradient-to-br from-brand-500 to-brand-600 rounded-2xl flex items-center justify-center shadow-md shadow-brand-500/15">
+                            <Brain className="w-6 h-6 text-white" />
                           </div>
                           <div>
-                            <p className="text-[10px] font-bold text-brand-400 uppercase tracking-widest">Persona Analizi</p>
-                            <h4 className="text-lg font-bold">{intelligence.persona}</h4>
+                            <p className="text-[10px] font-bold text-brand-500 uppercase tracking-widest">Persona Analizi</p>
+                            <h4 className="text-lg font-bold text-slate-800">{intelligence.persona}</h4>
                           </div>
                         </div>
-                        <p className="text-sm text-slate-300 leading-relaxed mb-8">
+                        <p className="text-sm text-slate-500 leading-relaxed mb-8 font-light">
                           {intelligence.personaDestiny}
                         </p>
                         <div className="space-y-3">
-                          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Stratejik Rota</p>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Stratejik Rota</p>
                           <div className="flex flex-wrap gap-2">
                             {intelligence.route.map((r, i) => (
-                              <span key={`route-${i}`} className="text-[10px] font-bold bg-white/10 px-3 py-1.5 rounded-lg border border-white/5">
+                              <span key={`route-${i}`} className="text-[10px] font-bold bg-brand-50 text-brand-700 px-3 py-1.5 rounded-lg border border-brand-100">
                                 {r}
                               </span>
                             ))}
@@ -1161,22 +1161,22 @@ export function DashboardStep({
   
                     {/* Roadmap */}
                     {roadmap.length > 0 && (
-                      <div className="p-8 bg-brand-600 rounded-[2.5rem] text-white space-y-8 shadow-xl shadow-brand-500/20 relative overflow-hidden">
-                        <div className="absolute -right-10 -top-10 w-32 h-32 bg-white/10 rounded-full blur-2xl" />
+                      <div className="p-8 bg-gradient-to-br from-brand-50 to-brand-100/50 border-2 border-brand-200/60 rounded-[2.5rem] space-y-8 relative overflow-hidden">
+                        <div className="absolute -right-10 -top-10 w-32 h-32 bg-brand-500/[0.06] rounded-full blur-2xl" />
                         <div className="flex items-center gap-3 relative z-10">
-                          <TrendingUp className="w-6 h-6 text-brand-200" />
-                          <h3 className="font-bold text-lg">Güçlendirme Planı</h3>
+                          <TrendingUp className="w-6 h-6 text-brand-500" />
+                          <h3 className="font-bold text-lg text-brand-800">Güçlendirme Planı</h3>
                         </div>
                         <div className="space-y-8 relative z-10">
                           {roadmap.map((item, i) => (
                             <div key={`roadmap-${i}`} className="flex gap-4 relative">
-                              {i !== roadmap.length - 1 && <div className="absolute left-4 top-10 bottom-0 w-px bg-white/20" />}
-                              <div className="w-8 h-8 bg-white/20 rounded-xl flex items-center justify-center text-[10px] font-bold shrink-0 border border-white/10">
+                              {i !== roadmap.length - 1 && <div className="absolute left-4 top-10 bottom-0 w-px bg-brand-200" />}
+                              <div className="w-8 h-8 bg-brand-500 text-white rounded-xl flex items-center justify-center text-[10px] font-bold shrink-0 shadow-sm shadow-brand-500/15">
                                 {item.week}
                               </div>
                               <div className="space-y-1">
-                                <p className="text-xs font-bold text-white">{item.task}</p>
-                                <p className="text-[9px] text-brand-200 font-bold uppercase tracking-widest">{item.impact}</p>
+                                <p className="text-xs font-bold text-slate-800">{item.task}</p>
+                                <p className="text-[9px] text-brand-500 font-bold uppercase tracking-widest">{item.impact}</p>
                               </div>
                             </div>
                           ))}
@@ -1330,18 +1330,18 @@ export function DashboardStep({
                       </button>
                     </div>
   
-                    <div className="glass-card p-10 bg-slate-900 text-white space-y-6 relative overflow-hidden group">
-                      <div className="absolute -right-10 -top-10 w-32 h-32 bg-amber-500/10 blur-2xl group-hover:bg-amber-500/20 transition-all duration-700" />
-                      <div className="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center text-amber-400 border border-white/5 group-hover:scale-110 transition-transform">
+                    <div className="glass-card p-10 bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-100 space-y-6 relative overflow-hidden group">
+                      <div className="absolute -right-10 -top-10 w-32 h-32 bg-amber-500/[0.06] blur-2xl group-hover:bg-amber-500/[0.1] transition-all duration-700" />
+                      <div className="w-14 h-14 bg-gradient-to-br from-amber-400 to-orange-500 rounded-2xl flex items-center justify-center text-white shadow-md shadow-amber-500/15 group-hover:scale-110 transition-transform">
                         <TrendingUp className="w-7 h-7" />
                       </div>
                       <div className="space-y-2">
-                        <h3 className="text-xl font-bold font-display">Kabul Taktikleri</h3>
-                        <p className="text-sm text-slate-400 leading-relaxed font-medium">Vize memurlarının dikkat ettiği 7 gizli taktiği hemen öğrenin.</p>
+                        <h3 className="text-xl font-bold font-display text-slate-800">Kabul Taktikleri</h3>
+                        <p className="text-sm text-slate-500 leading-relaxed font-light">Vize memurlarının dikkat ettiği 7 gizli taktiği hemen öğrenin.</p>
                       </div>
-                      <button 
+                      <button
                         onClick={() => setStep('tactics')}
-                        className="w-full py-4 bg-amber-600 text-white rounded-2xl font-bold text-sm hover:bg-amber-500 transition-all shadow-lg shadow-amber-900/20"
+                        className="w-full py-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-2xl font-bold text-sm hover:shadow-lg hover:shadow-amber-500/20 hover:-translate-y-0.5 transition-all duration-300"
                       >
                         Taktikleri İncele
                       </button>
@@ -1352,7 +1352,7 @@ export function DashboardStep({
                   <div className="glass-card p-10 flex flex-col md:flex-row items-center justify-between gap-8 relative overflow-hidden group">
                     <div className="absolute -left-20 -bottom-20 w-64 h-64 bg-slate-100 rounded-full blur-3xl group-hover:bg-slate-200 transition-all duration-700" />
                     <div className="flex items-center gap-6 relative z-10">
-                      <div className="w-16 h-16 bg-slate-900 rounded-[2rem] flex items-center justify-center text-white shadow-xl shadow-slate-900/20">
+                      <div className="w-16 h-16 bg-gradient-to-br from-brand-500 to-brand-600 rounded-[2rem] flex items-center justify-center text-white shadow-lg shadow-brand-500/20">
                         <Download className="w-8 h-8" />
                       </div>
                       <div className="space-y-1">

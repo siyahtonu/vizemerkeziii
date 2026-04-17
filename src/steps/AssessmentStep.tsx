@@ -228,15 +228,15 @@ export function AssessmentStep({
                     <p className="text-sm text-slate-500">Kriterlerinizi işaretleyin — skor anlık güncellenir.</p>
                   </div>
                   {/* Desktop: mini live skor */}
-                  <div className="hidden sm:flex items-center gap-3 bg-slate-900 rounded-2xl px-5 py-3">
+                  <div className="hidden sm:flex items-center gap-3 bg-white border-2 border-slate-100 rounded-2xl px-5 py-3 shadow-sm">
                     <div className={`text-2xl font-bold font-mono ${
-                      currentScore >= 82 ? 'text-emerald-400' :
-                      currentScore >= 65 ? 'text-amber-300' : 'text-rose-400'
+                      currentScore >= 82 ? 'text-emerald-500' :
+                      currentScore >= 65 ? 'text-amber-500' : 'text-rose-500'
                     }`}>
                       %{displayScore}
                     </div>
                     <div className="text-xs text-slate-400 leading-tight">
-                      <div className="font-bold text-white">Tahmini Skor</div>
+                      <div className="font-bold text-slate-800">Tahmini Skor</div>
                       <div>{currentConfidence.label} güven</div>
                     </div>
                   </div>
@@ -603,8 +603,8 @@ export function AssessmentStep({
                 <div className="hidden lg:block w-[340px] shrink-0">
                   <div className="sticky top-8 space-y-4">
                     {/* Skor kartı */}
-                    <div className="bg-slate-900 rounded-2xl p-6 text-white relative overflow-hidden">
-                      <div className="absolute top-0 right-0 w-40 h-40 bg-brand-600/15 blur-[60px] rounded-full pointer-events-none" />
+                    <div className="bg-white border-2 border-slate-100 rounded-3xl p-6 relative overflow-hidden shadow-sm">
+                      <div className="absolute top-0 right-0 w-40 h-40 bg-brand-500/[0.06] blur-[60px] rounded-full pointer-events-none" />
 
                       {/* Delta badge */}
                       <AnimatePresence>
@@ -614,8 +614,8 @@ export function AssessmentStep({
                             initial={{ opacity: 0, y: 12, scale: 0.8 }}
                             animate={{ opacity: 1, y: 0, scale: 1 }}
                             exit={{ opacity: 0, y: -8 }}
-                            className={`absolute top-3 right-3 z-30 px-2 py-1 rounded-lg text-xs font-bold ${
-                              delta > 0 ? 'bg-emerald-500 text-white' : 'bg-rose-500 text-white'
+                            className={`absolute top-3 right-3 z-30 px-2.5 py-1 rounded-full text-xs font-bold ${
+                              delta > 0 ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-rose-50 text-rose-600 border border-rose-100'
                             }`}
                           >
                             {delta > 0 ? `+${delta}` : delta}
@@ -624,20 +624,20 @@ export function AssessmentStep({
                       </AnimatePresence>
 
                       <div className="relative z-10 space-y-4">
-                        <div className="text-[10px] font-bold text-brand-400 uppercase tracking-widest">
+                        <div className="text-[10px] font-bold text-brand-500 uppercase tracking-widest">
                           Tahmini Başarı
                         </div>
                         <div className={`text-5xl font-bold font-mono ${
-                          currentScore >= 82 ? 'text-emerald-400' :
-                          currentScore >= 65 ? 'text-amber-300' : 'text-rose-400'
+                          currentScore >= 82 ? 'text-emerald-500' :
+                          currentScore >= 65 ? 'text-amber-500' : 'text-rose-500'
                         }`}>
                           %{displayScore}
                         </div>
-                        <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
+                        <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
                           <motion.div
                             className={`h-full rounded-full ${
-                              currentScore >= 82 ? 'bg-emerald-400' :
-                              currentScore >= 65 ? 'bg-amber-400' : 'bg-rose-400'
+                              currentScore >= 82 ? 'bg-gradient-to-r from-emerald-400 to-emerald-500' :
+                              currentScore >= 65 ? 'bg-gradient-to-r from-amber-400 to-amber-500' : 'bg-gradient-to-r from-rose-400 to-rose-500'
                             }`}
                             initial={{ width: 0 }}
                             animate={{ width: `${displayScore}%` }}
@@ -645,14 +645,14 @@ export function AssessmentStep({
                           />
                         </div>
                         <div className="flex flex-wrap gap-2 text-xs">
-                          <span className={`px-2 py-0.5 rounded-full font-bold ${
-                            currentConfidence.label === 'Yüksek' ? 'bg-emerald-500/20 text-emerald-300' :
-                            currentConfidence.label === 'Orta' ? 'bg-amber-500/20 text-amber-300' :
-                            'bg-rose-500/20 text-rose-300'
+                          <span className={`px-2.5 py-1 rounded-full font-bold ${
+                            currentConfidence.label === 'Yüksek' ? 'bg-emerald-50 text-emerald-600' :
+                            currentConfidence.label === 'Orta' ? 'bg-amber-50 text-amber-600' :
+                            'bg-rose-50 text-rose-600'
                           }`}>
                             {currentConfidence.label} Güven
                           </span>
-                          <span className="text-slate-500">
+                          <span className="text-slate-400 py-1">
                             %{currentConfidence.low}–%{currentConfidence.high}
                           </span>
                         </div>
@@ -688,16 +688,16 @@ export function AssessmentStep({
                 </div>{/* flex row sonu */}
 
                 {/* Mobil: alt sabit skor barı */}
-                <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-slate-900 border-t border-slate-800 px-4 py-3 flex items-center justify-between safe-bottom">
+                <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/80 backdrop-blur-2xl border-t border-slate-100 px-4 py-3 flex items-center justify-between safe-bottom">
                   <div className="flex items-center gap-3">
                     <div className={`text-2xl font-bold font-mono ${
-                      currentScore >= 82 ? 'text-emerald-400' :
-                      currentScore >= 65 ? 'text-amber-300' : 'text-rose-400'
+                      currentScore >= 82 ? 'text-emerald-500' :
+                      currentScore >= 65 ? 'text-amber-500' : 'text-rose-500'
                     }`}>
                       %{displayScore}
                     </div>
                     <div className="text-xs text-slate-400">
-                      <div className="font-bold text-white">{currentConfidence.label} Güven</div>
+                      <div className="font-bold text-slate-700">{currentConfidence.label} Güven</div>
                       <div>%{currentConfidence.low}–%{currentConfidence.high}</div>
                     </div>
                     <AnimatePresence>
@@ -707,7 +707,7 @@ export function AssessmentStep({
                           animate={{ opacity: 1, scale: 1 }}
                           exit={{ opacity: 0 }}
                           className={`text-xs font-bold px-2 py-0.5 rounded-full ${
-                            delta > 0 ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'
+                            delta > 0 ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'
                           }`}
                         >
                           {delta > 0 ? `+${delta}` : delta}
@@ -718,7 +718,7 @@ export function AssessmentStep({
                   <button
                     type="button"
                     onClick={() => setStep('dashboard')}
-                    className="bg-brand-600 text-white text-sm font-bold px-5 py-2.5 rounded-xl hover:bg-brand-700 transition-colors flex items-center gap-1.5"
+                    className="btn-primary text-sm px-5 py-2.5 flex items-center gap-1.5"
                   >
                     Sonuçlar <ChevronRight className="w-4 h-4" />
                   </button>

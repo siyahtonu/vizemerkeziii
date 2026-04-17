@@ -2480,13 +2480,13 @@ Signature: _______________     Date: ${today}`;
                 exit={{ opacity: 0, scale: 0.9, y: 30 }}
                 className="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl overflow-hidden max-h-[92vh] flex flex-col">
                 {/* Header */}
-                <div className="bg-slate-900 p-7 text-white text-center shrink-0">
-                  <button onClick={() => setIsUpgradeOpen(false)} className="absolute top-4 right-4 p-2 hover:bg-white/10 rounded-full"><X className="w-5 h-5" /></button>
-                  <div className="w-14 h-14 bg-amber-400/20 rounded-2xl flex items-center justify-center mx-auto mb-3">
-                    <Sparkles className="w-7 h-7 text-amber-300" />
+                <div className="bg-gradient-to-br from-brand-500 to-brand-600 p-7 text-white text-center shrink-0">
+                  <button onClick={() => setIsUpgradeOpen(false)} className="absolute top-4 right-4 p-2 hover:bg-white/20 rounded-full transition-colors"><X className="w-5 h-5" /></button>
+                  <div className="w-14 h-14 bg-white/15 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                    <Sparkles className="w-7 h-7 text-amber-200" />
                   </div>
                   <h3 className="text-2xl font-bold">VizeAkıl — Plan Seç</h3>
-                  <p className="text-slate-400 text-sm mt-1">İhtiyacına göre ödeme yap. Sürpriz maliyet yok.</p>
+                  <p className="text-white/70 text-sm mt-1">İhtiyacına göre ödeme yap. Sürpriz maliyet yok.</p>
                 </div>
                 {/* Planlar */}
                 <div className="p-6 overflow-y-auto flex-1 space-y-4">
@@ -2538,21 +2538,21 @@ Signature: _______________     Date: ${today}`;
                   </div>
 
                   {/* Yıllık Pro */}
-                  <div className="border-2 border-slate-800 bg-slate-900 rounded-2xl p-5">
+                  <div className="border-2 border-brand-200 bg-gradient-to-br from-brand-50 to-indigo-50 rounded-2xl p-5">
                     <div className="flex items-center justify-between mb-3">
                       <div>
-                        <div className="font-bold text-white text-base">Yıllık Pro</div>
-                        <div className="text-xs text-slate-400 mt-0.5">12 ay / sınırsız ülke</div>
+                        <div className="font-bold text-slate-900 text-base">Yıllık Pro</div>
+                        <div className="text-xs text-slate-500 mt-0.5">12 ay / sınırsız ülke</div>
                       </div>
                       <div>
-                        <span className="text-2xl font-bold text-white">₺999</span>
-                        <span className="text-xs text-slate-400 ml-1">/ yıl</span>
+                        <span className="text-2xl font-bold text-slate-900">₺999</span>
+                        <span className="text-xs text-slate-500 ml-1">/ yıl</span>
                       </div>
                     </div>
                     <div className="space-y-1.5">
                       {['Tek Başvuru planındaki her şey +', 'Sınırsız ülke & başvuru', 'Ret mektubu analizi & strateji', 'Öncelikli destek hattı', 'Yeni özellikler erken erişim'].map(f => (
-                        <div key={f} className="flex items-center gap-2 text-xs text-slate-300">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-amber-400 shrink-0"/>{f}
+                        <div key={f} className="flex items-center gap-2 text-xs text-slate-700">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-brand-500 shrink-0"/>{f}
                         </div>
                       ))}
                     </div>
@@ -2708,8 +2708,8 @@ Signature: _______________     Date: ${today}`;
                       onClick={() => setApplicantType('employer')}
                       className={`px-4 py-2 rounded-xl font-bold text-sm transition-colors ${
                         applicantType === 'employer' 
-                          ? 'bg-slate-900 text-white' 
-                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                          ? 'bg-brand-500 text-white shadow-sm shadow-brand-500/15'
+                          : 'bg-slate-50 text-slate-600 hover:bg-brand-50 hover:text-brand-600 border border-slate-100'
                       }`}
                     >
                       İşverenler
@@ -2718,8 +2718,8 @@ Signature: _______________     Date: ${today}`;
                       onClick={() => setApplicantType('unemployed')}
                       className={`px-4 py-2 rounded-xl font-bold text-sm transition-colors ${
                         applicantType === 'unemployed' 
-                          ? 'bg-slate-900 text-white' 
-                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                          ? 'bg-brand-500 text-white shadow-sm shadow-brand-500/15'
+                          : 'bg-slate-50 text-slate-600 hover:bg-brand-50 hover:text-brand-600 border border-slate-100'
                       }`}
                     >
                       Çalışmayanlar
@@ -2728,8 +2728,8 @@ Signature: _______________     Date: ${today}`;
                       onClick={() => setApplicantType('minor')}
                       className={`px-4 py-2 rounded-xl font-bold text-sm transition-colors ${
                         applicantType === 'minor' 
-                          ? 'bg-slate-900 text-white' 
-                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                          ? 'bg-brand-500 text-white shadow-sm shadow-brand-500/15'
+                          : 'bg-slate-50 text-slate-600 hover:bg-brand-50 hover:text-brand-600 border border-slate-100'
                       }`}
                     >
                       Reşit Olmayanlar
@@ -2738,8 +2738,8 @@ Signature: _______________     Date: ${today}`;
                       onClick={() => setApplicantType('sponsor')}
                       className={`px-4 py-2 rounded-xl font-bold text-sm transition-colors ${
                         applicantType === 'sponsor' 
-                          ? 'bg-slate-900 text-white' 
-                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                          ? 'bg-brand-500 text-white shadow-sm shadow-brand-500/15'
+                          : 'bg-slate-50 text-slate-600 hover:bg-brand-50 hover:text-brand-600 border border-slate-100'
                       }`}
                     >
                       Sponsor Olacak Kişi
@@ -2963,18 +2963,18 @@ Signature: _______________     Date: ${today}`;
                           <div className="p-5 space-y-2">
                             {rule.actions.map((action, j) => (
                               <div key={j} className="flex items-start gap-3">
-                                <div className="w-5 h-5 rounded-full bg-slate-900 text-white flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">{j+1}</div>
+                                <div className="w-5 h-5 rounded-full bg-brand-500 text-white flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">{j+1}</div>
                                 <p className="text-sm text-slate-700 leading-relaxed">{action}</p>
                               </div>
                             ))}
                           </div>
                         </div>
                       ))}
-                      <div className="p-5 bg-slate-900 rounded-2xl text-white flex items-start gap-4">
-                        <Clock className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+                      <div className="p-5 bg-gradient-to-br from-brand-50 to-indigo-50 border border-brand-100 rounded-2xl flex items-start gap-4">
+                        <Clock className="w-5 h-5 text-brand-500 shrink-0 mt-0.5" />
                         <div>
-                          <p className="font-bold mb-1">Tavsiye Edilen Bekleme Süresi</p>
-                          <p className="text-sm text-slate-300">
+                          <p className="font-bold text-slate-800 mb-1">Tavsiye Edilen Bekleme Süresi</p>
+                          <p className="text-sm text-slate-600">
                             {Math.max(...refusalResult.map(r => r.waitMonths))} ay sonra, tüm adımları tamamladıktan sonra tekrar başvurun.
                           </p>
                         </div>
@@ -3164,7 +3164,7 @@ Signature: _______________     Date: ${today}`;
                     ))}
                   </div>
                   <button onClick={checkConsistency}
-                    className="w-full py-4 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl font-bold flex items-center justify-center gap-2 transition-all">
+                    className="w-full py-4 bg-gradient-to-r from-brand-500 to-brand-600 text-white rounded-2xl font-bold flex items-center justify-center gap-2 shadow-md shadow-brand-500/15 hover:-translate-y-0.5 transition-all duration-300">
                     <Search className="w-5 h-5" /> Tutarlılık Kontrolü Yap
                   </button>
 
@@ -4104,7 +4104,7 @@ Signature: _______________     Date: ${today}`;
                 <div className="px-6 py-4 border-t border-slate-100 shrink-0">
                   <button
                     onClick={() => setIsSocialMediaOpen(false)}
-                    className="w-full py-3 bg-slate-900 text-white rounded-2xl font-bold text-sm hover:bg-slate-800 transition-colors"
+                    className="w-full py-3 bg-gradient-to-r from-brand-500 to-brand-600 text-white rounded-2xl font-bold text-sm hover:shadow-lg hover:shadow-brand-500/20 hover:-translate-y-0.5 transition-all duration-300"
                   >
                     Denetimi Kaydet ve Kapat
                   </button>
@@ -4207,7 +4207,7 @@ Signature: _______________     Date: ${today}`;
                       setIsCopilotOpen(false);
                       setStep('assessment');
                     }}
-                    className="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold flex items-center justify-center gap-2"
+                    className="w-full py-4 bg-gradient-to-r from-brand-500 to-brand-600 text-white rounded-2xl font-bold flex items-center justify-center gap-2 shadow-md shadow-brand-500/15 hover:-translate-y-0.5 transition-all duration-300"
                   >
                     <Zap className="w-5 h-5 text-amber-400" />
                     Şimdi Başvuruyu Başlat
@@ -4224,26 +4224,26 @@ Signature: _______________     Date: ${today}`;
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="engine-bg -mx-4 sm:-mx-6 lg:-mx-8 -mt-6 px-4 sm:px-6 lg:px-8 min-h-screen flex flex-col"
+              className="engine-bg -mx-4 sm:-mx-6 lg:-mx-8 -mt-6 px-4 sm:px-6 lg:px-8 min-h-screen flex flex-col relative"
             >
               {/* Üst bar */}
-              <div className="w-full max-w-6xl mx-auto flex items-center justify-between py-5">
-                <div className="flex items-center gap-2 font-display font-bold text-lg text-white">
-                  <div className="w-8 h-8 bg-brand-600 rounded-xl flex items-center justify-center">
-                    <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+              <div className="w-full max-w-6xl mx-auto flex items-center justify-between py-6 relative z-10">
+                <div className="flex items-center gap-2.5 font-display font-bold text-lg text-slate-900">
+                  <div className="w-9 h-9 bg-gradient-to-br from-brand-500 to-brand-600 rounded-2xl flex items-center justify-center shadow-md shadow-brand-500/20">
+                    <svg className="w-4.5 h-4.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                     </svg>
                   </div>
                   VizeAkıl
                 </div>
-                <div className="flex items-center gap-4">
-                  <a href="/blog" className="text-xs text-slate-400 hover:text-white transition-colors font-medium hidden sm:block">Blog</a>
-                  <a href="/hakkimizda" className="text-xs text-slate-400 hover:text-white transition-colors font-medium hidden sm:block">Hakkımızda</a>
+                <div className="flex items-center gap-5">
+                  <a href="/blog" className="text-sm text-slate-400 hover:text-brand-600 transition-colors font-medium hidden sm:block">Blog</a>
+                  <a href="/hakkimizda" className="text-sm text-slate-400 hover:text-brand-600 transition-colors font-medium hidden sm:block">Hakkımızda</a>
                   {hasSavedProfile && (
                     <button
                       type="button"
                       onClick={() => setStep('assessment')}
-                      className="text-xs bg-white/10 backdrop-blur text-white font-semibold px-4 py-2 rounded-lg border border-white/10 hover:bg-white/20 transition-all"
+                      className="text-sm bg-brand-500 text-white font-semibold px-5 py-2.5 rounded-xl shadow-md shadow-brand-500/20 hover:shadow-lg hover:shadow-brand-500/25 hover:-translate-y-0.5 transition-all duration-300"
                     >
                       Devam Et
                     </button>
@@ -4252,8 +4252,8 @@ Signature: _______________     Date: ${today}`;
               </div>
 
               {/* Ana içerik */}
-              <div className="flex-1 flex flex-col items-center justify-center max-w-5xl mx-auto w-full pb-16">
-                <div className="text-center space-y-6 mb-12">
+              <div className="flex-1 flex flex-col items-center justify-center max-w-5xl mx-auto w-full pb-20 relative z-10">
+                <div className="text-center space-y-7 mb-14">
                   <motion.div
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -4263,10 +4263,10 @@ Signature: _______________     Date: ${today}`;
                   </motion.div>
 
                   <motion.h1
-                    initial={{ opacity: 0, y: 12 }}
+                    initial={{ opacity: 0, y: 16 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.15 }}
-                    className="text-4xl sm:text-5xl md:text-[3.5rem] font-bold tracking-tight text-white leading-[1.08]"
+                    transition={{ delay: 0.15, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                    className="text-4xl sm:text-5xl md:text-[3.75rem] font-bold tracking-tight text-slate-900 leading-[1.08]"
                   >
                     Vize başvurunuz{' '}
                     <span className="text-gradient">ne kadar güçlü?</span>
@@ -4275,19 +4275,19 @@ Signature: _______________     Date: ${today}`;
                   <motion.p
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2 }}
-                    className="text-base sm:text-lg text-slate-400 max-w-md mx-auto leading-relaxed"
+                    transition={{ delay: 0.25 }}
+                    className="text-base sm:text-lg text-slate-400 max-w-lg mx-auto leading-relaxed font-light"
                   >
-                    Ülkeni seç — AI motorumuz profilini analiz etsin.
+                    Ülkeni seç — AI motorumuz profilini analiz etsin ve sana özel strateji oluştursun.
                   </motion.p>
                 </div>
 
                 {/* Ülke Kartları */}
                 <motion.div
-                  initial={{ opacity: 0, y: 16 }}
+                  initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 }}
-                  className="w-full max-w-3xl grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 mb-10"
+                  transition={{ delay: 0.35, duration: 0.5 }}
+                  className="w-full max-w-3xl grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-12"
                 >
                   {([
                     { label: 'Almanya',    flag: '🇩🇪', rejRate: 23, tag: 'Schengen',     wait: '23 gün' },
@@ -4302,29 +4302,31 @@ Signature: _______________     Date: ${today}`;
                     <motion.button
                       key={label}
                       type="button"
-                      initial={{ opacity: 0, y: 12 }}
+                      initial={{ opacity: 0, y: 16 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.35 + i * 0.04 }}
+                      transition={{ delay: 0.4 + i * 0.05, duration: 0.4 }}
+                      whileHover={{ y: -4, transition: { duration: 0.2 } }}
+                      whileTap={{ scale: 0.97 }}
                       onClick={() => {
                         setOnboardingCountry(label);
                         setProfile((prev: ProfileData) => ({ ...prev, targetCountry: label }));
                         setOnboardingStep(1);
                         setStep('onboarding');
                       }}
-                      className="group relative p-4 rounded-xl border border-white/[0.06] bg-white/[0.03] text-left transition-all duration-200 hover:bg-white/[0.08] hover:border-brand-500/30 active:scale-[0.97]"
+                      className="group relative p-4 sm:p-5 rounded-2xl border-2 border-slate-100 bg-white text-left transition-all duration-300 hover:border-brand-200 hover:shadow-lg hover:shadow-brand-500/[0.06]"
                     >
                       <div className="flex items-start justify-between mb-3">
-                        <span className="text-2xl">{flag}</span>
-                        <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${
-                          rejRate <= 10 ? 'bg-emerald-500/15 text-emerald-400' :
-                          rejRate <= 20 ? 'bg-amber-500/15 text-amber-400' :
-                                         'bg-orange-500/15 text-orange-400'
+                        <span className="text-3xl">{flag}</span>
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                          rejRate <= 10 ? 'bg-emerald-50 text-emerald-600' :
+                          rejRate <= 20 ? 'bg-amber-50 text-amber-600' :
+                                         'bg-red-50 text-red-500'
                         }`}>
                           %{rejRate} ret
                         </span>
                       </div>
-                      <div className="font-semibold text-white text-sm">{label}</div>
-                      <div className="text-[10px] text-slate-500 mt-0.5">{tag}{wait && ` · ${wait}`}</div>
+                      <div className="font-semibold text-slate-800 text-sm group-hover:text-brand-700 transition-colors">{label}</div>
+                      <div className="text-[10px] text-slate-400 mt-1 font-medium">{tag}{wait && ` · ${wait}`}</div>
                     </motion.button>
                   ))}
                 </motion.div>
@@ -4333,21 +4335,21 @@ Signature: _______________     Date: ${today}`;
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  transition={{ delay: 0.7 }}
-                  className="flex flex-wrap items-center justify-center gap-5 sm:gap-8 text-[11px] text-slate-500"
+                  transition={{ delay: 0.8 }}
+                  className="flex flex-wrap items-center justify-center gap-6 sm:gap-10"
                 >
-                  <div className="flex items-center gap-1.5">
-                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-500/70" />
-                    <span>Veri saklanmaz</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <Zap className="w-3.5 h-3.5 text-brand-400/70" />
-                    <span>18 analiz aracı</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <Globe className="w-3.5 h-3.5 text-blue-400/70" />
-                    <span>2026 konsolosluk verisi</span>
-                  </div>
+                  {[
+                    { icon: ShieldCheck, label: 'Veri saklanmaz', color: 'text-emerald-500' },
+                    { icon: Zap, label: '18 analiz aracı', color: 'text-brand-500' },
+                    { icon: Globe, label: '2026 konsolosluk verisi', color: 'text-sky-500' },
+                  ].map(({ icon: Icon, label, color }, i) => (
+                    <div key={i} className="flex items-center gap-2 text-xs text-slate-400">
+                      <div className="w-7 h-7 rounded-xl bg-white border border-slate-100 flex items-center justify-center shadow-sm">
+                        <Icon className={`w-3.5 h-3.5 ${color}`} />
+                      </div>
+                      <span className="font-medium">{label}</span>
+                    </div>
+                  ))}
                 </motion.div>
               </div>
             </motion.div>
@@ -4362,14 +4364,14 @@ Signature: _______________     Date: ${today}`;
               className="max-w-lg mx-auto py-12 sm:py-20 px-4"
             >
               {onboardingStep === 1 && (
-                <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
+                <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }} className="space-y-8">
                   {/* Geri + Ülke badge */}
                   <div className="flex items-center gap-3">
                     <button onClick={() => setStep('hero')}
-                      className="p-2 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all">
+                      className="p-2.5 rounded-xl text-slate-400 hover:text-brand-600 hover:bg-brand-50 transition-all duration-200">
                       <ArrowLeft className="w-4 h-4" />
                     </button>
-                    <div className="flex items-center gap-2 bg-slate-100 rounded-full px-3 py-1.5">
+                    <div className="flex items-center gap-2 bg-white border border-slate-100 rounded-full px-4 py-2 shadow-sm">
                       <span className="text-base">
                         {({'Almanya':'🇩🇪','İngiltere':'🇬🇧','ABD':'🇺🇸','Fransa':'🇫🇷','Hollanda':'🇳🇱','İtalya':'🇮🇹','Yunanistan':'🇬🇷'} as Record<string,string>)[onboardingCountry] || '🌍'}
                       </span>
@@ -4379,34 +4381,36 @@ Signature: _______________     Date: ${today}`;
 
                   <div>
                     <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 leading-tight">Profilinizi seçin</h2>
-                    <p className="text-sm text-slate-500 mt-1">Her profil farklı değerlendirilir — doğru seçim, doğru analiz.</p>
+                    <p className="text-sm text-slate-400 mt-2 font-light">Her profil farklı değerlendirilir — doğru seçim, doğru analiz.</p>
                   </div>
 
-                  <div className="space-y-2.5">
+                  <div className="space-y-3">
                     {[
-                      { id: 'employer',   icon: Briefcase, label: 'Çalışan / İşveren', desc: 'SGK\'lı iş veya şirket sahibi' },
-                      { id: 'student',    icon: Brain,     label: 'Öğrenci',           desc: 'Üniversite veya lise' },
-                      { id: 'unemployed', icon: Home,      label: 'Çalışmıyor / Emekli', desc: 'Eş veya aile sponsorluğu' },
-                      { id: 'self',       icon: Target,    label: 'Serbest Meslek',     desc: 'Freelance veya esnaf' },
-                    ].map(({ id, icon: Icon, label, desc }) => (
-                      <button key={id}
+                      { id: 'employer',   icon: Briefcase, label: 'Çalışan / İşveren', desc: 'SGK\'lı iş veya şirket sahibi', color: 'from-brand-500 to-brand-600' },
+                      { id: 'student',    icon: Brain,     label: 'Öğrenci',           desc: 'Üniversite veya lise', color: 'from-sky-500 to-blue-600' },
+                      { id: 'unemployed', icon: Home,      label: 'Çalışmıyor / Emekli', desc: 'Eş veya aile sponsorluğu', color: 'from-amber-500 to-orange-500' },
+                      { id: 'self',       icon: Target,    label: 'Serbest Meslek',     desc: 'Freelance veya esnaf', color: 'from-emerald-500 to-teal-600' },
+                    ].map(({ id, icon: Icon, label, desc, color }) => (
+                      <motion.button key={id}
+                        whileHover={{ x: 4 }}
+                        whileTap={{ scale: 0.98 }}
                         onClick={() => {
                           setOnboardingProfile(id);
                           setApplicantType(id === 'employer' || id === 'unemployed' ? id as 'employer' | 'unemployed' : 'employer');
                           if (id === 'student') setProfile(prev => ({ ...prev, isStudent: true }));
                           setOnboardingStep(2);
                         }}
-                        className="w-full card card-hover p-4 flex items-center gap-4 text-left"
+                        className="w-full card card-hover p-5 flex items-center gap-4 text-left"
                       >
-                        <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-slate-500 shrink-0">
-                          <Icon className="w-5 h-5" />
+                        <div className={`w-11 h-11 bg-gradient-to-br ${color} rounded-2xl flex items-center justify-center shrink-0 shadow-sm`}>
+                          <Icon className="w-5 h-5 text-white" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="font-semibold text-slate-900 text-sm">{label}</div>
-                          <div className="text-xs text-slate-400 mt-0.5">{desc}</div>
+                          <div className="font-semibold text-slate-800 text-sm">{label}</div>
+                          <div className="text-xs text-slate-400 mt-0.5 font-light">{desc}</div>
                         </div>
-                        <ChevronRight className="w-4 h-4 text-slate-300 shrink-0" />
-                      </button>
+                        <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-brand-400 shrink-0 transition-colors" />
+                      </motion.button>
                     ))}
                   </div>
                 </motion.div>
@@ -4421,66 +4425,73 @@ Signature: _______________     Date: ${today}`;
                   </button>
 
                   {/* Skor reveal */}
-                  <div className="card p-6 sm:p-8 text-center space-y-6">
+                  <div className="card p-7 sm:p-10 text-center space-y-7">
                     <div>
-                      <div className="text-[10px] font-bold text-brand-600 uppercase tracking-widest mb-1">Hızlı Analiz</div>
-                      <p className="text-sm text-slate-500">{onboardingCountry} · {onboardingProfile === 'employer' ? 'Çalışan' : onboardingProfile === 'student' ? 'Öğrenci' : onboardingProfile === 'unemployed' ? 'Çalışmıyor' : 'Serbest Meslek'}</p>
+                      <div className="inline-flex items-center gap-1.5 bg-brand-50 text-brand-600 text-[11px] font-bold uppercase tracking-widest px-4 py-1.5 rounded-full mb-3">
+                        <Sparkles className="w-3 h-3" />
+                        Hızlı Analiz
+                      </div>
+                      <p className="text-sm text-slate-400 font-light">{onboardingCountry} · {onboardingProfile === 'employer' ? 'Çalışan' : onboardingProfile === 'student' ? 'Öğrenci' : onboardingProfile === 'unemployed' ? 'Çalışmıyor' : 'Serbest Meslek'}</p>
                     </div>
 
                     <div>
-                      <div className={`text-6xl sm:text-7xl font-bold score-num ${
+                      <div className={`text-7xl sm:text-8xl font-bold score-num ${
                         currentScore >= 82 ? 'text-emerald-500' :
                         currentScore >= 65 ? 'text-amber-500' : 'text-rose-500'
                       }`}>
                         %{currentScore}
                       </div>
-                      <p className="text-xs text-slate-400 mt-2">Tahmini onay ihtimali</p>
+                      <p className="text-xs text-slate-400 mt-3 font-light">Tahmini onay ihtimali</p>
                     </div>
 
                     {/* Status badge */}
-                    <div className="flex items-center justify-center gap-2">
+                    <div className="flex items-center justify-center gap-2.5">
                       <span className={`badge ${
-                        currentScore >= 82 ? 'bg-emerald-50 text-emerald-700' :
-                        currentScore >= 65 ? 'bg-amber-50 text-amber-700' :
-                                             'bg-rose-50 text-rose-700'
+                        currentScore >= 82 ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' :
+                        currentScore >= 65 ? 'bg-amber-50 text-amber-700 border border-amber-100' :
+                                             'bg-rose-50 text-rose-700 border border-rose-100'
                       }`}>
                         {currentScore >= 82 ? 'Başvuruya Hazır' : currentScore >= 65 ? 'Geliştirmeli' : 'Riskli Profil'}
                       </span>
-                      <span className="badge bg-slate-100 text-slate-600">
+                      <span className="badge bg-slate-50 text-slate-500 border border-slate-100">
                         {currentConfidence.missingCount} eksik alan
                       </span>
                     </div>
 
                     {/* Progress */}
-                    <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                    <div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden">
                       <motion.div
                         className={`h-full rounded-full ${
-                          currentScore >= 82 ? 'bg-emerald-500' :
-                          currentScore >= 65 ? 'bg-amber-500' : 'bg-rose-500'
+                          currentScore >= 82 ? 'bg-gradient-to-r from-emerald-400 to-emerald-500' :
+                          currentScore >= 65 ? 'bg-gradient-to-r from-amber-400 to-amber-500' : 'bg-gradient-to-r from-rose-400 to-rose-500'
                         }`}
                         initial={{ width: 0 }}
                         animate={{ width: `${currentScore}%` }}
-                        transition={{ duration: 1, ease: 'easeOut', delay: 0.2 }}
+                        transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1], delay: 0.3 }}
                       />
                     </div>
                   </div>
 
                   {/* CTA'lar */}
                   <div className="space-y-3">
-                    <button
+                    <motion.button
+                      whileHover={{ y: -2 }}
+                      whileTap={{ scale: 0.98 }}
                       onClick={() => setStep('assessment')}
                       className="btn-primary w-full py-4 text-base flex items-center justify-center gap-2 group"
                     >
                       Profilini Detaylandır — Skoru Artır
                       <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                    </button>
-                    <button
+                    </motion.button>
+                    <motion.button
+                      whileHover={{ y: -1 }}
+                      whileTap={{ scale: 0.98 }}
                       onClick={() => setStep('dashboard')}
                       className="btn-secondary w-full py-3.5 text-sm flex items-center justify-center gap-2"
                     >
                       <Zap className="w-4 h-4" />
                       Direkt Analiz Paneline Git
-                    </button>
+                    </motion.button>
                   </div>
                 </motion.div>
               )}
@@ -5043,9 +5054,9 @@ Signature: _______________     Date: ${today}`;
                       </div>
 
                       {/* Soru */}
-                      <div className="p-5 bg-slate-900 rounded-2xl">
-                        <div className="text-xs text-slate-400 font-bold mb-2">🎙 Konsolosluk Görevlisi:</div>
-                        <p className="text-white font-bold leading-relaxed">{q.q}</p>
+                      <div className="p-5 bg-gradient-to-br from-brand-50 to-indigo-50 border border-brand-100 rounded-2xl">
+                        <div className="text-xs text-brand-500 font-bold mb-2">🎙 Konsolosluk Görevlisi:</div>
+                        <p className="text-slate-800 font-bold leading-relaxed">{q.q}</p>
                       </div>
 
                       {/* Hint */}
@@ -5511,7 +5522,7 @@ Signature: _______________     Date: ${today}`;
                       ))}
 
                     <button onClick={() => setCommunityPhase('submit')}
-                      className="w-full py-3 bg-slate-900 text-white font-bold rounded-2xl hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
+                      className="w-full py-3 bg-gradient-to-r from-brand-500 to-brand-600 text-white font-bold rounded-2xl hover:shadow-lg hover:shadow-brand-500/20 hover:-translate-y-0.5 transition-all duration-300 flex items-center justify-center gap-2">
                       + Deneyimimi Paylaş
                     </button>
 
@@ -5577,7 +5588,7 @@ Signature: _______________     Date: ${today}`;
                       <button onClick={() => setCommunityPhase('feed')} className="px-5 py-3 bg-slate-100 text-slate-700 font-bold rounded-2xl hover:bg-slate-200 transition-colors">İptal</button>
                       <button onClick={submitCommunityEntry}
                         disabled={!communityForm.consulate || !communityForm.notes || !communityForm.waitDays}
-                        className="flex-1 py-3 bg-slate-900 text-white font-bold rounded-2xl hover:opacity-90 disabled:opacity-40 transition-opacity">
+                        className="flex-1 py-3 bg-gradient-to-r from-brand-500 to-brand-600 text-white font-bold rounded-2xl hover:shadow-lg hover:shadow-brand-500/20 disabled:opacity-40 transition-all duration-300">
                         Deneyimi Paylaş →
                       </button>
                     </div>
@@ -6016,7 +6027,7 @@ Signature: _______________     Date: ${today}`;
 
               <div className="px-6 py-4 border-t border-slate-100 shrink-0">
                 <button onClick={() => setIsBankPlanOpen(false)}
-                  className="w-full py-3 bg-slate-900 text-white rounded-2xl font-bold text-sm hover:bg-slate-800 transition-colors">
+                  className="w-full py-3 bg-gradient-to-r from-brand-500 to-brand-600 text-white rounded-2xl font-bold text-sm hover:shadow-lg hover:shadow-brand-500/20 hover:-translate-y-0.5 transition-all duration-300">
                   Planı Kaydet ve Kapat
                 </button>
               </div>
@@ -6226,7 +6237,7 @@ Signature: _______________     Date: ${today}`;
 
               <div className="px-6 py-4 border-t border-slate-100 shrink-0">
                 <button onClick={() => setIsRefusalMapOpen(false)}
-                  className="w-full py-3 bg-slate-900 text-white rounded-2xl font-bold text-sm hover:bg-slate-800 transition-colors">
+                  className="w-full py-3 bg-gradient-to-r from-brand-500 to-brand-600 text-white rounded-2xl font-bold text-sm hover:shadow-lg hover:shadow-brand-500/20 hover:-translate-y-0.5 transition-all duration-300">
                   Kapat
                 </button>
               </div>
@@ -6356,7 +6367,7 @@ Signature: _______________     Date: ${today}`;
 
               <div className="px-6 py-4 border-t border-slate-100 shrink-0">
                 <button onClick={() => setIsBenchmarkOpen(false)}
-                  className="w-full py-3 bg-slate-900 text-white rounded-2xl font-bold text-sm hover:bg-slate-800 transition-colors">
+                  className="w-full py-3 bg-gradient-to-r from-brand-500 to-brand-600 text-white rounded-2xl font-bold text-sm hover:shadow-lg hover:shadow-brand-500/20 hover:-translate-y-0.5 transition-all duration-300">
                   Kapat
                 </button>
               </div>
