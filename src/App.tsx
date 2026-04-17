@@ -52,7 +52,8 @@ import {
   Banknote,
   ScanLine,
   Bell,
-  ClipboardList
+  ClipboardList,
+  Building2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
@@ -146,7 +147,8 @@ export default function App() {
       if (!saved) return false;
       return !!(saved.bankSufficientBalance || saved.hasSgkJob || saved.hasHighValueVisa ||
         saved.hasAssets || saved.isMarried || saved.cleanCriminalRecord ||
-        (saved.applicantAge && saved.applicantAge !== 28 && saved.applicantAge > 0));
+        (saved.applicantAge && saved.applicantAge > 0) ||
+        (saved.yearsInCurrentJob && saved.yearsInCurrentJob > 0));
     } catch { return false; }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // mount-only
@@ -235,7 +237,7 @@ export default function App() {
   const [aiBankLoading, setAiBankLoading] = useState(false);
   const [aiBankResult, setAiBankResult] = useState<BankAnalysisResult | null>(null);
   const [aiBankFile, setAiBankFile] = useState<string>('');
-  const [applicantType, setApplicantType] = useState<'employer' | 'unemployed' | 'minor' | 'sponsor'>('employer');
+  const [applicantType, setApplicantType] = useState<'employer' | 'employee' | 'student' | 'self' | 'unemployed' | 'minor' | 'sponsor'>('employer');
   const [aiBankIncome, setAiBankIncome] = useState('');
   const [aiBankBalance, setAiBankBalance] = useState('');
   const [aiBankMonths, setAiBankMonths] = useState('3');
@@ -405,7 +407,7 @@ export default function App() {
     hasSgkJob: false,
     isPublicSectorEmployee: false,
     sgkEmployerLetterWithReturn: false,
-    yearsInCurrentJob: 3,
+    yearsInCurrentJob: 0,
     sgkAddressMatchesDs160: true,
     hasHighValueVisa: false,
     hasOtherVisa: false,
@@ -459,7 +461,7 @@ export default function App() {
     monthlyIncome: '',
     lastVisaYear: 0,
     lastRejectionYear: 0,
-    applicantAge: 28,
+    applicantAge: 0,
   };
 
   const [profile, setProfile] = useState<ProfileData>(() => {
@@ -2856,7 +2858,7 @@ Signature: _______________     Date: ${today}`;
                   </div>
 
                   <div className="space-y-4 mb-12">
-                    {ukDocuments[applicantType as keyof typeof ukDocuments].map((doc, idx) => (
+                    {(ukDocuments[applicantType as keyof typeof ukDocuments] || ukDocuments.employer).map((doc, idx) => (
                       <div key={idx} className="flex items-start gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100">
                         <div className="w-6 h-6 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 mt-0.5">
                           <Check className="w-4 h-4" />
@@ -4495,18 +4497,23 @@ Signature: _______________     Date: ${today}`;
 
                   <div className="space-y-3">
                     {[
-                      { id: 'employer',   icon: Briefcase, label: 'Çalışan / İşveren', desc: 'SGK\'lı iş veya şirket sahibi', color: 'from-brand-500 to-brand-600' },
-                      { id: 'student',    icon: Brain,     label: 'Öğrenci',           desc: 'Üniversite veya lise', color: 'from-sky-500 to-blue-600' },
-                      { id: 'unemployed', icon: Home,      label: 'Çalışmıyor / Emekli', desc: 'Eş veya aile sponsorluğu', color: 'from-amber-500 to-orange-500' },
+                      { id: 'employee',   icon: Briefcase, label: 'Çalışan',            desc: 'SGK\'lı maaşlı çalışan', color: 'from-brand-500 to-brand-600' },
+                      { id: 'employer',   icon: Building2, label: 'İşveren',            desc: 'Şirket sahibi / ortak', color: 'from-indigo-500 to-violet-600' },
+                      { id: 'student',    icon: Brain,     label: 'Öğrenci',            desc: 'Üniversite veya lise', color: 'from-sky-500 to-blue-600' },
                       { id: 'self',       icon: Target,    label: 'Serbest Meslek',     desc: 'Freelance veya esnaf', color: 'from-emerald-500 to-teal-600' },
+                      { id: 'unemployed', icon: Home,      label: 'Çalışmıyor / Emekli', desc: 'Eş veya aile sponsorluğu', color: 'from-amber-500 to-orange-500' },
                     ].map(({ id, icon: Icon, label, desc, color }) => (
                       <motion.button key={id}
                         whileHover={{ x: 4 }}
                         whileTap={{ scale: 0.98 }}
                         onClick={() => {
                           setOnboardingProfile(id);
-                          setApplicantType(id === 'employer' || id === 'unemployed' ? id as 'employer' | 'unemployed' : 'employer');
-                          if (id === 'student') setProfile(prev => ({ ...prev, isStudent: true }));
+                          setApplicantType(id as 'employer' | 'employee' | 'student' | 'self' | 'unemployed');
+                          setProfile(prev => ({
+                            ...prev,
+                            isStudent: id === 'student',
+                            hasSgkJob: id === 'employee',
+                          }));
                           setOnboardingStep(2);
                         }}
                         className="w-full card card-hover p-5 flex items-center gap-4 text-left"
@@ -4540,7 +4547,14 @@ Signature: _______________     Date: ${today}`;
                         <Sparkles className="w-3 h-3" />
                         Hızlı Analiz
                       </div>
-                      <p className="text-sm text-slate-400 font-light">{onboardingCountry} · {onboardingProfile === 'employer' ? 'Çalışan' : onboardingProfile === 'student' ? 'Öğrenci' : onboardingProfile === 'unemployed' ? 'Çalışmıyor' : 'Serbest Meslek'}</p>
+                      <p className="text-sm text-slate-400 font-light">{onboardingCountry} · {
+                        onboardingProfile === 'employee'   ? 'Çalışan' :
+                        onboardingProfile === 'employer'   ? 'İşveren' :
+                        onboardingProfile === 'student'    ? 'Öğrenci' :
+                        onboardingProfile === 'self'       ? 'Serbest Meslek' :
+                        onboardingProfile === 'unemployed' ? 'Çalışmıyor / Emekli' :
+                        'Profil'
+                      }</p>
                     </div>
 
                     <div>

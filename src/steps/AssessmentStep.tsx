@@ -36,7 +36,7 @@ interface Props {
   onNavigate: (step: string) => void;
   onProfileUpdate: (patch: Partial<ProfileData>) => void;
   onProfileSet: React.Dispatch<React.SetStateAction<ProfileData>>;
-  onApplicantTypeChange: (t: 'employer' | 'unemployed' | 'minor' | 'sponsor') => void;
+  onApplicantTypeChange: (t: 'employer' | 'employee' | 'student' | 'self' | 'unemployed' | 'minor' | 'sponsor') => void;
   onProfileToggle: (key: keyof ProfileData) => void;
 }
 
@@ -61,7 +61,7 @@ function SwipeCriteriaCards({
   applicantType: string;
 }) {
   const visibleCriteria = CRITERIA.filter(c => {
-    if (c.id === 'hasSgkJob' && (applicantType === 'unemployed' || applicantType === 'minor')) return false;
+    if (c.id === 'hasSgkJob' && (applicantType === 'unemployed' || applicantType === 'minor' || applicantType === 'student' || applicantType === 'self' || applicantType === 'employer')) return false;
     return true;
   });
   const [idx, setIdx] = useState(0);
@@ -284,51 +284,32 @@ export function AssessmentStep({
                   <div>
                     <h3 className="text-xl font-bold text-slate-900 mb-4">1. Başvuru Tipiniz</h3>
                     <div className="flex flex-wrap gap-3">
-                      <button
-                        onClick={() => setApplicantType('employer')}
-                        className={`px-6 py-4 rounded-2xl font-bold text-sm transition-all border-2 ${
-                          applicantType === 'employer' 
-                            ? 'bg-blue-50 border-blue-600 text-blue-700' 
-                            : 'bg-white border-slate-100 text-slate-600 hover:border-slate-200'
-                        }`}
-                      >
-                        İşveren / Çalışan
-                      </button>
-                      <button
-                        onClick={() => setApplicantType('unemployed')}
-                        className={`px-6 py-4 rounded-2xl font-bold text-sm transition-all border-2 ${
-                          applicantType === 'unemployed' 
-                            ? 'bg-blue-50 border-blue-600 text-blue-700' 
-                            : 'bg-white border-slate-100 text-slate-600 hover:border-slate-200'
-                        }`}
-                      >
-                        Çalışmayan
-                      </button>
-                      <button
-                        onClick={() => setApplicantType('minor')}
-                        className={`px-6 py-4 rounded-2xl font-bold text-sm transition-all border-2 ${
-                          applicantType === 'minor' 
-                            ? 'bg-blue-50 border-blue-600 text-blue-700' 
-                            : 'bg-white border-slate-100 text-slate-600 hover:border-slate-200'
-                        }`}
-                      >
-                        Reşit Olmayan
-                      </button>
-                      <button
-                        onClick={() => setApplicantType('sponsor')}
-                        className={`px-6 py-4 rounded-2xl font-bold text-sm transition-all border-2 ${
-                          applicantType === 'sponsor' 
-                            ? 'bg-blue-50 border-blue-600 text-blue-700' 
-                            : 'bg-white border-slate-100 text-slate-600 hover:border-slate-200'
-                        }`}
-                      >
-                        Sponsor
-                      </button>
+                      {([
+                        { id: 'employee',   label: 'Çalışan' },
+                        { id: 'employer',   label: 'İşveren' },
+                        { id: 'student',    label: 'Öğrenci' },
+                        { id: 'self',       label: 'Serbest Meslek' },
+                        { id: 'unemployed', label: 'Çalışmıyor / Emekli' },
+                        { id: 'sponsor',    label: 'Sponsor' },
+                        { id: 'minor',      label: 'Reşit Olmayan' },
+                      ] as const).map(({ id, label }) => (
+                        <button
+                          key={id}
+                          onClick={() => setApplicantType(id)}
+                          className={`px-6 py-4 rounded-2xl font-bold text-sm transition-all border-2 ${
+                            applicantType === id
+                              ? 'bg-blue-50 border-blue-600 text-blue-700'
+                              : 'bg-white border-slate-100 text-slate-600 hover:border-slate-200'
+                          }`}
+                        >
+                          {label}
+                        </button>
+                      ))}
                     </div>
                   </div>
   
                   {/* ── #19 Conditional: applicantType-specific notice ── */}
-                  {(applicantType === 'unemployed' || applicantType === 'minor') && (
+                  {(applicantType === 'unemployed' || applicantType === 'minor' || applicantType === 'employer' || applicantType === 'self' || applicantType === 'sponsor') && (
                     <div className="bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3 text-sm text-amber-800 font-medium flex items-start gap-2">
                       <span className="text-base mt-0.5">ℹ️</span>
                       <div>
@@ -338,13 +319,22 @@ export function AssessmentStep({
                         {applicantType === 'minor' && (
                           <>Reşit olmayan başvurucular için <strong>veli muvafakatnamesi ve okul kaydı</strong> en kritik belgelerdir.</>
                         )}
+                        {applicantType === 'employer' && (
+                          <>İşveren profili — <strong>vergi levhası, ticaret sicil gazetesi ve imza sirküleri</strong> şirket sahipliği için zorunludur.</>
+                        )}
+                        {applicantType === 'self' && (
+                          <>Serbest meslek — <strong>vergi levhası, son 6 ay kazanç beyanı ve Bağ-Kur primleri</strong> ile mali durum gösterilir.</>
+                        )}
+                        {applicantType === 'sponsor' && (
+                          <>Sponsor profili — sponsor eden kişinin <strong>SGK/banka ektresi + noter tasdikli taahhütname</strong> sunulur.</>
+                        )}
                       </div>
                     </div>
                   )}
-                  {profile.isStudent && (
+                  {(applicantType === 'student' || profile.isStudent) && (
                     <div className="bg-indigo-50 border border-indigo-200 rounded-2xl px-4 py-3 text-sm text-indigo-800 font-medium flex items-start gap-2">
                       <span className="text-base mt-0.5">🎓</span>
-                      <div>Öğrenci profili aktif — <strong>okul kaydı / transkript</strong> belgesi bağ puanınıza katkı sağlıyor.</div>
+                      <div>Öğrenci profili aktif — <strong>okul kaydı / transkript</strong> belgesi bağ puanınıza katkı sağlıyor. SGK kriteri öğrenci için geçerli değildir.</div>
                     </div>
                   )}
 
@@ -357,7 +347,7 @@ export function AssessmentStep({
                     {/* ── Desktop: grid (md+ ) ── */}
                     <div className="hidden md:grid grid-cols-2 gap-4">
                       {CRITERIA.filter(item => {
-                        if (item.id === 'hasSgkJob' && (applicantType === 'unemployed' || applicantType === 'minor')) return false;
+                        if (item.id === 'hasSgkJob' && (applicantType === 'unemployed' || applicantType === 'minor' || applicantType === 'student' || applicantType === 'self' || applicantType === 'employer')) return false;
                         return true;
                       }).map((item) => (
                         <button
@@ -481,7 +471,7 @@ export function AssessmentStep({
                     </div>
 
                     {/* #16 Mesleki kıdem slider — işveren / çalışan için */}
-                    {(applicantType === 'employer') && (
+                    {(applicantType === 'employer' || applicantType === 'employee' || applicantType === 'self') && (
                       <div className="mt-4 bg-white border border-slate-200 rounded-2xl p-4">
                         <div className="flex items-center justify-between mb-2">
                           <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
@@ -498,7 +488,7 @@ export function AssessmentStep({
                         <input
                           type="range"
                           min={0} max={20} step={1}
-                          value={profile.yearsInCurrentJob ?? 3}
+                          value={profile.yearsInCurrentJob ?? 0}
                           onChange={(e) => setProfile(prev => ({ ...prev, yearsInCurrentJob: parseInt(e.target.value) }))}
                           className="w-full accent-brand-600 h-1.5"
                         />
