@@ -6724,6 +6724,7 @@ Signature: _______________     Date: ${today}`;
         onClose={() => setIsDocChecklistOpen(false)}
         profile={profile}
         onDownloadPDF={generateDocumentChecklistPDF}
+        onProfileUpdate={(updates) => setProfile(prev => ({ ...prev, ...updates }))}
       />
       {/* ── ARAÇ 18: Nereye Gidebilirim ────────────────────────────────── */}
       <CountryGuideModal

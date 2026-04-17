@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, FileCheck, Download } from 'lucide-react';
+import { X, FileCheck, Download, CheckCircle2 } from 'lucide-react';
+import type { ProfileData } from '../../types';
 
 export interface DocChecklistProfile {
   targetCountry?: string;
@@ -25,6 +26,110 @@ interface Props {
   onClose: () => void;
   profile: DocChecklistProfile;
   onDownloadPDF: () => void;
+  /** İşaretlenen belgelere göre profile flag güncellemesi uygular. */
+  onProfileUpdate?: (updates: Partial<ProfileData>) => void;
+}
+
+// Checked item metinlerini profil flag'lerine çevirir.
+// Her anahtar kelime (lowercase, eşiz karakter normalize) item içinde
+// varsa ilgili flag/alan güncellemesi biriktirilir.
+function mapCheckedItemsToProfile(
+  checkedTexts: Set<string>,
+  profile: DocChecklistProfile,
+): Partial<ProfileData> {
+  const u: Partial<ProfileData> = {};
+  const has = (text: string, kw: string) => text.toLowerCase().includes(kw.toLowerCase());
+
+  for (const text of checkedTexts) {
+    // ── Pasaport ─────────────────────────────────────────────────
+    if (has(text, 'geçerli pasaport')) {
+      u.hasValidPassport = true;
+      u.passportConditionGood = true;
+      u.passportValidityLong = true;
+    }
+
+    // ── Sigorta ──────────────────────────────────────────────────
+    if (has(text, 'sağlık sigortası') || has(text, 'seyahat sigortası')) {
+      u.hasHealthInsurance = true;
+      u.hasTravelInsurance = true;
+    }
+
+    // ── Banka ────────────────────────────────────────────────────
+    if (has(text, 'banka hesap dökümü') || has(text, 'banka dökümü')) {
+      u.bankRegularity = true;
+      // 6 aylık UK → 6, aksi halde 3
+      const months = has(text, '6 aylık') ? 6 : 3;
+      u.statementMonths = months;
+      if (months >= 6) u.has6MonthStatements = true;
+    }
+    if (has(text, '28 gün') && has(text, 'bakiye')) {
+      u.has28DayHolding = true;
+    }
+
+    // ── Gelir / maaş ─────────────────────────────────────────────
+    if (has(text, 'maaş bordrosu')) {
+      u.salaryDetected = true;
+      u.hasSteadyIncome = true;
+      u.incomeSourceClear = true;
+    }
+
+    // ── Varlık ───────────────────────────────────────────────────
+    if (has(text, 'tapu') || has(text, 'araç ruhsatı')) {
+      u.hasAssets = true;
+      u.tieCategories = { ...(profile as ProfileData).tieCategories, property: true };
+    }
+
+    // ── SGK / İşveren ────────────────────────────────────────────
+    if (has(text, 'sgk') && has(text, 'barkodlu')) {
+      u.hasBarcodeSgk = true;
+    }
+    if (has(text, 'işveren') && has(text, 'geri dönüş')) {
+      u.sgkEmployerLetterWithReturn = true;
+    }
+
+    // ── Seyahat planı / amaç ─────────────────────────────────────
+    if (has(text, 'niyet mektubu')) {
+      u.useOurTemplate = true;
+      u.purposeClear = true;
+    }
+    if (has(text, 'detaylı seyahat planı') || has(text, 'itinerary')) {
+      u.datesMatchReservations = true;
+    }
+    if (has(text, 'uçak rezervasyonu') || has(text, 'otel') || has(text, 'konaklama rezervasyonu')) {
+      u.paidReservations = true;
+      u.noFakeBooking = true;
+    }
+    if (has(text, 'biyometrik fotoğraf')) {
+      u.documentConsistency = true;
+    }
+
+    // ── Aile / evlilik ───────────────────────────────────────────
+    if (has(text, 'evlilik cüzdanı') || has(text, 'formül b')) {
+      u.tieCategories = { ...(u.tieCategories ?? (profile as ProfileData).tieCategories), family: true };
+      u.strongFamilyTies = true;
+    }
+
+    // ── Önceki ret ───────────────────────────────────────────────
+    if (has(text, 'önceki ret mektubu') || has(text, 'ret mektubu fotokopisi')) {
+      u.previousRefusalDisclosed = true;
+    }
+
+    // ── Yerleşim / adres ─────────────────────────────────────────
+    if (has(text, 'yerleşim yeri belgesi')) {
+      u.addressMatchSgk = true;
+    }
+
+    // ── Strong ties paketi (ABD) ─────────────────────────────────
+    if (has(text, 'strong ties')) {
+      u.strongFamilyTies = true;
+      u.tieCategories = {
+        ...(u.tieCategories ?? (profile as ProfileData).tieCategories),
+        employment: true, property: true, family: true,
+      };
+    }
+  }
+
+  return u;
 }
 
 type DocItem = { text: string; note?: string; status: 'required' | 'conditional' };
@@ -170,8 +275,18 @@ function buildSections(profile: DocChecklistProfile): DocSection[] {
   return sections;
 }
 
-export function DocChecklistModal({ isOpen, onClose, profile, onDownloadPDF }: Props) {
+export function DocChecklistModal({ isOpen, onClose, profile, onDownloadPDF, onProfileUpdate }: Props) {
   const [checkedDocs, setCheckedDocs] = useState<Set<string>>(new Set());
+  const [savedFlash, setSavedFlash] = useState(false);
+
+  const handleProfileSave = () => {
+    if (!onProfileUpdate) return;
+    const updates = mapCheckedItemsToProfile(checkedDocs, profile);
+    if (Object.keys(updates).length === 0) return;
+    onProfileUpdate(updates);
+    setSavedFlash(true);
+    setTimeout(() => setSavedFlash(false), 1800);
+  };
 
   const sections = buildSections(profile);
   const allItems = sections.flatMap(s => s.items);
@@ -302,16 +417,31 @@ export function DocChecklistModal({ isOpen, onClose, profile, onDownloadPDF }: P
             </div>
 
             {/* Footer */}
-            <div className="px-6 py-4 border-t border-slate-100 flex gap-3 shrink-0">
-              <button onClick={onDownloadPDF}
-                className="flex-1 flex items-center justify-center gap-2 py-3 bg-indigo-600 text-white rounded-2xl font-bold text-sm hover:bg-indigo-700 transition-colors">
-                <Download className="w-4 h-4" />
-                PDF Olarak İndir
-              </button>
-              <button onClick={onClose}
-                className="px-5 py-3 bg-slate-100 text-slate-700 rounded-2xl font-bold text-sm hover:bg-slate-200 transition-colors">
-                Kapat
-              </button>
+            <div className="px-6 py-4 border-t border-slate-100 shrink-0 space-y-2.5">
+              {onProfileUpdate && doneCount > 0 && (
+                <button
+                  onClick={handleProfileSave}
+                  className={`w-full flex items-center justify-center gap-2 py-3 rounded-2xl font-bold text-sm transition-all ${
+                    savedFlash
+                      ? 'bg-emerald-600 text-white'
+                      : 'bg-emerald-500 text-white hover:bg-emerald-600'
+                  }`}
+                >
+                  <CheckCircle2 className="w-4 h-4" />
+                  {savedFlash ? 'Profil Güncellendi ✓' : `Profili Güncelle (${doneCount} belge)`}
+                </button>
+              )}
+              <div className="flex gap-3">
+                <button onClick={onDownloadPDF}
+                  className="flex-1 flex items-center justify-center gap-2 py-3 bg-indigo-600 text-white rounded-2xl font-bold text-sm hover:bg-indigo-700 transition-colors">
+                  <Download className="w-4 h-4" />
+                  PDF Olarak İndir
+                </button>
+                <button onClick={onClose}
+                  className="px-5 py-3 bg-slate-100 text-slate-700 rounded-2xl font-bold text-sm hover:bg-slate-200 transition-colors">
+                  Kapat
+                </button>
+              </div>
             </div>
           </motion.div>
         </div>
