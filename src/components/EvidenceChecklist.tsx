@@ -204,7 +204,7 @@ const CATEGORY_LABEL: Record<Category, string> = {
   financial: 'Finansal', professional: 'Profesyonel',
   application: 'Başvuru', trust: 'Güven', country: 'Ülke Özel',
 };
-const STORAGE_KEY = 'evidence_checklist_v2';
+const STORAGE_KEY = 'evidence_checklist_v3';
 const MILESTONES = [25, 50, 75, 100];
 
 // ── Skor delta hesabı (tek madde için) ───────────────────────────────────────

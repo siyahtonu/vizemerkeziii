@@ -411,7 +411,7 @@ export default function App() {
     hasOtherVisa: false,
     travelHistoryNonVisa: false,
     noOverstayHistory: true,
-    hasSocialMediaFootprint: true,
+    hasSocialMediaFootprint: false,
     isMarried: false,
     hasChildren: false,
     isStudent: false,
@@ -427,7 +427,7 @@ export default function App() {
     passportValidityLong: false,
     documentConsistency: false,
     interviewPrepared: false,
-    cleanCriminalRecord: true,
+    cleanCriminalRecord: false,
     hasBarcodeSgk: false,
     hasTravelInsurance: false,
     has28DayHolding: false,
@@ -641,8 +641,8 @@ export default function App() {
       persona = "Güvenilir Profil: Deneyimli Çalışan";
       personaDestiny = "Finansal istikrar ve iş sürekliliği ile güçlü bir profil. Ek bağ kanıtlarıyla %90'a taşınabilir.";
     } else if (profile.hasHighValueVisa) {
-      persona = "Geçmişten Güç: Vizenin Vizesi";
-      personaDestiny = "Önceki ABD/UK/Schengen vizesi en güçlü referanstır. Konsolosluk bu profili öncelikli işler.";
+      persona = "Güçlü Vize Geçmişi: Altın Referans";
+      personaDestiny = "Önceki ABD/İngiltere/Schengen vizeniz en güçlü referansınız. Konsolosluk, vize geçmişi temiz profilleri öncelikli inceler ve onay oranı belirgin biçimde yüksektir.";
     } else if (profile.hasSuspiciousLargeDeposit || profile.unusualLargeTransactions) {
       persona = "KRİTİK: Şüpheli Finansal Profil";
       personaDestiny = "Emanet para şüphesi nedeniyle ret riski %85+. Başvurudan önce kaynağı belgele veya 2 ay bekle. Bu profille kesinlikle başvurma.";
@@ -663,14 +663,15 @@ export default function App() {
     // ─────────────────────────────────────────────────────────
     // 2. HAZIRLIKta DURUM - Daha hassas eşikler
     // ─────────────────────────────────────────────────────────
-    let readiness: 'apply' | 'wait' | 'risky' = 'wait';
+    let readiness: 'apply' | 'moderate' | 'risky' | 'wait' = 'wait';
     const hardBlocks = profile.hasSuspiciousLargeDeposit ||
                        (!profile.previousRefusalDisclosed && profile.hasPreviousRefusal) ||
                        !profile.noOverstayHistory ||
                        !profile.noFakeBooking;
 
     if (currentScore >= 82 && !hardBlocks) readiness = 'apply';
-    else if (currentScore >= 65 && !hardBlocks) readiness = 'risky';
+    else if (currentScore >= 72 && !hardBlocks) readiness = 'moderate';
+    else if (currentScore >= 60 && !hardBlocks) readiness = 'risky';
     else readiness = 'wait';
 
     // ─────────────────────────────────────────────────────────
@@ -2258,6 +2259,78 @@ Signature: _______________     Date: ${today}`;
     doc.save(`VizeAkil_Belge_Kontrol_Listesi_${normalizeTr(country)}_${today.replace(/\//g, '-')}.pdf`);
   };
 
+  // ── Kişiye Özel Sihirbaz Evrak Listesi PDF ────────────────────────────────
+  const generateWizardDocListPDF = () => {
+    if (wizardResult.length === 0) return;
+    const doc = new jsPDF();
+    const today = new Date().toLocaleDateString('tr-TR');
+    const countryLabel = wizardCountry === 'schengen' ? 'Schengen' : wizardCountry === 'uk' ? 'Ingiltere' : 'ABD';
+    const employmentLabel = wizardEmployment === 'employee' ? 'Calisan'
+                          : wizardEmployment === 'freelance' ? 'Serbest Meslek'
+                          : wizardEmployment === 'student' ? 'Ogrenci'
+                          : wizardEmployment === 'retired' ? 'Emekli'
+                          : 'Issiz';
+
+    // Header
+    doc.setFillColor(5, 150, 105);
+    doc.rect(0, 0, 210, 18, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.text('VizeAkil — Kisiye Ozel Evrak Listesi', 14, 12);
+    doc.text(today, 196, 12, { align: 'right' });
+
+    // Title
+    doc.setTextColor(30, 41, 59);
+    doc.setFontSize(13);
+    doc.setFont('helvetica', 'bold');
+    doc.text(normalizeTr(`${countryLabel} Vizesi — ${employmentLabel} Profili`), 14, 30);
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(100, 116, 139);
+    doc.text(normalizeTr(`${wizardResult.length} belge — profilinize ozel hazirlandi`), 14, 36);
+    doc.setDrawColor(229, 231, 235);
+    doc.line(14, 40, 196, 40);
+
+    let y = 48;
+    wizardResult.forEach((item) => {
+      if (y > 270) { doc.addPage(); y = 20; }
+      const isWarning = item.startsWith('⚠️') || item.startsWith('UYARI');
+      const cleanText = item.replace(/^⚠️ /, '');
+      if (isWarning) {
+        doc.setFillColor(254, 243, 199);
+        doc.setDrawColor(245, 158, 11);
+        const lines = doc.splitTextToSize(normalizeTr(cleanText), 180);
+        const h = lines.length * 5 + 4;
+        doc.roundedRect(14, y - 4, 182, h, 1.5, 1.5, 'FD');
+        doc.setTextColor(146, 64, 14);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(9);
+        doc.text(lines, 18, y);
+        y += h + 2;
+        doc.setFont('helvetica', 'normal');
+      } else {
+        doc.setDrawColor(100, 116, 139);
+        doc.rect(14, y - 3.5, 4, 4);
+        doc.setTextColor(51, 65, 85);
+        doc.setFontSize(9);
+        const lines = doc.splitTextToSize(normalizeTr(cleanText), 170);
+        doc.text(lines, 21, y);
+        y += lines.length * 5 + 2;
+      }
+    });
+
+    // Footer
+    const pageHeight = doc.internal.pageSize.height;
+    doc.setFillColor(248, 250, 252);
+    doc.rect(0, pageHeight - 12, 210, 12, 'F');
+    doc.setTextColor(148, 163, 184);
+    doc.setFontSize(7);
+    doc.text('Bu liste VizeAkil (vizeakil.com) tarafindan profilinize gore olusturulmustur. Resmi vize danismanliginin yerini tutmaz.', 14, pageHeight - 4);
+
+    doc.save(`VizeAkil_Kisiye_Ozel_Evrak_Listesi_${normalizeTr(countryLabel)}_${today.replace(/\//g, '-')}.pdf`);
+  };
+
   // Open a tool: if premium-gated and not premium, show upgrade modal; else navigate to dashboard + open
   const openTool = (toolId: string, setter: (b: boolean) => void) => {
     if (PREMIUM_TOOLS.includes(toolId) && !isPremium) {
@@ -2695,6 +2768,30 @@ Signature: _______________     Date: ${today}`;
                             </button>
                           );
                         })}
+
+                        {/* Alt eylem çubuğu: ilerleme + PDF + Tamam */}
+                        <div className="mt-4 pt-4 border-t border-emerald-200 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                          <div className="flex-1 text-xs font-bold text-emerald-800">
+                            {wizardChecked.size}/{wizardResult.length} belge hazır
+                            {wizardChecked.size === wizardResult.length && wizardResult.length > 0 && (
+                              <span className="ml-2 text-emerald-600">✓ Tamamlandı</span>
+                            )}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={generateWizardDocListPDF}
+                            className="flex items-center justify-center gap-1.5 px-4 py-2.5 bg-white border border-emerald-300 text-emerald-700 rounded-xl font-bold text-xs hover:bg-emerald-50 transition-colors"
+                          >
+                            <Download className="w-3.5 h-3.5"/> PDF İndir
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => { setIsDocumentListOpen(false); setWizardDone(false); setWizardResult([]); setWizardChecked(new Set()); }}
+                            className="flex items-center justify-center gap-1.5 px-5 py-2.5 bg-emerald-700 text-white rounded-xl font-bold text-xs hover:bg-emerald-800 transition-colors"
+                          >
+                            <CheckCircle2 className="w-3.5 h-3.5"/> Tamam
+                          </button>
+                        </div>
                       </div>
                     )}
                   </div>

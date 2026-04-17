@@ -597,6 +597,69 @@ export function AssessmentStep({
                   </div>
                 )}
 
+                {/* ── Mobil: Skor + Tam Analiz Paneli erişimi ── */}
+                <div className="lg:hidden space-y-4 mt-2">
+                  <div className="bg-white border-2 border-slate-100 rounded-3xl p-5 shadow-sm">
+                    <div className="text-[10px] font-bold text-brand-500 uppercase tracking-widest mb-2">
+                      Tahmini Başarı Skoru
+                    </div>
+                    <div className={`text-4xl font-bold font-mono mb-2 ${
+                      currentScore >= 82 ? 'text-emerald-500' :
+                      currentScore >= 65 ? 'text-amber-500' : 'text-rose-500'
+                    }`}>
+                      %{displayScore}
+                    </div>
+                    <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden mb-3">
+                      <motion.div
+                        className={`h-full rounded-full ${
+                          currentScore >= 82 ? 'bg-gradient-to-r from-emerald-400 to-emerald-500' :
+                          currentScore >= 65 ? 'bg-gradient-to-r from-amber-400 to-amber-500' : 'bg-gradient-to-r from-rose-400 to-rose-500'
+                        }`}
+                        initial={{ width: 0 }}
+                        animate={{ width: `${displayScore}%` }}
+                        transition={{ duration: 0.9, ease: 'easeOut' }}
+                      />
+                    </div>
+                    <div className="flex flex-wrap gap-2 text-xs mb-4">
+                      <span className={`px-2.5 py-1 rounded-full font-bold ${
+                        currentConfidence.label === 'Yüksek' ? 'bg-emerald-50 text-emerald-600' :
+                        currentConfidence.label === 'Orta' ? 'bg-amber-50 text-amber-600' :
+                        'bg-rose-50 text-rose-600'
+                      }`}>
+                        {currentConfidence.label} Güven
+                      </span>
+                      <span className="text-slate-400 py-1">
+                        %{currentConfidence.low}–%{currentConfidence.high}
+                      </span>
+                    </div>
+                    <ScoreStory profile={profile} score={currentScore} />
+                    <div className="mt-4">
+                      <ScoreRadarMini profile={profile} />
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setStep('dashboard')}
+                    className="btn-primary w-full py-4 text-base flex items-center justify-center gap-2 group"
+                  >
+                    Tam Analiz Paneli
+                    <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </button>
+                  {currentScore >= 65 && (
+                    <button
+                      type="button"
+                      onClick={() => setStep('letter')}
+                      className="btn-secondary w-full py-3 text-sm flex items-center justify-center gap-2"
+                    >
+                      Niyet Mektubu Oluştur
+                    </button>
+                  )}
+                  {profile.targetCountry && (
+                    <BenchmarkCard profile={profile} score={currentScore} />
+                  )}
+                </div>
+
                 </div>{/* flex-1 form sonu */}
 
                 {/* Sağ: Sticky Skor Paneli (desktop) */}

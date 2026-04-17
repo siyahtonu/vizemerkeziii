@@ -87,7 +87,7 @@ export interface ProfileData {
   // Strategy & Intelligence (New)
   targetCountry: string;
   persona: string;
-  readinessStatus: 'apply' | 'wait' | 'risky';
+  readinessStatus: 'apply' | 'moderate' | 'wait' | 'risky';
   documentStrengths: {
     financial: number;
     professional: number;

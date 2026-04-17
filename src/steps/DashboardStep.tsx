@@ -52,7 +52,7 @@ export interface DashboardStepProps {
   intelligence: {
     persona: string;
     personaDestiny: string;
-    readiness: 'apply' | 'wait' | 'risky';
+    readiness: 'apply' | 'moderate' | 'wait' | 'risky';
     docStrengths: { financial: number; professional: number; history: number; trust: number };
     timeline: string;
     route: string[];
@@ -940,28 +940,35 @@ export function DashboardStep({
                       {/* Readiness Card */}
                       <div className={`p-8 rounded-[2.5rem] border transition-all duration-500 ${
                         intelligence.readiness === 'apply' ? 'bg-emerald-50/50 border-emerald-100' :
+                        intelligence.readiness === 'moderate' ? 'bg-sky-50/50 border-sky-100' :
                         intelligence.readiness === 'risky' ? 'bg-amber-50/50 border-amber-100' : 'bg-rose-50/50 border-rose-100'
                       }`}>
                         <div className="flex items-center justify-between mb-6">
                           <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${
                             intelligence.readiness === 'apply' ? 'bg-emerald-100 text-emerald-600' :
+                            intelligence.readiness === 'moderate' ? 'bg-sky-100 text-sky-600' :
                             intelligence.readiness === 'risky' ? 'bg-amber-100 text-amber-600' : 'bg-rose-100 text-rose-600'
                           }`}>
                             <Zap className="w-6 h-6" />
                           </div>
                           <span className={`text-[10px] font-bold px-3 py-1 rounded-lg uppercase tracking-widest ${
                             intelligence.readiness === 'apply' ? 'bg-emerald-100 text-emerald-700' :
+                            intelligence.readiness === 'moderate' ? 'bg-sky-100 text-sky-700' :
                             intelligence.readiness === 'risky' ? 'bg-amber-100 text-amber-700' : 'bg-rose-100 text-rose-700'
                           }`}>
-                            {intelligence.readiness === 'apply' ? 'HAZIR' : intelligence.readiness === 'risky' ? 'RİSKLİ' : 'BEKLE'}
+                            {intelligence.readiness === 'apply' ? 'HAZIR' :
+                             intelligence.readiness === 'moderate' ? 'ONAYA YAKIN' :
+                             intelligence.readiness === 'risky' ? 'RİSKLİ' : 'BEKLE'}
                           </span>
                         </div>
                         <h4 className="text-2xl font-bold text-slate-900 mb-2">
-                          {intelligence.readiness === 'apply' ? 'Şimdi Başvurabilirsin' : 
+                          {intelligence.readiness === 'apply' ? 'Şimdi Başvurabilirsin' :
+                           intelligence.readiness === 'moderate' ? 'Orta-Güçlü Profil' :
                            intelligence.readiness === 'risky' ? 'Riskli Başvuru' : 'Henüz Başvurma'}
                         </h4>
                         <p className="text-sm text-slate-600 leading-relaxed mb-6">
                           {intelligence.readiness === 'apply' ? 'Profiliniz şu an konsolosluk standartlarını karşılıyor.' :
+                           intelligence.readiness === 'moderate' ? 'Onay ihtimaliniz belirgin biçimde yüksek. Birkaç küçük iyileştirme ile profilinizi "hazır" seviyesine taşıyabilirsiniz.' :
                            intelligence.readiness === 'risky' ? 'Onay şansınız var ancak memurun inisiyatifine kalmış durumdasınız.' :
                            'Mevcut profilinizle ret alma ihtimaliniz %80 üzerinde.'}
                         </p>
