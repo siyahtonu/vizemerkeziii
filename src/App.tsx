@@ -5604,196 +5604,253 @@ Signature: _______________     Date: ${today}`;
           ═══════════════════════════════════════════════════════ */}
       <AnimatePresence>
         {isAppointmentOpen && (
-          <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-[300] flex items-center justify-center p-3 sm:p-4">
             <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}
               onClick={() => setIsAppointmentOpen(false)}
-              className="absolute inset-0 bg-slate-950/60 backdrop-blur-lg" />
+              className="absolute inset-0 bg-slate-950/50 backdrop-blur-md" />
             <motion.div initial={{opacity:0,scale:0.95,y:20}} animate={{opacity:1,scale:1,y:0}}
               exit={{opacity:0,scale:0.95,y:20}}
-              className="relative w-full max-w-3xl bg-white rounded-2xl shadow-2xl flex flex-col max-h-[94vh] overflow-hidden">
+              className="relative w-full max-w-4xl bg-white rounded-3xl shadow-2xl flex flex-col max-h-[96vh] overflow-hidden">
 
-              {/* Header */}
-              <div className="p-7 bg-gradient-to-r from-slate-800 to-slate-900 text-white rounded-t-2xl shrink-0">
-                <div className="flex justify-between items-start mb-3">
+              {/* ── Header — açık, okunaklı ── */}
+              <div className="px-6 sm:px-8 pt-6 pb-5 border-b border-slate-100 shrink-0">
+                <div className="flex justify-between items-start mb-4">
                   <div>
-                    <div className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1 flex items-center gap-2">
-                      <Bell className="w-4 h-4"/> Randevu Takip Botu
-                    </div>
-                    <h3 className="text-2xl font-bold">Anlık Vize Randevu Takip Sistemi</h3>
-                    <p className="text-slate-400 text-sm mt-1 leading-relaxed">
-                      Randevu takip botu ile gerçek zamanlı veri ile Schengen vize randevusu, VFS randevu bulma ve VFS Global randevu takip durumlarını anında öğrenin.
-                    </p>
-                  </div>
-                  <button onClick={() => setIsAppointmentOpen(false)} className="p-2 hover:bg-white/10 rounded-full shrink-0 ml-4"><X className="w-6 h-6"/></button>
-                </div>
-
-                {/* 3 özellik bandı */}
-                <div className="grid grid-cols-3 gap-2 mb-4 mt-4">
-                  {[
-                    { icon: '🎯', title: 'Güvenilir Otomatik Sistem', desc: 'VFS Global ve resmi kaynaklardan %100 doğru ve güncel vize randevusu verileri.' },
-                    { icon: '🔔', title: 'Akıllı Bildirimler', desc: 'Sadece istediğiniz ülkeler ve şehirler için özelleştirilmiş anlık bildirimler.' },
-                    { icon: '⚡', title: 'Hızlı Kurulum', desc: 'Birkaç adımda botu kurun, Fransa ve Hollanda gibi ülkeler için takibe başlayın.' },
-                  ].map(({ icon, title, desc }) => (
-                    <div key={title} className="bg-white/5 rounded-xl p-3 text-center">
-                      <div className="text-xl mb-1">{icon}</div>
-                      <div className="text-xs font-bold text-white mb-0.5">{title}</div>
-                      <div className="text-[10px] text-slate-400 leading-relaxed">{desc}</div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* 3 adım */}
-                <div className="flex gap-3 mb-4">
-                  {[
-                    { n: '1', b: 'Kurulum', d: 'Takip etmek istediğiniz ülke, şehir ve vize türünü seçin.' },
-                    { n: '2', b: 'Bildirimleri Aç', d: 'Premium ile anlık bildirimleri aktif edin, "randevu çıkmıyor" sorununu yaşamayın.' },
-                    { n: '3', b: 'Randevu Bul', d: 'Randevu açıldığında bildirimi alın, anında başvuru merkezine gidin.' },
-                  ].map(({ n, b, d }) => (
-                    <div key={n} className="flex-1 flex items-start gap-2">
-                      <span className="w-6 h-6 bg-brand-500 text-white rounded-full flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">{n}</span>
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center shadow-md shadow-brand-500/15">
+                        <Bell className="w-5 h-5 text-white"/>
+                      </div>
                       <div>
-                        <div className="text-xs font-bold text-white">{b}</div>
-                        <div className="text-[10px] text-slate-400 leading-relaxed mt-0.5">{d}</div>
+                        <h3 className="text-xl sm:text-2xl font-bold text-slate-900">Vize Randevu Takip</h3>
+                        <p className="text-sm text-slate-400 font-light">VFS, TLS ve konsolosluk randevularını takip edin</p>
+                      </div>
+                    </div>
+                  </div>
+                  <button onClick={() => setIsAppointmentOpen(false)} className="p-2.5 hover:bg-slate-100 rounded-xl transition-colors shrink-0">
+                    <X className="w-5 h-5 text-slate-400"/>
+                  </button>
+                </div>
+
+                {/* 3 adım — yatay, okunaklı */}
+                <div className="flex gap-4 sm:gap-6 mb-5">
+                  {[
+                    { n: '1', b: 'Ülke Seç', d: 'Takip etmek istediğiniz merkezleri seçin' },
+                    { n: '2', b: 'Bildirim Aç', d: 'E-posta ile anlık bildirim alın' },
+                    { n: '3', b: 'Randevu Bul', d: 'Slot açılınca hemen başvurun' },
+                  ].map(({ n, b, d }) => (
+                    <div key={n} className="flex items-start gap-2.5">
+                      <span className="w-7 h-7 bg-brand-50 text-brand-600 rounded-full flex items-center justify-center font-bold text-xs shrink-0 border border-brand-100">{n}</span>
+                      <div>
+                        <div className="text-sm font-semibold text-slate-800">{b}</div>
+                        <div className="text-xs text-slate-400 font-light mt-0.5">{d}</div>
                       </div>
                     </div>
                   ))}
                 </div>
 
-                {/* Ülke filtre + Müsait Olanlar butonu */}
-                <div className="flex gap-2 flex-wrap items-center">
-                  {['Tümü','Almanya','Fransa','İtalya','İspanya','Yunanistan','Portekiz','Hollanda','Avusturya','Polonya','Macaristan','Belçika','Danimarka','İsveç','Norveç','İsviçre','İngiltere','ABD','Kanada'].map(c => (
-                    <button key={c} onClick={() => setApptCountryFilter(c)}
-                      className={`px-3 py-1 rounded-xl text-xs font-bold transition-all ${apptCountryFilter===c?'bg-white text-slate-900':'bg-white/10 text-white hover:bg-white/20'}`}>
-                      {c}
-                    </button>
-                  ))}
-                  <div className="h-4 w-px bg-white/20 mx-1" />
-                  <button
-                    onClick={() => setApptShowAvailableOnly(v => !v)}
-                    className={`flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold transition-all border ${
-                      apptShowAvailableOnly
-                        ? 'bg-emerald-400 text-white border-emerald-300'
-                        : 'bg-white/10 text-white border-white/20 hover:bg-white/20'
-                    }`}
-                  >
-                    <span className={`w-2 h-2 rounded-full ${apptShowAvailableOnly ? 'bg-white' : 'bg-emerald-400'}`} />
-                    Müsait Olanlar
-                  </button>
+                {/* ── Ülke Filtreleri — gruplu, büyük, okunaklı ── */}
+                <div className="flex flex-wrap gap-2 items-center">
+                  {(() => {
+                    const SCHENGEN_COUNTRIES = ['Almanya','Fransa','İtalya','İspanya','Yunanistan','Portekiz','Hollanda','Avusturya','Polonya','Macaristan','Belçika','Danimarka','İsveç','Norveç','İsviçre'];
+                    const groups = [
+                      { id: 'Tümü', label: 'Tümü', flag: '' },
+                      { id: 'ABD', label: 'ABD', flag: '🇺🇸' },
+                      { id: 'İngiltere', label: 'İngiltere', flag: '🇬🇧' },
+                      { id: 'Schengen', label: 'Schengen', flag: '🇪🇺' },
+                      { id: 'Diğer', label: 'Diğer', flag: '🌍' },
+                    ];
+                    return (
+                      <>
+                        {groups.map(g => (
+                          <button key={g.id} onClick={() => setApptCountryFilter(g.id)}
+                            className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 ${
+                              apptCountryFilter === g.id
+                                ? 'bg-brand-500 text-white shadow-sm shadow-brand-500/20'
+                                : 'bg-slate-50 text-slate-600 border border-slate-100 hover:bg-brand-50 hover:text-brand-600 hover:border-brand-200'
+                            }`}>
+                            {g.flag && <span className="mr-1.5">{g.flag}</span>}{g.label}
+                          </button>
+                        ))}
+
+                        {/* Schengen alt-ülkeleri — sadece Schengen seçiliyken göster */}
+                        {apptCountryFilter === 'Schengen' && (
+                          <div className="w-full flex flex-wrap gap-1.5 mt-1 pt-2 border-t border-slate-100">
+                            <button
+                              onClick={() => setApptCountryFilter('Schengen')}
+                              className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-brand-50 text-brand-600 border border-brand-100">
+                              Tüm Schengen
+                            </button>
+                            {SCHENGEN_COUNTRIES.map(c => {
+                              const flags: Record<string,string> = {'Almanya':'🇩🇪','Fransa':'🇫🇷','İtalya':'🇮🇹','İspanya':'🇪🇸','Yunanistan':'🇬🇷','Portekiz':'🇵🇹','Hollanda':'🇳🇱','Avusturya':'🇦🇹','Polonya':'🇵🇱','Macaristan':'🇭🇺','Belçika':'🇧🇪','Danimarka':'🇩🇰','İsveç':'🇸🇪','Norveç':'🇳🇴','İsviçre':'🇨🇭'};
+                              return (
+                                <button key={c} onClick={() => setApptCountryFilter(c)}
+                                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                                    apptCountryFilter === c
+                                      ? 'bg-brand-500 text-white shadow-sm'
+                                      : 'bg-white text-slate-600 border border-slate-100 hover:border-brand-200 hover:text-brand-600'
+                                  }`}>
+                                  {flags[c] || ''} {c}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
+
+                        <div className="h-6 w-px bg-slate-200 mx-1 hidden sm:block" />
+                        <button
+                          onClick={() => setApptShowAvailableOnly(v => !v)}
+                          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 border ${
+                            apptShowAvailableOnly
+                              ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                              : 'bg-white text-slate-500 border-slate-100 hover:border-emerald-200 hover:text-emerald-600'
+                          }`}
+                        >
+                          <span className={`w-2.5 h-2.5 rounded-full ${apptShowAvailableOnly ? 'bg-emerald-500' : 'bg-slate-300'}`} />
+                          Müsait Olanlar
+                        </button>
+                      </>
+                    );
+                  })()}
                 </div>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-6 space-y-5">
-                {/* Uyarı: bekleme süreleri tahmini */}
-                <div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-700">
-                  <AlertTriangle className="w-3.5 h-3.5 mt-0.5 shrink-0 text-amber-500" />
-                  <span>Bekleme süreleri <strong>tahminidir</strong> (Nisan 2026 verileri). Gerçek süre mevsim ve yoğunluğa göre değişir — konsolosluk sitesini kontrol edin.</span>
+              {/* ── İçerik ── */}
+              <div className="flex-1 overflow-y-auto px-6 sm:px-8 py-6 space-y-6">
+                {/* Uyarı */}
+                <div className="flex items-start gap-3 p-4 bg-amber-50 border border-amber-100 rounded-2xl">
+                  <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0 text-amber-500" />
+                  <span className="text-sm text-amber-700 leading-relaxed">
+                    Bekleme süreleri <strong>tahminidir</strong> (Nisan 2026). Gerçek süre mevsim ve yoğunluğa göre değişir.
+                  </span>
                 </div>
 
-                {/* İstatistik banner */}
-                <div className="grid grid-cols-3 gap-3">
+                {/* İstatistikler */}
+                <div className="grid grid-cols-3 gap-4">
                   {[
-                    { label:'Takip Edilen', value:`${APPOINTMENT_TARGETS.length} Merkez` },
-                    { label:'Müsait Şu An', value:`${APPOINTMENT_TARGETS.filter(t=>t.status==='müsait').length} Slot`, color:'text-emerald-600' },
-                    { label:'Maks. Tahmini Bekleme', value:`~${Math.max(...APPOINTMENT_TARGETS.map(t=>t.avgWaitDays))} gün`, color:'text-rose-600' },
+                    { label:'Takip Edilen', value:`${APPOINTMENT_TARGETS.length}`, unit:'Merkez', color:'text-slate-800', bg:'bg-slate-50' },
+                    { label:'Müsait Şu An', value:`${APPOINTMENT_TARGETS.filter(t=>t.status==='müsait').length}`, unit:'Slot', color:'text-emerald-600', bg:'bg-emerald-50/60' },
+                    { label:'Maks. Bekleme', value:`~${Math.max(...APPOINTMENT_TARGETS.map(t=>t.avgWaitDays))}`, unit:'Gün', color:'text-rose-500', bg:'bg-rose-50/60' },
                   ].map(s => (
-                    <div key={s.label} className="p-3 bg-slate-50 rounded-2xl text-center">
-                      <div className={`text-lg font-bold ${s.color ?? 'text-slate-900'}`}>{s.value}</div>
-                      <div className="text-[10px] font-bold text-slate-400">{s.label}</div>
+                    <div key={s.label} className={`p-4 ${s.bg} rounded-2xl text-center border border-slate-100/60`}>
+                      <div className={`text-2xl font-bold ${s.color}`}>{s.value}</div>
+                      <div className="text-[11px] text-slate-500 font-medium mt-0.5">{s.unit}</div>
+                      <div className="text-[10px] text-slate-400 mt-1">{s.label}</div>
                     </div>
                   ))}
                 </div>
 
-                {/* Konsolosluk listesi */}
+                {/* ── Konsolosluk listesi ── */}
                 <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <h4 className="font-bold text-slate-900 text-sm">Takip etmek istediğin merkezleri seç</h4>
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="font-bold text-slate-900 text-base">Merkezleri seçin</h4>
                     {apptSelected.length > 0 && (
-                      <span className="text-xs font-bold text-brand-600">{apptSelected.length} seçildi</span>
+                      <span className="text-sm font-bold text-brand-600 bg-brand-50 px-3 py-1 rounded-full">{apptSelected.length} seçildi</span>
                     )}
                   </div>
                   {apptShowAvailableOnly && (
-                    <div className="flex items-center gap-2 p-2.5 bg-emerald-50 border border-emerald-200 rounded-xl mb-3 text-xs text-emerald-700 font-semibold">
-                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    <div className="flex items-center gap-2.5 p-3 bg-emerald-50 border border-emerald-100 rounded-xl mb-4 text-sm text-emerald-700 font-medium">
+                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
                       Yalnızca müsait merkezler gösteriliyor
                     </div>
                   )}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    {APPOINTMENT_TARGETS
-                      .filter(t =>
-                        (apptCountryFilter === 'Tümü' || t.country === apptCountryFilter) &&
-                        (!apptShowAvailableOnly || t.status === 'müsait')
-                      )
-                      .map(t => {
-                        const isSelected = apptSelected.includes(t.id);
-                        const isMüsait = t.status === 'müsait';
-                        const trendIcon = t.trend === 'artıyor' ? '↑' : t.trend === 'azalıyor' ? '↓' : '→';
-                        const trendColor = t.trend === 'artıyor' ? 'text-rose-500' : t.trend === 'azalıyor' ? 'text-emerald-500' : 'text-slate-400';
-                        const centerBadgeColor = t.centerType === 'VFS' ? 'bg-blue-50 text-blue-600' : t.centerType === 'TLS' ? 'bg-violet-50 text-violet-600' : 'bg-amber-50 text-amber-600';
-                        const checkedDate = new Date(t.lastChecked).toLocaleDateString('tr-TR', { day:'numeric', month:'short' });
-                        return (
-                          <button key={t.id}
-                            onClick={() => setApptSelected(p => isSelected ? p.filter(x=>x!==t.id) : [...p, t.id])}
-                            className={`p-4 rounded-2xl border-2 text-left transition-all ${isSelected ? 'border-brand-500 bg-brand-50' : isMüsait ? 'border-emerald-200 hover:border-emerald-300 bg-white' : 'border-slate-200 hover:border-slate-300 bg-white'}`}>
-                            {/* Satır 1: bayrak + ülke + durum */}
-                            <div className="flex items-center justify-between mb-2">
-                              <div className="flex items-center gap-2">
-                                <span className="text-xl">{t.flag}</span>
-                                <div>
-                                  <div className="font-bold text-slate-900 text-sm">{t.country}</div>
-                                  <div className="text-xs text-slate-500">{t.city} — {t.visaType}</div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {(() => {
+                      const SCHENGEN_LIST = ['Almanya','Fransa','İtalya','İspanya','Yunanistan','Portekiz','Hollanda','Avusturya','Polonya','Macaristan','Belçika','Danimarka','İsveç','Norveç','İsviçre'];
+                      const NON_SCHENGEN_NON_MAJOR = ['Kanada'];
+                      return APPOINTMENT_TARGETS
+                        .filter(t => {
+                          if (apptShowAvailableOnly && t.status !== 'müsait') return false;
+                          if (apptCountryFilter === 'Tümü') return true;
+                          if (apptCountryFilter === 'Schengen') return SCHENGEN_LIST.includes(t.country);
+                          if (apptCountryFilter === 'Diğer') return NON_SCHENGEN_NON_MAJOR.includes(t.country);
+                          return t.country === apptCountryFilter;
+                        })
+                        .map(t => {
+                          const isSelected = apptSelected.includes(t.id);
+                          const isMüsait = t.status === 'müsait';
+                          const trendIcon = t.trend === 'artıyor' ? '↑' : t.trend === 'azalıyor' ? '↓' : '→';
+                          const trendColor = t.trend === 'artıyor' ? 'text-rose-500' : t.trend === 'azalıyor' ? 'text-emerald-500' : 'text-slate-400';
+                          const centerBadgeColor = t.centerType === 'VFS' ? 'bg-blue-50 text-blue-600 border-blue-100' : t.centerType === 'TLS' ? 'bg-violet-50 text-violet-600 border-violet-100' : 'bg-amber-50 text-amber-600 border-amber-100';
+                          return (
+                            <button key={t.id}
+                              onClick={() => setApptSelected(p => isSelected ? p.filter(x=>x!==t.id) : [...p, t.id])}
+                              className={`p-5 rounded-2xl border-2 text-left transition-all duration-200 ${
+                                isSelected
+                                  ? 'border-brand-400 bg-brand-50/50 shadow-sm shadow-brand-500/5'
+                                  : isMüsait
+                                  ? 'border-emerald-100 hover:border-emerald-300 bg-white hover:shadow-md'
+                                  : 'border-slate-100 hover:border-slate-200 bg-white hover:shadow-md'
+                              }`}>
+                              {/* Satır 1: bayrak + ülke + durum */}
+                              <div className="flex items-center justify-between mb-3">
+                                <div className="flex items-center gap-3">
+                                  <span className="text-2xl">{t.flag}</span>
+                                  <div>
+                                    <div className="font-bold text-slate-800 text-[15px]">{t.country}</div>
+                                    <div className="text-sm text-slate-400">{t.city} · {t.visaType}</div>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <span className={`text-[10px] font-bold px-2 py-1 rounded-lg border ${centerBadgeColor}`}>
+                                    {t.centerType}
+                                  </span>
+                                  {isSelected && <CheckCircle2 className="w-5 h-5 text-brand-500"/>}
                                 </div>
                               </div>
-                              <div className="flex items-center gap-1.5">
-                                <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md ${centerBadgeColor}`}>
-                                  {t.centerType}
-                                </span>
-                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${isMüsait ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>
+
+                              {/* Satır 2: durum + bekleme + trend */}
+                              <div className="flex items-center gap-3 flex-wrap">
+                                <span className={`text-xs font-bold px-3 py-1 rounded-full ${isMüsait ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-rose-50 text-rose-600 border border-rose-100'}`}>
                                   {isMüsait ? '● Müsait' : '○ Dolu'}
                                 </span>
-                                {isSelected && <CheckCircle2 className="w-4 h-4 text-brand-500"/>}
+                                <span className="text-sm text-slate-500">
+                                  Bekleme: <strong className={`${t.avgWaitDays > 60 ? 'text-rose-600' : t.avgWaitDays > 20 ? 'text-amber-600' : 'text-emerald-600'}`}>{t.avgWaitDays} gün</strong>
+                                  <span className={`ml-1 font-bold ${trendColor}`}>{trendIcon}</span>
+                                </span>
                               </div>
-                            </div>
-                            {/* Satır 2: bekleme + trend + son kontrol */}
-                            <div className="flex items-center justify-between">
-                              <span className="text-xs text-slate-400">
-                                Ort. bekleme: <strong className={`${t.avgWaitDays > 60 ? 'text-rose-600' : t.avgWaitDays > 20 ? 'text-amber-600' : 'text-emerald-600'}`}>{t.avgWaitDays} gün</strong>
-                                <span className={`ml-1 font-bold text-[11px] ${trendColor}`}>{trendIcon}</span>
-                              </span>
-                              <span className="text-[10px] text-slate-300">kontrol: {checkedDate}</span>
-                            </div>
-                            {/* Satır 3: notlar (varsa) */}
-                            {t.notes && (
-                              <div className="mt-1.5 text-[10px] text-amber-600 bg-amber-50 rounded-lg px-2 py-1 leading-tight">
-                                ⚠ {t.notes}
-                              </div>
-                            )}
-                            {/* Satır 4: VFS linki */}
-                            {isMüsait && (
-                              <div className="mt-2">
-                                <a href={t.vfsUrl} target="_blank" rel="noopener noreferrer"
-                                  onClick={e => e.stopPropagation()}
-                                  className="text-[10px] font-bold text-brand-600 hover:text-brand-800 flex items-center gap-0.5">
-                                  {t.centerType === 'TLS' ? 'TLS' : t.centerType === 'Konsolosluk' ? 'Elçilik' : 'VFS'}'e Git →
-                                </a>
-                              </div>
-                            )}
-                          </button>
-                        );
-                      })}
-                    {/* Boş state: filtre sonucu yok */}
-                    {APPOINTMENT_TARGETS.filter(t =>
-                      (apptCountryFilter === 'Tümü' || t.country === apptCountryFilter) &&
-                      (!apptShowAvailableOnly || t.status === 'müsait')
-                    ).length === 0 && (
-                      <div className="col-span-2 text-center py-8 text-sm text-slate-500">
-                        <div className="text-2xl mb-2">😔</div>
-                        {apptShowAvailableOnly
-                          ? 'Seçili ülkede şu an müsait slot yok. Takip için e-postanı bırak.'
-                          : 'Bu ülke için merkez bulunamadı.'}
+
+                              {/* Satır 3: notlar (varsa) */}
+                              {t.notes && (
+                                <div className="mt-3 text-xs text-amber-700 bg-amber-50 border border-amber-100 rounded-xl px-3 py-2 leading-relaxed">
+                                  {t.notes}
+                                </div>
+                              )}
+                              {/* Satır 4: VFS linki */}
+                              {isMüsait && (
+                                <div className="mt-3">
+                                  <a href={t.vfsUrl} target="_blank" rel="noopener noreferrer"
+                                    onClick={e => e.stopPropagation()}
+                                    className="text-sm font-semibold text-brand-600 hover:text-brand-700 flex items-center gap-1 transition-colors">
+                                    {t.centerType === 'TLS' ? 'TLS' : t.centerType === 'Konsolosluk' ? 'Elçilik' : 'VFS'} sitesine git
+                                    <ChevronRight className="w-4 h-4"/>
+                                  </a>
+                                </div>
+                              )}
+                            </button>
+                          );
+                        });
+                    })()}
+                    {/* Boş state */}
+                    {APPOINTMENT_TARGETS.filter(t => {
+                      const SCHENGEN_LIST = ['Almanya','Fransa','İtalya','İspanya','Yunanistan','Portekiz','Hollanda','Avusturya','Polonya','Macaristan','Belçika','Danimarka','İsveç','Norveç','İsviçre'];
+                      const NON_SCHENGEN_NON_MAJOR = ['Kanada'];
+                      if (apptShowAvailableOnly && t.status !== 'müsait') return false;
+                      if (apptCountryFilter === 'Tümü') return true;
+                      if (apptCountryFilter === 'Schengen') return SCHENGEN_LIST.includes(t.country);
+                      if (apptCountryFilter === 'Diğer') return NON_SCHENGEN_NON_MAJOR.includes(t.country);
+                      return t.country === apptCountryFilter;
+                    }).length === 0 && (
+                      <div className="col-span-2 text-center py-12 text-slate-500">
+                        <div className="text-3xl mb-3">😔</div>
+                        <p className="text-base font-medium">
+                          {apptShowAvailableOnly
+                            ? 'Seçili ülkede şu an müsait slot yok.'
+                            : 'Bu ülke için merkez bulunamadı.'}
+                        </p>
                         {apptShowAvailableOnly && (
                           <button onClick={() => setApptShowAvailableOnly(false)}
-                            className="block mx-auto mt-2 text-xs text-brand-600 font-bold hover:text-brand-800">
-                            Tüm merkezleri göster →
+                            className="mt-3 text-sm text-brand-600 font-bold hover:text-brand-700">
+                            Tüm merkezleri göster
                           </button>
                         )}
                       </div>
@@ -5801,48 +5858,47 @@ Signature: _______________     Date: ${today}`;
                   </div>
                 </div>
 
-                {/* Bildirim aboneliği */}
+                {/* ── Bildirim aboneliği ── */}
                 {apptSubStatus === 'success' ? (
-                  <div className="p-5 bg-emerald-50 border border-emerald-200 rounded-2xl text-center">
+                  <div className="p-6 bg-emerald-50 border border-emerald-100 rounded-2xl text-center">
                     <div className="text-3xl mb-2">✅</div>
-                    <div className="font-bold text-emerald-800">Abonelik Oluşturuldu!</div>
+                    <div className="font-bold text-emerald-800 text-lg">Abonelik Oluşturuldu!</div>
                     <div className="text-sm text-emerald-700 mt-1">
-                      Seçtiğin merkezlerde slot açıldığında <strong>{apptSubEmail}</strong> adresine bildirileceğiz.
+                      Seçtiğin merkezlerde slot açıldığında <strong>{apptSubEmail}</strong> adresine bildireceğiz.
                     </div>
                     <button onClick={() => { setApptSubStatus('idle'); setApptSubEmail(''); setApptSelected([]); }}
-                      className="mt-3 text-xs text-emerald-600 font-bold hover:text-emerald-800">
+                      className="mt-4 text-sm text-emerald-600 font-bold hover:text-emerald-700">
                       Yeni abonelik oluştur
                     </button>
                   </div>
                 ) : (
-                  <div className="p-5 bg-slate-50 border border-slate-200 rounded-2xl space-y-3">
-                    <h4 className="font-bold text-slate-900 text-sm flex items-center gap-2">
-                      <Bell className="w-4 h-4 text-brand-600"/> Slot açılınca haber ver
+                  <div className="p-6 bg-slate-50/80 border border-slate-100 rounded-2xl space-y-4">
+                    <h4 className="font-bold text-slate-900 text-base flex items-center gap-2.5">
+                      <Bell className="w-5 h-5 text-brand-500"/> Slot açılınca haber ver
                     </h4>
-                    <div className="flex gap-2">
+                    <div className="flex gap-3">
                       <input
                         type="email"
                         value={apptSubEmail}
                         onChange={e => setApptSubEmail(e.target.value)}
                         placeholder="e-posta adresiniz"
-                        className="flex-1 px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+                        className="flex-1 px-4 py-3 border-2 border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-4 focus:ring-brand-100 focus:border-brand-400 transition-all"
                       />
                       <button
                         onClick={handleApptSubscribe}
                         disabled={!apptSubEmail || apptSelected.length === 0 || apptSubStatus === 'loading'}
-                        className="px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-xl text-sm disabled:opacity-40 transition-colors">
-                        {apptSubStatus === 'loading' ? '...' : 'Bildir'}
+                        className="btn-primary px-6 py-3 text-sm disabled:opacity-40">
+                        {apptSubStatus === 'loading' ? '...' : 'Takip Et'}
                       </button>
                     </div>
                     {apptSelected.length === 0 && (
-                      <p className="text-xs text-slate-400">Önce yukarıdan konsolosluk seç.</p>
+                      <p className="text-sm text-slate-400">Yukarıdan en az bir merkez seçin.</p>
                     )}
                     {apptSubStatus === 'error' && (
-                      <p className="text-xs text-rose-600">Bir hata oluştu. Lütfen tekrar deneyin.</p>
+                      <p className="text-sm text-rose-600 font-medium">Bir hata oluştu. Lütfen tekrar deneyin.</p>
                     )}
-                    <p className="text-[10px] text-slate-400 leading-relaxed">
+                    <p className="text-xs text-slate-400 leading-relaxed">
                       E-postanız yalnızca bildirim amaçlı kullanılır. İstediğiniz zaman aboneliğinizi iptal edebilirsiniz.
-                      Durum bilgisi periyodik olarak güncellenir; anlık slot garantisi verilmez.
                     </p>
                   </div>
                 )}
