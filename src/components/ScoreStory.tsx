@@ -5,6 +5,7 @@
 
 import { useMemo } from 'react';
 import type { ProfileData } from '../types';
+import { resolveSegment } from '../scoring/algorithms';
 
 interface Props {
   profile: ProfileData;
@@ -43,7 +44,9 @@ function getSections(p: ProfileData, simValue = 0): SectionScore[] {
   // Segment-aware: öğrenci/sponsor/55+ emekli için SGK eksikliği ceza değil.
   let pro = 0;
   const proMax = 22;
-  const expectsEmployment = !p.isStudent && !p.hasSponsor && p.applicantAge < 55;
+  // core.ts:54 ile hizalı — segment bazlı (unemployed working-age için -5 ceza uygulanmaz)
+  const segment = resolveSegment(p);
+  const expectsEmployment = segment === 'employed' || segment === 'public_sector' || segment === 'self_employed';
   if (p.hasSgkJob) {
     pro += 12;
     if (p.yearsInCurrentJob >= 3) pro += 5;

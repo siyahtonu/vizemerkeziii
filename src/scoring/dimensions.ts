@@ -3,7 +3,7 @@
 // Her boyut bağımsız 0-100 değer döndürür
 // ============================================================
 import type { ProfileData } from '../types';
-import { temporalDecay } from './algorithms';
+import { temporalDecay, resolveSegment } from './algorithms';
 
 export interface DimensionScores {
   financial:    number; // Finansal güç
@@ -41,7 +41,9 @@ export function getFinancialScore(data: ProfileData): number {
 const PRO_MAX = 32;
 export function getProfessionalScore(data: ProfileData): number {
   let pts = 0;
-  const expectsEmployment = !data.isStudent && !data.hasSponsor && data.applicantAge < 55;
+  // core.ts:54 ile birebir aynı: segment bazlı expectsEmployment
+  const segment = resolveSegment(data);
+  const expectsEmployment = segment === 'employed' || segment === 'public_sector' || segment === 'self_employed';
 
   if (data.hasSgkJob) {
     pts += 12;
