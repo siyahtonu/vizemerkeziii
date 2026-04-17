@@ -5,7 +5,7 @@
 
 import type { ProfileData } from '../types';
 import { TR_REJECTION_RATES } from './matrices';
-import { temporalDecay, getReturnTieMultiplier, getProfileCountryFactor, getConsulateAdjustment } from './algorithms';
+import { temporalDecay, getReturnTieMultiplier, getProfileCountryFactor, getConsulateAdjustment, resolveSegment } from './algorithms';
 import { getSeasonalMultiplier } from './seasonal';
 
 // ============================================================
@@ -48,17 +48,25 @@ export const calculateRawScore = (data: ProfileData, simValue: number = 0): numb
 
   // ─────────────────────────────────────────────────────────
   // BÖLÜM 3: MESLEKİ BAĞLILIK (Maks 22 puan)
+  // v3.4: Segment-aware — emekli/öğrenci/sponsor için SGK yokluğu beklenen
   // ─────────────────────────────────────────────────────────
+  const segment = resolveSegment(data);
+  const expectsEmployment = segment === 'employed' || segment === 'public_sector' || segment === 'self_employed';
+
   if (data.hasSgkJob) score += 12;
-  else score -= 5; // v2.5: SGK yok = açık negatif sinyal (#3 ret sebebi)
+  else if (expectsEmployment) score -= 5; // çalışan profil için SGK yok = #3 ret sebebi
+  // emekli/öğrenci/sponsor/işsiz: SGK yokluğu beklenir, ceza yok
 
   if (data.isPublicSectorEmployee) score += 6;
   if (data.sgkEmployerLetterWithReturn) score += 5;
 
-  if (data.yearsInCurrentJob >= 3) score += 5;
-  else if (data.yearsInCurrentJob === 2) score += 4;
-  else if (data.yearsInCurrentJob === 1) score += 2;
-  else score -= 4;
+  // Kıdem değerlendirmesi: sadece SGK işi olan profiller için anlamlı
+  if (data.hasSgkJob) {
+    if (data.yearsInCurrentJob >= 3) score += 5;
+    else if (data.yearsInCurrentJob === 2) score += 4;
+    else if (data.yearsInCurrentJob === 1) score += 2;
+    else score -= 4; // SGK var ama kıdem 0 = yeni iş riski
+  }
 
   if (data.sgkAddressMatchesDs160) score += 2;
   if (data.hasBarcodeSgk) score += 2;

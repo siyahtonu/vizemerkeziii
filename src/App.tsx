@@ -513,6 +513,18 @@ export default function App() {
     try { localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(profile)); } catch { /* noop */ }
   }, [profile]);
 
+  // v3.4: Risk Tarayıcı modalı açıldığında checkbox'ları profile'dan init et
+  // (default true/false hardcode değerlerinin profile'ı bozmasını önler)
+  useEffect(() => {
+    if (isRedFlagOpen) {
+      setRfHasSgk(profile.hasSgkJob);
+      setRfHasInsurance(profile.hasHealthInsurance || profile.hasTravelInsurance);
+      setRfHasReturn(profile.hasReturnTicket);
+      setRfHasProperty(profile.tieCategories?.property ?? false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isRedFlagOpen]);
+
   const [isOcrScanning, setIsOcrScanning] = useState(false);
   const [ocrResults, setOcrResults] = useState<{file: string; status: string; ok: boolean; warn?: boolean}[]>([]);
   const [simulatorValue, setSimulatorValue] = useState(0); // For dynamic balance simulation
@@ -621,12 +633,16 @@ export default function App() {
     else if (userDailyEst >= country.dailyBudgetReq * 0.7) ms += 5;
 
     // 4. SGK / İstihdam faktörü (0–10 puan)
+    // v3.4: Segment-aware — emekli/öğrenci/sponsor için SGK yokluğu beklenen
     const employmentHeavy = ['Almanya', 'Avusturya', 'Hollanda', 'İsveç', 'Norveç', 'Danimarka', 'Finlandiya'];
+    const isNonEmploymentSegment = profile.isStudent || profile.hasSponsor ||
+                                   (profile.applicantAge >= 55 && !profile.hasSgkJob);
     if (profile.hasSgkJob) {
       ms += employmentHeavy.includes(country.name) ? 10 : 6;
-    } else {
+    } else if (!isNonEmploymentSegment) {
       ms += employmentHeavy.includes(country.name) ? -5 : 0;
     }
+    // Emekli/öğrenci/sponsor: bu eksen nötr (0 puan)
 
     // 5. Vize geçmişi bonusu (0–10 puan)
     if (profile.hasHighValueVisa) ms += 10;
@@ -680,7 +696,9 @@ export default function App() {
     } else if (profile.hasSuspiciousLargeDeposit || profile.unusualLargeTransactions) {
       persona = "KRİTİK: Şüpheli Finansal Profil";
       personaDestiny = "Emanet para şüphesi nedeniyle ret riski %85+. Başvurudan önce kaynağı belgele veya 2 ay bekle. Bu profille kesinlikle başvurma.";
-    } else if (!profile.hasSgkJob && !profile.isMarried && activeTies < 2 && profile.yearsInCurrentJob < 1) {
+    } else if (!profile.hasSgkJob && !profile.isMarried && activeTies < 2 && profile.yearsInCurrentJob < 1
+               && !profile.isStudent && !profile.hasSponsor && profile.applicantAge < 55) {
+      // v3.4: emekli/öğrenci/sponsor bu kategoriye girmesin
       persona = "Yüksek Risk: Göç Şüpheli Profil";
       personaDestiny = "Konsolosluk memurunun ilk baktığı 'göç riski' profili. Tek çözüm: çok güçlü finansal + en az 2 ek bağ kanıtı.";
     } else if (!profile.hasSgkJob && profile.isMarried && profile.hasAssets) {
@@ -751,7 +769,7 @@ export default function App() {
       timeline = "⚠ UK 28 gün kuralı: Paranın hesapta en az 28 gün kalması şart. Tarih planını buna göre yap.";
     } else if (profile.targetCountry === 'İngiltere' && !profile.has6MonthStatements) {
       timeline = "⚠ UK için 6 aylık banka dökümü zorunlu. Döküm hazırlanana kadar başvurma.";
-    } else if (profile.yearsInCurrentJob === 0) {
+    } else if (profile.hasSgkJob && profile.yearsInCurrentJob === 0) {
       timeline = "⚠ Yeni iş: İşe girişten itibaren en az 3 ay beklemek başarı şansını ciddi artırır.";
     } else if (month >= 4 && month <= 6) {
       timeline = "ℹ Yaz sezonu yoğunluğu (Mayıs-Temmuz) yaklaşıyor. Randevuları 3 hafta önceden al.";
@@ -1104,16 +1122,18 @@ export default function App() {
     const items: { gain: string; title: string; desc: string; toolLabel: string; toolFn: () => void; doneFn?: () => void; priority: number }[] = [];
 
     if (!profile.bankRegularity || !profile.incomeSourceClear) {
-      items.push({ gain: '+9', title: 'Banka Düzenliliğini Kanıtla', desc: 'Maaş/kira girişleri + 3 aylık ektre — en yüksek puan kazanımı.', toolLabel: 'AI Banka Analizi', toolFn: () => { setStep('dashboard'); setTimeout(() => { setIsAiBankOpen(true); }, 200); }, doneFn: () => setProfile(prev => ({ ...prev, bankRegularity: true, incomeSourceClear: true, hasSteadyIncome: true, bankSufficientBalance: true })), priority: 1 });
+      items.push({ gain: '+9', title: 'Banka Düzenliliğini Kanıtla', desc: 'Maaş/kira girişleri + 3 aylık ektre — en yüksek puan kazanımı.', toolLabel: 'AI Banka Analizi', toolFn: () => { setStep('dashboard'); setTimeout(() => { setIsAiBankOpen(true); }, 200); }, doneFn: () => setProfile(prev => ({ ...prev, bankRegularity: true })), priority: 1 });
     }
-    if (!profile.hasSgkJob) {
-      items.push({ gain: '+8', title: 'SGK / İstihdam Belgesi Ekle', desc: 'E-Devlet\'ten barkodlu SGK dökümü — en güçlü geri dönüş kanıtı.', toolLabel: 'Evrak Rehberi', toolFn: () => { setStep('dashboard'); setTimeout(() => setIsDocumentListOpen(true), 200); }, doneFn: () => setProfile(prev => ({ ...prev, hasSgkJob: true, hasBarcodeSgk: true, sgkEmployerLetterWithReturn: true })), priority: 2 });
+    // v3.4: SGK action item sadece çalışan segment için göster (emekli/öğrenci/sponsor için anlamsız)
+    if (!profile.hasSgkJob && !profile.isStudent && !profile.hasSponsor && !(profile.applicantAge >= 55)) {
+      items.push({ gain: '+8', title: 'SGK / İstihdam Belgesi Ekle', desc: 'E-Devlet\'ten barkodlu SGK dökümü — en güçlü geri dönüş kanıtı.', toolLabel: 'Evrak Rehberi', toolFn: () => { setStep('dashboard'); setTimeout(() => setIsDocumentListOpen(true), 200); }, doneFn: () => setProfile(prev => ({ ...prev, hasSgkJob: true })), priority: 2 });
     }
     if (!profile.hasHighValueVisa && !profile.hasOtherVisa) {
-      items.push({ gain: '+6', title: 'Doğru Ülkeyi Seç', desc: 'İlk başvuruda red oranı düşük ülkelerden başla — profil uyumu hesaplandı.', toolLabel: 'Ülke Kıyaslayıcı', toolFn: () => { setStep('dashboard'); setTimeout(() => openTool('comparator', setIsSchengenComparatorOpen), 200); }, doneFn: () => setProfile(prev => ({ ...prev, hasOtherVisa: true })), priority: 3 });
+      // Ülke seçmek vize geçmişi vermez — toolu açar, doneFn yok (kullanıcı vize geçmişini kendi kriterlerden işaretler)
+      items.push({ gain: '+6', title: 'Doğru Ülkeyi Seç', desc: 'İlk başvuruda red oranı düşük ülkelerden başla — profil uyumu hesaplandı.', toolLabel: 'Ülke Kıyaslayıcı', toolFn: () => { setStep('dashboard'); setTimeout(() => openTool('comparator', setIsSchengenComparatorOpen), 200); }, priority: 3 });
     }
     if (!profile.hasHealthInsurance && !profile.hasTravelInsurance) {
-      items.push({ gain: '+4', title: 'Seyahat Sigortası Al', desc: '€30.000 teminatlı sigorta olmadan başvuru kabul edilmez.', toolLabel: 'Evrak Sihirbazı', toolFn: () => { setStep('dashboard'); setTimeout(() => setIsDocumentListOpen(true), 200); }, doneFn: () => setProfile(prev => ({ ...prev, hasTravelInsurance: true, hasHealthInsurance: true })), priority: 4 });
+      items.push({ gain: '+4', title: 'Seyahat Sigortası Al', desc: '€30.000 teminatlı sigorta olmadan başvuru kabul edilmez.', toolLabel: 'Evrak Sihirbazı', toolFn: () => { setStep('dashboard'); setTimeout(() => setIsDocumentListOpen(true), 200); }, doneFn: () => setProfile(prev => ({ ...prev, hasTravelInsurance: true })), priority: 4 });
     }
     if (!profile.useOurTemplate) {
       items.push({ gain: '+5', title: 'Profesyonel Niyet Mektubu Yaz', desc: '2026 konsolosluk standartlarına uygun resmi şablon kullan.', toolLabel: 'Belge Oluşturucu', toolFn: () => setStep('letter'), doneFn: () => setProfile(prev => ({ ...prev, useOurTemplate: true })), priority: 5 });
@@ -1355,52 +1375,37 @@ export default function App() {
     setRedFlagResult(flags);
     setRfAnalyzed(true);
 
-    // ── Sonuçları profile'a yansıt → currentScore otomatik güncellenir ──
-    const criticalFlags = flags.filter(f => f.severity === 'critical');
+    // v3.4: Sonuçları profile'a NON-DESTRUCTIVE yansıt — kullanıcının mevcut
+    // işaretlerini ezme, sadece pozitif sinyalleri ekle. Kullanıcı eksik
+    // bilgiyi başka yerde manuel düzeltebilir.
     setProfile(prev => {
       const updates: Partial<ProfileData> = {};
 
-      // Banka bakiyesi yetersizse
-      const balanceFlag = flags[0]; // ilk flag her zaman bakiye
-      if (balanceFlag?.severity === 'critical' && balance > 0) {
-        updates.bankSufficientBalance = false;
-        updates.dailyBudgetSufficient = false;
-      } else if (balanceFlag?.severity === 'ok') {
+      // Banka bakiyesi: sadece OK ise true yaz
+      const balanceFlag = flags[0];
+      if (balanceFlag?.severity === 'ok') {
         updates.bankSufficientBalance = true;
       }
 
-      // Günlük bütçe (Schengen €50 min)
-      if (days > 0) {
-        if (dailyEur < 50) {
-          updates.dailyBudgetSufficient = false;
-        } else if (dailyEur >= 80) {
-          updates.dailyBudgetSufficient = true;
-        }
+      // Günlük bütçe: sadece yeterliyse true yaz
+      if (days > 0 && dailyEur >= 80) {
+        updates.dailyBudgetSufficient = true;
       }
 
-      // Seyahat sigortası
-      if (!rfHasInsurance || !rfInsuranceCoversAll) {
-        updates.hasTravelInsurance = false;
-        updates.hasHealthInsurance = false;
-      } else {
+      // Sigorta: sadece eksiksizse true yaz (kullanıcı işaretlediyse)
+      if (rfHasInsurance && rfInsuranceCoversAll) {
         updates.hasTravelInsurance = true;
         updates.hasHealthInsurance = true;
       }
 
-      // Dönüş bileti
-      if (!rfHasReturn) {
-        updates.hasReturnTicket = false;
-        updates.paidReservations = false;
-      } else {
+      // Dönüş bileti: sadece varsa true yaz
+      if (rfHasReturn) {
         updates.hasReturnTicket = true;
         updates.paidReservations = true;
       }
 
-      // SGK / istihdam
-      if (!rfHasSgk) {
-        updates.hasSgkJob = false;
-        updates.tieCategories = { ...prev.tieCategories, employment: false };
-      } else {
+      // SGK: sadece kullanıcı işaretlediyse true yaz (false ezme — emekli/öğrenci profilini bozar)
+      if (rfHasSgk) {
         updates.hasSgkJob = true;
         updates.tieCategories = { ...prev.tieCategories, employment: true };
       }
@@ -1409,19 +1414,6 @@ export default function App() {
       if (rfHasProperty) {
         updates.tieCategories = { ...(updates.tieCategories ?? prev.tieCategories), property: true };
         updates.hasAssets = true;
-      }
-
-      // İlk çıkış + bağ yok → çok riskli
-      if (rfFirstTrip && !rfHasProperty && !rfHasSgk) {
-        updates.strongFamilyTies = false;
-        updates.multiTieStrength = Math.max(0, (prev.multiTieStrength ?? 2) - 1);
-      }
-
-      // Kritik flag sayısına göre genel güven skoru
-      if (criticalFlags.length >= 3) {
-        updates.documentConsistency = false;
-      } else if (criticalFlags.length === 0) {
-        updates.documentConsistency = true;
       }
 
       return { ...prev, ...updates };
@@ -1630,9 +1622,26 @@ export default function App() {
   }, [profile]);
 
   const scoreDetails = useMemo(() => {
+    // v3.4: Segment-aware başlık ve status — emekli/öğrenci/sponsor için "Mesleki" yerine "Profil" göster
+    const isRetired = profile.applicantAge >= 55 && !profile.hasSgkJob;
+    const isStudent = profile.isStudent;
+    const isSponsorBacked = profile.hasSponsor;
+    let professionalLabel = 'Mesleki Bağlılık';
+    let professionalStatus = profile.hasSgkJob && profile.sgkEmployerLetterWithReturn;
+    if (isRetired) {
+      professionalLabel = 'Emeklilik & Varlık';
+      professionalStatus = profile.hasAssets;
+    } else if (isStudent) {
+      professionalLabel = 'Öğrencilik Kanıtı';
+      professionalStatus = profile.tieCategories?.education ?? false;
+    } else if (isSponsorBacked) {
+      professionalLabel = 'Sponsor Güvencesi';
+      professionalStatus = profile.bankSufficientBalance;
+    }
+
     const details = [
       { label: 'Finansal Güç', score: 25, status: profile.bankRegularity && profile.bankSufficientBalance },
-      { label: 'Mesleki Bağlılık', score: 20, status: profile.hasSgkJob && profile.sgkEmployerLetterWithReturn },
+      { label: professionalLabel, score: 20, status: professionalStatus },
       { label: 'Seyahat Geçmişi', score: 20, status: profile.hasHighValueVisa || profile.hasOtherVisa },
       { label: 'Sosyal Bağlar (Aile/Okul)', score: 10, status: profile.isMarried || profile.isStudent },
       { label: 'Başvuru Kalitesi & Niyet', score: 15, status: profile.useOurTemplate && profile.addressMatchSgk },
@@ -3833,7 +3842,14 @@ Signature: _______________     Date: ${today}`;
                   <div className="flex flex-wrap gap-3 mt-6">
                     {[
                       { label: "Mevcut Skor", value: `%${currentScore}`, color: currentScore >= 70 ? "bg-emerald-400/20 text-emerald-100" : "bg-rose-400/20 text-rose-100" },
-                      { label: "SGK", value: profile.hasSgkJob ? "✓ Var" : "✗ Yok", color: profile.hasSgkJob ? "bg-emerald-400/20 text-emerald-100" : "bg-rose-400/20 text-rose-100" },
+                      // v3.4: Segment-aware SGK badge — emekli/öğrenci/sponsor için "yok" kırmızı değil nötr
+                      (() => {
+                        if (profile.hasSgkJob) return { label: "SGK", value: "✓ Var", color: "bg-emerald-400/20 text-emerald-100" };
+                        if (profile.applicantAge >= 55) return { label: "Profil", value: "Emekli", color: "bg-blue-400/20 text-blue-100" };
+                        if (profile.isStudent) return { label: "Profil", value: "Öğrenci", color: "bg-blue-400/20 text-blue-100" };
+                        if (profile.hasSponsor) return { label: "Profil", value: "Sponsorlu", color: "bg-blue-400/20 text-blue-100" };
+                        return { label: "SGK", value: "✗ Yok", color: "bg-rose-400/20 text-rose-100" };
+                      })(),
                       { label: "Önceki Vize", value: profile.hasHighValueVisa ? "✓ Güçlü" : profile.hasOtherVisa ? "✓ Var" : "✗ Yok", color: (profile.hasHighValueVisa || profile.hasOtherVisa) ? "bg-emerald-400/20 text-emerald-100" : "bg-rose-400/20 text-rose-100" },
                       { label: "Sigorta", value: (profile.hasHealthInsurance || profile.hasTravelInsurance) ? "✓ Var" : "✗ Yok", color: (profile.hasHealthInsurance || profile.hasTravelInsurance) ? "bg-emerald-400/20 text-emerald-100" : "bg-rose-400/20 text-rose-100" },
                     ].map((b, i) => (
@@ -6604,7 +6620,8 @@ Signature: _______________     Date: ${today}`;
                   const topReasons: { reason: string; pct: number }[] = [];
                   if (!profile.bankSufficientBalance || !profile.bankRegularity) topReasons.push({ reason: 'Yetersiz/düzensiz banka dökümü', pct: 43 });
                   if (!profile.useOurTemplate && !profile.purposeClear) topReasons.push({ reason: 'Zayıf niyet mektubu', pct: 31 });
-                  if (!profile.hasSgkJob && !profile.isPublicSectorEmployee) topReasons.push({ reason: 'İstihdam kanıtı eksikliği', pct: 26 });
+                  // v3.4: SGK eksikliği sadece çalışan segment için ret sebebidir (emekli/öğrenci/sponsor için beklenen)
+                  if (!profile.hasSgkJob && !profile.isPublicSectorEmployee && !profile.isStudent && !profile.hasSponsor && profile.applicantAge < 55) topReasons.push({ reason: 'İstihdam kanıtı eksikliği', pct: 26 });
                   if (!profile.hasTravelInsurance) topReasons.push({ reason: 'Seyahat sigortası yok', pct: 18 });
                   if (!profile.strongFamilyTies && !profile.hasAssets) topReasons.push({ reason: 'Zayıf geri dönüş bağı', pct: 22 });
                   const displayReasons = topReasons.slice(0, 3);

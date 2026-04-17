@@ -110,7 +110,7 @@ export interface ConsulateAdjustment {
 }
 
 /** Profil segment'ini belirler (algorithms.ts'deki mantıkla tutarlı) */
-const resolveSegment = (data: ProfileData): ProfileSegment => {
+export const resolveSegment = (data: ProfileData): ProfileSegment => {
   if (data.hasSponsor) return 'sponsor';
   if (data.isStudent) return 'student';
   if (data.isPublicSectorEmployee) return 'public_sector';
