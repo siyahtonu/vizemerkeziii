@@ -155,7 +155,13 @@ export default function App() {
   const [isUpgradeOpen, setIsUpgradeOpen] = useState(false);
   const [isAnalysisReportOpen, setIsAnalysisReportOpen] = useState(false);
   const [onboardingStep, setOnboardingStep] = useState(0);
-  const [onboardingCountry, setOnboardingCountry] = useState('Almanya');
+  const [onboardingCountry, setOnboardingCountry] = useState(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(PROFILE_STORAGE_KEY) || 'null');
+      if (saved?.targetCountry && typeof saved.targetCountry === 'string') return saved.targetCountry;
+    } catch { /* noop */ }
+    return 'Almanya';
+  });
   const [onboardingProfile, setOnboardingProfile] = useState('');
   const [isTermsOpen, setIsTermsOpen] = useState(false);
   const [isKvkkOpen, setIsKvkkOpen] = useState(false);
@@ -237,7 +243,33 @@ export default function App() {
   const [aiBankLoading, setAiBankLoading] = useState(false);
   const [aiBankResult, setAiBankResult] = useState<BankAnalysisResult | null>(null);
   const [aiBankFile, setAiBankFile] = useState<string>('');
-  const [applicantType, setApplicantType] = useState<'employer' | 'employee' | 'student' | 'self' | 'unemployed' | 'minor' | 'sponsor'>('employer');
+  const [applicantType, setApplicantType] = useState<'employer' | 'employee' | 'student' | 'self' | 'unemployed' | 'retired' | 'minor' | 'sponsor'>(() => {
+    try {
+      const saved = localStorage.getItem('vizeakil_applicant_type');
+      const valid = ['employer', 'employee', 'student', 'self', 'unemployed', 'retired', 'minor', 'sponsor'];
+      if (saved && valid.includes(saved)) return saved as 'employer' | 'employee' | 'student' | 'self' | 'unemployed' | 'retired' | 'minor' | 'sponsor';
+      // Eski profilden çıkar: saved applicantType yoksa profile.isStudent / hasSponsor'dan türet
+      const savedProfile = JSON.parse(localStorage.getItem(PROFILE_STORAGE_KEY) || 'null');
+      if (savedProfile?.hasSponsor) return 'sponsor';
+      if (savedProfile?.isStudent) return 'student';
+    } catch { /* noop */ }
+    return 'employee';
+  });
+
+  useEffect(() => {
+    try { localStorage.setItem('vizeakil_applicant_type', applicantType); } catch { /* noop */ }
+  }, [applicantType]);
+
+  // applicantType → profile segment marker senkronu.
+  // Kriter değil, saf algoritma girdisi: UI'da ayrı bir "Temel Kriter" olarak görünmez.
+  useEffect(() => {
+    setProfile(prev => {
+      const nextIsStudent = applicantType === 'student';
+      const nextHasSponsor = applicantType === 'sponsor';
+      if (prev.isStudent === nextIsStudent && prev.hasSponsor === nextHasSponsor) return prev;
+      return { ...prev, isStudent: nextIsStudent, hasSponsor: nextHasSponsor };
+    });
+  }, [applicantType]);
   const [aiBankIncome, setAiBankIncome] = useState('');
   const [aiBankBalance, setAiBankBalance] = useState('');
   const [aiBankMonths, setAiBankMonths] = useState('3');
@@ -408,7 +440,7 @@ export default function App() {
     isPublicSectorEmployee: false,
     sgkEmployerLetterWithReturn: false,
     yearsInCurrentJob: 0,
-    sgkAddressMatchesDs160: true,
+    sgkAddressMatchesDs160: false,
     hasHighValueVisa: false,
     hasOtherVisa: false,
     travelHistoryNonVisa: false,
@@ -423,7 +455,7 @@ export default function App() {
     paidReservations: false,
     addressMatchSgk: false,
     datesMatchReservations: false,
-    purposeClear: true,
+    purposeClear: false,
     hasValidPassport: false,
     passportConditionGood: false,
     passportValidityLong: false,
@@ -441,7 +473,7 @@ export default function App() {
     hasHealthInsurance: false,
     multiTieStrength: 0,
     interviewConfidence: 'medium',
-    statementMonths: 3,
+    statementMonths: 0,
     incomeSourceClear: false,
     noFakeBooking: true,
     tieCategories: {
@@ -4497,22 +4529,24 @@ Signature: _______________     Date: ${today}`;
 
                   <div className="space-y-3">
                     {[
-                      { id: 'employee',   icon: Briefcase, label: 'Çalışan',            desc: 'SGK\'lı maaşlı çalışan', color: 'from-brand-500 to-brand-600' },
-                      { id: 'employer',   icon: Building2, label: 'İşveren',            desc: 'Şirket sahibi / ortak', color: 'from-indigo-500 to-violet-600' },
-                      { id: 'student',    icon: Brain,     label: 'Öğrenci',            desc: 'Üniversite veya lise', color: 'from-sky-500 to-blue-600' },
-                      { id: 'self',       icon: Target,    label: 'Serbest Meslek',     desc: 'Freelance veya esnaf', color: 'from-emerald-500 to-teal-600' },
-                      { id: 'unemployed', icon: Home,      label: 'Çalışmıyor / Emekli', desc: 'Eş veya aile sponsorluğu', color: 'from-amber-500 to-orange-500' },
+                      { id: 'employee',   icon: Briefcase,   label: 'Çalışan',        desc: 'SGK\'lı maaşlı çalışan', color: 'from-brand-500 to-brand-600' },
+                      { id: 'employer',   icon: Building2,   label: 'İşveren',        desc: 'Şirket sahibi / ortak', color: 'from-indigo-500 to-violet-600' },
+                      { id: 'student',    icon: Brain,       label: 'Öğrenci',        desc: 'Üniversite veya lise', color: 'from-sky-500 to-blue-600' },
+                      { id: 'self',       icon: Target,      label: 'Serbest Meslek', desc: 'Freelance veya esnaf', color: 'from-emerald-500 to-teal-600' },
+                      { id: 'retired',    icon: BadgeCheck,  label: 'Emekli',         desc: '55+ yaş, SGK dışı', color: 'from-amber-500 to-orange-500' },
+                      { id: 'unemployed', icon: Home,        label: 'Çalışmıyor',     desc: 'Aile / eş sponsorluğu', color: 'from-rose-500 to-pink-500' },
+                      { id: 'sponsor',    icon: Wallet,      label: 'Sponsorlu',      desc: 'Başka biri masrafları üstleniyor', color: 'from-teal-500 to-cyan-600' },
+                      { id: 'minor',      icon: ShieldCheck, label: 'Reşit Olmayan',  desc: 'Veli muvafakatnamesi ile', color: 'from-purple-500 to-fuchsia-600' },
                     ].map(({ id, icon: Icon, label, desc, color }) => (
                       <motion.button key={id}
                         whileHover={{ x: 4 }}
                         whileTap={{ scale: 0.98 }}
                         onClick={() => {
                           setOnboardingProfile(id);
-                          setApplicantType(id as 'employer' | 'employee' | 'student' | 'self' | 'unemployed');
+                          setApplicantType(id as 'employer' | 'employee' | 'student' | 'self' | 'unemployed' | 'retired' | 'sponsor' | 'minor');
                           setProfile(prev => ({
                             ...prev,
                             isStudent: id === 'student',
-                            hasSgkJob: id === 'employee',
                           }));
                           setOnboardingStep(2);
                         }}
@@ -4552,7 +4586,10 @@ Signature: _______________     Date: ${today}`;
                         onboardingProfile === 'employer'   ? 'İşveren' :
                         onboardingProfile === 'student'    ? 'Öğrenci' :
                         onboardingProfile === 'self'       ? 'Serbest Meslek' :
-                        onboardingProfile === 'unemployed' ? 'Çalışmıyor / Emekli' :
+                        onboardingProfile === 'retired'    ? 'Emekli' :
+                        onboardingProfile === 'unemployed' ? 'Çalışmıyor' :
+                        onboardingProfile === 'sponsor'    ? 'Sponsorlu' :
+                        onboardingProfile === 'minor'      ? 'Reşit Olmayan' :
                         'Profil'
                       }</p>
                     </div>

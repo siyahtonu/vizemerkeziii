@@ -112,6 +112,11 @@ export interface ProfileData {
   // ── Mevsimsellik (v3.2) ───────────────────────────────────────────────
   applyMonth?: number;        // Başvuru ayı (1-12); tanımsızsa mevsimsel kalibrasyon atlanır
   applyYear?:  number;        // Başvuru yılı (4 haneli)
+
+  // ── Sponsor Segmenti (v3.3) ───────────────────────────────────────────
+  // applicantType='sponsor' seçildiğinde algoritma segmentini belirlemek için set edilir.
+  // Başka bir kriter olarak UI'da gösterilmez — saf segment marker.
+  hasSponsor?: boolean;
 }
 
 export interface Conflict {

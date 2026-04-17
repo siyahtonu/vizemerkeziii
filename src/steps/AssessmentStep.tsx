@@ -36,7 +36,7 @@ interface Props {
   onNavigate: (step: string) => void;
   onProfileUpdate: (patch: Partial<ProfileData>) => void;
   onProfileSet: React.Dispatch<React.SetStateAction<ProfileData>>;
-  onApplicantTypeChange: (t: 'employer' | 'employee' | 'student' | 'self' | 'unemployed' | 'minor' | 'sponsor') => void;
+  onApplicantTypeChange: (t: 'employer' | 'employee' | 'student' | 'self' | 'unemployed' | 'retired' | 'minor' | 'sponsor') => void;
   onProfileToggle: (key: keyof ProfileData) => void;
 }
 
@@ -61,7 +61,7 @@ function SwipeCriteriaCards({
   applicantType: string;
 }) {
   const visibleCriteria = CRITERIA.filter(c => {
-    if (c.id === 'hasSgkJob' && (applicantType === 'unemployed' || applicantType === 'minor' || applicantType === 'student' || applicantType === 'self' || applicantType === 'employer')) return false;
+    if (c.id === 'hasSgkJob' && (applicantType === 'unemployed' || applicantType === 'retired' || applicantType === 'minor' || applicantType === 'student' || applicantType === 'self' || applicantType === 'employer' || applicantType === 'sponsor')) return false;
     return true;
   });
   const [idx, setIdx] = useState(0);
@@ -289,8 +289,9 @@ export function AssessmentStep({
                         { id: 'employer',   label: 'İşveren' },
                         { id: 'student',    label: 'Öğrenci' },
                         { id: 'self',       label: 'Serbest Meslek' },
-                        { id: 'unemployed', label: 'Çalışmıyor / Emekli' },
-                        { id: 'sponsor',    label: 'Sponsor' },
+                        { id: 'retired',    label: 'Emekli' },
+                        { id: 'unemployed', label: 'Çalışmıyor' },
+                        { id: 'sponsor',    label: 'Sponsorlu' },
                         { id: 'minor',      label: 'Reşit Olmayan' },
                       ] as const).map(({ id, label }) => (
                         <button
@@ -309,12 +310,15 @@ export function AssessmentStep({
                   </div>
   
                   {/* ── #19 Conditional: applicantType-specific notice ── */}
-                  {(applicantType === 'unemployed' || applicantType === 'minor' || applicantType === 'employer' || applicantType === 'self' || applicantType === 'sponsor') && (
+                  {(applicantType === 'unemployed' || applicantType === 'retired' || applicantType === 'minor' || applicantType === 'employer' || applicantType === 'self' || applicantType === 'sponsor') && (
                     <div className="bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3 text-sm text-amber-800 font-medium flex items-start gap-2">
                       <span className="text-base mt-0.5">ℹ️</span>
                       <div>
                         {applicantType === 'unemployed' && (
-                          <>SGK kriteri sizin için geçerli değil — <strong>sponsor mektubu veya emekli maaşı</strong> finansal bağ olarak değerlendiriliyor.</>
+                          <>SGK kriteri sizin için geçerli değil — <strong>sponsor mektubu veya aile geliri</strong> finansal bağ olarak değerlendiriliyor.</>
+                        )}
+                        {applicantType === 'retired' && (
+                          <>Emekli profili — <strong>emekli maaşı banka dökümü, tapu/mülk belgeleri ve 55+ yaş</strong> güçlü geri dönüş sinyali sağlar. "Yaşınız" alanını doldurmayı ve mülk kriterini işaretlemeyi unutmayın.</>
                         )}
                         {applicantType === 'minor' && (
                           <>Reşit olmayan başvurucular için <strong>veli muvafakatnamesi ve okul kaydı</strong> en kritik belgelerdir.</>
@@ -347,7 +351,7 @@ export function AssessmentStep({
                     {/* ── Desktop: grid (md+ ) ── */}
                     <div className="hidden md:grid grid-cols-2 gap-4">
                       {CRITERIA.filter(item => {
-                        if (item.id === 'hasSgkJob' && (applicantType === 'unemployed' || applicantType === 'minor' || applicantType === 'student' || applicantType === 'self' || applicantType === 'employer')) return false;
+                        if (item.id === 'hasSgkJob' && (applicantType === 'unemployed' || applicantType === 'retired' || applicantType === 'minor' || applicantType === 'student' || applicantType === 'self' || applicantType === 'employer' || applicantType === 'sponsor')) return false;
                         return true;
                       }).map((item) => (
                         <button

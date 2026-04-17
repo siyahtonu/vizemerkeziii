@@ -172,6 +172,28 @@ export const PROFILE_COUNTRY_MATRIX: Record<string, Record<string, number>> = {
     'İngiltere':  0.82,
     'ABD':        0.84,
   },
+
+  // Sponsorlu — kendi geliri yok ama noter tasdikli sponsor taahhütnamesi var
+  // Unemployed'dan ~5 puan üstte: sponsor belgeleri finansal bağ sağlıyor ama
+  // kendi geri dönüş taahhüdü zayıf kaldığı için employed'in altında kalıyor.
+  'sponsor': {
+    'Almanya':    0.88,
+    'Avusturya':  0.90,
+    'Fransa':     0.90,
+    'İtalya':     0.95,
+    'İspanya':    0.97,
+    'Yunanistan': 1.03,
+    'Portekiz':   0.98,
+    'Hollanda':   0.92,
+    'Belçika':    0.92,
+    'Polonya':    0.95,
+    'Macaristan': 0.96,
+    'Danimarka':  0.86,
+    'İsveç':      0.88,
+    'Norveç':     0.90,
+    'İngiltere':  0.87,
+    'ABD':        0.89,
+  },
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -200,7 +222,7 @@ export type ConsulateCity =
   | 'İstanbul' | 'Ankara' | 'İzmir' | 'Adana' | 'Gaziantep';
 
 export type ProfileSegment =
-  | 'employed' | 'public_sector' | 'student' | 'retired' | 'self_employed' | 'unemployed';
+  | 'employed' | 'public_sector' | 'student' | 'retired' | 'self_employed' | 'unemployed' | 'sponsor';
 
 export type ConsularMood = 'strict' | 'moderate' | 'lenient';
 export type TrendDir = 'tightening' | 'stable' | 'loosening';

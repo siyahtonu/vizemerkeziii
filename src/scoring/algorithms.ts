@@ -12,9 +12,18 @@ import type { ConsulateProfile, ProfileSegment, ConsulateCity } from './matrices
 // Formül: weight = e^(-lambda * yearsAgo)
 // lambda=0.20 → 5 yıl: %37 ağırlık | 10 yıl: %14 ağırlık
 // lambda=0.35 → 3 yıl: %35 ağırlık | 5 yıl: %17 ağırlık (ret cezası için)
+//
+// eventYear konvansiyonu:
+//   -1 = "hiç yok" (ilk başvuru / temiz geçmiş) → 0.0 ağırlık
+//    0 = "bilinmiyor / girilmedi" → ~5 yıl önce varsayımı (yarı ağırlık)
+//   >0 = gerçek yıl → exp decay
+// Bilinmiyen yıl için tam ağırlık uygulamak, kullanıcıyı yıl girmediği için
+// maksimum cezayla karşılaştırırdı. Konservatif 5-yıl varsayımı adil denge.
 export const temporalDecay = (eventYear: number, lambda = 0.20): number => {
-  if (!eventYear || eventYear === 0) return 1.0; // tarih bilinmiyor → decay yok
-  if (eventYear < 0) return 0.0; // -1 = "hiç yok" → sıfır ağırlık (vize/ret yok)
+  if (eventYear < 0) return 0.0; // -1 = "hiç yok" → sıfır ağırlık
+  if (!eventYear || eventYear === 0) {
+    return Math.exp(-lambda * 5); // bilinmiyor → 5 yıl önce varsay
+  }
   const yearsAgo = Math.max(0, new Date().getFullYear() - eventYear);
   return Math.exp(-lambda * yearsAgo);
 };
@@ -37,7 +46,8 @@ export const getReturnTieMultiplier = (ctx: ContextProfile): number => {
 export const getProfileCountryFactor = (data: ProfileData): number => {
   const country = data.targetCountry;
   let segment = 'employed';
-  if (data.isStudent)                          segment = 'student';
+  if (data.hasSponsor)                         segment = 'sponsor';
+  else if (data.isStudent)                     segment = 'student';
   else if (data.isPublicSectorEmployee)        segment = 'public_sector';
   else if (!data.hasSgkJob && !data.hasAssets) segment = 'unemployed';
   else if (!data.hasSgkJob && data.hasAssets)  segment = 'self_employed';
@@ -101,6 +111,7 @@ export interface ConsulateAdjustment {
 
 /** Profil segment'ini belirler (algorithms.ts'deki mantıkla tutarlı) */
 const resolveSegment = (data: ProfileData): ProfileSegment => {
+  if (data.hasSponsor) return 'sponsor';
   if (data.isStudent) return 'student';
   if (data.isPublicSectorEmployee) return 'public_sector';
   if (!data.hasSgkJob && data.hasAssets && data.applicantAge >= 55) return 'retired';
