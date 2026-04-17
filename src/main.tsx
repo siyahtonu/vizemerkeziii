@@ -69,6 +69,7 @@ const SeyahatSigortasiNasilSecilir = lazy(() => import('./pages/blog/SeyahatSigo
 // ── Feedback loop sayfaları ─────────────────────────────────────────────
 const OutcomeReport             = lazy(() => import('./pages/OutcomeReport'));
 const OutcomesStats             = lazy(() => import('./pages/OutcomesStats'));
+const AppointmentsAnnounce      = lazy(() => import('./pages/AppointmentsAnnounce'));
 const NotFound                  = lazy(() => import('./pages/NotFound'));
 
 const LoadingSpinner = () => (
@@ -154,6 +155,7 @@ createRoot(document.getElementById('root')!).render(
             {/* Feedback loop */}
             <Route path="/sonuc-bildir"                 element={<OutcomeReport />} />
             <Route path="/admin/outcomes-stats"         element={<OutcomesStats />} />
+            <Route path="/admin/appointments-announce" element={<AppointmentsAnnounce />} />
             <Route path="*"                    element={<NotFound />} />
             </Routes>
           </Suspense>
