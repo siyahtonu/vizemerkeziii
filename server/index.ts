@@ -2,16 +2,14 @@
  * VizeAkıl — Express API Server
  * API anahtarları yalnızca sunucu tarafında tutulur, client'a asla gönderilmez.
  */
+import './env.js';  // MUST be first — loads .env.local before any module reads process.env
 import express from 'express';
 import rateLimit from 'express-rate-limit';
-import * as dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import paymentRouter from './payment.js';
 import appointmentRouter from './appointmentWatcher.js';
 import outcomesRouter from './outcomes.js';
-
-dotenv.config({ path: '.env.local' });
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 

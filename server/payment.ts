@@ -24,14 +24,22 @@ if (!jwtSecret || jwtSecret.length < 32) {
   process.exit(1);
 }
 
-// ── iyzico istemcisi (test modu) ──────────────────────────────────────────
-const iyzipay = new Iyzipay({
-  apiKey:     process.env.IYZICO_API_KEY    ?? '',
-  secretKey:  process.env.IYZICO_SECRET_KEY ?? '',
-  uri:        process.env.IYZICO_ENV === 'production'
-                ? 'https://api.iyzipay.com'
-                : 'https://sandbox-api.iyzipay.com',
-});
+// ── iyzico istemcisi (lazy — API key yoksa /api/payment 503 döner) ────────
+let iyzipayClient: Iyzipay | null = null;
+function getIyzipay(): Iyzipay | null {
+  if (iyzipayClient) return iyzipayClient;
+  const apiKey = process.env.IYZICO_API_KEY;
+  const secretKey = process.env.IYZICO_SECRET_KEY;
+  if (!apiKey || !secretKey) return null;
+  iyzipayClient = new Iyzipay({
+    apiKey,
+    secretKey,
+    uri: process.env.IYZICO_ENV === 'production'
+      ? 'https://api.iyzipay.com'
+      : 'https://sandbox-api.iyzipay.com',
+  });
+  return iyzipayClient;
+}
 
 const paymentLimiter = rateLimit({ windowMs: 60_000, max: 5 });
 
@@ -94,6 +102,11 @@ router.post('/init', paymentLimiter, async (req, res) => {
     }],
   };
 
+  const iyzipay = getIyzipay();
+  if (!iyzipay) {
+    return res.status(503).json({ error: 'Ödeme servisi yapılandırılmamış (IYZICO_API_KEY eksik).' });
+  }
+
   return new Promise<void>((resolve) => {
     iyzipay.checkoutFormInitialize.create(request, (err: unknown, result: Record<string, unknown>) => {
       if (err || result.status !== 'success') {
@@ -115,6 +128,9 @@ router.post('/init', paymentLimiter, async (req, res) => {
 router.post('/callback', express.urlencoded({ extended: true }), async (req, res) => {
   const { token } = req.body as { token?: string };
   if (!token) return res.status(400).send('Token bulunamadı.');
+
+  const iyzipay = getIyzipay();
+  if (!iyzipay) return res.status(503).send('Ödeme servisi yapılandırılmamış.');
 
   return new Promise<void>((resolve) => {
     iyzipay.checkoutForm.retrieve({ locale: 'tr', conversationId: '', token } as Parameters<typeof iyzipay.checkoutForm.retrieve>[0], (err: unknown, result: Record<string, unknown>) => {

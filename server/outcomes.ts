@@ -394,4 +394,57 @@ router.get('/codes', (_req, res) => {
   res.json({ codes: REJECTION_CODES });
 });
 
+// ── POST /api/outcomes/check-now (manuel tetikleme — geliştirici/test) ────────
+// Follow-up taramasını cron beklemeden çalıştırır.
+router.post('/check-now', (req, res) => {
+  const secret = req.headers['x-check-secret'];
+  if (!secret || secret !== process.env.CHECK_SECRET) {
+    return res.status(403).json({ error: 'Yetkisiz.' });
+  }
+  runFollowupCheck()
+    .then(() => res.json({ success: true, message: 'Follow-up taraması tamamlandı.' }))
+    .catch(e => res.status(500).json({ error: String(e) }));
+});
+
+// ── POST /api/outcomes/test-email (SMTP doğrulama) ───────────────────────────
+// Verilen e-postaya örnek bir follow-up maili atar. SMTP ayarlarını test etmek için.
+router.post('/test-email', async (req, res) => {
+  const secret = req.headers['x-check-secret'];
+  if (!secret || secret !== process.env.CHECK_SECRET) {
+    return res.status(403).json({ error: 'Yetkisiz.' });
+  }
+  const { email } = req.body as { email?: string };
+  if (!email || !email.includes('@')) {
+    return res.status(400).json({ error: 'Geçerli bir e-posta girin.' });
+  }
+
+  const transporter = createTransporter();
+  if (!transporter) {
+    return res.status(503).json({ error: 'SMTP yapılandırması eksik (.env.local kontrol edin).' });
+  }
+
+  try {
+    await transporter.verify();
+  } catch (e) {
+    return res.status(500).json({ error: `SMTP bağlantısı başarısız: ${String(e)}` });
+  }
+
+  const sampleRecord: ApplicationRecord = {
+    id: 'test-' + Date.now(),
+    email,
+    country: 'Almanya',
+    visaType: 'Schengen (C)',
+    applicationDate: new Date(Date.now() - 30 * 86400_000).toISOString(),
+    profileScore: 72,
+    profileSegment: 'employed',
+    createdAt: new Date().toISOString(),
+  };
+
+  const sent = await sendFollowupEmail(sampleRecord);
+  if (!sent) {
+    return res.status(500).json({ error: 'SMTP bağlantısı kuruldu ama mail gönderilemedi.' });
+  }
+  return res.json({ success: true, message: `Test maili ${email} adresine gönderildi.` });
+});
+
 export default router;
