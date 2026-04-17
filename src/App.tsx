@@ -4221,109 +4221,140 @@ Signature: _______________     Date: ${today}`;
           {step === 'hero' && (
             <motion.div
               key="hero"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
               exit={{ opacity: 0, y: -20 }}
-              className="text-center space-y-10 py-12 lg:py-20"
+              className="engine-hero -mx-4 sm:-mx-6 lg:-mx-8 -mt-6 px-4 sm:px-6 lg:px-8"
             >
-              {/* Sosyal Kanıt */}
-              <div className="-mx-4 sm:-mx-6 lg:-mx-8 -mt-12 mb-0">
-                <SocialProofBar />
-              </div>
+              <div className="relative z-10 w-full max-w-4xl mx-auto py-16 lg:py-24 space-y-10">
 
-              {/* #18 Devam Et Banneri — önceki profil tespit edilince */}
-              {hasSavedProfile && (
+                {/* #18 Devam Et Banneri */}
+                {hasSavedProfile && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                    className="max-w-lg mx-auto"
+                  >
+                    <div className="flex items-center gap-3 bg-white/10 backdrop-blur border border-white/10 rounded-2xl px-4 py-3 text-left">
+                      <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold text-white">Profiliniz kaydedildi</p>
+                        <p className="text-xs text-slate-400 mt-0.5">Kaldığınız yerden devam edin.</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setStep('assessment')}
+                        className="shrink-0 bg-brand-500 text-white text-xs font-bold px-4 py-2 rounded-xl hover:bg-brand-400 transition-colors whitespace-nowrap"
+                      >
+                        Devam Et
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* Ana başlık */}
+                <div className="text-center space-y-5">
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 }}
+                    className="inline-flex items-center gap-2 px-3 py-1.5 bg-white/10 backdrop-blur text-brand-300 rounded-full text-xs font-bold tracking-wider uppercase border border-white/10"
+                  >
+                    <div className="w-1.5 h-1.5 bg-brand-400 rounded-full animate-pulse" />
+                    AI Destekli Vize Analiz Motoru
+                  </motion.div>
+
+                  <motion.h1
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.15 }}
+                    className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight text-white leading-[1.1]"
+                  >
+                    Nereye gitmek{' '}
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-400 to-blue-300">
+                      istiyorsun?
+                    </span>
+                  </motion.h1>
+
+                  <motion.p
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                    className="text-base sm:text-lg text-slate-400 max-w-lg mx-auto"
+                  >
+                    Ülkeni seç, profilini analiz edelim.{' '}
+                    <strong className="text-slate-200">5 dakikada vize şansını öğren.</strong>
+                  </motion.p>
+                </div>
+
+                {/* Ülke Seçim Grid — direkt hero'da */}
                 <motion.div
-                  initial={{ opacity: 0, y: -8 }}
+                  initial={{ opacity: 0, y: 16 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 }}
-                  className="max-w-lg mx-auto px-4"
+                  className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-3xl mx-auto"
                 >
-                  <div className="flex items-center gap-3 bg-brand-50 border border-brand-200 rounded-2xl px-4 py-3 text-left">
-                    <span className="text-2xl shrink-0">🔖</span>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold text-brand-800">Kaldığınız yerden devam edin</p>
-                      <p className="text-xs text-brand-500 mt-0.5">Önceki profiliniz kaydedildi.</p>
-                    </div>
+                  {([
+                    { label: 'Almanya',    flag: '🇩🇪', rejRate: 23, tag: 'Schengen' },
+                    { label: 'İngiltere',  flag: '🇬🇧', rejRate: 14, tag: 'UK Vizesi' },
+                    { label: 'ABD',        flag: '🇺🇸', rejRate: 35, tag: 'B1/B2' },
+                    { label: 'Fransa',     flag: '🇫🇷', rejRate: 15, tag: 'Schengen' },
+                    { label: 'Hollanda',   flag: '🇳🇱', rejRate: 13, tag: 'Schengen' },
+                    { label: 'İtalya',     flag: '🇮🇹', rejRate: 10, tag: 'Schengen' },
+                    { label: 'Yunanistan', flag: '🇬🇷', rejRate: 6,  tag: 'Schengen' },
+                    { label: 'Diğer',      flag: '🌍', rejRate: 20, tag: 'Tüm ülkeler' },
+                  ] as const).map(({ label, flag, rejRate, tag }) => (
                     <button
+                      key={label}
                       type="button"
-                      onClick={() => setStep('assessment')}
-                      className="shrink-0 bg-brand-600 text-white text-xs font-black px-3 py-1.5 rounded-xl hover:bg-brand-700 transition-colors whitespace-nowrap"
+                      onClick={() => {
+                        setOnboardingCountry(label);
+                        setProfile((prev: ProfileData) => ({ ...prev, targetCountry: label }));
+                        setOnboardingStep(1);
+                        setStep('onboarding');
+                      }}
+                      className="group relative p-4 sm:p-5 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm text-left transition-all duration-200 hover:bg-white/10 hover:border-brand-500/50 hover:shadow-lg hover:shadow-brand-500/10 active:scale-[0.97]"
                     >
-                      Skoru Gör →
+                      <div className="text-3xl mb-2">{flag}</div>
+                      <div className="font-bold text-white text-sm leading-tight">{label}</div>
+                      <div className="text-[10px] text-slate-500 mt-0.5">{tag}</div>
+                      <div className="mt-2 flex items-center gap-1.5">
+                        <div className={`w-1.5 h-1.5 rounded-full ${rejRate <= 10 ? 'bg-emerald-400' : rejRate <= 20 ? 'bg-amber-400' : 'bg-orange-400'}`} />
+                        <span className={`text-[10px] font-bold ${rejRate <= 10 ? 'text-emerald-400' : rejRate <= 20 ? 'text-amber-400' : 'text-orange-400'}`}>
+                          %{rejRate} ret oranı
+                        </span>
+                      </div>
+                      {/* Hover glow */}
+                      <div className="absolute inset-0 rounded-2xl bg-brand-500/0 group-hover:bg-brand-500/5 transition-colors pointer-events-none" />
                     </button>
+                  ))}
+                </motion.div>
+
+                {/* Alt güven göstergeleri */}
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.5 }}
+                  className="flex flex-wrap items-center justify-center gap-6 sm:gap-10 text-slate-500 text-xs"
+                >
+                  <div className="flex items-center gap-2">
+                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+                    <span>Veri saklanmaz</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <FileCheck className="w-3.5 h-3.5 text-brand-400" />
+                    <span>18 analiz aracı</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Globe className="w-3.5 h-3.5 text-blue-400" />
+                    <span>2026 konsolosluk verisi</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                    <span>50.000+ analiz</span>
                   </div>
                 </motion.div>
-              )}
-              {/* Hero content */}
-              <div className="space-y-6 max-w-3xl mx-auto px-4">
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.15 }}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-700 rounded-full text-xs font-bold tracking-widest uppercase border border-emerald-100"
-                >
-                  <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-                  2026 Güncel Konsolosluk Verileri ile Analiz
-                </motion.div>
-
-                <h1 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight text-slate-900 leading-tight">
-                  Vize başvurusunda{' '}
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-600 to-indigo-600">
-                    neyi yanlış yaptığınızı öğrenin
-                  </span>
-                </h1>
-
-                <p className="text-lg text-slate-500 max-w-xl mx-auto leading-relaxed">
-                  Banka dökümünüzü, sosyal medyanızı ve belgelerinizi analiz eden AI sistemi.{' '}
-                  <strong className="text-slate-700">5 dakikada profil riskinizi görün.</strong>
-                </p>
-              </div>
-
-              {/* 3 büyük aksiyon butonu */}
-              <div className="flex flex-col sm:flex-row gap-4 justify-center px-4 max-w-2xl mx-auto">
-                <button
-                  type="button"
-                  onClick={() => { setOnboardingStep(0); setStep('onboarding'); }}
-                  className="flex-1 btn-primary text-base sm:text-lg px-6 py-4 sm:py-5 flex items-center justify-center gap-3 group min-h-[56px]"
-                  aria-label="Ücretsiz analiz başlat"
-                >
-                  Ücretsiz Analizi Başlat
-                  <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" aria-hidden="true" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setStep('dashboard'); }}
-                  className="flex-1 btn-secondary text-base sm:text-lg px-6 py-4 sm:py-5 flex items-center justify-center gap-2 min-h-[56px]"
-                  aria-label="Araçları doğrudan aç"
-                >
-                  <Zap className="w-4 h-4" aria-hidden="true" />
-                  Araçlara Git
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setIsUpgradeOpen(true)}
-                  className="flex-1 text-base sm:text-lg px-6 py-4 sm:py-5 flex items-center justify-center gap-2 min-h-[56px] bg-amber-50 text-amber-700 border border-amber-200 rounded-2xl font-bold hover:bg-amber-100 transition-colors"
-                  aria-label="Premium planları incele"
-                >
-                  Premium Planlar
-                </button>
-              </div>
-
-              {/* Minimal güven göstergesi */}
-              <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-10 px-4 text-slate-400">
-                <div className="flex items-center gap-2 text-sm">
-                  <ShieldCheck className="w-4 h-4 text-emerald-500" aria-hidden="true" />
-                  <span>Kişisel veri saklanmaz</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <FileCheck className="w-4 h-4 text-brand-500" aria-hidden="true" />
-                  <span>18 analiz aracı</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <Globe className="w-4 h-4 text-indigo-500" aria-hidden="true" />
-                  <span>2026 konsolosluk verisi</span>
-                </div>
               </div>
             </motion.div>
           )}
@@ -4334,184 +4365,82 @@ Signature: _______________     Date: ${today}`;
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="max-w-2xl mx-auto py-16 space-y-10"
+              className="max-w-2xl mx-auto py-12 sm:py-16 space-y-8 px-4"
             >
-              {/* Stepper */}
-              <div className="flex items-center justify-center gap-0">
+              {/* Progress bar */}
+              <div className="flex items-center gap-0 justify-center">
                 {[
-                  { label: 'Ülke', icon: '🌍' },
-                  { label: 'Profil', icon: '👤' },
-                  { label: 'Skor', icon: '📊' },
+                  { label: 'Profil', step: 1 },
+                  { label: 'Sonuç', step: 2 },
                 ].map((s, i) => (
                   <React.Fragment key={i}>
-                    <div className="flex flex-col items-center gap-1">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg font-black border-2 transition-all duration-300 ${
-                        i < onboardingStep ? 'bg-brand-600 border-brand-600 text-white' :
-                        i === onboardingStep ? 'bg-white border-brand-600 text-brand-600 shadow-lg shadow-brand-200' :
-                        'bg-white border-slate-200 text-slate-300'
+                    <div className="flex flex-col items-center gap-1.5">
+                      <div className={`step-dot ${
+                        onboardingStep > s.step ? 'step-dot-done' :
+                        onboardingStep === s.step ? 'step-dot-active' :
+                        'step-dot-pending'
                       }`}>
-                        {i < onboardingStep ? '✓' : s.icon}
+                        {onboardingStep > s.step ? '✓' : s.step}
                       </div>
-                      <span className={`text-[10px] font-black uppercase tracking-wider transition-colors ${i === onboardingStep ? 'text-brand-600' : i < onboardingStep ? 'text-brand-400' : 'text-slate-300'}`}>{s.label}</span>
+                      <span className={`text-[10px] font-bold uppercase tracking-wider ${
+                        onboardingStep === s.step ? 'text-brand-600' : 'text-slate-400'
+                      }`}>{s.label}</span>
                     </div>
-                    {i < 2 && (
-                      <div className={`w-16 h-0.5 mb-5 transition-all duration-500 ${i < onboardingStep ? 'bg-brand-400' : 'bg-slate-200'}`} />
+                    {i < 1 && (
+                      <div className={`w-20 h-0.5 mb-5 transition-all duration-500 rounded-full ${
+                        onboardingStep > 1 ? 'bg-emerald-400' : 'bg-slate-200'
+                      }`} />
                     )}
                   </React.Fragment>
                 ))}
               </div>
 
-              {onboardingStep === 0 && (
-                <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="text-center space-y-6">
-                  <div>
-                    <h2 className="text-3xl font-black text-slate-900">Nereye gitmek istiyorsun?</h2>
-                    <p className="text-slate-500 mt-2">Ülkeye özel ret oranları ve ortalama bekleme süreleriyle analiz yapacağız.</p>
-                  </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                    {([
-                      { label: 'Almanya',   flag: '🇩🇪', sub: 'Schengen',     rejRate: 35, waitDays: 23, difficulty: 'Orta',     tip: 'Finansal süreklilik kritik' },
-                      { label: 'İngiltere', flag: '🇬🇧', sub: 'UK Vizesi',    rejRate: 14, waitDays: 15, difficulty: 'Orta',     tip: '2026 eVisa sistemi' },
-                      { label: 'ABD',       flag: '🇺🇸', sub: 'B1/B2 Vizesi', rejRate: 30, waitDays: 60, difficulty: 'Zor',      tip: 'Mülakat kritik' },
-                      { label: 'Fransa',    flag: '🇫🇷', sub: 'Schengen',     rejRate: 25, waitDays: 20, difficulty: 'Orta',     tip: 'Sigorta ön koşul' },
-                      { label: 'Hollanda',  flag: '🇳🇱', sub: 'Schengen',     rejRate: 18, waitDays: 18, difficulty: 'Orta',     tip: 'Banka düzeni önemli' },
-                      { label: 'İtalya',    flag: '🇮🇹', sub: 'Schengen',     rejRate: 28, waitDays: 25, difficulty: 'Orta',     tip: 'Güzergah uyumu şart' },
-                      { label: 'Yunanistan',flag: '🇬🇷', sub: 'Schengen',     rejRate:  6, waitDays: 12, difficulty: 'Kolay',    tip: 'İlk Schengen için ideal' },
-                      { label: 'Diğer',     flag: '🌍', sub: 'Farklı ülke',   rejRate: 20, waitDays: 20, difficulty: 'Değişken', tip: 'Ülkeye göre değişir' },
-                    ] as const).map(({ label, flag, sub, rejRate, waitDays, difficulty, tip }) => (
-                      <button key={label}
-                        type="button"
-                        onClick={() => {
-                          setOnboardingCountry(label);
-                          setProfile((prev: ProfileData) => ({ ...prev, targetCountry: label }));
-                          // Don't advance yet — let info card appear
-                        }}
-                        className={`p-4 rounded-2xl border-2 text-left transition-all hover:border-brand-400 hover:bg-brand-50 relative ${onboardingCountry === label ? 'border-brand-500 bg-brand-50 shadow-md shadow-brand-100' : 'border-slate-100 bg-white'}`}
-                      >
-                        {onboardingCountry === label && (
-                          <div className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-brand-600 rounded-full flex items-center justify-center text-white text-[10px] font-black">✓</div>
-                        )}
-                        <div className="text-2xl mb-1.5">{flag}</div>
-                        <div className="font-bold text-slate-900 text-sm leading-tight">{label}</div>
-                        <div className="text-[10px] text-slate-400 mt-0.5">{sub}</div>
-                        {onboardingCountry !== label && (
-                          <div className="mt-1.5 flex gap-1 flex-wrap">
-                            <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold ${
-                              rejRate <= 10 ? 'bg-emerald-100 text-emerald-700' :
-                              rejRate <= 20 ? 'bg-amber-100 text-amber-700' :
-                                             'bg-orange-100 text-orange-700'
-                            }`}>%{rejRate} ret</span>
-                          </div>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* Ülke info kartı — seçim yapılınca görünür */}
-                  <AnimatePresence mode="wait">
-                    {onboardingCountry && onboardingCountry !== 'Diğer' && (() => {
-                      const meta: Record<string, { rejRate: number; waitDays: number; difficulty: string; tip: string }> = {
-                        'Almanya':   { rejRate: 35, waitDays: 23, difficulty: 'Orta',  tip: 'Finansal süreklilik bakiyeden önemli — son 6 ayın her ayında düzenli giriş şart.' },
-                        'İngiltere': { rejRate: 14, waitDays: 15, difficulty: 'Orta',  tip: '2026\'dan itibaren eVisa sistemi. Fiziksel vize etiketi artık yok.' },
-                        'ABD':       { rejRate: 30, waitDays: 60, difficulty: 'Zor',   tip: 'Mülakat kritik. İlk 20 saniye belirleyici — Türkiye\'ye dönüş bağını net anlat.' },
-                        'Fransa':    { rejRate: 25, waitDays: 20, difficulty: 'Orta',  tip: 'Seyahat sigortası ön koşul. Otel + uçak rezervasyonu zorunlu.' },
-                        'Hollanda':  { rejRate: 18, waitDays: 18, difficulty: 'Orta',  tip: 'Banka düzeni ön planda. Her ay düzenli giriş-çıkış görülmeli.' },
-                        'İtalya':    { rejRate: 28, waitDays: 25, difficulty: 'Orta',  tip: 'Başlıca ülke İtalya olmalı. Güzergah uyumu değerlendirmede kritik.' },
-                        'Yunanistan':{ rejRate:  6, waitDays: 12, difficulty: 'Kolay', tip: 'Türk başvurucular için en yüksek onay oranlı Schengen ülkesi. İlk başvuru için ideal.' },
-                      };
-                      const info = meta[onboardingCountry];
-                      if (!info) return null;
-                      return (
-                        <motion.div
-                          key={onboardingCountry}
-                          initial={{ opacity: 0, y: 16, scale: 0.97 }}
-                          animate={{ opacity: 1, y: 0, scale: 1 }}
-                          exit={{ opacity: 0, y: -8 }}
-                          transition={{ duration: 0.25 }}
-                          className="bg-gradient-to-br from-brand-50 to-indigo-50 border border-brand-100 rounded-2xl p-5 text-left"
-                        >
-                          <div className="flex items-start gap-4">
-                            <div className="text-4xl shrink-0">
-                              {['Almanya','İngiltere','ABD','Fransa','Hollanda','İtalya','Yunanistan'].includes(onboardingCountry)
-                                ? ['🇩🇪','🇬🇧','🇺🇸','🇫🇷','🇳🇱','🇮🇹','🇬🇷'][['Almanya','İngiltere','ABD','Fransa','Hollanda','İtalya','Yunanistan'].indexOf(onboardingCountry)]
-                                : '🌍'}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="font-black text-slate-900 text-base">
-                                {onboardingCountry} — Türk başvurucular için {info.difficulty} zorlukta
-                              </p>
-                              <div className="flex flex-wrap gap-3 mt-2 mb-3">
-                                <span className="text-xs text-slate-500">
-                                  Ort. bekleme: <strong className="text-slate-800">{info.waitDays} gün</strong>
-                                </span>
-                                <span className="text-xs text-slate-500">
-                                  2024 ret oranı: <strong className={info.rejRate <= 15 ? 'text-emerald-700' : info.rejRate <= 25 ? 'text-amber-700' : 'text-orange-700'}>%{info.rejRate}</strong>
-                                </span>
-                              </div>
-                              <p className="text-xs text-slate-600 leading-relaxed mb-4">
-                                💡 {info.tip}
-                              </p>
-                              <button
-                                type="button"
-                                onClick={() => setOnboardingStep(1)}
-                                className="w-full py-3 bg-brand-600 text-white font-bold text-sm rounded-xl hover:bg-brand-700 transition-colors flex items-center justify-center gap-2 group"
-                              >
-                                Profilinizi doldurun, size özel tahmininizi görelim
-                                <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                              </button>
-                            </div>
-                          </div>
-                        </motion.div>
-                      );
-                    })()}
-                    {onboardingCountry === 'Diğer' && (
-                      <motion.div
-                        key="other"
-                        initial={{ opacity: 0, y: 16 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0 }}
-                        className="bg-slate-50 border border-slate-200 rounded-2xl p-4 text-left"
-                      >
-                        <p className="text-sm text-slate-600 mb-3">
-                          Farklı bir ülkeye başvuruyorsunuz. Genel profil analizinizi yapıp ardından ülkenizi seçebilirsiniz.
-                        </p>
-                        <button
-                          type="button"
-                          onClick={() => setOnboardingStep(1)}
-                          className="w-full py-3 bg-slate-900 text-white font-bold text-sm rounded-xl hover:bg-slate-800 transition-colors"
-                        >
-                          Devam Et →
-                        </button>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </motion.div>
-              )}
-
+              {/* Ülke bilgi kartı */}
               {onboardingStep === 1 && (
-                <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="text-center space-y-8">
-                  <div className="w-20 h-20 bg-indigo-50 rounded-[2rem] flex items-center justify-center mx-auto">
-                    <Briefcase className="w-10 h-10 text-indigo-600" />
+                <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
+                  {/* Seçilen ülke bilgisi */}
+                  <div className="bg-brand-50 border border-brand-100 rounded-2xl p-5 flex items-center gap-4">
+                    <div className="text-4xl">
+                      {({'Almanya':'🇩🇪','İngiltere':'🇬🇧','ABD':'🇺🇸','Fransa':'🇫🇷','Hollanda':'🇳🇱','İtalya':'🇮🇹','Yunanistan':'🇬🇷'} as Record<string,string>)[onboardingCountry] || '🌍'}
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-bold text-slate-900">{onboardingCountry} seçildi</p>
+                      <p className="text-xs text-slate-500 mt-0.5">Profilinizi seçin, size özel analiz başlasın.</p>
+                    </div>
+                    <button type="button" onClick={() => setStep('hero')} className="text-xs text-brand-600 font-bold hover:text-brand-700">
+                      Değiştir
+                    </button>
                   </div>
-                  <div>
-                    <h2 className="text-3xl font-black text-slate-900">Başvuru profiliniz nedir?</h2>
-                    <p className="text-slate-500 mt-2">Her profil farklı belgeler gerektirir.</p>
+
+                  {/* Profil seçimi */}
+                  <div className="text-center space-y-2">
+                    <h2 className="text-2xl sm:text-3xl font-black text-slate-900">Ne iş yapıyorsunuz?</h2>
+                    <p className="text-sm text-slate-500">Her profil tipi farklı değerlendirilir.</p>
                   </div>
-                  <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
                     {[
-                      { id: 'employer', icon: Briefcase, label: 'Çalışan / İşveren', desc: 'SGK\'lı işte çalışıyorum veya şirket sahibiyim', color: 'blue' },
-                      { id: 'student', icon: Brain, label: 'Öğrenci', desc: 'Üniversite veya lise öğrencisiyim', color: 'violet' },
-                      { id: 'unemployed', icon: Home, label: 'Çalışmıyor / Emekli', desc: 'Çalışmıyorum, eş/aile sponsorluğu var', color: 'emerald' },
-                      { id: 'self', icon: Target, label: 'Serbest Meslek', desc: 'Kendi işimi yapıyorum, vergi mükellefi', color: 'amber' },
-                    ].map(({ id, icon: Icon, label, desc, color }) => (
+                      { id: 'employer',   icon: Briefcase, label: 'Çalışan',        desc: 'SGK\'lı iş' },
+                      { id: 'student',    icon: Brain,     label: 'Öğrenci',        desc: 'Üniversite/lise' },
+                      { id: 'unemployed', icon: Home,      label: 'Çalışmıyor',     desc: 'Emekli / ev hanımı' },
+                      { id: 'self',       icon: Target,    label: 'Serbest Meslek', desc: 'Freelance / esnaf' },
+                    ].map(({ id, icon: Icon, label, desc }) => (
                       <button key={id}
-                        onClick={() => { setOnboardingProfile(id); setApplicantType(id === 'employer' || id === 'unemployed' ? id as 'employer' | 'unemployed' : 'employer'); setOnboardingStep(2); }}
-                        className={`w-full p-4 rounded-2xl border-2 text-left transition-all hover:border-${color}-400 hover:bg-${color}-50 flex items-center gap-4 ${onboardingProfile === id ? `border-${color}-500 bg-${color}-50` : 'border-slate-100 bg-white'}`}>
-                        <div className={`w-12 h-12 bg-${color}-50 rounded-xl flex items-center justify-center text-${color}-600 shrink-0`}>
-                          <Icon className="w-6 h-6" />
+                        onClick={() => {
+                          setOnboardingProfile(id);
+                          setApplicantType(id === 'employer' || id === 'unemployed' ? id as 'employer' | 'unemployed' : 'employer');
+                          if (id === 'student') setProfile(prev => ({ ...prev, isStudent: true }));
+                          setOnboardingStep(2);
+                        }}
+                        className={`p-5 rounded-2xl border-2 text-left transition-all hover:border-brand-300 hover:bg-brand-50 flex flex-col gap-3 ${
+                          onboardingProfile === id ? 'border-brand-500 bg-brand-50' : 'border-slate-100 bg-white'
+                        }`}
+                      >
+                        <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-slate-500">
+                          <Icon className="w-5 h-5" />
                         </div>
                         <div>
-                          <div className="font-bold text-slate-900">{label}</div>
-                          <div className="text-xs text-slate-400 mt-0.5">{desc}</div>
+                          <div className="font-bold text-slate-900 text-sm">{label}</div>
+                          <div className="text-[11px] text-slate-400 mt-0.5">{desc}</div>
                         </div>
                       </button>
                     ))}
@@ -4520,35 +4449,79 @@ Signature: _______________     Date: ${today}`;
               )}
 
               {onboardingStep === 2 && (
-                <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="text-center space-y-8">
-                  <div className="w-20 h-20 bg-emerald-50 rounded-[2rem] flex items-center justify-center mx-auto">
-                    <TrendingUp className="w-10 h-10 text-emerald-600" />
+                <motion.div initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} className="text-center space-y-8">
+                  {/* Skor reveal */}
+                  <div className="space-y-4">
+                    <div className="text-xs font-bold text-emerald-600 uppercase tracking-widest">Analiz Tamamlandı</div>
+                    <h2 className="text-2xl sm:text-3xl font-black text-slate-900">İlk tahmininiz hazır</h2>
                   </div>
-                  <div>
-                    <div className="text-sm font-bold text-emerald-600 uppercase tracking-widest mb-2">Harika! Profiliniz hazır</div>
-                    <h2 className="text-3xl font-black text-slate-900">İlk skorunuz hesaplandı</h2>
-                    <div className="text-7xl font-black text-brand-600 my-4">%{currentScore}</div>
-                    <p className="text-slate-500">Detaylı analizinizi görmek ve skoru artırmak için devam edin.</p>
+
+                  {/* Skor kartı */}
+                  <div className="bg-slate-900 rounded-3xl p-8 sm:p-10 text-white relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-48 h-48 bg-brand-600/20 blur-[80px] rounded-full pointer-events-none" />
+                    <div className="relative z-10">
+                      <div className={`text-7xl sm:text-8xl font-black font-mono ${
+                        currentScore >= 82 ? 'text-emerald-400' :
+                        currentScore >= 65 ? 'text-amber-300' : 'text-rose-400'
+                      }`}>
+                        %{currentScore}
+                      </div>
+                      <p className="text-slate-400 text-sm mt-2">
+                        Tahmini vize onay ihtimali — {onboardingCountry}
+                      </p>
+                      <div className="mt-4 flex items-center justify-center gap-3 text-xs">
+                        <span className={`px-3 py-1 rounded-full font-bold ${
+                          currentScore >= 82 ? 'bg-emerald-500/20 text-emerald-300' :
+                          currentScore >= 65 ? 'bg-amber-500/20 text-amber-300' :
+                                               'bg-rose-500/20 text-rose-300'
+                        }`}>
+                          {currentScore >= 82 ? 'Başvuruya Hazır' : currentScore >= 65 ? 'Geliştirmeli' : 'Riskli'}
+                        </span>
+                        <span className="text-slate-500">
+                          Detaylı analiz ile artırılabilir
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                  <div className="p-5 bg-slate-50 rounded-2xl text-left space-y-2">
-                    <div className="flex justify-between text-sm"><span className="text-slate-500">Hedef ülke</span><span className="font-bold text-slate-900">{onboardingCountry}</span></div>
-                    <div className="flex justify-between text-sm"><span className="text-slate-500">Profil tipi</span><span className="font-bold text-slate-900">{onboardingProfile === 'employer' ? 'Çalışan' : onboardingProfile === 'student' ? 'Öğrenci' : onboardingProfile === 'unemployed' ? 'Çalışmıyor' : 'Serbest Meslek'}</span></div>
-                    <div className="flex justify-between text-sm"><span className="text-slate-500">Kullanılabilir araç</span><span className="font-bold text-emerald-600">7 Ücretsiz + 3 Premium</span></div>
+
+                  {/* Özet */}
+                  <div className="bg-white rounded-2xl border border-slate-200 p-5 space-y-3 text-left">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-500">Hedef ülke</span>
+                      <span className="font-bold text-slate-900">{onboardingCountry}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-500">Profil tipi</span>
+                      <span className="font-bold text-slate-900">
+                        {onboardingProfile === 'employer' ? 'Çalışan' : onboardingProfile === 'student' ? 'Öğrenci' : onboardingProfile === 'unemployed' ? 'Çalışmıyor' : 'Serbest Meslek'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-500">Eksik kriter</span>
+                      <span className="font-bold text-amber-600">{currentConfidence.missingCount} alan</span>
+                    </div>
                   </div>
+
                   <div className="flex flex-col gap-3">
-                    <button onClick={() => setStep('dashboard')}
-                      className="btn-primary w-full py-5 text-lg flex items-center justify-center gap-2 group">
-                      Tam Analizi Gör <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                    <button
+                      onClick={() => setStep('assessment')}
+                      className="btn-primary w-full py-4 sm:py-5 text-base sm:text-lg flex items-center justify-center gap-2 group"
+                    >
+                      Profilini Detaylandır
+                      <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                     </button>
-                    <button onClick={() => setIsUpgradeOpen(true)}
-                      className="w-full py-4 rounded-2xl border-2 border-amber-200 bg-amber-50 text-amber-700 font-bold text-sm hover:bg-amber-100 transition-colors flex items-center justify-center gap-2">
-                      🔒 Tüm Araçları Aç — Premium
+                    <button
+                      onClick={() => setStep('dashboard')}
+                      className="btn-secondary w-full py-4 text-sm flex items-center justify-center gap-2"
+                    >
+                      <Zap className="w-4 h-4" />
+                      Direkt Araçlara Git
                     </button>
                   </div>
                 </motion.div>
               )}
 
-              <button onClick={() => onboardingStep > 0 ? setOnboardingStep(s => s - 1) : setStep('hero')}
+              <button onClick={() => onboardingStep > 1 ? setOnboardingStep(s => s - 1) : setStep('hero')}
                 className="flex items-center gap-2 text-sm text-slate-400 hover:text-slate-600 transition-colors mx-auto">
                 <ArrowLeft className="w-4 h-4" /> Geri
               </button>

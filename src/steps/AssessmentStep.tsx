@@ -213,21 +213,41 @@ export function AssessmentStep({
   return (
             <motion.div
                 key="assessment"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                className="max-w-4xl mx-auto space-y-8 sm:space-y-12 px-4 sm:px-0"
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -12 }}
+                className="max-w-5xl mx-auto px-4 sm:px-0"
               >
-                <div className="flex items-center gap-3 sm:gap-6">
-                  <button onClick={() => setStep('hero')} className="p-3 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl transition-all shadow-sm">
-                    <ArrowLeft className="w-5 h-5 text-slate-600" />
+                {/* Header */}
+                <div className="flex items-center gap-4 mb-8">
+                  <button onClick={() => setStep('hero')} className="p-2.5 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl transition-all">
+                    <ArrowLeft className="w-5 h-5 text-slate-500" />
                   </button>
                   <div className="flex-1">
-                    <h2 className="text-3xl md:text-4xl font-bold text-slate-900">Hızlı Profil Analizi</h2>
-                    <p className="text-slate-500 font-medium">Temel kriterlerinizi seçerek ilk tahmininizi alın.</p>
+                    <h2 className="text-2xl sm:text-3xl font-black text-slate-900">Profil Analizi</h2>
+                    <p className="text-sm text-slate-500">Kriterlerinizi işaretleyin — skor anlık güncellenir.</p>
+                  </div>
+                  {/* Desktop: mini live skor */}
+                  <div className="hidden sm:flex items-center gap-3 bg-slate-900 rounded-2xl px-5 py-3">
+                    <div className={`text-2xl font-black font-mono ${
+                      currentScore >= 82 ? 'text-emerald-400' :
+                      currentScore >= 65 ? 'text-amber-300' : 'text-rose-400'
+                    }`}>
+                      %{displayScore}
+                    </div>
+                    <div className="text-xs text-slate-400 leading-tight">
+                      <div className="font-bold text-white">Tahmini Skor</div>
+                      <div>{currentConfidence.label} güven</div>
+                    </div>
                   </div>
                 </div>
-  
+
+                {/* Layout: form + sticky skor (desktop) */}
+                <div className="flex flex-col lg:flex-row gap-8">
+
+                {/* Sol: form alanları */}
+                <div className="flex-1 space-y-8">
+
                 {/* Profil tamamlanma çubuğu */}
                 {(() => {
                   const criteriaKeys: (keyof ProfileData)[] = [
@@ -244,17 +264,17 @@ export function AssessmentStep({
                         <span className="text-sm font-bold text-slate-700">Profil Tamamlanma</span>
                         <span className={`text-sm font-black ${pct >= 70 ? 'text-emerald-600' : pct >= 40 ? 'text-amber-600' : 'text-rose-500'}`}>{pct}%</span>
                       </div>
-                      <div className="w-full bg-slate-100 rounded-full h-2">
+                      <div className="w-full bg-slate-100 rounded-full h-2.5">
                         <div
-                          className={`h-2 rounded-full transition-all duration-500 ${pct >= 70 ? 'bg-emerald-500' : pct >= 40 ? 'bg-amber-400' : 'bg-rose-400'}`}
+                          className={`h-2.5 rounded-full transition-all duration-500 ${pct >= 70 ? 'bg-emerald-500' : pct >= 40 ? 'bg-amber-400' : 'bg-rose-400'}`}
                           style={{ width: `${pct}%` }}
                         />
                       </div>
                       <p className="text-xs text-slate-400 mt-1.5">
                         {filled}/{total} kriter seçildi
-                        {pct < 50 && ' — Daha fazla kriter seçerek skorunuzu iyileştirin.'}
-                        {pct >= 50 && pct < 80 && ' — İyi ilerliyorsunuz, devam edin.'}
-                        {pct >= 80 && ' — Güçlü profil! Skoru görüntüleyin.'}
+                        {pct < 50 && ' — Daha fazla seçerek skoru artırın'}
+                        {pct >= 50 && pct < 80 && ' — İyi ilerliyorsunuz'}
+                        {pct >= 80 && ' — Güçlü profil!'}
                       </p>
                     </div>
                   );
@@ -550,232 +570,158 @@ export function AssessmentStep({
                   </div>
                 </div>
   
-                {/* Tamam butonu */}
-                <div className="flex justify-center">
-                  <button
-                    type="button"
-                    onClick={() => setStep('dashboard')}
-                    className="px-10 py-4 bg-brand-600 hover:bg-brand-700 text-white font-black text-base rounded-2xl transition-all shadow-lg hover:shadow-xl active:scale-95 flex items-center gap-2"
-                  >
-                    Tamam — Sonuçları Gör
-                    <ChevronRight className="w-5 h-5" />
-                  </button>
-                </div>
-
                 {/* Puan Artırma Kılavuzu */}
                 {actionItems.length > 0 && (
                   <div className="space-y-3">
                     <div className="flex items-center gap-2">
                       <Zap className="w-5 h-5 text-amber-500"/>
-                      <h3 className="font-black text-slate-900">Puanınızı Nasıl Artırırsınız?</h3>
-                      <span className="ml-auto text-xs font-bold text-slate-400">Toplam kazanım: +{actionItems.filter(a=>a.gain!=='⚠️').reduce((s,a)=>s+parseInt(a.gain),0)} puan</span>
+                      <h3 className="font-black text-slate-900 text-sm">Skoru Artır</h3>
+                      <span className="ml-auto text-xs font-bold text-slate-400">+{actionItems.filter(a=>a.gain!=='⚠️').reduce((s,a)=>s+parseInt(a.gain),0)} puan</span>
                     </div>
                     <div className="space-y-2">
-                      {actionItems.map((item, i) => (
-                        <div key={i} className={`flex items-center gap-3 p-4 rounded-2xl border transition-all group ${item.gain === '⚠️' ? 'bg-rose-50 border-rose-200' : 'bg-white border-slate-100 hover:border-brand-200 hover:bg-brand-50/30'}`}>
-                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-sm shrink-0 ${item.gain === '⚠️' ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-700'}`}>
+                      {actionItems.slice(0, 4).map((item, i) => (
+                        <div key={i} className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${item.gain === '⚠️' ? 'bg-rose-50 border-rose-200' : 'bg-white border-slate-100'}`}>
+                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 ${item.gain === '⚠️' ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-700'}`}>
                             {item.gain}
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="font-bold text-slate-900 text-sm">{item.title}</p>
-                            <p className="text-xs text-slate-500 mt-0.5 line-clamp-1">{item.desc}</p>
                           </div>
-                          <div className="shrink-0 flex items-center gap-2">
-                            <button
-                              type="button"
-                              onClick={item.toolFn}
-                              className={`px-3 py-2 text-xs font-black rounded-xl transition-colors whitespace-nowrap ${item.gain === '⚠️' ? 'bg-rose-600 text-white hover:bg-rose-700' : 'bg-brand-600 text-white hover:bg-brand-700'}`}>
-                              {item.toolLabel} →
-                            </button>
-                            {item.doneFn && (
-                              <button
-                                type="button"
-                                onClick={item.doneFn}
-                                title="Yaptım — puanımı güncelle"
-                                className="px-3 py-2 text-xs font-black rounded-xl transition-colors whitespace-nowrap bg-emerald-100 text-emerald-700 hover:bg-emerald-200 border border-emerald-200">
-                                Yaptım ✓
-                              </button>
-                            )}
-                          </div>
+                          <button type="button" onClick={item.toolFn}
+                            className="px-3 py-1.5 text-xs font-bold rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors whitespace-nowrap">
+                            {item.toolLabel}
+                          </button>
                         </div>
                       ))}
                     </div>
                   </div>
                 )}
-  
-                {/* ═══ SKOR KARTI — animasyon + mikro-feedback ═══ */}
-                <div className="p-5 sm:p-8 md:p-10 bg-slate-900 rounded-[2rem] sm:rounded-[2.5rem] text-white flex flex-col lg:flex-row items-center justify-between gap-6 sm:gap-8 relative overflow-hidden shadow-2xl">
-                  {/* Arkaplan efekti */}
-                  <div className="absolute top-0 right-0 w-64 h-64 bg-brand-600/20 blur-[100px] rounded-full pointer-events-none" />
 
-                  {/* Mikro-feedback delta rozeti */}
-                  <AnimatePresence>
-                    {delta !== null && (
-                      <motion.div
-                        key="delta"
-                        initial={{ opacity: 0, y: 24, scale: 0.7 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: -16, scale: 0.8 }}
-                        transition={{ type: 'spring', stiffness: 400, damping: 22 }}
-                        className={`absolute top-4 right-4 z-30 px-3 py-1.5 rounded-xl text-sm font-black shadow-xl pointer-events-none ${
-                          delta > 0 ? 'bg-emerald-500 text-white' : 'bg-rose-500 text-white'
-                        }`}
-                      >
-                        {delta > 0 ? `+${delta}` : delta} puan {delta < 0 ? '⚠️' : '✓'}
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+                </div>{/* flex-1 form sonu */}
 
-                  {/* Analiz ediliyor overlay */}
-                  <AnimatePresence>
-                    {isAnalyzing && (
-                      <motion.div
-                        key="analyzing"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0, transition: { duration: 0.4 } }}
-                        className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-5 bg-slate-900/95 rounded-[2rem]"
-                      >
-                        <div className="flex gap-2">
-                          {[0, 1, 2].map(i => (
-                            <motion.div
-                              key={i}
-                              className="w-2.5 h-2.5 bg-brand-400 rounded-full"
-                              animate={{ y: [0, -10, 0] }}
-                              transition={{ duration: 0.7, repeat: Infinity, delay: i * 0.15 }}
-                            />
-                          ))}
-                        </div>
-                        <p className="text-white/70 text-sm font-semibold tracking-wide">
-                          Profiliniz analiz ediliyor…
-                        </p>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+                {/* Sağ: Sticky Skor Paneli (desktop) */}
+                <div className="hidden lg:block w-[340px] shrink-0">
+                  <div className="sticky top-8 space-y-4">
+                    {/* Skor kartı */}
+                    <div className="bg-slate-900 rounded-2xl p-6 text-white relative overflow-hidden">
+                      <div className="absolute top-0 right-0 w-40 h-40 bg-brand-600/15 blur-[60px] rounded-full pointer-events-none" />
 
-                  {/* Yüksek skor confetti */}
-                  <AnimatePresence>
-                    {!isAnalyzing && currentScore >= 82 && (
-                      <motion.div
-                        key="confetti"
-                        className="absolute inset-0 pointer-events-none overflow-hidden rounded-[2rem]"
-                        initial="hidden"
-                        animate="visible"
-                      >
-                        {['⭐', '✨', '🎉', '🌟', '⭐', '✨'].map((e, i) => (
-                          <motion.span
-                            key={i}
-                            className="absolute text-2xl"
-                            style={{ left: `${10 + i * 16}%`, bottom: '8%' }}
-                            variants={{
-                              hidden: { y: 0, opacity: 0 },
-                              visible: {
-                                y: -90, opacity: [0, 1, 0],
-                                transition: { delay: i * 0.12 + 0.2, duration: 1.4, ease: 'easeOut' },
-                              },
-                            }}
+                      {/* Delta badge */}
+                      <AnimatePresence>
+                        {delta !== null && (
+                          <motion.div
+                            key="delta"
+                            initial={{ opacity: 0, y: 12, scale: 0.8 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: -8 }}
+                            className={`absolute top-3 right-3 z-30 px-2 py-1 rounded-lg text-xs font-bold ${
+                              delta > 0 ? 'bg-emerald-500 text-white' : 'bg-rose-500 text-white'
+                            }`}
                           >
-                            {e}
-                          </motion.span>
-                        ))}
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+                            {delta > 0 ? `+${delta}` : delta}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
 
-                  {/* Sol taraf: skor + badge + hikaye */}
-                  <div className="space-y-3 text-center lg:text-left relative z-10 w-full lg:w-auto">
-                    <div className="text-brand-400 text-xs font-bold uppercase tracking-[0.2em]">
-                      Tahmini Başarı İhtimali
-                    </div>
-                    <div className="flex items-end gap-3 justify-center lg:justify-start">
-                      <motion.div
-                        key={displayScore}
-                        className={`text-5xl sm:text-6xl md:text-7xl font-black ${
+                      <div className="relative z-10 space-y-4">
+                        <div className="text-[10px] font-bold text-brand-400 uppercase tracking-widest">
+                          Tahmini Başarı
+                        </div>
+                        <div className={`text-5xl font-black font-mono ${
                           currentScore >= 82 ? 'text-emerald-400' :
-                          currentScore >= 65 ? 'text-amber-300'   : 'text-rose-400'
-                        }`}
-                        animate={{ scale: [1, 1.06, 1] }}
-                        transition={{ duration: 0.25 }}
-                      >
-                        %{displayScore}
-                      </motion.div>
-                      <div className="text-sm text-slate-400 pb-2">
-                        {currentScore < 82
-                          ? `Hedef: %82 (+${82 - currentScore} puan)`
-                          : '✓ Başvuruya hazır'}
+                          currentScore >= 65 ? 'text-amber-300' : 'text-rose-400'
+                        }`}>
+                          %{displayScore}
+                        </div>
+                        <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
+                          <motion.div
+                            className={`h-full rounded-full ${
+                              currentScore >= 82 ? 'bg-emerald-400' :
+                              currentScore >= 65 ? 'bg-amber-400' : 'bg-rose-400'
+                            }`}
+                            initial={{ width: 0 }}
+                            animate={{ width: `${displayScore}%` }}
+                            transition={{ duration: 0.9, ease: 'easeOut' }}
+                          />
+                        </div>
+                        <div className="flex flex-wrap gap-2 text-xs">
+                          <span className={`px-2 py-0.5 rounded-full font-bold ${
+                            currentConfidence.label === 'Yüksek' ? 'bg-emerald-500/20 text-emerald-300' :
+                            currentConfidence.label === 'Orta' ? 'bg-amber-500/20 text-amber-300' :
+                            'bg-rose-500/20 text-rose-300'
+                          }`}>
+                            {currentConfidence.label} Güven
+                          </span>
+                          <span className="text-slate-500">
+                            %{currentConfidence.low}–%{currentConfidence.high}
+                          </span>
+                        </div>
+                        <ScoreStory profile={profile} score={currentScore} />
+                        <ScoreRadarMini profile={profile} />
                       </div>
                     </div>
 
-                    {/* Güven aralığı + rozetler */}
-                    <div className="flex flex-wrap items-center gap-2 text-xs justify-center lg:justify-start">
-                      <span className="text-white/60">Aralık:</span>
-                      <span className="text-white font-semibold">
-                        %{currentConfidence.low}–%{currentConfidence.high}
-                      </span>
-                      <span className={`px-2 py-0.5 rounded-full font-bold ${
-                        currentConfidence.label === 'Yüksek' ? 'bg-emerald-500/30 text-emerald-300' :
-                        currentConfidence.label === 'Orta'   ? 'bg-amber-500/30 text-amber-300'     :
-                                                               'bg-rose-500/30 text-rose-300'
-                      }`}>
-                        {currentConfidence.label} Güven
-                      </span>
-                      {currentConfidence.missingCount > 0 && (
-                        <span className="text-white/40">
-                          (+{currentConfidence.missingCount} alan eksik)
-                        </span>
-                      )}
-                      {profile.applyMonth && (
-                        <span className="px-2 py-0.5 rounded-full font-bold bg-indigo-500/30 text-indigo-300">
-                          📅 Mevsimsel aktif
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Mini progress bar */}
-                    <div className="w-full max-w-xs h-2 bg-white/10 rounded-full overflow-hidden mx-auto lg:mx-0">
-                      <motion.div
-                        className={`h-full rounded-full ${
-                          currentScore >= 82 ? 'bg-emerald-400' :
-                          currentScore >= 65 ? 'bg-amber-400'   : 'bg-rose-400'
-                        }`}
-                        initial={{ width: 0 }}
-                        animate={{ width: `${displayScore}%` }}
-                        transition={{ duration: 0.9, ease: 'easeOut' }}
-                      />
-                    </div>
-
-                    {/* Storytelling anlatı kartı */}
-                    <div className="mt-3">
-                      <ScoreStory profile={profile} score={currentScore} />
-                    </div>
-
-                    {/* #12 Kompakt 6-eksen radar mini */}
-                    <ScoreRadarMini profile={profile} />
-                  </div>
-
-                  {/* Sağ taraf: aksiyonlar + benchmark */}
-                  <div className="flex flex-col gap-3 relative z-10 w-full lg:w-auto">
+                    {/* CTA butonları */}
                     <button
                       type="button"
                       onClick={() => setStep('dashboard')}
-                      className="btn-primary w-full lg:w-auto px-6 sm:px-8 py-3 sm:py-4 text-sm sm:text-base flex items-center justify-center gap-2 group"
+                      className="btn-primary w-full py-3.5 text-sm flex items-center justify-center gap-2 group"
                     >
-                      Araçlarla Puanı Artır
-                      <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                      Tam Analiz Paneli
+                      <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                     </button>
                     {currentScore >= 65 && (
                       <button
                         type="button"
                         onClick={() => setStep('letter')}
-                        className="w-full lg:w-auto px-6 sm:px-8 py-3 sm:py-4 text-sm sm:text-base font-bold bg-white/10 hover:bg-white/20 rounded-xl flex items-center justify-center gap-2 transition-colors"
+                        className="btn-secondary w-full py-3 text-sm flex items-center justify-center gap-2"
                       >
-                        Niyet Mektubu Oluştur →
+                        Niyet Mektubu Oluştur
                       </button>
                     )}
                     {profile.targetCountry && (
                       <BenchmarkCard profile={profile} score={currentScore} />
                     )}
                   </div>
+                </div>
+
+                </div>{/* flex row sonu */}
+
+                {/* Mobil: alt sabit skor barı */}
+                <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-slate-900 border-t border-slate-800 px-4 py-3 flex items-center justify-between safe-bottom">
+                  <div className="flex items-center gap-3">
+                    <div className={`text-2xl font-black font-mono ${
+                      currentScore >= 82 ? 'text-emerald-400' :
+                      currentScore >= 65 ? 'text-amber-300' : 'text-rose-400'
+                    }`}>
+                      %{displayScore}
+                    </div>
+                    <div className="text-xs text-slate-400">
+                      <div className="font-bold text-white">{currentConfidence.label} Güven</div>
+                      <div>%{currentConfidence.low}–%{currentConfidence.high}</div>
+                    </div>
+                    <AnimatePresence>
+                      {delta !== null && (
+                        <motion.span
+                          initial={{ opacity: 0, scale: 0.7 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0 }}
+                          className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+                            delta > 0 ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'
+                          }`}
+                        >
+                          {delta > 0 ? `+${delta}` : delta}
+                        </motion.span>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setStep('dashboard')}
+                    className="bg-brand-600 text-white text-sm font-bold px-5 py-2.5 rounded-xl hover:bg-brand-700 transition-colors flex items-center gap-1.5"
+                  >
+                    Sonuçlar <ChevronRight className="w-4 h-4" />
+                  </button>
                 </div>
               </motion.div>
   );

@@ -5,193 +5,132 @@
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Outfit", sans-serif;
   --font-mono: "JetBrains Mono", monospace;
-  
-  --color-brand-50: #f0f9ff;
-  --color-brand-100: #e0f2fe;
-  --color-brand-200: #bae6fd;
-  --color-brand-300: #7dd3fc;
-  --color-brand-400: #38bdf8;
-  --color-brand-500: #0ea5e9;
-  --color-brand-600: #0284c7;
-  --color-brand-700: #0369a1;
-  --color-brand-800: #075985;
-  --color-brand-900: #0c4a6e;
-  --color-brand-950: #082f49;
+
+  --color-brand-50: #eff6ff;
+  --color-brand-100: #dbeafe;
+  --color-brand-200: #bfdbfe;
+  --color-brand-300: #93c5fd;
+  --color-brand-400: #60a5fa;
+  --color-brand-500: #3b82f6;
+  --color-brand-600: #2563eb;
+  --color-brand-700: #1d4ed8;
+  --color-brand-800: #1e40af;
+  --color-brand-900: #1e3a8a;
+  --color-brand-950: #172554;
 }
 
 @layer base {
   body {
     @apply font-sans antialiased bg-slate-50 text-slate-900;
   }
-  
+
   h1, h2, h3, h4, h5, h6 {
     @apply font-display tracking-tight;
   }
 }
 
 @layer components {
+  /* ── Kartlar ── */
+  .card {
+    @apply bg-white border border-slate-200 rounded-2xl;
+  }
+  .card-hover {
+    @apply transition-all duration-200 hover:shadow-lg hover:border-slate-300 hover:-translate-y-0.5;
+  }
+
+  /* ── Butonlar ── */
+  .btn-primary {
+    @apply inline-flex items-center justify-center font-bold rounded-xl transition-all duration-150
+           px-6 py-3 bg-brand-600 text-white hover:bg-brand-700 active:scale-[0.97]
+           focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2
+           shadow-lg shadow-brand-600/20;
+  }
+  .btn-secondary {
+    @apply inline-flex items-center justify-center font-bold rounded-xl transition-all duration-150
+           px-6 py-3 border border-slate-200 text-slate-900 bg-white hover:bg-slate-50 active:scale-[0.97]
+           focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:ring-offset-2;
+  }
+  .btn-ghost {
+    @apply inline-flex items-center justify-center font-medium rounded-xl transition-all duration-150
+           px-4 py-2 text-slate-600 hover:bg-slate-100 active:scale-[0.97];
+  }
+
+  /* ── Badge ── */
+  .badge {
+    @apply inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold;
+  }
+
+  /* ── Input ── */
+  .input {
+    @apply px-4 py-3 rounded-xl border border-slate-200 bg-white text-slate-900 text-base
+           placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-brand-500
+           focus-visible:ring-offset-1 focus-visible:border-transparent transition-all;
+  }
+
+  /* ── Engine Hero ── */
+  .engine-hero {
+    @apply min-h-screen flex flex-col items-center justify-center relative overflow-hidden;
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+  }
+  .engine-hero::before {
+    content: '';
+    @apply absolute inset-0 pointer-events-none;
+    background: radial-gradient(ellipse 60% 50% at 50% 40%, rgba(37, 99, 235, 0.15) 0%, transparent 70%);
+  }
+
+  /* ── Score Ring ── */
+  .score-ring {
+    @apply relative inline-flex items-center justify-center;
+  }
+
+  /* ── Progress Step ── */
+  .step-dot {
+    @apply w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300;
+  }
+  .step-dot-active {
+    @apply bg-brand-600 text-white shadow-lg shadow-brand-600/30;
+  }
+  .step-dot-done {
+    @apply bg-emerald-500 text-white;
+  }
+  .step-dot-pending {
+    @apply bg-slate-100 text-slate-400;
+  }
+
+  /* ── Animasyonlar ── */
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes slide-up {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes pulse-slow {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+  }
+
+  .animate-fade-in { animation: fade-in 300ms ease-out; }
+  .animate-slide-up { animation: slide-up 350ms ease-out; }
+  .animate-pulse-slow { animation: pulse-slow 2s ease-in-out infinite; }
+
+  /* ── Hover efektleri ── */
+  .hover-lift {
+    @apply transition-all duration-200;
+  }
+  .hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px -4px rgba(0,0,0,0.1);
+  }
+
+  /* Focus rings */
+  button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+    @apply outline-none ring-2 ring-brand-500 ring-offset-2;
+  }
+
+  /* ── Glass card (hafif kullanım) ── */
   .glass-card {
     @apply bg-white/80 backdrop-blur-md border border-white/20 shadow-sm;
   }
-
-  .bento-grid {
-    @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4;
-  }
-
-  .btn-primary {
-    @apply px-6 py-3 bg-brand-600 hover:bg-brand-700 text-white rounded-xl font-medium transition-all active:scale-95 shadow-lg shadow-brand-500/20;
-  }
-
-  .btn-secondary {
-    @apply px-6 py-3 bg-white hover:bg-slate-50 text-slate-900 border border-slate-200 rounded-xl font-medium transition-all active:scale-95;
-  }
-}
-
-/* ═══════════════════════════════════════════════
-   CUSTOM CURSOR — Yalnızca body.use-custom-cursor varsa aktif
-   Default: KAPALI (native cursor kullanılır)
-   ═══════════════════════════════════════════════ */
-
-/* Yalnızca özel cursor tercih edildiğinde ve mouse destekli cihazda aktif */
-@media (hover: hover) and (pointer: fine) {
-  body.use-custom-cursor *,
-  body.use-custom-cursor *::before,
-  body.use-custom-cursor *::after {
-    cursor: none !important;
-  }
-}
-
-/* Custom cursor root element */
-#vize-cursor {
-  display: none; /* JS ile use-custom-cursor class'ı eklenince gösterilir */
-  position: fixed;
-  top: 0;
-  left: 0;
-  pointer-events: none;
-  z-index: 99999;
-  transform: translate(-50%, -50%);
-  transition: transform 0.08s ease, opacity 0.2s ease;
-}
-
-body.use-custom-cursor #vize-cursor {
-  display: block;
-}
-
-/* Main cursor dot */
-#vize-cursor .cursor-dot {
-  width: 10px;
-  height: 10px;
-  background: #0284c7;
-  border-radius: 50%;
-  transition: width 0.15s ease, height 0.15s ease, background 0.15s ease, transform 0.15s ease;
-}
-
-/* Outer ring */
-#vize-cursor .cursor-ring {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 36px;
-  height: 36px;
-  border: 2px solid rgba(2, 132, 199, 0.35);
-  border-radius: 50%;
-  transition: width 0.2s ease, height 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
-}
-
-/* ── Hover states ── */
-body.use-custom-cursor.cursor-hover #vize-cursor .cursor-dot {
-  width: 14px;
-  height: 14px;
-  background: #0369a1;
-  transform: scale(1.2);
-}
-body.use-custom-cursor.cursor-hover #vize-cursor .cursor-ring {
-  width: 52px;
-  height: 52px;
-  border-color: rgba(2, 132, 199, 0.5);
-}
-body.use-custom-cursor.cursor-premium #vize-cursor .cursor-dot {
-  background: #7c3aed;
-  width: 12px;
-  height: 12px;
-}
-body.use-custom-cursor.cursor-premium #vize-cursor .cursor-ring {
-  width: 48px;
-  height: 48px;
-  border-color: rgba(124, 58, 237, 0.4);
-}
-body.use-custom-cursor.cursor-danger #vize-cursor .cursor-dot {
-  background: #dc2626;
-  width: 12px;
-  height: 12px;
-}
-body.use-custom-cursor.cursor-danger #vize-cursor .cursor-ring {
-  border-color: rgba(220, 38, 38, 0.4);
-}
-body.use-custom-cursor.cursor-text #vize-cursor .cursor-dot {
-  width: 3px;
-  height: 20px;
-  border-radius: 2px;
-  background: #0284c7;
-}
-body.use-custom-cursor.cursor-text #vize-cursor .cursor-ring {
-  opacity: 0;
-}
-body.use-custom-cursor.cursor-click #vize-cursor .cursor-dot {
-  transform: scale(0.7);
-  background: #0369a1;
-}
-body.use-custom-cursor.cursor-click #vize-cursor .cursor-ring {
-  transform: translate(-50%, -50%) scale(0.8);
-}
-
-/* ═══════════════════════════════════════════════
-   GLOBAL HOVER EFFECTS
-   ═══════════════════════════════════════════════ */
-
-/* All buttons */
-button, [role="button"], label[for], a {
-  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
-}
-
-button:hover:not(:disabled), [role="button"]:hover {
-  transform: translateY(-1px);
-}
-
-button:active:not(:disabled) {
-  transform: translateY(0) scale(0.97);
-}
-
-/* Smooth focus rings */
-button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
-  outline: 2px solid #0284c7;
-  outline-offset: 2px;
-}
-
-/* Modal card hover lift */
-.hover-lift {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-.hover-lift:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 32px -8px rgba(0,0,0,0.12);
-}
-
-/* Score card / tool card shine on hover */
-.card-shine {
-  position: relative;
-  overflow: hidden;
-}
-.card-shine::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.12) 50%, transparent 60%);
-  transform: translateX(-100%);
-  transition: transform 0.5s ease;
-  pointer-events: none;
-}
-.card-shine:hover::after {
-  transform: translateX(100%);
 }
