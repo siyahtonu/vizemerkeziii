@@ -394,27 +394,69 @@ export function AssessmentStep({
                       </div>
                       <div className="bg-white border border-slate-200 rounded-2xl p-4">
                         <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Son Vize Yılı</label>
-                        <input
-                          type="number"
-                          min={2000} max={new Date().getFullYear()}
-                          placeholder="örn. 2022"
-                          value={profile.lastVisaYear || ''}
-                          onChange={(e) => setProfile(prev => ({ ...prev, lastVisaYear: parseInt(e.target.value) || 0 }))}
-                          className="w-full text-2xl font-black text-slate-900 border-none outline-none bg-transparent p-0 placeholder:text-slate-300"
-                        />
-                        <p className="text-xs text-slate-400 mt-1">Eski vize puanı zamanla azalır (temporal decay)</p>
+                        <label className="flex items-center gap-2 mb-2 cursor-pointer select-none">
+                          <input
+                            type="checkbox"
+                            checked={profile.lastVisaYear === -1}
+                            onChange={(e) => setProfile(prev => ({
+                              ...prev,
+                              lastVisaYear: e.target.checked ? -1 : 0,
+                            }))}
+                            className="w-4 h-4 accent-brand-600 rounded"
+                          />
+                          <span className="text-xs font-semibold text-slate-600">İlk kez başvuruyorum</span>
+                        </label>
+                        {profile.lastVisaYear !== -1 && (
+                          <input
+                            type="number"
+                            min={2000} max={new Date().getFullYear()}
+                            placeholder="örn. 2022"
+                            value={profile.lastVisaYear || ''}
+                            onChange={(e) => setProfile(prev => ({ ...prev, lastVisaYear: parseInt(e.target.value) || 0 }))}
+                            className="w-full text-2xl font-black text-slate-900 border-none outline-none bg-transparent p-0 placeholder:text-slate-300"
+                          />
+                        )}
+                        {profile.lastVisaYear === -1 && (
+                          <p className="text-sm font-bold text-brand-600">Daha önce vize almadım</p>
+                        )}
+                        <p className="text-xs text-slate-400 mt-1">
+                          {profile.lastVisaYear === -1
+                            ? 'İlk başvuru — önceki vize puanı hesaba katılmaz'
+                            : 'Eski vize puanı zamanla azalır (temporal decay)'}
+                        </p>
                       </div>
                       <div className="bg-white border border-slate-200 rounded-2xl p-4">
                         <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Son Red Yılı</label>
-                        <input
-                          type="number"
-                          min={2000} max={new Date().getFullYear()}
-                          placeholder="örn. 2020"
-                          value={profile.lastRejectionYear || ''}
-                          onChange={(e) => setProfile(prev => ({ ...prev, lastRejectionYear: parseInt(e.target.value) || 0 }))}
-                          className="w-full text-2xl font-black text-slate-900 border-none outline-none bg-transparent p-0 placeholder:text-slate-300"
-                        />
-                        <p className="text-xs text-slate-400 mt-1">Eski ret cezası yıllar geçtikçe azalır</p>
+                        <label className="flex items-center gap-2 mb-2 cursor-pointer select-none">
+                          <input
+                            type="checkbox"
+                            checked={profile.lastRejectionYear === -1}
+                            onChange={(e) => setProfile(prev => ({
+                              ...prev,
+                              lastRejectionYear: e.target.checked ? -1 : 0,
+                            }))}
+                            className="w-4 h-4 accent-brand-600 rounded"
+                          />
+                          <span className="text-xs font-semibold text-slate-600">Hiç red almadım</span>
+                        </label>
+                        {profile.lastRejectionYear !== -1 && (
+                          <input
+                            type="number"
+                            min={2000} max={new Date().getFullYear()}
+                            placeholder="örn. 2020"
+                            value={profile.lastRejectionYear || ''}
+                            onChange={(e) => setProfile(prev => ({ ...prev, lastRejectionYear: parseInt(e.target.value) || 0 }))}
+                            className="w-full text-2xl font-black text-slate-900 border-none outline-none bg-transparent p-0 placeholder:text-slate-300"
+                          />
+                        )}
+                        {profile.lastRejectionYear === -1 && (
+                          <p className="text-sm font-bold text-emerald-600">Temiz geçmiş ✓</p>
+                        )}
+                        <p className="text-xs text-slate-400 mt-1">
+                          {profile.lastRejectionYear === -1
+                            ? 'Red geçmişi yok — ceza puanı uygulanmaz'
+                            : 'Eski ret cezası yıllar geçtikçe azalır'}
+                        </p>
                       </div>
                     </div>
 
@@ -508,6 +550,18 @@ export function AssessmentStep({
                   </div>
                 </div>
   
+                {/* Tamam butonu */}
+                <div className="flex justify-center">
+                  <button
+                    type="button"
+                    onClick={() => setStep('dashboard')}
+                    className="px-10 py-4 bg-brand-600 hover:bg-brand-700 text-white font-black text-base rounded-2xl transition-all shadow-lg hover:shadow-xl active:scale-95 flex items-center gap-2"
+                  >
+                    Tamam — Sonuçları Gör
+                    <ChevronRight className="w-5 h-5" />
+                  </button>
+                </div>
+
                 {/* Puan Artırma Kılavuzu */}
                 {actionItems.length > 0 && (
                   <div className="space-y-3">

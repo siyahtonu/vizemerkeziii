@@ -14,6 +14,7 @@ import type { ConsulateProfile, ProfileSegment, ConsulateCity } from './matrices
 // lambda=0.35 → 3 yıl: %35 ağırlık | 5 yıl: %17 ağırlık (ret cezası için)
 export const temporalDecay = (eventYear: number, lambda = 0.20): number => {
   if (!eventYear || eventYear === 0) return 1.0; // tarih bilinmiyor → decay yok
+  if (eventYear < 0) return 0.0; // -1 = "hiç yok" → sıfır ağırlık (vize/ret yok)
   const yearsAgo = Math.max(0, new Date().getFullYear() - eventYear);
   return Math.exp(-lambda * yearsAgo);
 };
