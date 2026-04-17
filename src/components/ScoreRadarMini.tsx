@@ -1,6 +1,6 @@
 // ============================================================
 // ScoreRadarMini — #12 Kompakt 6-Eksen Skor Görselleştirme
-// Skor kartı içinde: ★★★★☆ yıldız derecelendirme, tıklanabilir
+// Açık tema — okunaklı boyutlar, tıklanabilir detay
 // + #1 Zayıf eksene göre gerçek zamanlı blog önerisi
 // ============================================================
 
@@ -31,7 +31,6 @@ const DIMENSION_ACTIONS: Record<string, string> = {
   trust:        'Seyahat sigortası yaptır',
 };
 
-// #1 — Zayıf eksene göre ilgili blog yazıları
 interface BlogLink { title: string; slug: string; }
 const DIMENSION_BLOGS: Record<string, BlogLink[]> = {
   financial: [
@@ -60,25 +59,22 @@ const DIMENSION_BLOGS: Record<string, BlogLink[]> = {
   ],
 };
 
-function Stars({ value }: { value: number }) {
-  const filled = Math.round(value / 20); // 0–100 → 0–5
-  return (
-    <div className="flex gap-0.5">
-      {[1, 2, 3, 4, 5].map(i => (
-        <span
-          key={i}
-          className={`text-sm leading-none ${
-            i <= filled
-              ? value >= 80 ? 'text-emerald-400' :
-                value >= 50 ? 'text-amber-400' : 'text-rose-400'
-              : 'text-white/20'
-          }`}
-        >
-          ★
-        </span>
-      ))}
-    </div>
-  );
+function scoreColor(score: number): string {
+  if (score >= 70) return 'text-emerald-600';
+  if (score >= 45) return 'text-amber-600';
+  return 'text-rose-500';
+}
+
+function scoreBg(score: number): string {
+  if (score >= 70) return 'bg-emerald-50 border-emerald-100 text-emerald-700';
+  if (score >= 45) return 'bg-amber-50 border-amber-100 text-amber-700';
+  return 'bg-rose-50 border-rose-100 text-rose-600';
+}
+
+function barColor(score: number): string {
+  if (score >= 70) return 'bg-gradient-to-r from-emerald-400 to-emerald-500';
+  if (score >= 45) return 'bg-gradient-to-r from-amber-400 to-amber-500';
+  return 'bg-gradient-to-r from-rose-400 to-rose-500';
 }
 
 export function ScoreRadarMini({ profile }: Props) {
@@ -87,54 +83,65 @@ export function ScoreRadarMini({ profile }: Props) {
   const scores = getDimensionScores(profile);
   const keys = Object.keys(scores) as (keyof typeof scores)[];
 
-  // En zayıf eksen — blog önerisi için
   const weakestKey = keys.reduce((a, b) => scores[a] <= scores[b] ? a : b);
   const weakestScore = scores[weakestKey];
   const blogLinks = DIMENSION_BLOGS[weakestKey] ?? [];
 
   return (
-    <div className="mt-3 space-y-1.5">
-      <div className="text-[10px] font-bold text-white/40 uppercase tracking-[0.15em] mb-2">
+    <div className="mt-4 space-y-1">
+      <div className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-3">
         6 Eksen Profil
       </div>
+
       {keys.map((key) => {
         const score = scores[key];
         const isOpen = expanded === key;
-        const color =
-          score >= 80 ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-300' :
-          score >= 50 ? 'bg-amber-500/20 border-amber-500/30 text-amber-300' :
-                        'bg-rose-500/20 border-rose-500/30 text-rose-300';
 
         return (
           <div key={key}>
             <button
               type="button"
               onClick={() => setExpanded(isOpen ? null : key)}
-              className="w-full flex items-center gap-2.5 py-1.5 px-2 rounded-lg hover:bg-white/5 transition-colors group text-left"
+              className="w-full flex items-center gap-2.5 py-2 px-2.5 rounded-xl hover:bg-slate-50 transition-colors group text-left"
             >
-              <span className="text-xs w-4 text-center shrink-0">
+              {/* Icon */}
+              <span className="text-base w-5 text-center shrink-0">
                 {DIMENSION_ICONS[key]}
               </span>
-              <span className="text-[11px] font-semibold text-white/70 w-16 shrink-0 leading-tight">
+
+              {/* Label */}
+              <span className="text-xs font-semibold text-slate-600 w-[60px] shrink-0">
                 {DIMENSION_LABELS[key]}
               </span>
-              <Stars value={score} />
-              <span className={`ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded border ${color}`}>
+
+              {/* Progress bar */}
+              <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
+                <div
+                  className={`h-full rounded-full transition-all duration-500 ${barColor(score)}`}
+                  style={{ width: `${score}%` }}
+                />
+              </div>
+
+              {/* Score badge */}
+              <span className={`text-xs font-bold px-2 py-0.5 rounded-lg border shrink-0 ${scoreBg(score)}`}>
                 %{score}
               </span>
-              <span className={`text-[9px] text-white/30 transition-transform group-hover:text-white/60 ${isOpen ? 'rotate-180' : ''}`}>
+
+              {/* Chevron */}
+              <span className={`text-xs text-slate-300 transition-transform ${isOpen ? 'rotate-180' : ''}`}>
                 ▾
               </span>
             </button>
 
             {isOpen && (
-              <div className="mx-2 mb-1 px-3 py-2.5 bg-white/5 rounded-lg border border-white/10">
-                <p className="text-[11px] text-white/60 leading-relaxed">
+              <div className="mx-2 mb-1.5 px-3 py-3 bg-slate-50 rounded-xl border border-slate-100">
+                <p className="text-xs text-slate-500 leading-relaxed">
                   {DIMENSION_TIPS[key]}
                 </p>
                 {score < 70 && (
-                  <p className="text-[10px] text-amber-400 font-bold mt-1.5">
-                    → {DIMENSION_ACTIONS[key]}
+                  <p className="text-xs text-brand-600 font-semibold mt-2 flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-brand-500 shrink-0" />
+                    {DIMENSION_ACTIONS[key]}
                   </p>
                 )}
               </div>
@@ -143,21 +150,21 @@ export function ScoreRadarMini({ profile }: Props) {
         );
       })}
 
-      {/* #1 — En zayıf eksene göre blog önerisi */}
+      {/* Blog önerisi */}
       {weakestScore < 65 && blogLinks.length > 0 && (
-        <div className="mt-3 pt-3 border-t border-white/10">
-          <div className="text-[10px] font-bold text-white/30 uppercase tracking-[0.15em] mb-2">
-            📚 {DIMENSION_LABELS[weakestKey]} için okuma önerisi
+        <div className="mt-4 pt-3 border-t border-slate-100">
+          <div className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2.5 flex items-center gap-1.5">
+            <span>📚</span> {DIMENSION_LABELS[weakestKey]} için okuma önerisi
           </div>
           <div className="space-y-1.5">
             {blogLinks.map(link => (
               <Link
                 key={link.slug}
                 to={`/blog/${link.slug}`}
-                className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 transition-colors group"
+                className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-brand-50/50 border border-brand-100/60 hover:bg-brand-50 hover:border-brand-200 transition-all group"
               >
-                <span className="text-[10px] text-brand-300 shrink-0">→</span>
-                <span className="text-[11px] text-white/60 group-hover:text-white/90 transition-colors leading-tight">
+                <span className="text-xs text-brand-400 shrink-0">→</span>
+                <span className="text-xs text-slate-600 group-hover:text-brand-700 transition-colors leading-snug font-medium">
                   {link.title}
                 </span>
               </Link>

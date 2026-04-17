@@ -249,10 +249,16 @@
   }
 
   /* ── Smooth scrollbar ── */
-  ::-webkit-scrollbar { width: 6px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: rgba(108,92,231,0.15); border-radius: 3px; }
-  ::-webkit-scrollbar-thumb:hover { background: rgba(108,92,231,0.25); }
+  ::-webkit-scrollbar { width: 8px; }
+  ::-webkit-scrollbar-track { background: rgba(148,163,184,0.08); border-radius: 4px; }
+  ::-webkit-scrollbar-thumb { background: rgba(124,110,240,0.35); border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(124,110,240,0.55); }
+
+  /* Firefox scrollbar */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(124,110,240,0.35) rgba(148,163,184,0.08);
+  }
 }
 
 /* ── Print ── */

@@ -2406,16 +2406,17 @@ Signature: _______________     Date: ${today}`;
       <div className="cursor-ring"/>
       <div className="cursor-dot"/>
     </div>
-    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans selection:bg-brand-100 selection:text-brand-900">
-      {/* Navigation */}
-      <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur-xl border-b border-slate-200/60 px-4 sm:px-6 py-3 sm:py-4">
+    <div className="min-h-screen bg-[#fafbfe] text-slate-800 font-sans selection:bg-brand-100 selection:text-brand-900">
+      {/* Navigation — hero modunda gizle */}
+      {step !== 'hero' && (
+      <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-2xl border-b border-slate-100/80 px-4 sm:px-6 py-3 sm:py-4">
         <div className="max-w-7xl mx-auto flex justify-between items-center gap-3">
           <div
             onClick={() => setStep('hero')}
-            className="flex items-center gap-2 font-display font-bold text-xl sm:text-2xl text-brand-600 cursor-pointer hover:opacity-80 transition-opacity min-w-0"
+            className="flex items-center gap-2.5 font-display font-bold text-xl text-slate-900 cursor-pointer hover:text-brand-600 transition-colors min-w-0"
           >
-            <div className="w-9 h-9 sm:w-10 sm:h-10 bg-brand-600 rounded-xl flex items-center justify-center shadow-lg shadow-brand-500/20 shrink-0">
-              <ShieldCheck className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+            <div className="w-9 h-9 bg-gradient-to-br from-brand-500 to-brand-600 rounded-2xl flex items-center justify-center shadow-md shadow-brand-500/15 shrink-0">
+              <ShieldCheck className="w-5 h-5 text-white" />
             </div>
             <span className="tracking-tight truncate">VizeAkıl</span>
           </div>
@@ -2463,6 +2464,7 @@ Signature: _______________     Date: ${today}`;
           </div>
         </div>
       </nav>
+      )}
 
       {/* Funnel adım göstergesi */}
       <StepProgress currentStep={step} onNavigate={setStep} />
