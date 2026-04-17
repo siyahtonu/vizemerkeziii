@@ -20,8 +20,8 @@ const COUNTRY_ANNUAL_APPS: Record<string, number> = {
 };
 
 const SEGMENT_SHARE: Record<string, number> = {
-  employed: 0.42, student: 0.14, public_sector: 0.09,
-  self_employed: 0.12, retired: 0.08, unemployed: 0.15,
+  employed: 0.40, student: 0.14, public_sector: 0.09,
+  self_employed: 0.12, retired: 0.08, unemployed: 0.12, sponsor: 0.05,
 };
 
 const SCORE_TIER_SHARE: Record<string, number> = {
@@ -29,6 +29,8 @@ const SCORE_TIER_SHARE: Record<string, number> = {
 };
 
 function getSegment(p: ProfileData): string {
+  // resolveSegment (scoring/algorithms.ts) ile aynı sıralama: sponsor önce.
+  if (p.hasSponsor) return 'sponsor';
   if (p.isStudent) return 'student';
   if (p.isPublicSectorEmployee) return 'public_sector';
   if (!p.hasSgkJob && p.hasAssets && p.applicantAge >= 55) return 'retired';
@@ -80,14 +82,14 @@ function computeBenchmark(p: ProfileData, score: number): BenchmarkData | null {
   const rejRate = TR_REJECTION_RATES[country] ?? 0.15;
   const segBonus: Record<string, number> = {
     public_sector: +0.06, employed: +0.02, student: -0.03,
-    self_employed: -0.02, unemployed: -0.08, retired: +0.03,
+    self_employed: -0.02, unemployed: -0.08, retired: +0.03, sponsor: -0.01,
   };
   const baseApproval = (1 - rejRate) + (segBonus[segment] ?? 0);
   const approvalRate = Math.round(Math.min(0.97, Math.max(0.30, baseApproval)) * 100);
 
   const avgScoreBySegment: Record<string, number> = {
     public_sector: 74, employed: 65, student: 58,
-    self_employed: 60, retired: 67, unemployed: 44,
+    self_employed: 60, retired: 67, unemployed: 44, sponsor: 62,
   };
   const avgScore = avgScoreBySegment[segment] ?? 60;
 
@@ -117,7 +119,7 @@ function computeBenchmark(p: ProfileData, score: number): BenchmarkData | null {
 const SEGMENT_LABEL: Record<string, string> = {
   employed: 'Özel Sektör', public_sector: 'Kamu',
   student: 'Öğrenci', self_employed: 'Serbest Meslek',
-  retired: 'Emekli', unemployed: 'Çalışmıyor',
+  retired: 'Emekli', unemployed: 'Çalışmıyor', sponsor: 'Sponsorlu',
 };
 
 // ── Bileşen ──────────────────────────────────────────────────────────────

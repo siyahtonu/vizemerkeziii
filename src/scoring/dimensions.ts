@@ -36,17 +36,24 @@ export function getFinancialScore(data: ProfileData): number {
 }
 
 // ─── Mesleki (max 32 ham puan) ───────────────────────────────────────────────
+// Segment-aware: öğrenci/sponsor/55+ emekli profilleri SGK/yearsInCurrentJob
+// cezasını almaz (core.ts ile tutarlı).
 const PRO_MAX = 32;
 export function getProfessionalScore(data: ProfileData): number {
   let pts = 0;
-  if (data.hasSgkJob)                    pts += 12;
-  else                                    pts -= 5;
+  const expectsEmployment = !data.isStudent && !data.hasSponsor && data.applicantAge < 55;
+
+  if (data.hasSgkJob) {
+    pts += 12;
+    if (data.yearsInCurrentJob >= 3)       pts += 5;
+    else if (data.yearsInCurrentJob === 2) pts += 4;
+    else if (data.yearsInCurrentJob === 1) pts += 2;
+    else                                    pts -= 4;
+  } else if (expectsEmployment) {
+    pts -= 5;
+  }
   if (data.isPublicSectorEmployee)       pts += 6;
   if (data.sgkEmployerLetterWithReturn)  pts += 5;
-  if (data.yearsInCurrentJob >= 3)       pts += 5;
-  else if (data.yearsInCurrentJob === 2) pts += 4;
-  else if (data.yearsInCurrentJob === 1) pts += 2;
-  else                                   pts -= 4;
   if (data.sgkAddressMatchesDs160)       pts += 2;
   if (data.hasBarcodeSgk)                pts += 2;
 

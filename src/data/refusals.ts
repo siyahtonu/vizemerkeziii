@@ -109,7 +109,8 @@ export const UK_REFUSAL_CODES: UkRefusalCode[] = [
     profileRisk: (p) => p.hasPreviousRefusal && !p.previousRefusalDisclosed },
   { code: 'V 4.7',  label: '28 Gün Kalış Aşımı Riski', pct: 4,
     desc: 'Başvurucu UK\'ta kalabilir izlenimi veriyor.',
-    profileRisk: (p) => !p.isMarried && !p.hasHighValueVisa && p.yearsInCurrentJob < 1 },
+    profileRisk: (p) => !p.isMarried && !p.hasHighValueVisa && p.yearsInCurrentJob < 1
+                    && !p.isStudent && !p.hasSponsor && (p.applicantAge ?? 0) < 55 },
   { code: 'ADM',   label: 'İdari / Diğer', pct: 2,
     desc: 'Eksik belge, yanlış form veya teknik ret.',
     profileRisk: () => false },
@@ -122,13 +123,17 @@ export interface UsaRefusalCode {
 export const USA_REFUSAL_CODES: UsaRefusalCode[] = [
   { code: '214(b)', label: 'Göçmen Niyet Şüphesi', pct: 62,
     desc: 'B2 başvurularında Türkler için %62\'yi oluşturan tek sebep.',
-    profileRisk: (p) => (!p.isMarried && !p.hasChildren && !p.hasAssets) || p.yearsInCurrentJob < 2 },
+    // yearsInCurrentJob ölçütü öğrenci/emekli için anlamsız — segment ile koruyalım.
+    profileRisk: (p) => (!p.isMarried && !p.hasChildren && !p.hasAssets)
+                     || (p.yearsInCurrentJob < 2 && !p.isStudent && !p.hasSponsor && (p.applicantAge ?? 0) < 55) },
   { code: '221(g)', label: 'İdari İşlem (Admin Processing)', pct: 18,
     desc: 'Güvenlik kontrolleri veya ek belge talebi.',
     profileRisk: () => false },
   { code: 'DOCS',   label: 'Yetersiz Belgeleme', pct: 10,
     desc: 'DS-160 formunda eksiklik veya finansal kanıt yetersizliği.',
-    profileRisk: (p) => !p.hasSgkJob || !p.purposeClear || !p.bankSufficientBalance },
+    // SGK eksikliği sadece istihdam bekleyen segmentlerde risk; öğrenci/sponsor/55+ için değil.
+    profileRisk: (p) => (!p.hasSgkJob && !p.isStudent && !p.hasSponsor && (p.applicantAge ?? 0) < 55)
+                     || !p.purposeClear || !p.bankSufficientBalance },
   { code: '212(a)', label: 'Uygunsuzluk Temelli Red', pct: 5,
     desc: 'Suç geçmişi, sağlık koşulu veya önceki sınır dışı etme.',
     profileRisk: (p) => !p.noOverstayHistory || !p.cleanCriminalRecord },
@@ -300,7 +305,9 @@ export const REJECTION_TAXONOMY: RejectionPattern[] = [
     country: 'schengen',
     frequency: 2,
     scorePenalty: 7,
-    trigger: (p) => p.yearsInCurrentJob < 1 && !p.salaryDetected,
+    // "Gelir düşüşü" patterni çalışan profil için — öğrenci/emekli/sponsor'u kapsamaz.
+    trigger: (p) => p.yearsInCurrentJob < 1 && !p.salaryDetected
+                 && !p.isStudent && !p.hasSponsor && p.applicantAge < 55,
     explanation: 'Son 1-2 ayda maaş belirgin biçimde düşmüş veya kesilmiş. "Çalışıyor muyum?" şüphesi yaratıyor.',
     mitigation: 'Başvuruyu maaş istikrarı dönemine öteleyin. Geçiş dönemindeyseniz sebep mektubu ekleyin.',
     firstSeen: 2021,
@@ -424,7 +431,8 @@ export const REJECTION_TAXONOMY: RejectionPattern[] = [
     country: 'schengen',
     frequency: 3,
     scorePenalty: 8,
-    trigger: (p) => !p.hasSgkJob && !p.hasAssets && !p.bankSufficientBalance,
+    // 55+ yaş şartı — yoksa bu pattern "emekli maaşı" değil genel yoksulluk olurdu.
+    trigger: (p) => p.applicantAge >= 55 && !p.hasSgkJob && !p.hasAssets && !p.bankSufficientBalance,
     explanation: 'Düşük emekli maaşı + tasarruf yoksa bakiye yetersiz kalıyor. Almanya ve İsveç vakalarında görülüyor.',
     mitigation: 'Taşınmaz veya yatırım belgesi ekleyin. Çocuk sponsoru varsa noter onaylı mektup.',
     firstSeen: 2018,
@@ -443,7 +451,8 @@ export const REJECTION_TAXONOMY: RejectionPattern[] = [
     legalCode: 'Madde 14',
     frequency: 4,
     scorePenalty: 14,
-    trigger: (p) => !p.hasSgkJob && !p.isPublicSectorEmployee && !p.isStudent,
+    // v3.4: Emekli/sponsor segment'inde SGK yokluğu beklenen; bu pattern sadece çalışma çağındaki işsiz için geçerli
+    trigger: (p) => !p.hasSgkJob && !p.isPublicSectorEmployee && !p.isStudent && !p.hasSponsor && p.applicantAge < 55,
     explanation: 'Kayıt dışı çalışma veya SGK yokluğu. "İşimi kanıtlayamıyorum" şikayeti Şikayetvar ve Ekşi\'de en sık karşılaşılan şikayet.',
     mitigation: 'SGK kaydı veya noter onaylı çalışma belgesi. Serbest meslek ise vergi levhası şart.',
     firstSeen: 2015,
@@ -509,7 +518,9 @@ export const REJECTION_TAXONOMY: RejectionPattern[] = [
     country: 'all',
     frequency: 4,
     scorePenalty: 11,
-    trigger: (p) => !p.hasSgkJob && !p.isPublicSectorEmployee && p.incomeSourceClear,
+    // Öğrenci/sponsor/55+ emekli bu kategoriye girmez — pattern "serbest meslek" için.
+    trigger: (p) => !p.hasSgkJob && !p.isPublicSectorEmployee && p.incomeSourceClear
+                 && !p.isStudent && !p.hasSponsor && p.applicantAge < 55,
     explanation: 'Freelancer/serbest çalışan için vergi levhası + gelir vergisi beyannamesi + sözleşme örnekleri zorunlu. Ekşi\'de en çok şikayet edilen profil.',
     mitigation: 'Vergi levhası + son 2 yıl gelir vergisi beyannamesi + aktif müşteri sözleşmeleri.',
     firstSeen: 2018,
@@ -615,7 +626,9 @@ export const REJECTION_TAXONOMY: RejectionPattern[] = [
     country: 'schengen',
     frequency: 6,
     scorePenalty: 15,
-    trigger: (p) => !p.hasHighValueVisa && !p.hasOtherVisa && p.yearsInCurrentJob < 1,
+    // "Yeni iş" önkoşulu — öğrenci/sponsor/55+ emekli için geçerli değil.
+    trigger: (p) => !p.hasHighValueVisa && !p.hasOtherVisa && p.yearsInCurrentJob < 1
+                 && !p.isStudent && !p.hasSponsor && p.applicantAge < 55,
     explanation: 'İlk uluslararası başvuru + yeni iş birlikte gelince çift risk katlanıyor. 2019-2024 arası en sık görülen genç profil ret kalıbı.',
     mitigation: 'En az 6 ay bekleyin. Eğer mecbursanız, Yunanistan veya İtalya gibi daha toleranslı ülkeden başlayın.',
     firstSeen: 2016,
@@ -1000,7 +1013,10 @@ export const REJECTION_TAXONOMY: RejectionPattern[] = [
     legalCode: 'Madde 13 / INA 214(b)',
     frequency: 22,
     scorePenalty: 27,
-    trigger: (p) => !p.isMarried && !p.hasChildren && !p.hasAssets && p.yearsInCurrentJob < 3,
+    // yearsInCurrentJob kriteri çalışma çağı profili için geçerli.
+    trigger: (p) => !p.isMarried && !p.hasChildren && !p.hasAssets
+                 && (p.yearsInCurrentJob < 3 || p.isStudent)
+                 && p.applicantAge < 55,
     explanation: '50 vakada %22 ile en yaygın ret kalıbı. Bekar + genç + kısa iş süresi kombinasyonu konsolosluk gözünde "geri dönmeyebilir" izlenimi yaratır.',
     mitigation: "Türkiye\'deki iş, mülk ve aile bağlarını somutlaştırın. 5-7 günlük kısa ilk seyahat önerilir.",
     firstSeen: 2010,
@@ -1027,7 +1043,9 @@ export const REJECTION_TAXONOMY: RejectionPattern[] = [
     legalCode: 'INA 214(b)',
     frequency: 65,
     scorePenalty: 27,
-    trigger: (p) => (!p.isMarried && !p.hasChildren && !p.hasAssets) || p.yearsInCurrentJob < 2,
+    // yearsInCurrentJob < 2 ölçütü öğrenci/sponsor/55+ için anlamsız
+    trigger: (p) => (!p.isMarried && !p.hasChildren && !p.hasAssets)
+                 || (p.yearsInCurrentJob < 2 && !p.isStudent && !p.hasSponsor && p.applicantAge < 55),
     explanation: "ABD vakalarının %70'inde dominant ret sebebi. Türkiye\'ye bağlayan somut unsurlar yoksa 'potansiyel göçmen' sayılıyor.",
     mitigation: "Tapu, araç, SGK, aile fotoğrafları — bağları somutlaştırın. Kariyer planınızı mülakatta anlatın.",
     firstSeen: 2010,
@@ -1040,7 +1058,10 @@ export const REJECTION_TAXONOMY: RejectionPattern[] = [
     country: 'all',
     frequency: 6,
     scorePenalty: 12,
-    trigger: (p) => !p.isMarried && p.yearsInCurrentJob < 2,
+    // Yaş ve segment guardları — emekli ve öğrencide "bekar + iş <2 yıl" normaldir.
+    trigger: (p) => !p.isMarried && p.yearsInCurrentJob < 2
+                 && p.applicantAge >= 22 && p.applicantAge <= 32
+                 && !p.isStudent && !p.hasSponsor,
     explanation: 'Kariyer istikrarsızlığı + bekarlık kombinasyonu. Özellikle 22-30 yaş arası tek erkek profili.',
     mitigation: 'Kariyer planı + aile mülkü + kısa süreli seyahat (5-7 gün).',
     firstSeen: 2015,
@@ -1053,7 +1074,8 @@ export const REJECTION_TAXONOMY: RejectionPattern[] = [
     country: 'schengen',
     frequency: 4,
     scorePenalty: 10,
-    trigger: (p) => p.isMarried && !p.hasSgkJob && !p.isPublicSectorEmployee && !p.isStudent,
+    // 55+ emekli eşini ziyaret bu patterne değil; aile birleşimi şüphesi genç profilde güçlü.
+    trigger: (p) => p.isMarried && !p.hasSgkJob && !p.isPublicSectorEmployee && !p.isStudent && p.applicantAge < 55,
     explanation: 'Eş yurt dışındayken başvurucunun çalışmaması "aile birleşimi hedefi" izlenimi yaratabilir.',
     mitigation: "Eş yurt dışındaysa sponsor evrakı güçlü olmalı. Türkiye\'de kalacak aile üyesi varsa mutlaka vurgulayın.",
     firstSeen: 2018,
@@ -1134,7 +1156,8 @@ export const REJECTION_TAXONOMY: RejectionPattern[] = [
     country: 'schengen',
     frequency: 2,
     scorePenalty: 5,
-    trigger: (p) => !p.hasSgkJob && !p.hasAssets && !p.isMarried,
+    // "Yaşlı" için 65+ yaş şartı (açıklamadaki eşik ile uyumlu).
+    trigger: (p) => p.applicantAge >= 65 && !p.hasSgkJob && !p.hasAssets && !p.isMarried,
     explanation: '65+ yaş, sağlık sigortası ve destek belgesi olmadan başvuruda sağlık maliyeti şüphesi oluşuyor.',
     mitigation: 'Özel sağlık sigortası + bakım masraflarını karşılayacak finansal belge + aile desteği.',
     firstSeen: 2019,
@@ -1262,7 +1285,9 @@ export const REJECTION_TAXONOMY: RejectionPattern[] = [
     country: 'schengen',
     frequency: 3,
     scorePenalty: 8,
-    trigger: (p) => !p.hasSgkJob && p.incomeSourceClear && !p.hasAssets,
+    // Remote work profili — öğrenci/sponsor/55+ emekli bu kategoriye girmez.
+    trigger: (p) => !p.hasSgkJob && p.incomeSourceClear && !p.hasAssets
+                 && !p.isStudent && !p.hasSponsor && p.applicantAge < 55,
     explanation: '2022-2024\'te "remote work + Schengen vizesi" kombinasyonu arttı. Konsolosluklar çalışma vizesi olmadan uzaktan çalışmayı yasadışı sayıyor.',
     mitigation: 'Kalış amacının yalnızca turizm olduğunu kanıtlayın. Çalışma konumunuzu Türkiye olarak gösterin.',
     firstSeen: 2021,
@@ -1281,7 +1306,8 @@ export const REJECTION_TAXONOMY: RejectionPattern[] = [
     country: 'schengen',
     frequency: 3,
     scorePenalty: 5,
-    trigger: (p) => p.targetCountry === 'Almanya' && p.yearsInCurrentJob < 2,
+    trigger: (p) => p.targetCountry === 'Almanya' && p.yearsInCurrentJob < 2
+                 && !p.isStudent && !p.hasSponsor && p.applicantAge < 55,
     explanation: '2022-2024\'te Almanya randevu bekleme süresi 4-6 aya çıktı. Randevu günü iş veya finansal durum değiştiyse belgeleri güncellemezseniz ret riski artıyor.',
     mitigation: 'Randevu yaklaşırken tüm belgeleri güncelleyin. Özellikle banka ekstresi ve işveren mektubu.',
     firstSeen: 2022,
@@ -1433,7 +1459,9 @@ export const REJECTION_TAXONOMY: RejectionPattern[] = [
     country: 'schengen',
     frequency: 4,
     scorePenalty: 10,
-    trigger: (p) => !p.isMarried && !p.hasAssets && p.yearsInCurrentJob < 3,
+    // yearsInCurrentJob kriteri çalışan profil için; öğrenci/emekli/sponsor dışında uygula.
+    trigger: (p) => !p.isMarried && !p.hasAssets && p.yearsInCurrentJob < 3
+                 && !p.isStudent && !p.hasSponsor && p.applicantAge < 55,
     explanation: 'Norveç, İsveç, Danimarka ret oranı Türk başvurucular için İtalya\'nın 2 katı. Geri dönüş bağı kanıtlama çıtası çok yüksek.',
     mitigation: 'Kuzey Avrupa için mülk / 5+ yıl iş kıdemi / evli+çocuklu profil güçlü olmalı. Yoksa İtalya/İspanya\'dan başlayın.',
     firstSeen: 2019,

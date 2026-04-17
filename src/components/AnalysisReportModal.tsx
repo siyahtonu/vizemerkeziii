@@ -124,10 +124,12 @@ export function AnalysisReportModal({
     } catch { return null; }
   }, [profile, currentScore]);
 
-  // ── Profil segmenti ──────────────────────────────────────────────────────
-  const segment = profile.isStudent ? 'Öğrenci'
+  // ── Profil segmenti (resolveSegment ile tutarlı) ─────────────────────────
+  const segment = profile.hasSponsor ? 'Sponsorlu Başvurucu'
+    : profile.isStudent ? 'Öğrenci'
     : profile.isPublicSectorEmployee ? 'Kamu Çalışanı'
     : profile.hasSgkJob ? 'SGK\'lı Çalışan'
+    : (profile.hasAssets && profile.applicantAge >= 55) ? 'Emekli / Varlıklı'
     : profile.hasAssets ? 'Serbest / Varlıklı'
     : 'Çalışmıyor';
 

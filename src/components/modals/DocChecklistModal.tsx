@@ -16,6 +16,8 @@ export interface DocChecklistProfile {
   hasHighValueVisa?: boolean;
   hasOtherVisa?: boolean;
   strongFamilyTies?: boolean;
+  hasSponsor?: boolean;
+  applicantAge?: number;
 }
 
 interface Props {
@@ -76,6 +78,8 @@ function buildSections(profile: DocChecklistProfile): DocSection[] {
     ],
   });
 
+  const isRetired = !profile.hasSgkJob && profile.hasAssets && (profile.applicantAge ?? 0) >= 55;
+
   if (profile.hasSgkJob || profile.isPublicSectorEmployee) {
     sections.push({
       title: 'Mesleki Belgeler',
@@ -103,6 +107,30 @@ function buildSections(profile: DocChecklistProfile): DocSection[] {
         { text: 'Güncel öğrenci belgesi (tercihen İngilizce/Almanca)', status: 'required' },
         { text: 'Not dökümü / Transkript', status: 'required' },
         { text: 'Burs belgesi veya veli finansal sponsorluğu', status: 'conditional' },
+      ],
+    });
+  } else if (isRetired) {
+    sections.push({
+      title: 'Emeklilik Belgeleri',
+      icon: '🏖️',
+      items: [
+        { text: 'SGK / Bağ-Kur emeklilik belgesi (e-Devlet, barkodlu)', status: 'required' },
+        { text: 'Son 3 aylık emekli maaşı hesap dökümü', status: 'required' },
+        { text: 'Varlık beyanı (tapu, araç ruhsatı, mevduat)', status: 'conditional' },
+      ],
+    });
+  }
+
+  if (profile.hasSponsor) {
+    sections.push({
+      title: 'Sponsor Belgeleri',
+      icon: '🤝',
+      items: [
+        { text: 'Noter onaylı sponsor taahhütnamesi (masrafları karşılama beyanı)', status: 'required' },
+        { text: 'Sponsorun son 3 aylık banka dökümü (kaşeli-imzalı)', status: 'required' },
+        { text: 'Sponsorun kimlik/pasaport fotokopisi', status: 'required' },
+        { text: 'Sponsorluk ilişki belgesi (akrabalık / davet / resmi bağ)', status: 'required' },
+        { text: 'Sponsorun gelir belgesi (maaş bordrosu veya vergi levhası)', status: 'conditional' },
       ],
     });
   }

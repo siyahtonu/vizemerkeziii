@@ -40,15 +40,21 @@ function getSections(p: ProfileData, simValue = 0): SectionScore[] {
   if (p.monthlyInflow < p.monthlyOutflow && p.monthlyInflow > 0) fin -= 6;
 
   // ─── Mesleki ─────────────────────────────────────────────────────────
+  // Segment-aware: öğrenci/sponsor/55+ emekli için SGK eksikliği ceza değil.
   let pro = 0;
   const proMax = 22;
-  if (p.hasSgkJob) pro += 12; else pro -= 5;
+  const expectsEmployment = !p.isStudent && !p.hasSponsor && p.applicantAge < 55;
+  if (p.hasSgkJob) {
+    pro += 12;
+    if (p.yearsInCurrentJob >= 3) pro += 5;
+    else if (p.yearsInCurrentJob === 2) pro += 4;
+    else if (p.yearsInCurrentJob === 1) pro += 2;
+    else pro -= 4;
+  } else if (expectsEmployment) {
+    pro -= 5;
+  }
   if (p.isPublicSectorEmployee) pro += 6;
   if (p.sgkEmployerLetterWithReturn) pro += 5;
-  if (p.yearsInCurrentJob >= 3) pro += 5;
-  else if (p.yearsInCurrentJob === 2) pro += 4;
-  else if (p.yearsInCurrentJob === 1) pro += 2;
-  else pro -= 4;
   if (p.sgkAddressMatchesDs160) pro += 2;
   if (p.hasBarcodeSgk) pro += 2;
 
@@ -108,9 +114,19 @@ function getSections(p: ProfileData, simValue = 0): SectionScore[] {
         : 'Sigorta ve günlük bütçe ispat eksik',
     },
     {
-      name: 'Mesleki Bağlılık', earned: clamp(pro, proMax), max: proMax,
+      name: p.isStudent ? 'Öğrencilik Kanıtı'
+          : p.hasSponsor ? 'Sponsor Güvencesi'
+          : (p.applicantAge >= 55 && !p.hasSgkJob) ? 'Emeklilik & Varlık'
+          : 'Mesleki Bağlılık',
+      earned: clamp(pro, proMax), max: proMax,
       efficiency: clamp(pro, proMax) / proMax,
-      hint: !p.hasSgkJob
+      hint: p.isStudent
+        ? 'Öğrenci belgesi / transkript eksik'
+        : p.hasSponsor
+        ? 'Sponsor mektubu ve mali taahhüt belgesi eksik'
+        : (p.applicantAge >= 55 && !p.hasSgkJob)
+        ? 'Emeklilik belgesi / varlık kanıtı eksik'
+        : !p.hasSgkJob
         ? 'SGK kaydı yok veya aktif değil'
         : !p.sgkEmployerLetterWithReturn
         ? 'Dönüş taahhütlü işveren mektubu eksik'

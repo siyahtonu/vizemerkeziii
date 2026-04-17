@@ -40,7 +40,8 @@ const BASE_TASKS: TimelineTask[] = [
     label: 'SGK & İşveren Belgesi Al',
     desc: 'E-Devlet barkodlu SGK dökümü + dönüş taahhütlü işveren mektubu.',
     icon: '💼',
-    cond: (p) => !p.hasSgkJob,
+    // Öğrenci/sponsor/55+ emekli profilleri SGK/işveren belgesi beklemez.
+    cond: (p) => !p.hasSgkJob && !p.isStudent && !p.hasSponsor && p.applicantAge < 55,
   },
   {
     id: 'balance_target',

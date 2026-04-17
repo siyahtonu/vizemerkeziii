@@ -13,8 +13,14 @@ import { BASE_PROFILE } from './fixtures';
 
 // ── temporalDecay ─────────────────────────────────────────────────────────────
 describe('temporalDecay', () => {
-  test('eventYear=0 -> decay yok (1.0)', () => {
-    expect(temporalDecay(0)).toBe(1.0);
+  test('eventYear=0 (bilinmiyor) -> 5-yıl varsayımı ile ~0.37 ağırlık', () => {
+    // Algoritma kuralı: 0 = "bilinmiyor", konservatif 5-yıl önce varsay.
+    // lambda=0.20 × 5 yıl = e^-1 ≈ 0.3678
+    expect(temporalDecay(0)).toBeCloseTo(Math.exp(-1), 3);
+  });
+
+  test('eventYear=-1 (hiç yok) -> 0 ağırlık', () => {
+    expect(temporalDecay(-1)).toBe(0);
   });
 
   test('gecen yil -> neredeyse 1.0 ama az altinda', () => {

@@ -43,16 +43,11 @@ export const getReturnTieMultiplier = (ctx: ContextProfile): number => {
 };
 
 // ── #4 Profil-Ülke Faktörü ───────────────────────────────────────────────
+// resolveSegment kullanılır — önceki inline mantık sponsor+55+ durumunda
+// segmenti yanlışlıkla 'retired' ile ezebiliyordu.
 export const getProfileCountryFactor = (data: ProfileData): number => {
   const country = data.targetCountry;
-  let segment = 'employed';
-  if (data.hasSponsor)                         segment = 'sponsor';
-  else if (data.isStudent)                     segment = 'student';
-  else if (data.isPublicSectorEmployee)        segment = 'public_sector';
-  else if (!data.hasSgkJob && !data.hasAssets) segment = 'unemployed';
-  else if (!data.hasSgkJob && data.hasAssets)  segment = 'self_employed';
-  // retired: SGK yok, 55+ yaş ve varlık var
-  if (!data.hasSgkJob && data.hasAssets && data.applicantAge >= 55) segment = 'retired';
+  const segment = resolveSegment(data);
   return PROFILE_COUNTRY_MATRIX[segment]?.[country] ?? 1.0;
 };
 

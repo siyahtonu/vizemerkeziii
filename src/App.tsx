@@ -701,6 +701,12 @@ export default function App() {
       // v3.4: emekli/öğrenci/sponsor bu kategoriye girmesin
       persona = "Yüksek Risk: Göç Şüpheli Profil";
       personaDestiny = "Konsolosluk memurunun ilk baktığı 'göç riski' profili. Tek çözüm: çok güçlü finansal + en az 2 ek bağ kanıtı.";
+    } else if (profile.applicantAge >= 55 && !profile.hasSgkJob && profile.hasAssets) {
+      persona = "İstikrarlı Profil: Emekli / Varlıklı";
+      personaDestiny = "55+ yaş + varlık kanıtı konsoloslukta düşük göç riski olarak değerlendirilir. Emeklilik belgesi ve varlık kanıtlarıyla güçlü bir profilsiniz.";
+    } else if (profile.hasSponsor && !profile.hasSgkJob) {
+      persona = "Sponsorlu Profil";
+      personaDestiny = "Sponsor güvencesi var. Başarı, sponsor belgelerinin eksiksizliğine ve ilişki kanıtının netliğine bağlı.";
     } else if (!profile.hasSgkJob && profile.isMarried && profile.hasAssets) {
       persona = "Orta Risk: Ev Hanımı/Bağımsız";
       personaDestiny = "Sponsor (eş/aile) gerekli. Sponsor belgeleri eksiksiz olursa onay mümkün.";

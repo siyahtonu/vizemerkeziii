@@ -565,7 +565,14 @@ export function DashboardStep({
                                       visaType: profile.targetCountry === 'ABD' ? 'B1/B2' : profile.targetCountry === 'İngiltere' ? 'UK Visitor' : 'Schengen (C)',
                                       applicationDate: fbDate,
                                       profileScore: currentScore,
-                                      profileSegment: profile.isStudent ? 'student' : profile.isPublicSectorEmployee ? 'public_sector' : !profile.hasSgkJob ? 'self_employed' : 'employed',
+                                      profileSegment:
+                                        profile.hasSponsor ? 'sponsor' :
+                                        profile.isStudent ? 'student' :
+                                        profile.isPublicSectorEmployee ? 'public_sector' :
+                                        (!profile.hasSgkJob && profile.hasAssets && profile.applicantAge >= 55) ? 'retired' :
+                                        (!profile.hasSgkJob && profile.hasAssets) ? 'self_employed' :
+                                        (!profile.hasSgkJob && !profile.hasAssets) ? 'unemployed' :
+                                        'employed',
                                     }),
                                   });
                                   const data = await res.json();
@@ -1201,12 +1208,16 @@ export function DashboardStep({
                         <h3 className="font-bold text-lg text-slate-900 font-display">Red Flag Kill Switch</h3>
                       </div>
                       <div className="space-y-4">
-                        {[
-                          { label: 'Yetersiz Bakiye', risk: parseInt(profile.bankBalance || '0') < 50000 },
-                          { label: 'SGK Boşluğu', risk: !profile.hasSgkJob },
-                          { label: 'Pasaport Süresi', risk: !profile.hasValidPassport },
-                          { label: 'Şüpheli Para Girişi', risk: profile.hasSuspiciousLargeDeposit }
-                        ].map((flag, i) => (
+                        {(() => {
+                          // v3.4: SGK boşluğu emekli/öğrenci/sponsor için beklenen; kırmızı bayrak değil
+                          const sgkIsRisk = !profile.hasSgkJob && !profile.isStudent && !profile.hasSponsor && profile.applicantAge < 55;
+                          return [
+                            { label: 'Yetersiz Bakiye', risk: parseInt(profile.bankBalance || '0') < 50000 },
+                            { label: 'SGK Boşluğu', risk: sgkIsRisk },
+                            { label: 'Pasaport Süresi', risk: !profile.hasValidPassport },
+                            { label: 'Şüpheli Para Girişi', risk: profile.hasSuspiciousLargeDeposit }
+                          ];
+                        })().map((flag, i) => (
                           <div key={`flag-${i}`} className="flex items-center justify-between p-3 bg-white rounded-xl border border-slate-100">
                             <span className="text-xs font-bold text-slate-600">{flag.label}</span>
                             {flag.risk ? (
@@ -1256,12 +1267,22 @@ export function DashboardStep({
                         <h3 className="font-bold text-lg text-slate-900 font-display">Evrak Durumu</h3>
                       </div>
                       <div className="space-y-4">
-                        {[
-                          { label: 'Pasaport', ok: profile.hasValidPassport },
-                          { label: 'Banka Dökümü', ok: profile.bankRegularity },
-                          { label: 'SGK Dökümü', ok: profile.hasSgkJob },
-                          { label: 'Niyet Mektubu', ok: profile.useOurTemplate },
-                        ].map((item, i) => (
+                        {(() => {
+                          // v3.4: Segment-aware "3. Belge" — emekli için emeklilik belgesi, öğrenci için öğrenci belgesi,
+                          // sponsor için sponsor mektubu, çalışan için SGK dökümü
+                          const isRetired = profile.applicantAge >= 55 && !profile.hasSgkJob;
+                          let thirdLabel = 'SGK Dökümü';
+                          let thirdOk = profile.hasSgkJob;
+                          if (isRetired) { thirdLabel = 'Emeklilik Belgesi'; thirdOk = profile.hasAssets; }
+                          else if (profile.isStudent) { thirdLabel = 'Öğrenci Belgesi'; thirdOk = profile.tieCategories?.education ?? false; }
+                          else if (profile.hasSponsor) { thirdLabel = 'Sponsor Mektubu'; thirdOk = profile.bankSufficientBalance; }
+                          return [
+                            { label: 'Pasaport', ok: profile.hasValidPassport },
+                            { label: 'Banka Dökümü', ok: profile.bankRegularity },
+                            { label: thirdLabel, ok: thirdOk },
+                            { label: 'Niyet Mektubu', ok: profile.useOurTemplate },
+                          ];
+                        })().map((item, i) => (
                           <div key={`doc-status-${i}`} className="flex items-center justify-between">
                             <span className="text-xs font-medium text-slate-600">{item.label}</span>
                             {item.ok ? (
