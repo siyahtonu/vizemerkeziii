@@ -1,18 +1,17 @@
 // ============================================================
-// EvidenceChecklist — Kişiselleştirilmiş Kanıt Kontrol Listesi v2
+// EvidenceChecklist — Kişiselleştirilmiş Kanıt Kontrol Listesi v3
 //
-// Özellikler:
-//  • Her madde için anlık skor delta (+X puan badge)
-//  • localStorage kalıcılığı — sayfa yenilemede ilerleme korunur
-//  • "Sıradaki En Etkili Adım" sticky kartı
-//  • Öncelik grubu + kategori breakdown
-//  • %25 / %50 / %75 / %100 milestone kutlamaları
-//  • "Yaptım ✓" → profil güncelleme + "Geri al" ile güvenli revert
+// Tasarım prensibi: "profil = tek gerçek kaynak".
+// Bir madde hangi yolla tamamlanmış olursa olsun (Yaptım butonu,
+// sosyal medya aracı, belge kontrol listesi, doğrudan form) profilde
+// ilgili bayrak true olur → showIf filtresi maddeyi otomatik düşürür.
+// Üstü çizili / "Geri al" state'i yok; localStorage yok. Liste ile
+// profil arasında senkron kayması imkânsız.
 // ============================================================
-import { useMemo, useState, useEffect, useCallback } from 'react';
+import { useMemo, useState, useEffect, useRef, useCallback } from 'react';
 import {
-  CheckCircle2, ExternalLink, ChevronDown, ChevronUp,
-  ListChecks, Zap, TrendingUp, Trophy, ArrowRight, RotateCcw,
+  ExternalLink, ChevronDown, ChevronUp,
+  ListChecks, Zap, TrendingUp, Trophy, ArrowRight,
 } from 'lucide-react';
 import type { ProfileData } from '../types';
 import { calculateScore } from '../scoring/core';
@@ -204,10 +203,24 @@ const CATEGORY_LABEL: Record<Category, string> = {
   financial: 'Finansal', professional: 'Profesyonel',
   application: 'Başvuru', trust: 'Güven', country: 'Ülke Özel',
 };
-const STORAGE_KEY = 'evidence_checklist_v3';
 const MILESTONES = [25, 50, 75, 100];
 
-// ── Skor delta hesabı (tek madde için) ───────────────────────────────────────
+// ── Yardımcılar ──────────────────────────────────────────────────────────────
+
+// "Applicable" = bu madde bu profile uygulanabilir mi (tamamlanmış da olsa).
+// patch'teki boolean alanları false'a çekip showIf'i çağırarak ölçülür —
+// böylece ülke/meslek gibi bağımsız ön-koşullar ayrı değerlendirilir.
+function isApplicable(item: ChecklistItem, profile: ProfileData): boolean {
+  const reset: Record<string, unknown> = { ...profile };
+  for (const key of Object.keys(item.patch)) {
+    const val = (item.patch as Record<string, unknown>)[key];
+    if (typeof val === 'boolean') {
+      reset[key] = false;
+    }
+  }
+  return item.showIf(reset as unknown as ProfileData);
+}
+
 function scoreDelta(profile: ProfileData, patch: Partial<ProfileData>, base: number): number {
   return Math.round(calculateScore({ ...profile, ...patch }) - base);
 }
@@ -220,106 +233,87 @@ interface Props {
 }
 
 export function EvidenceChecklist({ profile, currentScore, onProfileUpdate }: Props) {
-  // localStorage'dan başlangıç durumu
-  const [checked, setChecked] = useState<Set<string>>(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      return raw ? new Set<string>(JSON.parse(raw)) : new Set<string>();
-    } catch {
-      return new Set<string>();
-    }
-  });
   const [expanded, setExpanded] = useState(true);
   const [recentMilestone, setRecentMilestone] = useState<number | null>(null);
 
-  // Profildeki eksiklere göre filtrele
-  const visible = useMemo(
-    () => ALL_ITEMS.filter(item => item.showIf(profile)),
+  // Profile uygulanabilir tüm maddeler (tamamlanmış + eksik)
+  const applicable = useMemo(
+    () => ALL_ITEMS.filter(item => isApplicable(item, profile)),
     [profile],
   );
 
-  const total     = visible.length;
-  const doneCount = [...checked].filter(id => visible.some(i => i.id === id)).length;
+  // Sadece eksik olanlar — showIf bunu zaten filtreliyor
+  const visible = useMemo(
+    () => applicable.filter(item => item.showIf(profile)),
+    [applicable, profile],
+  );
+
+  const total     = applicable.length;
+  const remaining = visible.length;
+  const doneCount = total - remaining;
   const progress  = total === 0 ? 100 : Math.round((doneCount / total) * 100);
 
-  // Her madde için bireysel delta (sadece görünür maddeler)
+  // Her eksik madde için bireysel delta
   const deltas = useMemo(() => {
     const map: Record<string, number> = {};
     visible.forEach(item => {
-      if (!checked.has(item.id)) {
-        map[item.id] = scoreDelta(profile, item.patch, currentScore);
-      }
+      map[item.id] = scoreDelta(profile, item.patch, currentScore);
     });
     return map;
-  }, [visible, profile, currentScore, checked]);
+  }, [visible, profile, currentScore]);
 
-  // En yüksek kazanımlı sıradaki madde
-  const topItem = useMemo(() => {
-    const candidates = visible.filter(i => !checked.has(i.id));
-    if (candidates.length === 0) return null;
-    // Önce kritik, sonra en yüksek delta
-    const criticals = candidates.filter(i => i.priority === 'critical');
-    const pool = criticals.length > 0 ? criticals : candidates;
-    return pool.reduce((best, cur) =>
-      (deltas[cur.id] ?? 0) > (deltas[best.id] ?? 0) ? cur : best
-    );
-  }, [visible, checked, deltas]);
-
-  // Toplam tahmini skor
-  const combinedPatch = useMemo(() => {
+  // Tüm eksikler tamamlansa toplam kazanç
+  const allPatch = useMemo(() => {
     const merged: Partial<ProfileData> = {};
-    visible.forEach(item => {
-      if (checked.has(item.id)) Object.assign(merged, item.patch);
-    });
+    visible.forEach(item => Object.assign(merged, item.patch));
     return merged;
-  }, [checked, visible]);
+  }, [visible]);
   const projectedScore = useMemo(
-    () => Object.keys(combinedPatch).length > 0
-      ? Math.round(calculateScore({ ...profile, ...combinedPatch }))
+    () => Object.keys(allPatch).length > 0
+      ? Math.round(calculateScore({ ...profile, ...allPatch }))
       : currentScore,
-    [combinedPatch, profile, currentScore],
+    [allPatch, profile, currentScore],
   );
   const totalGain = projectedScore - currentScore;
 
-  // Kategori breakdown
+  // En yüksek kazanımlı sıradaki madde
+  const topItem = useMemo(() => {
+    if (visible.length === 0) return null;
+    const criticals = visible.filter(i => i.priority === 'critical');
+    const pool = criticals.length > 0 ? criticals : visible;
+    return pool.reduce((best, cur) =>
+      (deltas[cur.id] ?? 0) > (deltas[best.id] ?? 0) ? cur : best
+    );
+  }, [visible, deltas]);
+
+  // Kategori breakdown — applicable denominator
   const categoryStats = useMemo(() => {
-    const cats = Array.from(new Set(visible.map(i => i.category)));
-    return cats.map(cat => ({
-      cat,
-      done: visible.filter(i => i.category === cat && checked.has(i.id)).length,
-      total: visible.filter(i => i.category === cat).length,
-    }));
-  }, [visible, checked]);
-
-  // localStorage persist + milestone detection
-  const prevProgress = useMemo(() => {
-    const prevDone = doneCount - (recentMilestone !== null ? 1 : 0);
-    return total === 0 ? 100 : Math.round((prevDone / total) * 100);
-  }, [doneCount, total, recentMilestone]);
-
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify([...checked]));
-  }, [checked]);
-
-  const handleToggle = useCallback((item: ChecklistItem) => {
-    setChecked(prev => {
-      const next = new Set(prev);
-      if (next.has(item.id)) {
-        next.delete(item.id);
-      } else {
-        next.add(item.id);
-        onProfileUpdate(item.patch);
-        // Milestone kontrolü
-        const newProgress = total === 0 ? 100 : Math.round((next.size / total) * 100);
-        const hit = MILESTONES.find(m => newProgress >= m && prevProgress < m);
-        if (hit) {
-          setRecentMilestone(hit);
-          setTimeout(() => setRecentMilestone(null), 3000);
-        }
-      }
-      return next;
+    const cats = Array.from(new Set(applicable.map(i => i.category)));
+    return cats.map(cat => {
+      const catTotal = applicable.filter(i => i.category === cat).length;
+      const catRemaining = visible.filter(i => i.category === cat).length;
+      return { cat, done: catTotal - catRemaining, total: catTotal };
     });
-  }, [onProfileUpdate, total, prevProgress]);
+  }, [applicable, visible]);
+
+  // Milestone detection — progress arttıkça kutla
+  const prevProgressRef = useRef(progress);
+  useEffect(() => {
+    const prev = prevProgressRef.current;
+    if (progress > prev) {
+      const hit = MILESTONES.find(m => progress >= m && prev < m);
+      if (hit) {
+        setRecentMilestone(hit);
+        const timer = setTimeout(() => setRecentMilestone(null), 3000);
+        return () => clearTimeout(timer);
+      }
+    }
+    prevProgressRef.current = progress;
+  }, [progress]);
+
+  const handleMarkDone = useCallback((item: ChecklistItem) => {
+    onProfileUpdate(item.patch);
+  }, [onProfileUpdate]);
 
   // Gruplar
   const grouped = PRIORITY_ORDER
@@ -357,10 +351,10 @@ export function EvidenceChecklist({ profile, currentScore, onProfileUpdate }: Pr
           <div>
             <div className="font-bold text-slate-900 text-sm">Kanıt Kontrol Listesi</div>
             <div className="text-xs text-slate-400">
-              {doneCount}/{total} madde ·{' '}
+              {doneCount}/{total} tamamlandı · {remaining} eksik ·{' '}
               {totalGain > 0
-                ? <span className="text-emerald-600 font-bold">+{totalGain} puan kazanıldı</span>
-                : 'tiklediğinde skor anında yükselir'}
+                ? <span className="text-emerald-600 font-bold">tümü +{totalGain} puan</span>
+                : 'tıkladığında skor anında yükselir'}
             </div>
           </div>
         </div>
@@ -384,7 +378,7 @@ export function EvidenceChecklist({ profile, currentScore, onProfileUpdate }: Pr
             <div className="flex items-center gap-3 p-3 rounded-xl bg-emerald-50 border border-emerald-200 animate-pulse">
               <Trophy className="w-5 h-5 text-emerald-500 shrink-0" />
               <span className="text-sm font-bold text-emerald-700">
-                %{recentMilestone} tamamlandı! {recentMilestone === 100 ? '🎉 Mükemmel!' : 'Harika gidiyorsun →'}
+                %{recentMilestone} tamamlandı! {recentMilestone === 100 ? 'Mükemmel!' : 'Harika gidiyorsun →'}
               </span>
             </div>
           )}
@@ -406,7 +400,7 @@ export function EvidenceChecklist({ profile, currentScore, onProfileUpdate }: Pr
               {totalGain > 0 && (
                 <span className="font-bold text-emerald-600 flex items-center gap-1">
                   <TrendingUp className="w-3 h-3" />
-                  Tahmini: %{projectedScore} <span className="text-emerald-500">(+{totalGain})</span>
+                  Tümü biterse: %{projectedScore} <span className="text-emerald-500">(+{totalGain})</span>
                 </span>
               )}
             </div>
@@ -453,7 +447,7 @@ export function EvidenceChecklist({ profile, currentScore, onProfileUpdate }: Pr
                 )}
                 <button
                   type="button"
-                  onClick={() => handleToggle(topItem)}
+                  onClick={() => handleMarkDone(topItem)}
                   className="ml-auto flex items-center gap-1.5 px-4 py-1.5 text-xs font-bold bg-brand-600 text-white hover:bg-brand-700 rounded-xl transition-colors"
                 >
                   Yaptım ✓ <ArrowRight className="w-3 h-3" />
@@ -483,86 +477,55 @@ export function EvidenceChecklist({ profile, currentScore, onProfileUpdate }: Pr
               <div className={`inline-flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-0.5 rounded-full border mb-2.5 ${PRIORITY_COLOR[priority].badge}`}>
                 {priority === 'critical' && '⚠ '}
                 {PRIORITY_LABEL[priority]}
-                <span className="opacity-60">
-                  · {items.filter(i => checked.has(i.id)).length}/{items.length}
-                </span>
+                <span className="opacity-60">· {items.length} eksik</span>
               </div>
 
               <div className="space-y-2">
                 {items.map(item => {
-                  const isChecked = checked.has(item.id);
                   const delta = deltas[item.id] ?? 0;
                   return (
                     <div
                       key={item.id}
-                      className={`flex items-start gap-3 p-3 rounded-xl border transition-all duration-200 ${
-                        isChecked
-                          ? 'border-emerald-200 bg-emerald-50/60'
-                          : `${PRIORITY_COLOR[priority].glow} hover:border-slate-300`
-                      }`}
+                      className={`flex items-start gap-3 p-3 rounded-xl border transition-all duration-200 ${PRIORITY_COLOR[priority].glow} hover:border-slate-300`}
                     >
-                      {/* Checkbox */}
+                      {/* Boş kutucuk — henüz işaretlenmemiş */}
                       <button
                         type="button"
-                        aria-label={isChecked ? 'Geri al' : 'Yaptım'}
-                        onClick={() => handleToggle(item)}
-                        className={`mt-0.5 w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-colors ${
-                          isChecked
-                            ? 'bg-emerald-500 border-emerald-500'
-                            : 'border-slate-300 hover:border-emerald-400'
-                        }`}
-                      >
-                        {isChecked && <CheckCircle2 className="w-3.5 h-3.5 text-white" />}
-                      </button>
+                        aria-label="Yaptım"
+                        onClick={() => handleMarkDone(item)}
+                        className="mt-0.5 w-5 h-5 rounded-md border-2 border-slate-300 hover:border-emerald-400 shrink-0 transition-colors"
+                      />
 
-                      {/* İçerik */}
                       <div className="flex-1 min-w-0">
-                        <div className={`text-sm font-bold ${isChecked ? 'line-through text-slate-400' : 'text-slate-800'}`}>
-                          {item.label}
-                        </div>
-                        {!isChecked && (
-                          <>
-                            <div className="text-xs text-slate-500 mt-0.5 leading-relaxed">{item.detail}</div>
-                            {item.link && (
-                              <a
-                                href={item.link}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1 text-xs font-bold text-brand-600 hover:underline mt-1"
-                                onClick={e => e.stopPropagation()}
-                              >
-                                {item.linkLabel ?? item.link}
-                                <ExternalLink className="w-3 h-3" />
-                              </a>
-                            )}
-                          </>
+                        <div className="text-sm font-bold text-slate-800">{item.label}</div>
+                        <div className="text-xs text-slate-500 mt-0.5 leading-relaxed">{item.detail}</div>
+                        {item.link && (
+                          <a
+                            href={item.link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 text-xs font-bold text-brand-600 hover:underline mt-1"
+                            onClick={e => e.stopPropagation()}
+                          >
+                            {item.linkLabel ?? item.link}
+                            <ExternalLink className="w-3 h-3" />
+                          </a>
                         )}
                       </div>
 
-                      {/* Sağ: delta badge + aksiyon */}
                       <div className="shrink-0 flex flex-col items-end gap-1.5">
-                        {!isChecked && delta > 0 && (
+                        {delta > 0 && (
                           <span className="text-[10px] font-bold bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">
                             +{delta} puan
                           </span>
                         )}
-                        {!isChecked ? (
-                          <button
-                            type="button"
-                            onClick={() => handleToggle(item)}
-                            className="px-3 py-1.5 text-xs font-bold bg-emerald-100 text-emerald-700 hover:bg-emerald-200 border border-emerald-200 rounded-lg transition-colors whitespace-nowrap"
-                          >
-                            Yaptım ✓
-                          </button>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() => handleToggle(item)}
-                            className="flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold text-slate-400 hover:text-rose-600 border border-slate-200 hover:border-rose-200 rounded-lg transition-colors"
-                          >
-                            <RotateCcw className="w-3 h-3" /> Geri al
-                          </button>
-                        )}
+                        <button
+                          type="button"
+                          onClick={() => handleMarkDone(item)}
+                          className="px-3 py-1.5 text-xs font-bold bg-emerald-100 text-emerald-700 hover:bg-emerald-200 border border-emerald-200 rounded-lg transition-colors whitespace-nowrap"
+                        >
+                          Yaptım ✓
+                        </button>
                       </div>
                     </div>
                   );
@@ -572,7 +535,7 @@ export function EvidenceChecklist({ profile, currentScore, onProfileUpdate }: Pr
           ))}
 
           <p className="text-[10px] text-slate-400 text-center pt-1">
-            İlerlemeniz tarayıcıda saklanır — sayfa yenilesen de kaybolmaz.
+            İşaretlediğin adımlar profil analizini anında etkiler. Araçlardan tamamlananlar da burada otomatik düşer.
           </p>
         </div>
       )}

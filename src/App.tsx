@@ -4319,10 +4319,30 @@ Signature: _______________     Date: ${today}`;
                   </section>
                 </div>
 
-                {/* Footer — kapat butonu */}
+                {/* Footer — kaydet ve profili güncelle */}
                 <div className="px-6 py-4 border-t border-slate-100 shrink-0">
                   <button
-                    onClick={() => setIsSocialMediaOpen(false)}
+                    onClick={() => {
+                      // Denetim yeterli seviyedeyse profile işle — skor >=60
+                      // ("İlerliyor"ın üstü). Böylece Kanıt Kontrol Listesi,
+                      // Ret Risk Analizi ve diğer panellerdeki "sosyal medya"
+                      // maddesi otomatik düşer.
+                      const riskItems   = socialMediaChecklist.filter(i => i.category === 'risk');
+                      const actionItems = socialMediaChecklist.filter(i => i.category === 'action');
+                      const posItems    = socialMediaChecklist.filter(i => i.category === 'positive');
+                      const riskDone    = riskItems.filter(i => socialMediaChecked[i.id]).length;
+                      const actionDone  = actionItems.filter(i => socialMediaChecked[i.id]).length;
+                      const posDone     = posItems.filter(i => socialMediaChecked[i.id]).length;
+                      const score = Math.round(
+                        (riskItems.length   ? (riskDone   / riskItems.length)   : 0) * 50 +
+                        (actionItems.length ? (actionDone / actionItems.length) : 0) * 30 +
+                        (posItems.length    ? (posDone    / posItems.length)    : 0) * 20
+                      );
+                      if (score >= 60) {
+                        setProfile(prev => ({ ...prev, hasSocialMediaFootprint: true }));
+                      }
+                      setIsSocialMediaOpen(false);
+                    }}
                     className="w-full py-3 bg-gradient-to-r from-brand-500 to-brand-600 text-white rounded-2xl font-bold text-sm hover:shadow-lg hover:shadow-brand-500/20 hover:-translate-y-0.5 transition-all duration-300"
                   >
                     Denetimi Kaydet ve Kapat
