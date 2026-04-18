@@ -20,6 +20,7 @@ import { WhatIfSimulator } from '../components/WhatIfSimulator';
 import { EvidenceChecklist } from '../components/EvidenceChecklist';
 import { RejectionRiskWidget } from '../components/RejectionRiskWidget';
 import SeasonalRiskWidget from '../components/SeasonalRiskWidget';
+import CostCalculatorWidget from '../components/CostCalculatorWidget';
 import { WidgetBoundary } from '../components/ErrorBoundary';
 import ScoreStory from '../components/ScoreStory';
 import BenchmarkCard from '../components/BenchmarkCard';
@@ -480,6 +481,13 @@ export function DashboardStep({
                   <WidgetBoundary name="WhatIfSimulator">
                     <WhatIfSimulator profile={profile} currentScore={currentScore} />
                   </WidgetBoundary>
+
+                  {/* ── MALİYET HESAPLAYICI ── */}
+                  {profile.targetCountry && (
+                    <WidgetBoundary name="CostCalculatorWidget">
+                      <CostCalculatorWidget country={profile.targetCountry} />
+                    </WidgetBoundary>
+                  )}
 
                   {/* ── SONUCU ÇIKART CTA ── */}
                   <div className="rounded-2xl bg-gradient-to-br from-indigo-600 to-brand-700 p-5 flex flex-col sm:flex-row items-center gap-4">

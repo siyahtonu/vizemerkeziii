@@ -13,6 +13,7 @@ import { getDimensionScores, DIMENSION_LABELS, DIMENSION_TIPS } from '../scoring
 import { TR_REJECTION_RATES } from '../scoring/matrices';
 import { getProfileCountryFactor } from '../scoring/algorithms';
 import { getTimingAdvice } from '../scoring/seasonal';
+import { calculateTripCost, COUNTRY_COSTS } from '../data/countries';
 
 // ── Yardımcı ─────────────────────────────────────────────────────────────────
 const FLAG: Record<string, string> = {
@@ -108,6 +109,20 @@ export function AnalysisReportModal({
 
   // ── Detaylı breakdown ────────────────────────────────────────────────────
   const breakdown = useMemo(() => calculateScoreDetailed(profile), [profile]);
+
+  // ── Maliyet tahmini — orta tier, 7 gün, 1 kişi, shoulder sezon ──────────
+  const costEstimate = useMemo(() => {
+    if (!profile.targetCountry || !COUNTRY_COSTS[profile.targetCountry]) return null;
+    return calculateTripCost({
+      country: profile.targetCountry,
+      days: 7,
+      travelers: 1,
+      tier: 'mid',
+      cityTier: 'mid',
+      season: 'shoulder',
+      includeInsurance: true,
+    });
+  }, [profile.targetCountry]);
 
   // ── Mevsimsel öneri ──────────────────────────────────────────────────────
   // getTimingAdvice(country, score, year?, month?, baseWaitDays?)
@@ -485,6 +500,55 @@ export function AnalysisReportModal({
                       ))}
                     </ul>
                   </div>
+                )}
+              </section>
+            )}
+
+            {/* ── 6.5. MALİYET TAHMİNİ ───────────────────────────────────── */}
+            {costEstimate && (
+              <section>
+                <h2 className="text-base font-bold text-slate-900 uppercase tracking-wide mb-4 flex items-center gap-2">
+                  <span className="w-1 h-5 bg-indigo-500 rounded-full inline-block" />
+                  Tahmini Seyahat Maliyeti
+                </h2>
+                <div className="text-xs text-slate-500 mb-3">
+                  Varsayım: <b>7 gün, 1 kişi, orta tier, normal sezon, sigorta dahil</b>. Uygulamada maliyet hesaplayıcıyı açarak kendi parametrelerinizi girin.
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-3">
+                  {[
+                    { l: 'Vize harcı',        v: costEstimate.visaFeeEUR },
+                    { l: 'VFS / servis',      v: costEstimate.serviceFeeEUR },
+                    { l: 'Sigorta',           v: costEstimate.insuranceEUR },
+                    { l: 'Uçak (gidiş-dönüş)',v: costEstimate.flightEUR },
+                    { l: 'Konaklama',         v: costEstimate.lodgingEUR },
+                    { l: 'Günlük yaşam',      v: costEstimate.dailyLifeEUR },
+                  ].map(row => (
+                    <div key={row.l} className="rounded-xl border border-slate-200 p-3">
+                      <div className="text-[10px] text-slate-400 uppercase">{row.l}</div>
+                      <div className="font-mono font-bold text-slate-900 text-sm mt-0.5">€{row.v.toLocaleString('tr-TR')}</div>
+                    </div>
+                  ))}
+                </div>
+                <div className="rounded-xl p-4 border border-indigo-200 bg-indigo-50 flex items-end justify-between">
+                  <div>
+                    <div className="text-xs font-bold text-indigo-600 uppercase">Tahmini Toplam</div>
+                    <div className="font-black text-2xl text-indigo-900 mt-0.5">
+                      €{costEstimate.totalEUR.toLocaleString('tr-TR')}
+                    </div>
+                  </div>
+                  {costEstimate.consulateMinEUR !== null && (
+                    <div className="text-right text-xs">
+                      <div className="text-slate-500">Konsolosluk min beklentisi</div>
+                      <div className={`font-bold ${costEstimate.meetsConsulateMin ? 'text-emerald-700' : 'text-amber-700'}`}>
+                        €{costEstimate.consulateMinEUR.toLocaleString('tr-TR')} · {costEstimate.meetsConsulateMin ? 'karşılıyor' : 'eksik olabilir'}
+                      </div>
+                    </div>
+                  )}
+                </div>
+                {costEstimate.notes.length > 0 && (
+                  <ul className="mt-3 space-y-1 text-xs text-slate-600 list-disc list-inside">
+                    {costEstimate.notes.map((n, i) => <li key={i}>{n}</li>)}
+                  </ul>
                 )}
               </section>
             )}

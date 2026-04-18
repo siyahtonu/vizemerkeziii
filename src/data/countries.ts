@@ -374,3 +374,165 @@ export const multiCountryVisaData: Record<string, { flag: string; region: string
   'Katar': { flag:'🇶🇦', region:'Orta Doğu', visaType:'kapida', note:'Kapıda vize alınır', maxDays:30 },
   'Arjantin': { flag:'🇦🇷', region:'Güney Amerika', visaType:'vizsiz', note:'90 gün vizesiz', maxDays:90 },
 };
+
+// ============================================================
+// MALİYET HESAPLAYICI VERİ TABANI — 2026 gerçekçi EUR bazlı rakamlar
+// ── Kaynaklar:
+//   • Schengen harcı: AB Komisyonu — €90 (yetişkin, 2024'ten beri)
+//   • UK Standard Visitor: £115 ≈ €135
+//   • US B1/B2 MRV: $185 ≈ €170
+//   • VFS/iData servis ücreti: €30–40 (ülkeye göre)
+//   • Günlük bütçe beklentisi: konsolosluk tebliğleri + SchengenVisaInfo
+//   • Uçuş bantları: Skyscanner/Kiwi ortalamaları (İstanbul çıkışı)
+//   • Konaklama: Booking/Airbnb median (düşük sezon → yüksek sezon)
+// ── NOT: Rakamlar tahmini. UI'da mutlaka "tahmini" ibaresi gösterin.
+// ============================================================
+
+export interface CountryCost {
+  visaFeeEUR: number;         // Konsolosluk harcı
+  serviceFeeEUR: number;      // VFS / iData / TLSContact servis ücreti
+  insuranceDailyEUR: number;  // 30.000€ teminatlı seyahat sigortası / gün
+  flight: { low: number; mid: number; high: number };     // İstanbul → hedef, gidiş-dönüş EUR
+  lodging: { budget: number; mid: number; high: number }; // EUR / gece
+  dailyLife: { low: number; mid: number; high: number };  // yemek + ulaşım + müze vs. EUR/gün
+  consulateDailyRequirementEUR?: number;                  // Konsolosluğun beklediği min günlük bütçe
+}
+
+export const COUNTRY_COSTS: Record<string, CountryCost> = {
+  // ═══ Schengen — €90 harç standart ═══
+  'Almanya':    { visaFeeEUR: 90, serviceFeeEUR: 35, insuranceDailyEUR: 1.5, flight: { low: 120, mid: 220, high: 380 }, lodging: { budget: 55, mid: 110, high: 220 }, dailyLife: { low: 40, mid: 70, high: 120 }, consulateDailyRequirementEUR: 45 },
+  'Fransa':     { visaFeeEUR: 90, serviceFeeEUR: 40, insuranceDailyEUR: 1.5, flight: { low: 140, mid: 240, high: 420 }, lodging: { budget: 70, mid: 150, high: 320 }, dailyLife: { low: 55, mid: 95, high: 160 }, consulateDailyRequirementEUR: 120 },
+  'İtalya':     { visaFeeEUR: 90, serviceFeeEUR: 35, insuranceDailyEUR: 1.5, flight: { low: 100, mid: 200, high: 360 }, lodging: { budget: 55, mid: 120, high: 260 }, dailyLife: { low: 45, mid: 80, high: 140 }, consulateDailyRequirementEUR: 45 },
+  'İspanya':    { visaFeeEUR: 90, serviceFeeEUR: 35, insuranceDailyEUR: 1.5, flight: { low: 130, mid: 230, high: 400 }, lodging: { budget: 50, mid: 110, high: 230 }, dailyLife: { low: 45, mid: 80, high: 140 }, consulateDailyRequirementEUR: 100 },
+  'Hollanda':   { visaFeeEUR: 90, serviceFeeEUR: 35, insuranceDailyEUR: 1.5, flight: { low: 120, mid: 230, high: 400 }, lodging: { budget: 80, mid: 160, high: 320 }, dailyLife: { low: 55, mid: 95, high: 160 }, consulateDailyRequirementEUR: 55 },
+  'Yunanistan': { visaFeeEUR: 90, serviceFeeEUR: 30, insuranceDailyEUR: 1.5, flight: { low: 60,  mid: 130, high: 260 }, lodging: { budget: 40, mid: 90,  high: 180 }, dailyLife: { low: 35, mid: 65, high: 110 }, consulateDailyRequirementEUR: 50 },
+  'Macaristan': { visaFeeEUR: 90, serviceFeeEUR: 30, insuranceDailyEUR: 1.5, flight: { low: 90,  mid: 170, high: 300 }, lodging: { budget: 40, mid: 85,  high: 170 }, dailyLife: { low: 30, mid: 55, high: 95  }, consulateDailyRequirementEUR: 40 },
+  'Polonya':    { visaFeeEUR: 90, serviceFeeEUR: 30, insuranceDailyEUR: 1.5, flight: { low: 100, mid: 180, high: 320 }, lodging: { budget: 35, mid: 80,  high: 160 }, dailyLife: { low: 30, mid: 55, high: 95  }, consulateDailyRequirementEUR: 35 },
+  'Portekiz':   { visaFeeEUR: 90, serviceFeeEUR: 35, insuranceDailyEUR: 1.5, flight: { low: 180, mid: 280, high: 460 }, lodging: { budget: 50, mid: 105, high: 220 }, dailyLife: { low: 40, mid: 75, high: 130 }, consulateDailyRequirementEUR: 70 },
+  'Avusturya':  { visaFeeEUR: 90, serviceFeeEUR: 35, insuranceDailyEUR: 1.5, flight: { low: 130, mid: 220, high: 380 }, lodging: { budget: 70, mid: 140, high: 280 }, dailyLife: { low: 50, mid: 90, high: 150 }, consulateDailyRequirementEUR: 100 },
+  'Belçika':    { visaFeeEUR: 90, serviceFeeEUR: 35, insuranceDailyEUR: 1.5, flight: { low: 130, mid: 230, high: 400 }, lodging: { budget: 65, mid: 130, high: 260 }, dailyLife: { low: 50, mid: 90, high: 150 }, consulateDailyRequirementEUR: 95 },
+  'İsviçre':    { visaFeeEUR: 90, serviceFeeEUR: 40, insuranceDailyEUR: 1.5, flight: { low: 150, mid: 260, high: 450 }, lodging: { budget: 110, mid: 220, high: 420 }, dailyLife: { low: 90, mid: 150, high: 240 }, consulateDailyRequirementEUR: 100 },
+  'Norveç':     { visaFeeEUR: 90, serviceFeeEUR: 40, insuranceDailyEUR: 1.5, flight: { low: 180, mid: 320, high: 520 }, lodging: { budget: 100, mid: 200, high: 380 }, dailyLife: { low: 80, mid: 130, high: 210 }, consulateDailyRequirementEUR: 75 },
+  'İsveç':      { visaFeeEUR: 90, serviceFeeEUR: 35, insuranceDailyEUR: 1.5, flight: { low: 160, mid: 280, high: 460 }, lodging: { budget: 80, mid: 160, high: 320 }, dailyLife: { low: 65, mid: 110, high: 180 }, consulateDailyRequirementEUR: 65 },
+  'Danimarka':  { visaFeeEUR: 90, serviceFeeEUR: 40, insuranceDailyEUR: 1.5, flight: { low: 150, mid: 270, high: 450 }, lodging: { budget: 90, mid: 180, high: 350 }, dailyLife: { low: 75, mid: 125, high: 200 }, consulateDailyRequirementEUR: 70 },
+  'Romanya':    { visaFeeEUR: 90, serviceFeeEUR: 30, insuranceDailyEUR: 1.5, flight: { low: 80,  mid: 160, high: 280 }, lodging: { budget: 35, mid: 75,  high: 150 }, dailyLife: { low: 25, mid: 50, high: 90  }, consulateDailyRequirementEUR: 50 },
+  'Slovakya':   { visaFeeEUR: 90, serviceFeeEUR: 30, insuranceDailyEUR: 1.5, flight: { low: 100, mid: 180, high: 310 }, lodging: { budget: 40, mid: 85,  high: 170 }, dailyLife: { low: 30, mid: 55, high: 95  }, consulateDailyRequirementEUR: 60 },
+  'Malta':      { visaFeeEUR: 90, serviceFeeEUR: 35, insuranceDailyEUR: 1.5, flight: { low: 140, mid: 240, high: 400 }, lodging: { budget: 60, mid: 120, high: 230 }, dailyLife: { low: 45, mid: 80, high: 130 }, consulateDailyRequirementEUR: 80 },
+  // ═══ Non-Schengen ═══
+  'İngiltere':  { visaFeeEUR: 135, serviceFeeEUR: 55, insuranceDailyEUR: 2.0, flight: { low: 160, mid: 280, high: 460 }, lodging: { budget: 90, mid: 180, high: 360 }, dailyLife: { low: 70, mid: 120, high: 200 } },
+  'ABD':        { visaFeeEUR: 170, serviceFeeEUR: 0,  insuranceDailyEUR: 2.5, flight: { low: 400, mid: 650, high: 950 }, lodging: { budget: 110, mid: 220, high: 420 }, dailyLife: { low: 90, mid: 150, high: 250 } },
+};
+
+// ── Maliyet sınıfları ───────────────────────────────────────────────────────
+export type TravelTier = 'budget' | 'mid' | 'premium';
+export type CityTier = 'low' | 'mid' | 'high';
+export type Season = 'off' | 'shoulder' | 'peak';
+
+export interface CostInput {
+  country: string;
+  days: number;            // Kalış gün sayısı
+  travelers: number;       // Kişi sayısı (uçak + konaklama + günlük × kişi)
+  tier: TravelTier;
+  cityTier: CityTier;
+  season: Season;
+  includeInsurance: boolean;
+}
+
+export interface CostBreakdown {
+  visaFeeEUR: number;
+  serviceFeeEUR: number;
+  insuranceEUR: number;
+  flightEUR: number;
+  lodgingEUR: number;
+  dailyLifeEUR: number;
+  totalEUR: number;
+  currency: 'EUR';
+  consulateMinEUR: number | null;   // Konsolosluk min günlük bütçe × gün × kişi
+  meetsConsulateMin: boolean;
+  notes: string[];
+}
+
+/**
+ * Seyahat maliyetini ülke × süre × kişi × tier × sezon bazında hesaplar.
+ * Tüm değerler EUR; UI tarafında TRY'ye çevrilebilir.
+ */
+export function calculateTripCost(input: CostInput): CostBreakdown | null {
+  const c = COUNTRY_COSTS[input.country];
+  if (!c) return null;
+
+  const days = Math.max(1, input.days);
+  const people = Math.max(1, input.travelers);
+  const notes: string[] = [];
+
+  // Uçak — sezona göre band seçimi
+  const flightBand = input.season === 'off' ? c.flight.low
+                   : input.season === 'peak' ? c.flight.high
+                   : c.flight.mid;
+
+  // Konaklama — tier × cityTier çarpımı (tier düşükse low/budget, premium ise high)
+  const lodgingBand = input.tier === 'budget' ? c.lodging.budget
+                    : input.tier === 'premium' ? c.lodging.high
+                    : c.lodging.mid;
+  const cityMultiplier = input.cityTier === 'low' ? 0.85 : input.cityTier === 'high' ? 1.2 : 1.0;
+  const lodgingPerNight = lodgingBand * cityMultiplier;
+
+  // Günlük yaşam — aynı city tier çarpanını uygula
+  const dailyBand = input.tier === 'budget' ? c.dailyLife.low
+                  : input.tier === 'premium' ? c.dailyLife.high
+                  : c.dailyLife.mid;
+  const dailyPerPerson = dailyBand * cityMultiplier;
+
+  // Vize ücretleri — kişi başı, tek seferlik
+  const visaFeeEUR = c.visaFeeEUR * people;
+  const serviceFeeEUR = c.serviceFeeEUR * people;
+
+  // Sigorta — gün × kişi
+  const insuranceEUR = input.includeInsurance ? Math.round(c.insuranceDailyEUR * days * people) : 0;
+
+  // Uçuş — kişi başı gidiş-dönüş
+  const flightEUR = flightBand * people;
+
+  // Konaklama — gece başı oda; çift kişi için +%40 varsayımı, 3+ kişi için /oda başına
+  // Basitleştirme: 1 kişi tek, 2 kişi tek oda (×1.4), 3+ kişi (people/2 oda)
+  const roomCount = people === 1 ? 1 : people === 2 ? 1 : Math.ceil(people / 2);
+  const roomMultiplier = people === 2 ? 1.4 : 1.0;
+  const lodgingEUR = Math.round(lodgingPerNight * days * roomCount * roomMultiplier);
+
+  // Günlük yaşam — kişi × gün
+  const dailyLifeEUR = Math.round(dailyPerPerson * days * people);
+
+  const totalEUR = visaFeeEUR + serviceFeeEUR + insuranceEUR + flightEUR + lodgingEUR + dailyLifeEUR;
+
+  // Konsolosluk minimum kontrolü
+  const consulateMinEUR = c.consulateDailyRequirementEUR
+    ? c.consulateDailyRequirementEUR * days * people
+    : null;
+  const meetsConsulateMin = consulateMinEUR === null
+    ? true
+    : (dailyLifeEUR + lodgingEUR) >= consulateMinEUR;
+
+  // Notlar — konsolosluk beklentisi ve ipuçları
+  if (consulateMinEUR && !meetsConsulateMin) {
+    notes.push(`Konsolosluk ${input.country} için günlük min ~€${c.consulateDailyRequirementEUR} bekler — toplam min €${consulateMinEUR}. Banka bakiyenizin bunu karşıladığından emin olun.`);
+  }
+  if (input.season === 'peak') {
+    notes.push('Yoğun sezon (Haziran-Ağustos, Aralık) — uçuş/konaklama %30-60 pahalı. Mart-Mayıs veya Ekim-Kasım dönemi daha uygun.');
+  }
+  if (input.tier === 'budget' && people === 1) {
+    notes.push('Tek kişilik ekonomik seyahat — hostel/Airbnb + yerel ulaşım varsayıldı.');
+  }
+
+  return {
+    visaFeeEUR,
+    serviceFeeEUR,
+    insuranceEUR,
+    flightEUR,
+    lodgingEUR,
+    dailyLifeEUR,
+    totalEUR: Math.round(totalEUR),
+    currency: 'EUR',
+    consulateMinEUR,
+    meetsConsulateMin,
+    notes,
+  };
+}
