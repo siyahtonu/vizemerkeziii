@@ -80,6 +80,7 @@ export interface DashboardStepProps {
   dashToolTab: 'hazirlik' | 'analiz' | 'ulke';
   showRiskDetail: boolean;
   usedTools: Set<string>;
+  completedTools: Set<string>;
   // Callbacks
   onNavigate: (step: string) => void;
   onProfileUpdate: (patch: Partial<ProfileData>) => void;
@@ -216,7 +217,7 @@ export function DashboardStep({
   rejectionMatches, intelligence, bankHealthScore, roadmap, actionItems,
   baseScoreWithoutUs, isPremium, simulatorValue, isOcrScanning, ocrResults,
   letterData, feedbackStep, fbEmail, fbDate, fbStatus, fbRegisteredId,
-  fbOutcome, fbRejCode, fbRejNotes, dashToolTab, showRiskDetail, usedTools,
+  fbOutcome, fbRejCode, fbRejNotes, dashToolTab, showRiskDetail, usedTools, completedTools,
   onNavigate, onProfileUpdate, onProfileSet, onReset, onSimulatorValueChange,
   onOcrUpload, onGeneratePDF, onOpenReportModal, onOpenTool,
   onFeedbackStepChange, onFbEmailChange, onFbDateChange, onFbStatusChange,
@@ -479,20 +480,32 @@ export function DashboardStep({
                         .filter(t => t.tab === dashToolTab)
                         .map(({ label, desc, icon: Icon, color, id, setter }) => {
                           const locked = PREMIUM_TOOLS.includes(id) && !isPremium;
-                          const used = usedTools.has(id);
+                          const completed = completedTools.has(id);
+                          const inProgress = usedTools.has(id) && !completed;
+                          // Kart çerçevesi durumuna göre renklensin
+                          const cardTone = locked
+                            ? 'bg-slate-50/50 border-slate-100'
+                            : completed
+                              ? 'bg-emerald-50/40 border-emerald-300 hover:border-emerald-400'
+                              : inProgress
+                                ? 'bg-amber-50/30 border-amber-200 hover:border-amber-300'
+                                : 'bg-white border-slate-100 hover:border-brand-200';
                           return (
                             <button key={id} onClick={() => openTool(id, setter as (b: boolean) => void)}
-                              className={`group relative text-left rounded-2xl border-2 p-4 transition-all duration-300 hover:shadow-lg hover:shadow-brand-500/[0.04] hover:-translate-y-1
-                                ${locked ? 'bg-slate-50/50 border-slate-100' : used ? 'bg-emerald-50/40 border-emerald-300 hover:border-emerald-400' : 'bg-white border-slate-100 hover:border-brand-200'}`}>
-                              {/* Sağ üst köşe: Tamamlandı / Tamamlanmadı rozeti */}
+                              className={`group relative text-left rounded-2xl border-2 p-4 transition-all duration-300 hover:shadow-lg hover:shadow-brand-500/[0.04] hover:-translate-y-1 ${cardTone}`}>
+                              {/* Sağ üst köşe: Tamamlandı / Devam ediyor / Tamamlanmadı rozeti */}
                               {!locked && (
-                                used
+                                completed
                                   ? <span className="absolute top-2 right-2 inline-flex items-center gap-1 text-[10px] font-bold bg-emerald-600 text-white px-2 py-0.5 rounded-full shadow-sm">
                                       <CheckCircle2 className="w-3 h-3" /> Tamamlandı
                                     </span>
-                                  : <span className="absolute top-2 right-2 inline-flex items-center gap-1 text-[10px] font-bold bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full">
-                                      <span className="w-1.5 h-1.5 rounded-full bg-slate-400"/> Tamamlanmadı
-                                    </span>
+                                  : inProgress
+                                    ? <span className="absolute top-2 right-2 inline-flex items-center gap-1 text-[10px] font-bold bg-amber-500 text-white px-2 py-0.5 rounded-full shadow-sm">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"/> Devam ediyor
+                                      </span>
+                                    : <span className="absolute top-2 right-2 inline-flex items-center gap-1 text-[10px] font-bold bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-slate-400"/> Tamamlanmadı
+                                      </span>
                               )}
                               <div className="flex items-start gap-3 pr-2">
                                 <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${locked ? 'bg-slate-200' : color}`}>

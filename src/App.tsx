@@ -1521,6 +1521,7 @@ export default function App() {
 
     setWizardResult(docs);
     setWizardDone(true);
+    markToolCompleted('docs');
   };
 
   const handleOcrUpload = (files: FileList | null) => {
@@ -2417,9 +2418,9 @@ Signature: _______________     Date: ${today}`;
     doc.save(`VizeAkil_Kisiye_Ozel_Evrak_Listesi_${normalizeTr(countryLabel)}_${today.replace(/\//g, '-')}.pdf`);
   };
 
-  // Kullanıcının bu seanstae açtığı araçlar — kartlardaki
-  // "Tamamlandı / Tamamlanmadı" rozetini beslemek için localStorage'da
-  // tutulur, böylece sayfa yenilense de durum korunur.
+  // Kullanıcının bu seansta açtığı araçlar — "Devam ediyor / Tamamlanmadı"
+  // rozetini beslemek için localStorage'da tutulur, böylece sayfa yenilense
+  // de durum korunur.
   const [usedTools, setUsedTools] = useState<Set<string>>(() => {
     try {
       const raw = localStorage.getItem('vizeakil_used_tools');
@@ -2431,14 +2432,42 @@ Signature: _______________     Date: ${today}`;
     catch { /* noop */ }
   }, [usedTools]);
 
+  // Tamamlanmış araçlar — kullanıcı içindeki asıl aksiyonu bitirdiyse burada.
+  // (ör. sihirbaz tamamlandı, sosyal medya denetimi kaydedildi, belge
+  // listesinde en az bir belge işaretlendi, info-only araç açıldı.)
+  const [completedTools, setCompletedTools] = useState<Set<string>>(() => {
+    try {
+      const raw = localStorage.getItem('vizeakil_completed_tools');
+      return raw ? new Set<string>(JSON.parse(raw)) : new Set<string>();
+    } catch { return new Set<string>(); }
+  });
+  React.useEffect(() => {
+    try { localStorage.setItem('vizeakil_completed_tools', JSON.stringify([...completedTools])); }
+    catch { /* noop */ }
+  }, [completedTools]);
+
+  const markToolCompleted = React.useCallback((toolId: string) => {
+    setCompletedTools(prev => (prev.has(toolId) ? prev : new Set(prev).add(toolId)));
+  }, []);
+
+  // Sadece görüntüleme sağlayan araçlar — açılmaları = tamamlanma sayılır.
+  const VIEW_ONLY_TOOLS = React.useMemo(
+    () => new Set(['visafree', 'refusalmap', 'community', 'bankplan', 'countryguide', 'comparator']),
+    []
+  );
+
   // Open a tool: if premium-gated and not premium, show upgrade modal; else navigate to dashboard + open
   const openTool = (toolId: string, setter: (b: boolean) => void) => {
     if (PREMIUM_TOOLS.includes(toolId) && !isPremium) {
       setIsUpgradeOpen(true);
       return;
     }
-    // Araca girildiğinde "tamamlandı" olarak işaretle
+    // Araca girildiğinde "kullanıldı" olarak işaretle
     setUsedTools(prev => (prev.has(toolId) ? prev : new Set(prev).add(toolId)));
+    // Info-only araçlar açılır açılmaz tamamlanmış sayılır
+    if (VIEW_ONLY_TOOLS.has(toolId)) {
+      markToolCompleted(toolId);
+    }
     if (step !== 'dashboard') {
       setStep('dashboard');
       setTimeout(() => setter(true), 150);
@@ -4383,6 +4412,7 @@ Signature: _______________     Date: ${today}`;
                       if (score >= 60) {
                         setProfile(prev => ({ ...prev, hasSocialMediaFootprint: true }));
                       }
+                      markToolCompleted('socialmedia');
                       setIsSocialMediaOpen(false);
                     }}
                     className="w-full py-3 bg-gradient-to-r from-brand-500 to-brand-600 text-white rounded-2xl font-bold text-sm hover:shadow-lg hover:shadow-brand-500/20 hover:-translate-y-0.5 transition-all duration-300"
@@ -4842,6 +4872,7 @@ Signature: _______________     Date: ${today}`;
               dashToolTab={dashToolTab}
               showRiskDetail={showRiskDetail}
               usedTools={usedTools}
+              completedTools={completedTools}
               onNavigate={setStep}
               onProfileUpdate={(patch) => setProfile(prev => ({ ...prev, ...patch }))}
               onProfileSet={setProfile}
@@ -6843,7 +6874,11 @@ Signature: _______________     Date: ${today}`;
         onClose={() => setIsDocChecklistOpen(false)}
         profile={profile}
         onDownloadPDF={generateDocumentChecklistPDF}
-        onProfileUpdate={(updates) => setProfile(prev => ({ ...prev, ...updates }))}
+        onProfileUpdate={(updates) => {
+          setProfile(prev => ({ ...prev, ...updates }));
+          // En az bir belge işaretlendiyse aracı tamamlandı say
+          if (Object.keys(updates).length > 0) markToolCompleted('docchecklist');
+        }}
       />
 
       {/* ── ARAÇ: Maliyet Hesaplayıcı ────────────────────────────────────────── */}
