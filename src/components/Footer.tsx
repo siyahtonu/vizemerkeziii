@@ -34,6 +34,7 @@ const Footer: React.FC = () => {
               {[
                 { label: 'Blog', href: '/blog' },
                 { label: 'Hakkımızda', href: '/hakkimizda' },
+                { label: 'Yardım', href: '/yardim' },
                 { label: 'İletişim', href: '/iletisim' },
               ].map(({ label, href }) => (
                 <li key={href}>

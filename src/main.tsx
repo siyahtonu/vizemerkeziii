@@ -15,6 +15,7 @@ const Hakkimizda      = lazy(() => import('./pages/Hakkimizda'));
 const KullanimKosullari = lazy(() => import('./pages/KullanimKosullari'));
 const MesafeliSatis   = lazy(() => import('./pages/MesafeliSatis'));
 const CerezPolitikasi = lazy(() => import('./pages/CerezPolitikasi'));
+const Yardim          = lazy(() => import('./pages/Yardim'));
 
 // ── Rehber sayfaları ────────────────────────────────────────────────────
 const SchengenRehber  = lazy(() => import('./pages/rehber/SchengenVizeBelgeleri'));
@@ -99,6 +100,7 @@ createRoot(document.getElementById('root')!).render(
             <Route path="/kullanim-kosullari"  element={<KullanimKosullari />} />
             <Route path="/mesafeli-satis"      element={<MesafeliSatis />} />
             <Route path="/cerez-politikasi"    element={<CerezPolitikasi />} />
+            <Route path="/yardim"              element={<Yardim />} />
             {/* Rehber sayfaları */}
             <Route path="/rehber/schengen-vize-belgeleri" element={<SchengenRehber />} />
             <Route path="/rehber/almanya-vize-basvurusu"  element={<AlmanyaRehber />} />
