@@ -126,6 +126,15 @@ export const calculateRawScore = (data: ProfileData, simValue: number = 0): numb
   if (data.hasPreviousRefusal && !data.previousRefusalDisclosed) score -= Math.round(20 * refusalDecay);
   if (data.hasPreviousRefusal && data.previousRefusalDisclosed) score -= Math.round(5 * refusalDecay);
 
+  // v3.6: "Temiz sicil" pozitif bonusu — hiç ret yok + overstay yok + önceki
+  // başarılı vize geçmişi varsa güvenilirlik sinyali. Sadece ceza yokluğu
+  // yerine aktif ödül — konsolosluklar "track record" taşıyanı tercih ediyor.
+  if (!data.hasPreviousRefusal && data.noOverstayHistory) {
+    if (data.hasHighValueVisa && data.hasOtherVisa) score += 5;       // çoklu elite
+    else if (data.hasHighValueVisa || data.hasOtherVisa) score += 3;  // tek başarı
+    else if (data.travelHistoryNonVisa) score += 1;                   // vizesiz olsa bile temiz
+  }
+
   // v3.5: Vizesiz seyahat geçmişi bonusu (+0/+1/+2).
   // Kullanıcı Japonya/Singapur/Kore gibi "güçlü damga" ülkelerini ziyaret
   // ettiyse geri dönüş güvenilirliği artar. Abuse önlemek için maksimum

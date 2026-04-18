@@ -100,6 +100,13 @@ export function getTravelScore(data: ProfileData): number {
   if (data.hasPreviousRefusal && !data.previousRefusalDisclosed) pts -= Math.round(10 * rDecay);
   if (data.hasPreviousRefusal &&  data.previousRefusalDisclosed) pts -= Math.round(3  * rDecay);
 
+  // v3.6: Temiz sicil bonusu (core.ts ile tutarlı)
+  if (!data.hasPreviousRefusal && data.noOverstayHistory) {
+    if (data.hasHighValueVisa && data.hasOtherVisa) pts += 3;
+    else if (data.hasHighValueVisa || data.hasOtherVisa) pts += 2;
+    else if (data.travelHistoryNonVisa) pts += 1;
+  }
+
   return Math.max(0, Math.min(100, Math.round((pts / TRAVEL_MAX) * 100)));
 }
 

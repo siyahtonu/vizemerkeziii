@@ -1,9 +1,16 @@
 // ============================================================
 // WhatIfSimulator — "Ne Yaparsam Skorum Ne Olur?" Paneli
-// Her seçenek işaretlendiğinde calculateScore yeniden çağrılır.
+//
+// İki bölüm:
+//   1) "Yapılanlar" — aktif olan adımlar, yeşil rozetle + puan etkisi
+//   2) "Yapılabilecekler" — eksik olan adımlar, kırmızı rozet + eksilen puan
+//
+// v3.6: Baseline bug'ı düzeltildi — simulatorValue prop'u parent'tan gelir,
+// tüm calculateScore çağrıları aynı simValue ile yapılır (aksi halde delta
+// kayıyordu).
 // ============================================================
 import { useState, useMemo } from 'react';
-import { Zap, TrendingUp, CheckCircle2, ChevronDown, ChevronUp } from 'lucide-react';
+import { Zap, TrendingUp, CheckCircle2, ChevronDown, ChevronUp, XCircle } from 'lucide-react';
 import type { ProfileData } from '../types';
 import { calculateScore } from '../scoring/core';
 
@@ -14,8 +21,8 @@ interface Scenario {
   patch: Partial<ProfileData>;
   /** Sadece belirli ülkelerde göster (undefined = hepsinde) */
   onlyFor?: string[];
-  /** Zaten aktifse gösterme */
-  skipIf: (p: ProfileData) => boolean;
+  /** Bu şart sağlanıyorsa senaryo "aktif" sayılır. */
+  isActive: (p: ProfileData) => boolean;
 }
 
 const SCENARIOS: Scenario[] = [
@@ -24,56 +31,56 @@ const SCENARIOS: Scenario[] = [
     label: 'Niyet mektubu hazırla',
     description: 'Şablonumuzu kullan + amacını net belirt',
     patch: { purposeClear: true, useOurTemplate: true },
-    skipIf: p => p.purposeClear && p.useOurTemplate,
+    isActive: p => p.purposeClear && p.useOurTemplate,
   },
   {
     id: 'hotel',
     label: 'Otel + uçak rezervasyonu yap',
     description: 'İptal edilebilir ön rezervasyon yeterli',
     patch: { paidReservations: true, datesMatchReservations: true },
-    skipIf: p => p.paidReservations && p.datesMatchReservations,
+    isActive: p => p.paidReservations && p.datesMatchReservations,
   },
   {
     id: 'insurance',
     label: 'Seyahat sigortası yaptır (€30.000+)',
     description: 'Schengen için zorunlu — %15 ret sebebi',
     patch: { hasHealthInsurance: true, hasTravelInsurance: true },
-    skipIf: p => p.hasHealthInsurance || p.hasTravelInsurance,
+    isActive: p => p.hasHealthInsurance || p.hasTravelInsurance,
   },
   {
     id: 'employer_letter',
     label: 'İşveren + geri dönüş mektubu al',
     description: 'SGK\'lı çalışanlar için güçlü kanıt',
     patch: { sgkEmployerLetterWithReturn: true },
-    skipIf: p => p.sgkEmployerLetterWithReturn,
+    isActive: p => p.sgkEmployerLetterWithReturn,
   },
   {
     id: 'return_ticket',
     label: 'Dönüş bileti rezervasyonu yap',
     description: 'Geri dönme niyetini somutlaştırır',
     patch: { hasReturnTicket: true },
-    skipIf: p => p.hasReturnTicket,
+    isActive: p => p.hasReturnTicket,
   },
   {
     id: 'barcode_sgk',
     label: 'Barkodlu SGK belgesi ekle',
     description: 'QR kodlu resmi baskı — sahtecilik ihtimalini sıfırlar',
     patch: { hasBarcodeSgk: true, sgkAddressMatchesDs160: true },
-    skipIf: p => p.hasBarcodeSgk,
+    isActive: p => p.hasBarcodeSgk,
   },
   {
     id: 'bank_regularity',
     label: 'Banka düzenliliğini artır (3 ay)',
     description: 'Düzenli harcama + gelir hareketi göster',
     patch: { bankRegularity: true, incomeSourceClear: true },
-    skipIf: p => p.bankRegularity && p.incomeSourceClear,
+    isActive: p => p.bankRegularity && p.incomeSourceClear,
   },
   {
     id: 'passport_validity',
     label: 'Uzun geçerli pasaport al / yenile',
     description: 'Uzun geçerlilik konsolosluğa güven verir',
     patch: { passportValidityLong: true, passportConditionGood: true },
-    skipIf: p => p.passportValidityLong,
+    isActive: p => p.passportValidityLong,
   },
   {
     id: 'uk_28day',
@@ -81,7 +88,7 @@ const SCENARIOS: Scenario[] = [
     description: 'İngiltere için en kritik finansal kural',
     patch: { has28DayHolding: true },
     onlyFor: ['İngiltere'],
-    skipIf: p => p.has28DayHolding,
+    isActive: p => p.has28DayHolding,
   },
   {
     id: 'uk_6month',
@@ -89,7 +96,7 @@ const SCENARIOS: Scenario[] = [
     description: 'İngiltere standart gereksinimi',
     patch: { has6MonthStatements: true, statementMonths: 6 },
     onlyFor: ['İngiltere'],
-    skipIf: p => p.has6MonthStatements,
+    isActive: p => p.has6MonthStatements,
   },
   {
     id: 'interview_prep',
@@ -97,57 +104,73 @@ const SCENARIOS: Scenario[] = [
     description: 'B1/B2 soruları için pratik — güven sinyali',
     patch: { interviewPrepared: true, interviewConfidence: 'high' },
     onlyFor: ['ABD'],
-    skipIf: p => p.interviewPrepared && p.interviewConfidence === 'high',
+    isActive: p => p.interviewPrepared && p.interviewConfidence === 'high',
   },
 ];
 
 interface Props {
   profile: ProfileData;
   currentScore: number;
+  /** Parent'taki simulatorValue — aynı skor pipeline'ını kullanmak için şart. */
+  simulatorValue?: number;
 }
 
-export function WhatIfSimulator({ profile, currentScore }: Props) {
+export function WhatIfSimulator({ profile, currentScore, simulatorValue = 0 }: Props) {
   const [checked, setChecked] = useState<Set<string>>(new Set());
   const [expanded, setExpanded] = useState(true);
 
-  // Ülkeye göre ve zaten aktif olmayan senaryoları filtrele
+  // Ülkeye göre filtrele
   const visible = useMemo(() =>
-    SCENARIOS.filter(s => {
-      if (s.skipIf(profile)) return false;
-      if (s.onlyFor && !s.onlyFor.includes(profile.targetCountry)) return false;
-      return true;
-    }),
-  [profile]);
+    SCENARIOS.filter(s => !s.onlyFor || s.onlyFor.includes(profile.targetCountry)),
+  [profile.targetCountry]);
 
-  // Her senaryo için bireysel delta
-  const deltas = useMemo(() =>
-    visible.map(s => {
-      const projected = calculateScore({ ...profile, ...s.patch });
-      return projected - currentScore;
+  // Aktif / eksik ayır
+  const active  = visible.filter(s =>  s.isActive(profile));
+  const missing = visible.filter(s => !s.isActive(profile));
+
+  // Her aktif senaryo için "kazandıran puan" (kapatınca ne düşer)
+  const activeContributions = useMemo(() =>
+    active.map(s => {
+      const invertedPatch: Partial<ProfileData> = {};
+      for (const key of Object.keys(s.patch) as Array<keyof ProfileData>) {
+        // boolean alanları tersine çevir, enum'ları eski değere döndürmek için özel durum
+        const val = s.patch[key];
+        if (typeof val === 'boolean') (invertedPatch as Record<string, unknown>)[key] = false;
+      }
+      const without = calculateScore({ ...profile, ...invertedPatch }, simulatorValue);
+      return currentScore - without; // pozitif sayı: aktif olmanın katkısı
     }),
-  [visible, profile, currentScore]);
+  [active, profile, simulatorValue, currentScore]);
+
+  // Her eksik senaryo için "kazanılacak puan"
+  const missingGains = useMemo(() =>
+    missing.map(s => {
+      const projected = calculateScore({ ...profile, ...s.patch }, simulatorValue);
+      return projected - currentScore; // pozitif sayı: eklenirse kazanç
+    }),
+  [missing, profile, simulatorValue, currentScore]);
 
   // Seçili senaryoların birleşik patchi
   const combinedPatch = useMemo(() => {
     const merged: Partial<ProfileData> = {};
-    visible.forEach((s, i) => {
+    missing.forEach(s => {
       if (checked.has(s.id)) Object.assign(merged, s.patch);
     });
     return merged;
-  }, [checked, visible]);
+  }, [checked, missing]);
 
   const projectedScore = useMemo(() =>
     Object.keys(combinedPatch).length > 0
-      ? calculateScore({ ...profile, ...combinedPatch })
+      ? calculateScore({ ...profile, ...combinedPatch }, simulatorValue)
       : currentScore,
-  [combinedPatch, profile, currentScore]);
+  [combinedPatch, profile, simulatorValue, currentScore]);
 
   const totalGain = projectedScore - currentScore;
 
   const toggle = (id: string) => {
     setChecked(prev => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) next.delete(id); else next.add(id);
       return next;
     });
   };
@@ -168,7 +191,7 @@ export function WhatIfSimulator({ profile, currentScore }: Props) {
           </div>
           <div>
             <div className="font-bold text-slate-900 text-sm">Ne Yaparsam Skorum Ne Olur?</div>
-            <div className="text-xs text-slate-400">İşaretlediğiniz adımların anlık etkisini görün</div>
+            <div className="text-xs text-slate-400">Yaptıkların artı, eksik olanlar eksi puan olarak görünür</div>
           </div>
         </div>
         <div className="flex items-center gap-3">
@@ -185,7 +208,7 @@ export function WhatIfSimulator({ profile, currentScore }: Props) {
 
       {expanded && (
         <div className="p-5">
-          {/* Özet banner — seçim varsa göster */}
+          {/* Özet banner */}
           {checked.size > 0 && (
             <div className={`mb-4 flex items-center justify-between p-3 rounded-xl border ${
               totalGain > 0 ? 'bg-violet-50 border-violet-200' : 'bg-slate-50 border-slate-200'
@@ -208,55 +231,86 @@ export function WhatIfSimulator({ profile, currentScore }: Props) {
             </div>
           )}
 
-          {/* Senaryo listesi */}
-          <div className="space-y-2">
-            {visible.map((s, i) => {
-              const delta = deltas[i];
-              const isChecked = checked.has(s.id);
-              return (
-                <button
-                  key={s.id}
-                  type="button"
-                  onClick={() => toggle(s.id)}
-                  className={`w-full flex items-center gap-3 p-3 rounded-xl border text-left transition-all hover:shadow-sm ${
-                    isChecked
-                      ? 'border-violet-300 bg-violet-50'
-                      : 'border-slate-200 hover:border-slate-300 bg-white'
-                  }`}
-                >
-                  {/* Checkbox */}
-                  <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-colors ${
-                    isChecked ? 'bg-violet-600 border-violet-600' : 'border-slate-300'
-                  }`}>
-                    {isChecked && <CheckCircle2 className="w-3.5 h-3.5 text-white" />}
-                  </div>
-
-                  {/* Metin */}
-                  <div className="flex-1 min-w-0">
-                    <div className={`text-sm font-bold truncate ${isChecked ? 'text-violet-900' : 'text-slate-800'}`}>
-                      {s.label}
+          {/* ── YAPILANLAR (aktif, pozitif katkı) ───────────────────────── */}
+          {active.length > 0 && (
+            <div className="mb-5">
+              <div className="text-xs font-semibold text-emerald-700 uppercase tracking-wide mb-2">
+                Yaptıkların ({active.length})
+              </div>
+              <div className="space-y-2">
+                {active.map((s, i) => {
+                  const gain = activeContributions[i];
+                  return (
+                    <div
+                      key={s.id}
+                      className="w-full flex items-center gap-3 p-3 rounded-xl border border-emerald-200 bg-emerald-50/40"
+                    >
+                      <div className="w-5 h-5 rounded-md bg-emerald-600 flex items-center justify-center shrink-0">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-white" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-bold text-emerald-900 truncate">{s.label}</div>
+                        <div className="text-xs text-emerald-700/70 truncate">{s.description}</div>
+                      </div>
+                      <div className="shrink-0 text-xs font-bold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700">
+                        {gain > 0 ? `+${gain}` : gain === 0 ? '✓' : gain}
+                      </div>
                     </div>
-                    <div className="text-xs text-slate-400 truncate">{s.description}</div>
-                  </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
-                  {/* Delta rozeti */}
-                  <div className={`shrink-0 text-xs font-bold px-2.5 py-1 rounded-full ${
-                    delta > 0
-                      ? 'bg-emerald-100 text-emerald-700'
-                      : delta < 0
-                      ? 'bg-rose-100 text-rose-700'
-                      : 'bg-slate-100 text-slate-500'
-                  }`}>
-                    {delta > 0 ? '+' : ''}{delta}
-                  </div>
-                </button>
-              );
-            })}
-          </div>
+          {/* ── EKSİKLER (yapılabilecekler) ──────────────────────────────── */}
+          {missing.length > 0 && (
+            <div>
+              <div className="text-xs font-semibold text-rose-700 uppercase tracking-wide mb-2">
+                Yapabileceklerin ({missing.length}) — tıkla, etkisini gör
+              </div>
+              <div className="space-y-2">
+                {missing.map((s, i) => {
+                  const gain = missingGains[i];
+                  const isChecked = checked.has(s.id);
+                  return (
+                    <button
+                      key={s.id}
+                      type="button"
+                      onClick={() => toggle(s.id)}
+                      className={`w-full flex items-center gap-3 p-3 rounded-xl border text-left transition-all hover:shadow-sm ${
+                        isChecked
+                          ? 'border-violet-300 bg-violet-50'
+                          : 'border-rose-200 bg-rose-50/30 hover:border-rose-300'
+                      }`}
+                    >
+                      <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-colors ${
+                        isChecked ? 'bg-violet-600 border-violet-600' : 'border-rose-300 bg-white'
+                      }`}>
+                        {isChecked
+                          ? <CheckCircle2 className="w-3.5 h-3.5 text-white" />
+                          : <XCircle className="w-3.5 h-3.5 text-rose-400" />}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className={`text-sm font-bold truncate ${isChecked ? 'text-violet-900' : 'text-slate-800'}`}>
+                          {s.label}
+                        </div>
+                        <div className="text-xs text-slate-400 truncate">{s.description}</div>
+                      </div>
+                      <div className={`shrink-0 text-xs font-bold px-2.5 py-1 rounded-full ${
+                        gain > 0 ? 'bg-rose-100 text-rose-700' : 'bg-slate-100 text-slate-500'
+                      }`}>
+                        {gain > 0 ? `−${gain}` : '0'}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* Alt not */}
           <p className="mt-3 text-[10px] text-slate-400 text-center">
-            Tahminler mevcut profilinize göre hesaplanır. Gerçek skor birden fazla faktörden etkilenir.
+            Yeşil rozet: aktif — bu adımı kaldırırsan kaybedeceğin puan. Kırmızı rozet: eksik — eklersen kazanacağın puan.
           </p>
         </div>
       )}

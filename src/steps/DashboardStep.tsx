@@ -493,7 +493,7 @@ export function DashboardStep({
 
                   {/* ── WHAT-IF SİMÜLATÖRÜ ── */}
                   <WidgetBoundary name="WhatIfSimulator">
-                    <WhatIfSimulator profile={profile} currentScore={currentScore} />
+                    <WhatIfSimulator profile={profile} currentScore={currentScore} simulatorValue={simulatorValue} />
                   </WidgetBoundary>
 
                   {/* ── SONUCU ÇIKART CTA ── */}
