@@ -13,7 +13,8 @@
     "lint": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "calibrate": "tsx scripts/calibrate.ts"
   },
   "dependencies": {
     "@google/genai": "^1.29.0",

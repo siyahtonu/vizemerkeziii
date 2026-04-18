@@ -86,6 +86,55 @@ export const calculateConfidenceInterval = (
   return { label: 'Düşük', color: 'text-rose-600', low, high, missingCount };
 };
 
+// ── Güven aralığı sebepleri (v3.7) ────────────────────────────────────────
+// Tek başına skor vermek yerine "neden bu aralık?" sorusunu yanıtlar.
+// UI'da tooltip olarak gösterilir. calculateConfidenceInterval'in width
+// hesabıyla tutarlı kalması için aynı tetikleyicileri kullanıyor — bu
+// fonksiyon saf-sunum (presentational), ayrı bir hesap yapmıyor.
+export interface ConfidenceReason {
+  key: 'missing_city' | 'missing_month' | 'no_travel_history' | 'extreme_score' | 'rare_segment' | 'sparse_form' | 'complete';
+  text: string;
+}
+
+export const explainConfidence = (data: ProfileData, finalScore: number): ConfidenceReason[] => {
+  const reasons: ConfidenceReason[] = [];
+
+  if (!data.applicantCity) {
+    reasons.push({ key: 'missing_city', text: 'Başvuru konsolosluğu belirtilmedi; şehir kalibrasyonu uygulanmadı.' });
+  }
+  if (!data.applyMonth) {
+    reasons.push({ key: 'missing_month', text: 'Başvuru ayı belirtilmedi; mevsimsellik kalibrasyonu uygulanmadı.' });
+  }
+
+  const noTravelSignal =
+    !data.hasHighValueVisa && !data.hasOtherVisa && !data.travelHistoryNonVisa
+    && data.lastVisaYear === 0 && data.lastRejectionYear === 0;
+  if (noTravelSignal) {
+    reasons.push({ key: 'no_travel_history', text: 'Seyahat geçmişi belirtilmemiş; profil sinyali zayıf kaldı.' });
+  }
+
+  if (finalScore < 25 || finalScore > 88) {
+    reasons.push({
+      key: 'extreme_score',
+      text: finalScore < 25
+        ? 'Çok düşük skor bölgesi; az sayıda karşılaştırma vakası mevcut.'
+        : 'Çok yüksek skor bölgesi; az sayıda karşılaştırma vakası mevcut.',
+    });
+  }
+
+  const hasAnchor = data.hasSgkJob || data.isPublicSectorEmployee || data.isStudent;
+  const hasFamily = data.isMarried || data.hasChildren;
+  if (!hasAnchor && !hasFamily && data.applicantAge > 0 && data.applicantAge < 50) {
+    reasons.push({ key: 'rare_segment', text: 'Nadir profil segmenti (çalışmıyor + bekâr + çocuksuz); kalibrasyon verisi sınırlı.' });
+  }
+
+  if (reasons.length === 0) {
+    reasons.push({ key: 'complete', text: 'Önemli kalibrasyon sinyallerinin tamamı mevcut.' });
+  }
+
+  return reasons;
+};
+
 // ── #5b Konsolosluk Kalibrasyonu (v3.1) ──────────────────────────────────
 // Mantık: Aynı ülke için farklı şehirdeki konsolosluğun davranışı farklıdır.
 // city × country × profile_segment 3 boyutlu matris.

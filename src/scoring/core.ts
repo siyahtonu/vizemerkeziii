@@ -174,6 +174,62 @@ export const calculateRawScore = (data: ProfileData, simValue: number = 0): numb
   else if (data.targetCountry !== 'ABD' && data.targetCountry !== 'İngiltere') score -= 5;
 
   // ─────────────────────────────────────────────────────────
+  // BÖLÜM 7.5: ETKİLEŞİM TERİMLERİ (v3.7)
+  // Tek başına ölçülemeyen profil kombinasyonları. Küçük etkiler
+  // (±3…±5) — overfit'i önlemek için kasıtlı olarak ölçülü.
+  // ─────────────────────────────────────────────────────────
+
+  // I1: "Mütevazı gelir + güçlü geri dönüş çapası"
+  // Bankada az para var ama çoklu bağ (iş + aile + çocuk) = düşük kaçma riski.
+  // Ev hanımı + çalışan eş + çocuk, kendi hesabı küçük ama ev/arsa mevcut vb.
+  if (!data.bankSufficientBalance
+      && activeTieCount >= 3
+      && data.noOverstayHistory
+      && data.hasChildren) {
+    score += 4;
+  }
+
+  // I2: "Hikâyesiz para" — büyük birikim + iş yok + seyahat yok + bağ yok
+  // Konsolosluklar için en şüpheli kombinasyon: nereden geldiği belirsiz
+  // yüksek mevduat, anchor'sız profil. Emekli/sponsor segmentinde uygulanmaz.
+  const isEliteTraveler = data.hasHighValueVisa || data.hasOtherVisa;
+  if (data.bankSufficientBalance
+      && data.highSavingsAmount
+      && !isEliteTraveler
+      && !data.travelHistoryNonVisa
+      && data.lastVisaYear === -1
+      && activeTieCount <= 1
+      && segment !== 'retired'
+      && segment !== 'sponsor') {
+    score -= 5;
+  }
+
+  // I3: "Güvenilir müdavim" — çoklu pozitif sinyal birleşimi
+  // Elit vize geçmişi + tutarlı belgeler + düzenli banka + temiz sicil.
+  // Her biri ayrı ayrı ödüllendiriliyor; birleşince ek küçük güven bonusu.
+  if (data.hasHighValueVisa
+      && data.documentConsistency
+      && data.bankRegularity
+      && data.noOverstayHistory
+      && !data.hasPreviousRefusal) {
+    score += 3;
+  }
+
+  // I4: "Genç, bekâr, ilk başvuru → zor ülke" etkileşimi
+  // Her faktör tek başına zaten kısmen cezalandırılıyor; birleşimi ABD/UK
+  // için sistemik 214(b) / V4.2 riskini yansıtır.
+  if (data.applicantAge > 0
+      && data.applicantAge < 28
+      && !data.isMarried
+      && !data.hasChildren
+      && !data.hasSgkJob
+      && data.lastVisaYear === -1
+      && !data.travelHistoryNonVisa
+      && (data.targetCountry === 'ABD' || data.targetCountry === 'İngiltere')) {
+    score -= 3;
+  }
+
+  // ─────────────────────────────────────────────────────────
   // BÖLÜM 8: VETO — Kritik eşik aşıldığında skoru zorla kırp
   // v2.5: Son dakika mevduat Türklerde #1 ret sebebi (%43)
   // ─────────────────────────────────────────────────────────
