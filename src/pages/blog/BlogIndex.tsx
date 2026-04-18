@@ -454,16 +454,25 @@ export default function BlogIndex() {
 
   const filtered = useMemo(() => {
     const q = query.toLowerCase().trim();
-    return BLOG_POSTS.filter((post) => {
-      const matchCategory = activeCategory === 'Tümü' || post.category === activeCategory;
-      if (!matchCategory) return false;
-      if (!q) return true;
-      return (
-        post.title.toLowerCase().includes(q) ||
-        post.description.toLowerCase().includes(q) ||
-        post.tags.some((t) => t.toLowerCase().includes(q))
-      );
-    });
+    // Dizideki orijinal sıra tiebreaker olarak kullanılır: diziye en son eklenen = en yeni
+    return BLOG_POSTS
+      .map((post, idx) => ({ post, idx }))
+      .filter(({ post }) => {
+        const matchCategory = activeCategory === 'Tümü' || post.category === activeCategory;
+        if (!matchCategory) return false;
+        if (!q) return true;
+        return (
+          post.title.toLowerCase().includes(q) ||
+          post.description.toLowerCase().includes(q) ||
+          post.tags.some((t) => t.toLowerCase().includes(q))
+        );
+      })
+      .sort((a, b) => {
+        // Tarih azalan (yeni → eski); eşitse dizideki index azalan (sonra eklenen üstte)
+        const cmp = b.post.date.localeCompare(a.post.date);
+        return cmp !== 0 ? cmp : b.idx - a.idx;
+      })
+      .map(({ post }) => post);
   }, [query, activeCategory]);
 
   return (

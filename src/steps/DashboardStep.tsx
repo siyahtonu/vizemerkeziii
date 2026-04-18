@@ -1376,23 +1376,6 @@ export function DashboardStep({
                       </button>
                     </div>
                   </div>
-  
-                  {/* Evrak Paketi */}
-                  <div className="glass-card p-10 flex flex-col md:flex-row items-center justify-between gap-8 relative overflow-hidden group">
-                    <div className="absolute -left-20 -bottom-20 w-64 h-64 bg-slate-100 rounded-full blur-3xl group-hover:bg-slate-200 transition-all duration-700" />
-                    <div className="flex items-center gap-6 relative z-10">
-                      <div className="w-16 h-16 bg-gradient-to-br from-brand-500 to-brand-600 rounded-[2rem] flex items-center justify-center text-white shadow-lg shadow-brand-500/20">
-                        <Download className="w-8 h-8" />
-                      </div>
-                      <div className="space-y-1">
-                        <h3 className="text-2xl font-bold text-slate-900 font-display">Evrak Paketi</h3>
-                        <p className="text-slate-500 text-sm font-medium">Gerekli tüm dilekçe, form ve kontrol listeleri.</p>
-                      </div>
-                    </div>
-                    <button className="btn-primary px-10 relative z-10">
-                      Paketi İndir ($50)
-                    </button>
-                  </div>
               </motion.div>
   );
 }

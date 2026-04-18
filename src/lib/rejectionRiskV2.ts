@@ -81,6 +81,9 @@ export interface ProfileSnapshot {
   hasTravelInsurance?: boolean;
   // Strateji
   targetCountry?: string;
+  // Segment marker'ları (core.ts resolveSegment ile tutarlı)
+  hasSponsor?: boolean;
+  applicantAge?: number;
 }
 
 // App.tsx'teki tam ProfileData tipine de uyar (superset olduğu için)
@@ -139,6 +142,24 @@ function levelOf(score: number): FactorScore['level'] {
   if (score >= 50) return 'moderate';
   if (score >= 25) return 'weak';
   return 'critical';
+}
+
+// ── Segment tespiti — scoring/algorithms.ts:resolveSegment ile %100 tutarlı ──
+// R-2077 breakdown'ı ile ana algoritma ayrışmasın diye burada tekrar tanımlıyoruz.
+type Segment = 'sponsor' | 'student' | 'public_sector' | 'retired' | 'self_employed' | 'unemployed' | 'employed';
+function resolveSegment(p: ProfileData): Segment {
+  if (p.hasSponsor) return 'sponsor';
+  if (p.isStudent) return 'student';
+  if (p.isPublicSectorEmployee) return 'public_sector';
+  if (!p.hasSgkJob && p.hasAssets && (p.applicantAge ?? 0) >= 55) return 'retired';
+  if (!p.hasSgkJob && p.hasAssets) return 'self_employed';
+  if (!p.hasSgkJob && !p.hasAssets) return 'unemployed';
+  return 'employed';
+}
+
+// SGK zorunlu mu? (employed / public_sector / self_employed için beklenir)
+function expectsEmployment(segment: Segment): boolean {
+  return segment === 'employed' || segment === 'public_sector' || segment === 'self_employed';
 }
 
 // ── Ülke Veritabanı ───────────────────────────────────────────────────────
@@ -213,6 +234,15 @@ function getCountryInfo(country: string): CountryInfo {
 export function calculateRejectionRisk(profile: ProfileData, currentScore?: number): RejectionRiskResult {
   const factors: FactorScore[] = [];
   const vetoes: string[] = [];
+  const segment = resolveSegment(profile);
+  const sgkExpected = expectsEmployment(segment);
+  // Türkçe normalize: "İngiltere".toLowerCase() → "i̇ngiltere" (combining dot) —
+  // basit .includes('ingiltere') eşleşmez. Karakterleri önceden eşle.
+  const tcRaw = (profile.targetCountry ?? '').toLowerCase()
+    .replace(/\u0307/g, '')    // combining dot above
+    .replace(/ı/g, 'i');
+  const insuranceNotRequired = tcRaw.includes('abd') || tcRaw.includes('usa') || tcRaw.includes('america') ||
+                                tcRaw.includes('ingiltere') || tcRaw.includes('uk') || tcRaw.includes('britain');
 
   // ────────────────────────────────────────────────────────────────────────
   // FAKTÖR 1: Geri Dönüş Bağı — ağırlık %25
@@ -234,15 +264,16 @@ export function calculateRejectionRisk(profile: ProfileData, currentScore?: numb
 
     score += tieCount * 14; // Her bağ kategorisi 14 puan (max 70 = 5 kategori)
 
-    // SGK / İş bağı
+    // SGK / İş bağı — segment-aware (core.ts:54 ile tutarlı)
     if (profile.hasSgkJob) score += 10;
-    else issues.push('SGK kaydı / aktif iş bağı yok');
+    else if (sgkExpected) issues.push('SGK kaydı / aktif iş bağı yok');
+    else score += 6; // öğrenci/emekli/sponsor için SGK yokluğu beklenir — telafi bonusu
 
     if (profile.isPublicSectorEmployee) score += 8;
 
-    // Mülk bağı
+    // Mülk bağı — segment-aware issue (öğrenci için taşınmaz beklenmez)
     if (profile.hasAssets) score += 8;
-    else issues.push('Türkiye\'de kayıtlı taşınmaz yok');
+    else if (segment !== 'student') issues.push('Türkiye\'de kayıtlı taşınmaz yok');
 
     // Aile bağı
     if (profile.isMarried) score += 4;
@@ -281,8 +312,10 @@ export function calculateRejectionRisk(profile: ProfileData, currentScore?: numb
     if (profile.bankRegularity) score += 20;
     else issues.push('Düzenli banka hareketi yok (3+ ay bekleniyor)');
 
-    if (profile.hasSteadyIncome) score += 20;
-    else issues.push('Sabit gelir kanıtlanamıyor');
+    // Sabit gelir: hasSteadyIncome açık set edilmediyse salaryDetected / hasSgkJob proxy olarak sayılır
+    const steadyIncomeOK = profile.hasSteadyIncome || profile.salaryDetected || profile.hasSgkJob;
+    if (steadyIncomeOK) score += 20;
+    else if (sgkExpected) issues.push('Sabit gelir kanıtlanamıyor');
 
     if (profile.salaryDetected) score += 15;
 
@@ -329,7 +362,10 @@ export function calculateRejectionRisk(profile: ProfileData, currentScore?: numb
       vetoes.push('Süre aşımı geçmişi otomatik ret riskini artırır');
     }
 
-    if (profile.hasSocialMediaFootprint) score -= 15;
+    // 2025 ABD/AB konsolosluk kuralı: sosyal medya handle'ı beyan edilmesi gerek.
+    // Normal/tutarlı footprint = pozitif sinyal (gerçek kimlik). Yokluk = beyaz bayrak.
+    // core.ts:100 ile aynı işaret (+).
+    if (profile.hasSocialMediaFootprint) score += 5;
 
     score = clamp(score);
 
@@ -355,11 +391,15 @@ export function calculateRejectionRisk(profile: ProfileData, currentScore?: numb
     if (profile.documentConsistency) score += 25;
     else issues.push('Belgeler arasında tutarsızlık var (adres, tarih, işveren)');
 
+    // Barkodlu SGK — yalnızca SGK bekleniyorsa issue'a ekle
     if (profile.hasBarcodeSgk) score += 15;
-    else issues.push('Barkodlu SGK dökümü eklenmemiş');
+    else if (sgkExpected) issues.push('Barkodlu SGK dökümü eklenmemiş');
+    else score += 8; // öğrenci/emekli/sponsor için telafi (belge yok ama beklenen de değil)
 
+    // İşveren mektubu — yalnızca SGK bekleniyorsa issue'a ekle
     if (profile.sgkEmployerLetterWithReturn) score += 15;
-    else issues.push('İşveren mektubu kesin geri dönüş tarihi içermiyor');
+    else if (sgkExpected) issues.push('İşveren mektubu kesin geri dönüş tarihi içermiyor');
+    else score += 8;
 
     if (profile.noFakeBooking) score += 15;
     else {
@@ -537,8 +577,11 @@ export function calculateRejectionRisk(profile: ProfileData, currentScore?: numb
     const actions: ToolAction[] = [];
     let score = 0;
 
+    // ABD ve İngiltere sigortayı zorunlu kılmaz — core.ts:165 ile tutarlı
     if (profile.hasHealthInsurance || profile.hasTravelInsurance) {
       score = 100;
+    } else if (insuranceNotRequired) {
+      score = 70; // zorunlu değil, önerilen → nötr-iyi
     } else {
       score = 0;
       issues.push('Seyahat sigortası yok — Schengen için zorunlu');
