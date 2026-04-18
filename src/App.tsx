@@ -2417,12 +2417,28 @@ Signature: _______________     Date: ${today}`;
     doc.save(`VizeAkil_Kisiye_Ozel_Evrak_Listesi_${normalizeTr(countryLabel)}_${today.replace(/\//g, '-')}.pdf`);
   };
 
+  // Kullanıcının bu seanstae açtığı araçlar — kartlardaki
+  // "Tamamlandı / Tamamlanmadı" rozetini beslemek için localStorage'da
+  // tutulur, böylece sayfa yenilense de durum korunur.
+  const [usedTools, setUsedTools] = useState<Set<string>>(() => {
+    try {
+      const raw = localStorage.getItem('vizeakil_used_tools');
+      return raw ? new Set<string>(JSON.parse(raw)) : new Set<string>();
+    } catch { return new Set<string>(); }
+  });
+  React.useEffect(() => {
+    try { localStorage.setItem('vizeakil_used_tools', JSON.stringify([...usedTools])); }
+    catch { /* noop */ }
+  }, [usedTools]);
+
   // Open a tool: if premium-gated and not premium, show upgrade modal; else navigate to dashboard + open
   const openTool = (toolId: string, setter: (b: boolean) => void) => {
     if (PREMIUM_TOOLS.includes(toolId) && !isPremium) {
       setIsUpgradeOpen(true);
       return;
     }
+    // Araca girildiğinde "tamamlandı" olarak işaretle
+    setUsedTools(prev => (prev.has(toolId) ? prev : new Set(prev).add(toolId)));
     if (step !== 'dashboard') {
       setStep('dashboard');
       setTimeout(() => setter(true), 150);
@@ -4825,6 +4841,7 @@ Signature: _______________     Date: ${today}`;
               fbRejNotes={fbRejNotes}
               dashToolTab={dashToolTab}
               showRiskDetail={showRiskDetail}
+              usedTools={usedTools}
               onNavigate={setStep}
               onProfileUpdate={(patch) => setProfile(prev => ({ ...prev, ...patch }))}
               onProfileSet={setProfile}

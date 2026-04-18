@@ -79,6 +79,7 @@ export interface DashboardStepProps {
   fbRejNotes: string;
   dashToolTab: 'hazirlik' | 'analiz' | 'ulke';
   showRiskDetail: boolean;
+  usedTools: Set<string>;
   // Callbacks
   onNavigate: (step: string) => void;
   onProfileUpdate: (patch: Partial<ProfileData>) => void;
@@ -215,7 +216,7 @@ export function DashboardStep({
   rejectionMatches, intelligence, bankHealthScore, roadmap, actionItems,
   baseScoreWithoutUs, isPremium, simulatorValue, isOcrScanning, ocrResults,
   letterData, feedbackStep, fbEmail, fbDate, fbStatus, fbRegisteredId,
-  fbOutcome, fbRejCode, fbRejNotes, dashToolTab, showRiskDetail,
+  fbOutcome, fbRejCode, fbRejNotes, dashToolTab, showRiskDetail, usedTools,
   onNavigate, onProfileUpdate, onProfileSet, onReset, onSimulatorValueChange,
   onOcrUpload, onGeneratePDF, onOpenReportModal, onOpenTool,
   onFeedbackStepChange, onFbEmailChange, onFbDateChange, onFbStatusChange,
@@ -478,21 +479,27 @@ export function DashboardStep({
                         .filter(t => t.tab === dashToolTab)
                         .map(({ label, desc, icon: Icon, color, id, setter }) => {
                           const locked = PREMIUM_TOOLS.includes(id) && !isPremium;
+                          const used = usedTools.has(id);
                           return (
                             <button key={id} onClick={() => openTool(id, setter as (b: boolean) => void)}
                               className={`group text-left rounded-2xl border-2 p-4 transition-all duration-300 hover:shadow-lg hover:shadow-brand-500/[0.04] hover:-translate-y-1
-                                ${locked ? 'bg-slate-50/50 border-slate-100' : 'bg-white border-slate-100 hover:border-brand-200'}`}>
+                                ${locked ? 'bg-slate-50/50 border-slate-100' : used ? 'bg-emerald-50/40 border-emerald-200 hover:border-emerald-300' : 'bg-white border-slate-100 hover:border-brand-200'}`}>
                               <div className="flex items-start gap-3">
                                 <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${locked ? 'bg-slate-200' : color}`}>
                                   <Icon className={`w-4 h-4 ${locked ? 'text-slate-400' : 'text-white'}`} />
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                  <div className="flex items-center gap-1.5 mb-0.5">
+                                  <div className="flex items-center gap-1.5 mb-0.5 flex-wrap">
                                     <span className={`text-sm font-bold ${locked ? 'text-slate-400' : 'text-slate-900'}`}>{label}</span>
-                                    {locked
-                                      ? <span className="text-[9px] font-bold bg-amber-100 text-amber-600 px-1 py-0.5 rounded">🔒</span>
-                                      : !PREMIUM_TOOLS.includes(id) && <span className="text-[9px] font-bold bg-emerald-100 text-emerald-600 px-1 py-0.5 rounded">Ücretsiz</span>
-                                    }
+                                    {locked && <span className="text-[9px] font-bold bg-amber-100 text-amber-600 px-1 py-0.5 rounded">🔒</span>}
+                                    {!locked && (
+                                      used
+                                        ? <span className="inline-flex items-center gap-0.5 text-[9px] font-bold bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded">
+                                            <CheckCircle2 className="w-2.5 h-2.5" /> Tamamlandı
+                                          </span>
+                                        : <span className="text-[9px] font-bold bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded">Tamamlanmadı</span>
+                                    )}
+                                    {!locked && !PREMIUM_TOOLS.includes(id) && <span className="text-[9px] font-bold bg-emerald-100 text-emerald-600 px-1 py-0.5 rounded">Ücretsiz</span>}
                                   </div>
                                   <p className={`text-xs leading-relaxed ${locked ? 'text-slate-400' : 'text-slate-500'}`}>{desc}</p>
                                 </div>
