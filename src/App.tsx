@@ -63,6 +63,8 @@ import { apiUrl } from './lib/api';
 import { HelpModal } from './components/modals/HelpModal';
 import { CountryGuideModal } from './components/modals/CountryGuideModal';
 import { DocChecklistModal } from './components/modals/DocChecklistModal';
+import { CostCalculatorModal } from './components/modals/CostCalculatorModal';
+import { DayCalculatorModal } from './components/modals/DayCalculatorModal';
 import type { CountryWarning } from './lib/scoringV2';
 import { RejectionRiskWidget } from './components/RejectionRiskWidget';
 
@@ -309,6 +311,12 @@ export default function App() {
 
   // ── Belge Kontrol Listesi ───────────────────────────────────────────────────
   const [isDocChecklistOpen, setIsDocChecklistOpen] = useState(false);
+
+  // ── Maliyet Hesaplayıcı ─────────────────────────────────────────────────────
+  const [isCostCalculatorOpen, setIsCostCalculatorOpen] = useState(false);
+
+  // ── 90/180 Günlük Hesaplayıcı ───────────────────────────────────────────────
+  const [isDayCalculatorOpen, setIsDayCalculatorOpen] = useState(false);
 
   // ── Dashboard UI State ───────────────────────────────────────────────────────
   const [dashToolTab, setDashToolTab] = useState<'hazirlik' | 'analiz' | 'ulke'>('hazirlik');
@@ -4797,6 +4805,8 @@ Signature: _______________     Date: ${today}`;
               setIsCountryGuideOpen={setIsCountryGuideOpen}
               setIsDocChecklistOpen={setIsDocChecklistOpen}
               setIsDocumentListOpen={setIsDocumentListOpen}
+              setIsCostCalculatorOpen={setIsCostCalculatorOpen}
+              setIsDayCalculatorOpen={setIsDayCalculatorOpen}
               setIsInterviewSimOpen={setIsInterviewSimOpen}
               setIsMultiCountryOpen={setIsMultiCountryOpen}
               setIsRedFlagOpen={setIsRedFlagOpen}
@@ -6768,6 +6778,19 @@ Signature: _______________     Date: ${today}`;
         profile={profile}
         onDownloadPDF={generateDocumentChecklistPDF}
         onProfileUpdate={(updates) => setProfile(prev => ({ ...prev, ...updates }))}
+      />
+
+      {/* ── ARAÇ: Maliyet Hesaplayıcı ────────────────────────────────────────── */}
+      <CostCalculatorModal
+        isOpen={isCostCalculatorOpen}
+        onClose={() => setIsCostCalculatorOpen(false)}
+        country={profile.targetCountry}
+      />
+
+      {/* ── ARAÇ: 90/180 Günlük Hesaplayıcı ──────────────────────────────────── */}
+      <DayCalculatorModal
+        isOpen={isDayCalculatorOpen}
+        onClose={() => setIsDayCalculatorOpen(false)}
       />
       {/* ── ARAÇ 18: Nereye Gidebilirim ────────────────────────────────── */}
       <CountryGuideModal

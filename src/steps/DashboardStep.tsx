@@ -20,7 +20,6 @@ import { WhatIfSimulator } from '../components/WhatIfSimulator';
 import { EvidenceChecklist } from '../components/EvidenceChecklist';
 import { RejectionRiskWidget } from '../components/RejectionRiskWidget';
 import SeasonalRiskWidget from '../components/SeasonalRiskWidget';
-import CostCalculatorWidget from '../components/CostCalculatorWidget';
 import { WidgetBoundary } from '../components/ErrorBoundary';
 import ScoreStory from '../components/ScoreStory';
 import BenchmarkCard from '../components/BenchmarkCard';
@@ -109,6 +108,8 @@ export interface DashboardStepProps {
   setIsCountryGuideOpen: React.Dispatch<React.SetStateAction<boolean>>;
   setIsDocChecklistOpen: React.Dispatch<React.SetStateAction<boolean>>;
   setIsDocumentListOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  setIsCostCalculatorOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  setIsDayCalculatorOpen: React.Dispatch<React.SetStateAction<boolean>>;
   setIsInterviewSimOpen: React.Dispatch<React.SetStateAction<boolean>>;
   setIsMultiCountryOpen: React.Dispatch<React.SetStateAction<boolean>>;
   setIsRedFlagOpen: React.Dispatch<React.SetStateAction<boolean>>;
@@ -134,6 +135,7 @@ export function DashboardStep({
   setIsAiBankOpen, setIsAppointmentOpen, setIsBankPlanOpen, setIsCalculatorOpen,
   setIsCommunityOpen, setIsConsistencyOpen, setIsCopilotOpen, setIsCountryGuideOpen,
   setIsDocChecklistOpen, setIsDocumentListOpen, setIsInterviewSimOpen,
+  setIsCostCalculatorOpen, setIsDayCalculatorOpen,
   setIsMultiCountryOpen, setIsRedFlagOpen, setIsRefusalMapOpen, setIsRefusalOpen,
   setIsSchengenComparatorOpen, setIsSocialMediaOpen, setIsUpgradeOpen, setIsVisaFreeOpen,
 }: DashboardStepProps) {
@@ -392,6 +394,8 @@ export function DashboardStep({
                         { tab: 'hazirlik', label: 'Banka Hazırlık Planı',  desc: 'Aylık giriş/çıkış hedeflerini görün.',             icon: Banknote,     color: 'bg-gradient-to-br from-emerald-400 to-emerald-600',   id: 'bankplan',     setter: setIsBankPlanOpen },
                         { tab: 'hazirlik', label: 'Belge Tutarlılık',      desc: 'Pasaport, SGK, banka tarihleri uyuşuyor mu?',      icon: CheckCircle2, color: 'bg-gradient-to-br from-slate-400 to-slate-500',   id: 'consistency',  setter: setIsConsistencyOpen },
                         { tab: 'hazirlik', label: 'Vizesiz Ülkeler',       desc: 'Türk pasaportuyla vize gerektirmeyen ülkeler.',    icon: Plane,        color: 'bg-gradient-to-br from-emerald-400 to-green-500', id: 'visafree',     setter: setIsVisaFreeOpen },
+                        { tab: 'hazirlik', label: 'Maliyet Hesaplayıcı',   desc: 'Vize + uçak + konaklama + günlük toplam bütçe.',   icon: Wallet,       color: 'bg-gradient-to-br from-indigo-500 to-brand-600',  id: 'cost',         setter: setIsCostCalculatorOpen },
+                        { tab: 'hazirlik', label: '90/180 Gün Hesaplayıcı',desc: 'Schengen 90/180 kuralı — kalan gün ve yeni giriş tarihi.', icon: Calendar, color: 'bg-gradient-to-br from-amber-500 to-orange-600',  id: 'daycalc',      setter: setIsDayCalculatorOpen },
                         { tab: 'analiz',   label: 'Vize Danışmanım',       desc: 'Yapay zeka ile en kritik 3 adımı öğrenin.',        icon: MessageSquare, color: 'bg-gradient-to-br from-blue-400 to-blue-500',   id: 'copilot',      setter: setIsCopilotOpen },
                         { tab: 'analiz',   label: 'Kırmızı Bayrak',        desc: 'Otomatik ret gerekçelerini önceden tespit edin.',  icon: XCircle,      color: 'bg-gradient-to-br from-red-400 to-red-500',     id: 'redflag',      setter: setIsRedFlagOpen },
                         { tab: 'analiz',   label: 'Banka Dökümü Analizi',  desc: 'Ekstrenizi konsolosluk gözüyle değerlendirin.',    icon: Sparkles,     color: 'bg-gradient-to-br from-blue-500 to-indigo-600',    id: 'aibank',       setter: setIsAiBankOpen },
@@ -481,13 +485,6 @@ export function DashboardStep({
                   <WidgetBoundary name="WhatIfSimulator">
                     <WhatIfSimulator profile={profile} currentScore={currentScore} />
                   </WidgetBoundary>
-
-                  {/* ── MALİYET HESAPLAYICI ── */}
-                  {profile.targetCountry && (
-                    <WidgetBoundary name="CostCalculatorWidget">
-                      <CostCalculatorWidget country={profile.targetCountry} />
-                    </WidgetBoundary>
-                  )}
 
                   {/* ── SONUCU ÇIKART CTA ── */}
                   <div className="rounded-2xl bg-gradient-to-br from-indigo-600 to-brand-700 p-5 flex flex-col sm:flex-row items-center gap-4">

@@ -18,6 +18,8 @@ interface Props {
   country: string;
   /** EUR → TL kur. Prop olarak verilmezse default kullanılır. */
   eurToTry?: number;
+  /** Modal içinde render ediliyorsa dış kart çerçevesini kaldırır. */
+  embedded?: boolean;
 }
 
 // 2026 başı ortalama kur varsayımı — gerçek kur için backend endpoint'i eklenebilir
@@ -51,7 +53,7 @@ function fmtTRY(v: number): string {
   return '₺' + Math.round(v).toLocaleString('tr-TR');
 }
 
-export const CostCalculatorWidget: React.FC<Props> = ({ country, eurToTry = DEFAULT_EUR_TRY }) => {
+export const CostCalculatorWidget: React.FC<Props> = ({ country, eurToTry = DEFAULT_EUR_TRY, embedded = false }) => {
   const [days, setDays]           = useState(7);
   const [travelers, setTravelers] = useState(1);
   const [tier, setTier]           = useState<TravelTier>('mid');
@@ -76,11 +78,13 @@ export const CostCalculatorWidget: React.FC<Props> = ({ country, eurToTry = DEFA
 
   if (!hasCostData) {
     return (
-      <div className="bg-white rounded-2xl border border-slate-200 p-5">
-        <div className="flex items-center gap-2 mb-2">
-          <Calculator className="w-4 h-4 text-slate-400" />
-          <div className="font-bold text-slate-900 text-sm">Maliyet Hesaplayıcı</div>
-        </div>
+      <div className={embedded ? 'p-1' : 'bg-white rounded-2xl border border-slate-200 p-5'}>
+        {!embedded && (
+          <div className="flex items-center gap-2 mb-2">
+            <Calculator className="w-4 h-4 text-slate-400" />
+            <div className="font-bold text-slate-900 text-sm">Maliyet Hesaplayıcı</div>
+          </div>
+        )}
         <div className="text-xs text-slate-500">
           {country || 'Hedef ülke'} için maliyet verisi henüz mevcut değil. Schengen ülkeleri, İngiltere ve ABD desteklenir.
         </div>
@@ -100,18 +104,20 @@ export const CostCalculatorWidget: React.FC<Props> = ({ country, eurToTry = DEFA
   ];
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
-      <div className="px-5 py-4 border-b border-slate-100 flex items-center gap-2">
-        <div className="w-8 h-8 bg-indigo-50 rounded-xl flex items-center justify-center">
-          <Calculator className="w-4 h-4 text-indigo-600" />
+    <div className={embedded ? '' : 'bg-white rounded-2xl border border-slate-200 overflow-hidden'}>
+      {!embedded && (
+        <div className="px-5 py-4 border-b border-slate-100 flex items-center gap-2">
+          <div className="w-8 h-8 bg-indigo-50 rounded-xl flex items-center justify-center">
+            <Calculator className="w-4 h-4 text-indigo-600" />
+          </div>
+          <div>
+            <div className="font-bold text-slate-900 text-sm">Maliyet Hesaplayıcı</div>
+            <div className="text-xs text-slate-400">{country} için tahmini toplam bütçe</div>
+          </div>
         </div>
-        <div>
-          <div className="font-bold text-slate-900 text-sm">Maliyet Hesaplayıcı</div>
-          <div className="text-xs text-slate-400">{country} için tahmini toplam bütçe</div>
-        </div>
-      </div>
+      )}
 
-      <div className="p-5 space-y-4">
+      <div className={embedded ? 'space-y-4' : 'p-5 space-y-4'}>
         {/* ── Girdiler ────────────────────────────────────────── */}
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           <label className="flex flex-col gap-1">
