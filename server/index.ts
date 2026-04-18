@@ -8,6 +8,7 @@ import rateLimit from 'express-rate-limit';
 import paymentRouter from './payment.js';
 import appointmentRouter from './appointmentWatcher.js';
 import outcomesRouter from './outcomes.js';
+import contactRouter from './contact.js';
 
 const app = express();
 app.use(express.json());
@@ -79,6 +80,9 @@ app.use('/api/appointments', appointmentRouter);
 
 // ── Başvuru sonuç takip rotaları ──────────────────────────
 app.use('/api/outcomes', outcomesRouter);
+
+// ── İletişim formu ────────────────────────────────────────
+app.use('/api/contact', contactRouter);
 
 // ── Sağlık kontrolü ───────────────────────────────────────
 app.get('/api/health', (_req, res) => {

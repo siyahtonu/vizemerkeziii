@@ -2,15 +2,36 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, ShieldCheck, Mail, MessageSquare, MapPin, Clock } from 'lucide-react';
 import { SEO } from '../components/SEO';
+import { apiUrl } from '../lib/api';
 
 const Iletisim: React.FC = () => {
   const [sent, setSent] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: backend form gönderimi
-    setSent(true);
+    if (sending) return;
+    setError(null);
+    setSending(true);
+    try {
+      const res = await fetch(apiUrl('/api/contact'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(data?.error ?? 'Mesaj gönderilemedi. Lütfen daha sonra tekrar deneyin.');
+        return;
+      }
+      setSent(true);
+    } catch {
+      setError('Bağlantı hatası — internet bağlantınızı kontrol edip tekrar deneyin.');
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
@@ -98,7 +119,7 @@ const Iletisim: React.FC = () => {
                 </div>
                 <h3 className="font-bold text-slate-900 text-lg">Mesajınız İletildi!</h3>
                 <p className="text-slate-500 text-sm text-center">En geç 24 saat içinde dönüş yapacağız.</p>
-                <button onClick={() => { setSent(false); setForm({ name:'', email:'', subject:'', message:'' }); }}
+                <button onClick={() => { setSent(false); setError(null); setForm({ name:'', email:'', subject:'', message:'' }); }}
                   className="px-5 py-2 bg-slate-100 rounded-xl font-bold text-sm text-slate-700 hover:bg-slate-200">
                   Yeni Mesaj
                 </button>
@@ -133,9 +154,14 @@ const Iletisim: React.FC = () => {
                     className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 resize-none"
                   />
                 </div>
-                <button type="submit"
-                  className="w-full py-3 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-xl transition-colors">
-                  Gönder →
+                {error && (
+                  <div className="text-sm text-rose-600 bg-rose-50 border border-rose-200 rounded-xl px-3 py-2">
+                    {error}
+                  </div>
+                )}
+                <button type="submit" disabled={sending}
+                  className="w-full py-3 bg-brand-600 hover:bg-brand-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-colors">
+                  {sending ? 'Gönderiliyor...' : 'Gönder →'}
                 </button>
               </form>
             )}
