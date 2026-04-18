@@ -482,23 +482,26 @@ export function DashboardStep({
                           const used = usedTools.has(id);
                           return (
                             <button key={id} onClick={() => openTool(id, setter as (b: boolean) => void)}
-                              className={`group text-left rounded-2xl border-2 p-4 transition-all duration-300 hover:shadow-lg hover:shadow-brand-500/[0.04] hover:-translate-y-1
-                                ${locked ? 'bg-slate-50/50 border-slate-100' : used ? 'bg-emerald-50/40 border-emerald-200 hover:border-emerald-300' : 'bg-white border-slate-100 hover:border-brand-200'}`}>
-                              <div className="flex items-start gap-3">
+                              className={`group relative text-left rounded-2xl border-2 p-4 transition-all duration-300 hover:shadow-lg hover:shadow-brand-500/[0.04] hover:-translate-y-1
+                                ${locked ? 'bg-slate-50/50 border-slate-100' : used ? 'bg-emerald-50/40 border-emerald-300 hover:border-emerald-400' : 'bg-white border-slate-100 hover:border-brand-200'}`}>
+                              {/* Sağ üst köşe: Tamamlandı / Tamamlanmadı rozeti */}
+                              {!locked && (
+                                used
+                                  ? <span className="absolute top-2 right-2 inline-flex items-center gap-1 text-[10px] font-bold bg-emerald-600 text-white px-2 py-0.5 rounded-full shadow-sm">
+                                      <CheckCircle2 className="w-3 h-3" /> Tamamlandı
+                                    </span>
+                                  : <span className="absolute top-2 right-2 inline-flex items-center gap-1 text-[10px] font-bold bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full">
+                                      <span className="w-1.5 h-1.5 rounded-full bg-slate-400"/> Tamamlanmadı
+                                    </span>
+                              )}
+                              <div className="flex items-start gap-3 pr-2">
                                 <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${locked ? 'bg-slate-200' : color}`}>
                                   <Icon className={`w-4 h-4 ${locked ? 'text-slate-400' : 'text-white'}`} />
                                 </div>
-                                <div className="flex-1 min-w-0">
+                                <div className="flex-1 min-w-0 mt-5">
                                   <div className="flex items-center gap-1.5 mb-0.5 flex-wrap">
                                     <span className={`text-sm font-bold ${locked ? 'text-slate-400' : 'text-slate-900'}`}>{label}</span>
                                     {locked && <span className="text-[9px] font-bold bg-amber-100 text-amber-600 px-1 py-0.5 rounded">🔒</span>}
-                                    {!locked && (
-                                      used
-                                        ? <span className="inline-flex items-center gap-0.5 text-[9px] font-bold bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded">
-                                            <CheckCircle2 className="w-2.5 h-2.5" /> Tamamlandı
-                                          </span>
-                                        : <span className="text-[9px] font-bold bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded">Tamamlanmadı</span>
-                                    )}
                                     {!locked && !PREMIUM_TOOLS.includes(id) && <span className="text-[9px] font-bold bg-emerald-100 text-emerald-600 px-1 py-0.5 rounded">Ücretsiz</span>}
                                   </div>
                                   <p className={`text-xs leading-relaxed ${locked ? 'text-slate-400' : 'text-slate-500'}`}>{desc}</p>
