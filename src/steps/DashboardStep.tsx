@@ -20,6 +20,7 @@ import { WhatIfSimulator } from '../components/WhatIfSimulator';
 import { EvidenceChecklist } from '../components/EvidenceChecklist';
 import { RejectionRiskWidget } from '../components/RejectionRiskWidget';
 import SeasonalRiskWidget from '../components/SeasonalRiskWidget';
+import ResearchInsightsWidget from '../components/ResearchInsightsWidget';
 import { WidgetBoundary } from '../components/ErrorBoundary';
 import ScoreStory from '../components/ScoreStory';
 import BenchmarkCard from '../components/BenchmarkCard';
@@ -478,6 +479,15 @@ export function DashboardStep({
                         applyMonth={profile.applyMonth}
                         applyYear={profile.applyYear}
                       />
+                    </WidgetBoundary>
+                  )}
+
+                  {/* ── ARAŞTIRMA İÇGÖRÜLERİ (olası ret sebepleri + benzer vakalar) ── */}
+                  {profile.targetCountry && (
+                    <WidgetBoundary name="ResearchInsightsWidget">
+                      <div className="rounded-2xl border border-slate-200 bg-white p-5">
+                        <ResearchInsightsWidget profile={profile} />
+                      </div>
                     </WidgetBoundary>
                   )}
 
