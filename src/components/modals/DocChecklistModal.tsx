@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, FileCheck, Download, CheckCircle2 } from 'lucide-react';
 import type { ProfileData } from '../../types';
@@ -19,6 +19,24 @@ export interface DocChecklistProfile {
   strongFamilyTies?: boolean;
   hasSponsor?: boolean;
   applicantAge?: number;
+  // Reverse-map için opsiyonel bayraklar — profilde zaten dolu olan
+  // belgeleri modal açıldığında otomatik işaretlemek için kullanılır.
+  hasValidPassport?: boolean;
+  passportValidityLong?: boolean;
+  hasHealthInsurance?: boolean;
+  hasTravelInsurance?: boolean;
+  bankRegularity?: boolean;
+  has6MonthStatements?: boolean;
+  has28DayHolding?: boolean;
+  hasBarcodeSgk?: boolean;
+  sgkEmployerLetterWithReturn?: boolean;
+  useOurTemplate?: boolean;
+  purposeClear?: boolean;
+  datesMatchReservations?: boolean;
+  paidReservations?: boolean;
+  documentConsistency?: boolean;
+  previousRefusalDisclosed?: boolean;
+  addressMatchSgk?: boolean;
 }
 
 interface Props {
@@ -130,6 +148,37 @@ function mapCheckedItemsToProfile(
   }
 
   return u;
+}
+
+// Profil bayraklarından belgenin "zaten hazır" sayılıp sayılmayacağını döner.
+// `mapCheckedItemsToProfile`'ın tersi; aynı anahtar kelimeleri kullanır.
+function isItemCompletedInProfile(text: string, profile: DocChecklistProfile): boolean {
+  const has = (kw: string) => text.toLowerCase().includes(kw.toLowerCase());
+
+  if (has('geçerli pasaport')) return !!(profile.hasValidPassport && profile.passportValidityLong);
+  if (has('sağlık sigortası') || has('seyahat sigortası'))
+    return !!(profile.hasHealthInsurance || profile.hasTravelInsurance);
+  if (has('banka hesap dökümü') || has('banka dökümü')) {
+    if (has('6 aylık')) return !!(profile.bankRegularity && profile.has6MonthStatements);
+    return !!profile.bankRegularity;
+  }
+  if (has('28 gün') && has('bakiye')) return !!profile.has28DayHolding;
+  if (has('maaş bordrosu')) return !!(profile.hasSteadyIncome || profile.salaryDetected);
+  if (has('tapu') || has('araç ruhsatı')) return !!profile.hasAssets;
+  if (has('sgk') && has('barkodlu')) return !!profile.hasBarcodeSgk;
+  if (has('işveren') && has('geri dönüş')) return !!profile.sgkEmployerLetterWithReturn;
+  if (has('niyet mektubu')) return !!(profile.useOurTemplate && profile.purposeClear);
+  if (has('detaylı seyahat planı') || has('itinerary')) return !!profile.datesMatchReservations;
+  if (has('uçak rezervasyonu') || has('konaklama rezervasyonu') || has('otel'))
+    return !!profile.paidReservations;
+  if (has('biyometrik fotoğraf')) return !!profile.documentConsistency;
+  if (has('evlilik cüzdanı') || has('formül b'))
+    return !!(profile.isMarried && profile.strongFamilyTies);
+  if (has('önceki ret mektubu') || has('ret mektubu fotokopisi'))
+    return !!profile.previousRefusalDisclosed;
+  if (has('yerleşim yeri belgesi')) return !!profile.addressMatchSgk;
+  if (has('strong ties')) return !!profile.strongFamilyTies;
+  return false;
 }
 
 type DocItem = { text: string; note?: string; status: 'required' | 'conditional' };
@@ -278,6 +327,23 @@ function buildSections(profile: DocChecklistProfile): DocSection[] {
 export function DocChecklistModal({ isOpen, onClose, profile, onDownloadPDF, onProfileUpdate }: Props) {
   const [checkedDocs, setCheckedDocs] = useState<Set<string>>(new Set());
   const [savedFlash, setSavedFlash] = useState(false);
+
+  // Modal her açıldığında profildeki mevcut bayraklara göre ön-işaretle.
+  // Aksi halde sigortası/banka dökümü/pasaportu olan kullanıcı her açışta
+  // sıfırdan tıklamak zorunda kalıyordu.
+  useEffect(() => {
+    if (!isOpen) return;
+    const initial = new Set<string>();
+    for (const section of buildSections(profile)) {
+      for (const item of section.items) {
+        if (isItemCompletedInProfile(item.text, profile)) {
+          initial.add(item.text);
+        }
+      }
+    }
+    setCheckedDocs(initial);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
 
   const handleProfileSave = () => {
     if (!onProfileUpdate) return;
