@@ -2353,9 +2353,10 @@ Signature: _______________     Date: ${today}`;
     doc.line(14, 40, 196, 40);
 
     let y = 48;
-    wizardResult.forEach((item) => {
+    wizardResult.forEach((item, i) => {
       if (y > 270) { doc.addPage(); y = 20; }
       const isWarning = item.startsWith('⚠️') || item.startsWith('UYARI');
+      const isChecked = wizardChecked.has(i);
       const cleanText = item.replace(/^⚠️ /, '');
       if (isWarning) {
         doc.setFillColor(254, 243, 199);
@@ -2370,12 +2371,37 @@ Signature: _______________     Date: ${today}`;
         y += h + 2;
         doc.setFont('helvetica', 'normal');
       } else {
-        doc.setDrawColor(100, 116, 139);
-        doc.rect(14, y - 3.5, 4, 4);
-        doc.setTextColor(51, 65, 85);
+        // İşaretli: dolu kutu + tik işareti, metin üstü çizili ve soluk
+        if (isChecked) {
+          doc.setDrawColor(16, 185, 129);
+          doc.setFillColor(16, 185, 129);
+          doc.rect(14, y - 3.5, 4, 4, 'FD');
+          // Tik işareti
+          doc.setDrawColor(255, 255, 255);
+          doc.setLineWidth(0.4);
+          doc.line(14.8, y - 1.6, 15.8, y - 0.6);
+          doc.line(15.8, y - 0.6, 17.3, y - 2.5);
+          doc.setLineWidth(0.2);
+          doc.setTextColor(148, 163, 184);
+        } else {
+          doc.setDrawColor(100, 116, 139);
+          doc.rect(14, y - 3.5, 4, 4);
+          doc.setTextColor(51, 65, 85);
+        }
         doc.setFontSize(9);
         const lines = doc.splitTextToSize(normalizeTr(cleanText), 170);
         doc.text(lines, 21, y);
+        // Üstü çizili efekti — her satırın ortasından yatay çizgi
+        if (isChecked) {
+          doc.setDrawColor(148, 163, 184);
+          doc.setLineWidth(0.3);
+          lines.forEach((line: string, lineIdx: number) => {
+            const w = doc.getTextWidth(line);
+            const lineY = y + lineIdx * 5 - 1.2;
+            doc.line(21, lineY, 21 + w, lineY);
+          });
+          doc.setLineWidth(0.2);
+        }
         y += lines.length * 5 + 2;
       }
     });
