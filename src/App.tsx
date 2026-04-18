@@ -1406,8 +1406,11 @@ export default function App() {
         updates.dailyBudgetSufficient = true;
       }
 
-      // Sigorta: sadece eksiksizse true yaz (kullanıcı işaretlediyse)
-      if (rfHasInsurance && rfInsuranceCoversAll) {
+      // Sigorta: kullanıcı "sigortası var" işaretlediyse profile'a yaz.
+      // "Tüm seyahati kapsıyor" kutusu ayrı bir critical uyarı üretir ama
+      // hasTravelInsurance bayrağını bloklamaz — aksi hâlde sigortayı
+      // seçen kullanıcı panelde "Kritik" görüyordu.
+      if (rfHasInsurance) {
         updates.hasTravelInsurance = true;
         updates.hasHealthInsurance = true;
       }

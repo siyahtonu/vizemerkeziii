@@ -123,6 +123,42 @@ export interface DashboardStepProps {
   setIsVisaFreeOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
+// ── Aksiyon listesi (inline genişletme) ──────────────────────────────────
+function ActionItemsList({ items }: { items: ActionItem[] }) {
+  const [expanded, setExpanded] = React.useState(false);
+  const visible = expanded ? items : items.slice(0, 3);
+  return (
+    <div className="space-y-2">
+      <div className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Şu an yapılacaklar</div>
+      {visible.map((item, i) => (
+        <button key={i} onClick={item.toolFn} type="button"
+          className={`w-full flex items-center gap-3 p-3 rounded-xl border text-left transition-all hover:shadow-sm
+            ${item.gain === '⚠️' ? 'bg-rose-50 border-rose-200 hover:bg-rose-100' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'}`}>
+          <span className={`text-[11px] font-bold px-2 py-1 rounded-lg shrink-0 ${item.gain === '⚠️' ? 'bg-rose-500 text-white' : 'bg-amber-500 text-white'}`}>
+            {item.gain === '⚠️' ? '!' : item.gain + 'p'}
+          </span>
+          <div className="flex-1 min-w-0">
+            <div className="text-sm font-bold text-slate-800">{item.title}</div>
+            <div className="text-xs text-slate-500 truncate">{item.desc.substring(0, 55)}…</div>
+          </div>
+          <span className="text-xs font-bold text-brand-600 shrink-0">{item.toolLabel} →</span>
+        </button>
+      ))}
+      {items.length > 3 && (
+        <button
+          type="button"
+          onClick={() => setExpanded(v => !v)}
+          className="text-xs text-brand-600 hover:underline font-bold pl-1"
+        >
+          {expanded
+            ? 'Daha az göster ↑'
+            : `+${items.length - 3} adım daha görüntüle →`}
+        </button>
+      )}
+    </div>
+  );
+}
+
 // ── Güven aralığı badge + tooltip ─────────────────────────────────────────
 function ConfidenceBadge({
   low, high, label, missingCount, reasons,
@@ -355,28 +391,7 @@ export function DashboardStep({
   
                       {/* Öncelikli adımlar */}
                       {actionItems.length > 0 && currentScore < 82 && (
-                        <div className="space-y-2">
-                          <div className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Şu an yapılacaklar</div>
-                          {actionItems.slice(0, 3).map((item, i) => (
-                            <button key={i} onClick={item.toolFn} type="button"
-                              className={`w-full flex items-center gap-3 p-3 rounded-xl border text-left transition-all hover:shadow-sm
-                                ${item.gain === '⚠️' ? 'bg-rose-50 border-rose-200 hover:bg-rose-100' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'}`}>
-                              <span className={`text-[11px] font-bold px-2 py-1 rounded-lg shrink-0 ${item.gain === '⚠️' ? 'bg-rose-500 text-white' : 'bg-amber-500 text-white'}`}>
-                                {item.gain === '⚠️' ? '!' : item.gain + 'p'}
-                              </span>
-                              <div className="flex-1 min-w-0">
-                                <div className="text-sm font-bold text-slate-800">{item.title}</div>
-                                <div className="text-xs text-slate-500 truncate">{item.desc.substring(0, 55)}…</div>
-                              </div>
-                              <span className="text-xs font-bold text-brand-600 shrink-0">{item.toolLabel} →</span>
-                            </button>
-                          ))}
-                          {actionItems.length > 3 && (
-                            <button onClick={() => setStep('assessment')} className="text-xs text-brand-600 hover:underline font-bold pl-1">
-                              +{actionItems.length - 3} adım daha görüntüle →
-                            </button>
-                          )}
-                        </div>
+                        <ActionItemsList items={actionItems} />
                       )}
   
                       {/* R-2077 detay toggle */}
