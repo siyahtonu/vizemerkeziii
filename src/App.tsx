@@ -3310,6 +3310,7 @@ Signature: _______________     Date: ${today}`;
                   <button
                     onClick={() => {
                       setIsCalculatorOpen(false);
+                      if (!wizardDone) setOnboardingStep(1);
                       setStep(wizardDone ? 'dashboard' : 'onboarding');
                     }}
                     className="btn-primary flex-[2] flex items-center justify-center gap-2"
@@ -4897,8 +4898,18 @@ Signature: _______________     Date: ${today}`;
                       </div>
                     )}
 
+                    {/* Boş profil uyarısı */}
+                    {!copilotLoading && !copilotError && copilotData && copilotData.steps.length === 0 && (
+                      <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl">
+                        <p className="text-xs text-amber-800 leading-relaxed">
+                          Profiliniz henüz boş — önce formu doldurun, sonra geri dönün.
+                          Aşağıdaki <strong>Şimdi Başvuruyu Başlat</strong> butonu sizi forma götürür.
+                        </p>
+                      </div>
+                    )}
+
                     {/* AI cevabı */}
-                    {!copilotLoading && !copilotError && copilotData && (
+                    {!copilotLoading && !copilotError && copilotData && copilotData.steps.length > 0 && (
                       <div className="space-y-3">
                         {copilotData.steps.map((item, i) => (
                           <div key={`copilot-step-${i}`} className="flex gap-4 items-start p-4 bg-white border border-slate-100 rounded-2xl shadow-sm">
@@ -4947,6 +4958,7 @@ Signature: _______________     Date: ${today}`;
                   <button
                     onClick={() => {
                       setIsCopilotOpen(false);
+                      if (!wizardDone) setOnboardingStep(1);
                       setStep(wizardDone ? 'tactics' : 'onboarding');
                     }}
                     className="w-full py-4 bg-gradient-to-r from-brand-500 to-brand-600 text-white rounded-2xl font-bold flex items-center justify-center gap-2 shadow-md shadow-brand-500/15 hover:-translate-y-0.5 transition-all duration-300"

@@ -152,8 +152,56 @@ export function AnalysisReportModal({
   const topRisks = rejectionMatches.slice(0, 5);
 
   // ── Yazdır ───────────────────────────────────────────────────────────────
+  // Rapor DOM'unu izole etmeden window.print() çağırırsak, rapor dışındaki
+  // elementler "visibility: hidden" ile gizlense de layout alanlarını
+  // korudukları için PDF'de boş sayfalar çıkıyor. Print sırasında rapor
+  // kökünün ata zincirini korur, kalan DOM dallarını geçici display:none yapar.
   function handlePrint() {
-    window.print();
+    const reportEl = printRef.current;
+    if (!reportEl) { window.print(); return; }
+
+    const keep = new Set<Element>();
+    for (let n: Element | null = reportEl; n; n = n.parentElement) keep.add(n);
+
+    type Restore = { el: HTMLElement; display: string };
+    const hidden: Restore[] = [];
+    document.querySelectorAll<HTMLElement>('body *').forEach(el => {
+      if (keep.has(el)) return;
+      if (reportEl.contains(el)) return;
+      hidden.push({ el, display: el.style.display });
+      el.style.display = 'none';
+    });
+
+    type StyleRestore = { el: HTMLElement; position: string; overflow: string; maxHeight: string; height: string };
+    const ancestors: StyleRestore[] = [];
+    keep.forEach(node => {
+      const el = node as HTMLElement;
+      ancestors.push({
+        el,
+        position: el.style.position,
+        overflow: el.style.overflow,
+        maxHeight: el.style.maxHeight,
+        height: el.style.height,
+      });
+      el.style.position = 'static';
+      el.style.overflow = 'visible';
+      el.style.maxHeight = 'none';
+      el.style.height = 'auto';
+    });
+
+    const cleanup = () => {
+      hidden.forEach(({ el, display }) => { el.style.display = display; });
+      ancestors.forEach(({ el, position, overflow, maxHeight, height }) => {
+        el.style.position = position;
+        el.style.overflow = overflow;
+        el.style.maxHeight = maxHeight;
+        el.style.height = height;
+      });
+      window.removeEventListener('afterprint', cleanup);
+    };
+    window.addEventListener('afterprint', cleanup);
+
+    setTimeout(() => window.print(), 50);
   }
 
   if (!isOpen) return null;
@@ -203,12 +251,18 @@ export function AnalysisReportModal({
         }
       `}</style>
 
-      {/* ── Modal overlay ────────────────────────────────────────────── */}
-      <div className="report-overlay fixed inset-0 z-50 flex items-start justify-center bg-black/60 overflow-y-auto p-4 sm:p-8">
-        <div className="report-container w-full max-w-4xl bg-white rounded-2xl shadow-2xl">
+      {/* ── Modal overlay ──────────────────────────────────────────────
+           Not: iç kap max-h-[90vh] + overflow-y-auto → scroll iç kapta;
+           overlay fixed + centering için flex kullanmıyor (mobil Safari'de
+           flex+overflow kombinasyonu scroll'ü sık sık kilitliyor). */}
+      <div
+        className="report-overlay fixed inset-0 z-50 bg-black/60 overflow-y-auto"
+        onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      >
+        <div className="report-container w-full max-w-4xl bg-white rounded-2xl shadow-2xl mx-auto my-4 sm:my-8 max-h-[calc(100vh-2rem)] sm:max-h-[calc(100vh-4rem)] overflow-hidden flex flex-col">
 
           {/* ── Modal başlık ────────────────────────────────────────── */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 no-print sticky top-0 bg-white rounded-t-2xl z-10">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 no-print bg-white rounded-t-2xl shrink-0">
             <div>
               <h2 className="font-bold text-slate-900 text-lg">Kişisel Vize Analiz Raporu</h2>
               <p className="text-xs text-slate-400 mt-0.5">Tarayıcı yazdır menüsüyle PDF olarak kaydedin</p>
@@ -228,7 +282,7 @@ export function AnalysisReportModal({
           </div>
 
           {/* ── RAPOR İÇERİĞİ ─────────────────────────────────────────── */}
-          <div id="analysis-report-print" ref={printRef} className="p-6 sm:p-8 space-y-8 text-slate-800">
+          <div id="analysis-report-print" ref={printRef} className="p-6 sm:p-8 space-y-8 text-slate-800 overflow-y-auto flex-1">
 
             {/* ── 1. KAPAK BAŞLIĞI ──────────────────────────────────── */}
             <div className="border-b-2 border-indigo-600 pb-6">
