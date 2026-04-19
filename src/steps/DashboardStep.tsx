@@ -292,6 +292,58 @@ export function DashboardStep({
 
                 <div className="space-y-4 sm:space-y-5">
 
+                  {/* ── ÜST BANNER: RAPOR HAZIRLIK DURUMU ── */}
+                  {(() => {
+                    const REQUIRED = [
+                      { id: 'copilot',      label: 'Vize Danışmanım' },
+                      { id: 'redflag',      label: 'Kırmızı Bayrak' },
+                      { id: 'aibank',       label: 'Banka Dökümü Analizi' },
+                      { id: 'docchecklist', label: 'Belge Kontrol' },
+                    ];
+                    const doneCount = REQUIRED.filter(t => completedTools.has(t.id)).length;
+                    const ready = doneCount === REQUIRED.length;
+                    const progress = Math.round((doneCount / REQUIRED.length) * 100);
+                    const scrollToTools = () => {
+                      document.getElementById('dashboard-tools')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    };
+                    return (
+                      <div className={`rounded-2xl border p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3 ${
+                        ready
+                          ? 'bg-gradient-to-br from-indigo-600 to-brand-700 border-transparent'
+                          : 'bg-amber-50 border-amber-200'
+                      }`}>
+                        <div className="flex-1 min-w-0">
+                          <div className={`font-bold text-sm ${ready ? 'text-white' : 'text-amber-900'}`}>
+                            {ready
+                              ? '✓ Kişisel analiz raporunuz hazır'
+                              : `Rapor için ${REQUIRED.length - doneCount} araç daha gerekiyor`}
+                          </div>
+                          <div className={`text-xs mt-1 ${ready ? 'text-indigo-100' : 'text-amber-700'}`}>
+                            {ready
+                              ? 'Tüm araçlar tamamlandı — PDF raporunu indirin.'
+                              : `${doneCount}/${REQUIRED.length} tamamlandı. Araçları kullanmadan rapor profilinizi düşük gösterir.`}
+                          </div>
+                          {!ready && (
+                            <div className="mt-2 w-full h-1.5 bg-amber-200 rounded-full overflow-hidden">
+                              <div className="h-full bg-amber-500 transition-all" style={{ width: `${progress}%` }} />
+                            </div>
+                          )}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={ready ? onOpenReportModal : scrollToTools}
+                          className={`shrink-0 px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-colors ${
+                            ready
+                              ? 'bg-white text-indigo-700 hover:bg-indigo-50'
+                              : 'bg-amber-600 text-white hover:bg-amber-700'
+                          }`}
+                        >
+                          {ready ? 'Raporu Aç' : 'Araçlara Git →'}
+                        </button>
+                      </div>
+                    );
+                  })()}
+
                   {/* ── KART 1: SKOR + ÖNCELIKLI ADIMLAR ── */}
                   <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
                     {/* Üst şerit: ülke seçici + kontrol butonları */}
@@ -432,7 +484,7 @@ export function DashboardStep({
                   </div>
   
                   {/* ── ARAÇLAR (SEKMELİ) — üste taşındı ── */}
-                  <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+                  <div id="dashboard-tools" className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
                     <div className="flex items-center justify-between px-5 pt-4 pb-0 border-b border-slate-100">
                       <div className="flex gap-1">
                         {([
@@ -584,10 +636,7 @@ export function DashboardStep({
                     <WhatIfSimulator profile={profile} currentScore={currentScore} simulatorValue={simulatorValue} />
                   </WidgetBoundary>
 
-                  {/* ── SONUCU ÇIKART CTA ──
-                       Rapor yalnızca temel araçlar tamamlandıktan sonra indirilebilir.
-                       Araç kullanılmamış düşük-skorlu profilin PDF raporu anlamsız.
-                  */}
+                  {/* CTA aşağıya taşındı — üstteki ReportCTA blokundan render edilir */}
                   {(() => {
                     const REQUIRED = [
                       { id: 'copilot',    label: 'Vize Danışmanım' },
@@ -600,7 +649,7 @@ export function DashboardStep({
                     const ready = doneCount === REQUIRED.length;
                     const progress = Math.round((doneCount / REQUIRED.length) * 100);
                     return (
-                      <div className={`rounded-2xl p-5 ${ready ? 'bg-gradient-to-br from-indigo-600 to-brand-700' : 'bg-slate-100 border border-slate-200'}`}>
+                      <div id="report-cta" className={`rounded-2xl p-5 ${ready ? 'bg-gradient-to-br from-indigo-600 to-brand-700' : 'bg-slate-100 border border-slate-200'}`}>
                         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                           <div className="flex-1">
                             <div className={`font-bold text-base mb-1 ${ready ? 'text-white' : 'text-slate-800'}`}>
