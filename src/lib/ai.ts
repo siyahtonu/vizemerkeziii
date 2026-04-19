@@ -301,47 +301,198 @@ Kurallar:
 }
 
 // ── Kapak / Niyet Mektubu Üreteci ────────────────────────────────────────
+export type LetterType = 'cover' | 'sponsor' | 'employer' | 'itinerary';
+
 export interface CoverLetterResult {
   body: string;
   tips: string[];
 }
 
 /**
- * LetterData + ProfileData'yı alır, Claude'dan konsolosluk formatında
- * 4 paragraflık Türkçe niyet mektubu gövdesi + 2-3 yazım ipucu üretir.
- * Form input'larını aynen kullanır — uydurmaz, boş alanları vurgular.
+ * Her belge tipi için ayrı ton + format tarifi. Prompt'un başına enjekte
+ * edilir; generic "mektup yaz" yerine tipe-spesifik çerçeve üretir.
+ */
+const LETTER_TYPE_SPEC: Record<LetterType, { label: string; voice: string; structure: string }> = {
+  cover: {
+    label: 'Niyet Mektubu (Cover Letter) — başvurucunun kendi beyanı',
+    voice: '1. tekil şahıs, saygılı ve kişisel. "Ben ...-im, ... amacıyla ... talep ediyorum."',
+    structure: [
+      '(1) HITAP: tarih + "Sayın [Ülke] Konsolosluğu Vize Görevlisi,"',
+      '(2) KIMLIK + AMAÇ: ad, meslek, bu başvurunun net amacı, tarih aralığı (1 paragraf)',
+      '(3) FINANSAL + MESLEK: aylık gelir, bakiye, iş pozisyonu, işe dönüş taahhüdü (1 paragraf)',
+      '(4) TÜRKİYE BAĞLARI: aile, mülk, iş — somut detaylarla (1 paragraf)',
+      '(5) DÖNÜŞ TAAHHÜDÜ: uçuş rezervasyon özeti + "[tarih]\'te döneceğim" cümlesi (1 paragraf)',
+      '(6) KAPANIŞ: "Saygılarımla," + Ad Soyad + imza yeri',
+    ].join('\n'),
+  },
+  sponsor: {
+    label: 'Sponsor Taahhüt Mektubu — başvurucuyu finanse eden kişinin beyanı',
+    voice: '1. tekil şahıs (sponsorun ağzından). Formal, noterlik tonu. "Ben [sponsor], ... tam masraflarını karşılayacağımı taahhüt ederim."',
+    structure: [
+      '(1) HITAP: tarih + konsolosluk hitabı',
+      '(2) SPONSOR KİMLİĞİ: ad, TC, meslek, gelir, yakınlık derecesi',
+      '(3) TAAHHÜT: tam masrafın karşılanacağı net ifade + süre + masraf kalemleri',
+      '(4) FINANSAL KANIT REFERANSI: "ekte banka ekstrem + maaş bordrom bulunmaktadır"',
+      '(5) KAPANIŞ: "Saygılarımla," + Sponsor Adı + imza',
+    ].join('\n'),
+  },
+  employer: {
+    label: 'İşveren İzin / Çalışma Belgesi — şirket antetli kağıdında',
+    voice: 'Şirket adına 3. şahıs. Resmi, noterlik tonu. "Çalışanımız [ad], ... tarihleri arasında izinli olup, [dönüş tarihi] itibarıyla işine devam edecektir."',
+    structure: [
+      '(1) ŞİRKET BAŞLIĞI: şirket adı + adres + telefon (üst blok)',
+      '(2) TARİH + HITAP: konsolosluk hitabı',
+      '(3) ÇALIŞAN BİLGİSİ: ad, pozisyon, işe başlama tarihi, aylık maaş',
+      '(4) İZİN + DÖNÜŞ: izin tarih aralığı + kesin işe dönüş tarihi',
+      '(5) TAAHHÜT: "İzin süresi boyunca görevinin açık tutulduğunu beyan ederiz"',
+      '(6) İMZA: yetkili ad + ünvan + şirket mührü yeri',
+    ].join('\n'),
+  },
+  itinerary: {
+    label: 'Seyahat Planı / Itinerary — günlük rota dökümü',
+    voice: 'Tarafsız, planlama tonu. Madde-madde. Metni kısa tut, tablodaki gibi.',
+    structure: [
+      '(1) BAŞLIK: "[Ülke] Seyahat Programı — [Başlangıç] - [Bitiş]"',
+      '(2) ÖZET: uçuşlar (gidiş/dönüş), konaklama (otel adı + adres), toplam gün',
+      '(3) GÜN GÜN PLAN: her gün için 1 satır — tarih + şehir + yapılacaklar',
+      '(4) SİGORTA + REZERVASYON REFERANSI: poliçe no, otel rezervasyon no',
+      '(5) İMZA: başvurucu ad + tarih',
+    ].join('\n'),
+  },
+};
+
+/**
+ * LetterData + ProfileData'yı alır, Claude'dan belge tipine özel format + ton ile
+ * Türkçe mektup gövdesi + 2-3 yazım ipucu üretir. Form input'larını aynen kullanır
+ * — uydurmaz, boş alanları "[girilmedi]" ile vurgular.
  */
 export async function askCoverLetter(
   letter: LetterData,
   profile: ProfileData,
-  letterType: 'cover' | 'sponsor' | 'employer' | 'itinerary' = 'cover',
+  letterType: LetterType = 'cover',
 ): Promise<CoverLetterResult> {
-  const typeLabel = {
-    cover: 'Niyet Mektubu (başvurucunun kendi beyanı)',
-    sponsor: 'Sponsor Taahhüt Mektubu',
-    employer: 'İşveren İzin Yazısı',
-    itinerary: 'Seyahat Planı / Itinerary',
-  }[letterType];
+  const spec = LETTER_TYPE_SPEC[letterType];
 
-  const prompt = `Sen deneyimli bir Türk vize danışmanısın. Aşağıdaki form verileriyle
-konsolosluk standardında ${typeLabel} üret. 2024-2026 Schengen/UK/ABD formatına uy.
+  const prompt = `Sen 2000'in üzerinde Türk vize başvurusu hazırlamış deneyimli bir vize danışmanısın.
+Görevin: aşağıdaki form verileriyle konsolosluk standardında "${spec.label}" üret.
 
-Form verisi:
+TON: ${spec.voice}
+
+ZORUNLU YAPI (sırayla takip et):
+${spec.structure}
+
+FORM VERİSİ (bunları birebir kullan, UYDURMA):
 ${JSON.stringify(letter, null, 2)}
 
-Profil özeti:
+PROFİL ÖZETİ (mektuba referans için):
 ${JSON.stringify(summarizeProfile(profile), null, 2)}
 
-Kurallar:
-- Türkçe, profesyonel, 1. şahıs (mektup türüne göre başvurucu/işveren/sponsor).
-- 4 paragraf: (1) kimlik + amaç, (2) finansal durum + iş, (3) Türkiye'deki bağlar, (4) dönüş taahhüdü.
-- Forma girilmeyen alanı UYDURMA, "[girilmedi]" yaz.
-- Başında tarih + konsolosluk hitabı, sonunda "Saygılarımla, [Ad Soyad]" bulunsun.
+KURALLAR:
+- Türkçe, profesyonel, doğal akış — "AI tarafından yazılmış" görünmesin.
+- Form'da boş alan varsa "[girilmedi]" yaz, rakam/isim uydurma.
+- Klişe ifadelerden kaçın ("hayalimin ülkesi", "kültürünüzü tanımak için can atıyorum" gibi — konsolosluk bunları her gün görüyor).
+- Rakam/tarih kullanırken formdaki değerleri değiştirme.
+- Uzunluk: cover/sponsor/employer için 300-450 kelime; itinerary tablo/liste tarzı kısa.
 
 ÇIKTI SADECE JSON (başka metin EKLEME):
 {
   "body": "mektubun tam gövdesi, \\n ile satır sonları",
-  "tips": ["mektupla ilgili 2-3 Türkçe yazım ipucu"]
+  "tips": ["3 Türkçe yazım/iyileştirme ipucu"]
+}`;
+
+  const raw = await askAI(prompt);
+  const parsed = extractJSON<CoverLetterResult>(raw);
+  if (!parsed || typeof parsed.body !== 'string' || parsed.body.length < 40) {
+    throw new Error('AI yanıtı beklenmedik formatta.');
+  }
+  return parsed;
+}
+
+// ── Mektup Kalite Skoru ──────────────────────────────────────────────────
+export interface LetterQualityScore {
+  score: number;           // 0-100
+  grade: 'A' | 'B' | 'C' | 'D';
+  strengths: string[];
+  weaknesses: string[];
+  verdict: string;         // 1 cümle özet
+}
+
+/**
+ * Üretilmiş bir mektubu konsolosluk gözüyle 0-100 puanlar. 2. tur Claude çağrısı
+ * — kullanıcıya "bu mektup 87/100, şu yönler eksik" diyerek güven/değer gösterir.
+ */
+export async function askLetterScore(
+  body: string,
+  letterType: LetterType,
+): Promise<LetterQualityScore> {
+  const spec = LETTER_TYPE_SPEC[letterType];
+
+  const prompt = `Sen Schengen/UK/ABD konsolosluk vize görevlisisin. Aşağıdaki "${spec.label}"
+metnini 0-100 arası puanla. Gerçekçi ol — mükemmel bir mektup 92+, ortalama 65-75 civarı.
+
+Değerlendirme kriterleri:
+- Format tamlığı (yapıya uyum)
+- Ton ve profesyonellik (konsolosluk dili)
+- Somutluk (rakam, tarih, ad yeterince kullanılmış mı)
+- Klişeden kaçınma
+- Türkçe dilbilgisi ve akış
+
+Mektup metni:
+"""
+${body.slice(0, 6000)}
+"""
+
+ÇIKTI SADECE JSON:
+{
+  "score": 0-100,
+  "grade": "A | B | C | D",
+  "strengths": ["2-3 Türkçe güçlü yön"],
+  "weaknesses": ["2-3 Türkçe zayıf yön / eksik"],
+  "verdict": "1 cümle Türkçe genel değerlendirme"
+}`;
+
+  const raw = await askAI(prompt);
+  const parsed = extractJSON<LetterQualityScore>(raw);
+  if (!parsed || typeof parsed.score !== 'number') {
+    throw new Error('AI yanıtı beklenmedik formatta.');
+  }
+  return parsed;
+}
+
+// ── Mektup Revize Et ─────────────────────────────────────────────────────
+/**
+ * Kullanıcının feedback'ine göre mevcut mektubu Claude'a yeniden yazdırır.
+ * Örn: "Türkiye bağlarını daha güçlü vurgula" / "Daha kısa yaz" gibi.
+ */
+export async function askLetterRevise(
+  body: string,
+  feedback: string,
+  letterType: LetterType,
+  letter: LetterData,
+  profile: ProfileData,
+): Promise<CoverLetterResult> {
+  const spec = LETTER_TYPE_SPEC[letterType];
+
+  const prompt = `Aşağıdaki "${spec.label}" metnini, kullanıcının TALEBİ doğrultusunda yeniden yaz.
+Yapıyı ve tonu koru; sadece talebi uygula. Rakam/isim uydurma — orijinal form verisini kullan.
+
+ORİJİNAL MEKTUP:
+"""
+${body.slice(0, 6000)}
+"""
+
+KULLANICI TALEBİ: "${feedback.trim().slice(0, 500)}"
+
+FORM VERİSİ (referans):
+${JSON.stringify(letter, null, 2)}
+
+PROFİL (referans):
+${JSON.stringify(summarizeProfile(profile), null, 2)}
+
+ÇIKTI SADECE JSON:
+{
+  "body": "revize edilmiş mektup gövdesi, \\n ile satır sonları",
+  "tips": ["2 Türkçe ipucu: revizede neyi değiştirdin, neyi korudun"]
 }`;
 
   const raw = await askAI(prompt);

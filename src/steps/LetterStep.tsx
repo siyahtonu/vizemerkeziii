@@ -5,7 +5,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Download, ArrowLeft, Briefcase, Wallet, PenTool, Map, X, Star, Sparkles, RefreshCw } from 'lucide-react';
 import type { LetterData, ProfileData } from '../types';
-import { askCoverLetter } from '../lib/ai';
+import { askCoverLetter, askLetterScore, askLetterRevise, type LetterQualityScore } from '../lib/ai';
 
 interface Props {
   activeLetterType: 'cover' | 'sponsor' | 'employer' | 'itinerary';
@@ -35,24 +35,66 @@ export function LetterStep({
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
 
+  // ── Kalite skoru + revize state'i ────────────────────────────────────────
+  const [score, setScore] = useState<LetterQualityScore | null>(null);
+  const [scoreLoading, setScoreLoading] = useState(false);
+  const [reviseFeedback, setReviseFeedback] = useState('');
+  const [reviseLoading, setReviseLoading] = useState(false);
+
   useEffect(() => {
     // Belge tipi değiştiğinde AI çıktısı bu tipin değil — temizle.
     setAiText(null);
     setAiTips([]);
     setAiError(null);
+    setScore(null);
+    setReviseFeedback('');
   }, [activeLetterType]);
+
+  const scoreLetter = async (body: string) => {
+    setScoreLoading(true);
+    try {
+      const s = await askLetterScore(body, activeLetterType);
+      setScore(s);
+    } catch {
+      // Skorlama başarısız olursa sessiz geç — ana mektup yine kullanılabilir.
+      setScore(null);
+    } finally {
+      setScoreLoading(false);
+    }
+  };
 
   const runAiLetter = async () => {
     setAiLoading(true);
     setAiError(null);
+    setScore(null);
     try {
       const res = await askCoverLetter(letterData, profile, activeLetterType);
       setAiText(res.body);
       setAiTips(res.tips || []);
+      // Mektup hazır; 2. turda kalite skorla.
+      void scoreLetter(res.body);
     } catch (err) {
       setAiError(err instanceof Error ? err.message : 'AI yanıt vermedi.');
     } finally {
       setAiLoading(false);
+    }
+  };
+
+  const runRevise = async () => {
+    if (!aiText || !reviseFeedback.trim()) return;
+    setReviseLoading(true);
+    setAiError(null);
+    try {
+      const res = await askLetterRevise(aiText, reviseFeedback, activeLetterType, letterData, profile);
+      setAiText(res.body);
+      setAiTips(res.tips || []);
+      setReviseFeedback('');
+      setScore(null);
+      void scoreLetter(res.body);
+    } catch (err) {
+      setAiError(err instanceof Error ? err.message : 'Revize başarısız.');
+    } finally {
+      setReviseLoading(false);
     }
   };
   return (
@@ -358,13 +400,13 @@ export function LetterStep({
                         <div className="flex items-center gap-2">
                           <Sparkles className="w-4 h-4 text-indigo-600" />
                           <span className="text-sm font-bold text-slate-800">
-                            {aiText ? 'Claude Versiyonu Aktif' : 'Claude ile Kişiselleştir'}
+                            {aiText ? 'VizeAkıl Versiyonu Aktif' : 'VizeAkıl ile Kişiselleştir'}
                           </span>
                         </div>
                         {aiText ? (
                           <button
                             type="button"
-                            onClick={() => { setAiText(null); setAiTips([]); }}
+                            onClick={() => { setAiText(null); setAiTips([]); setScore(null); setReviseFeedback(''); }}
                             className="flex items-center gap-1 text-xs font-bold text-slate-500 hover:text-slate-700"
                           >
                             <X className="w-3.5 h-3.5" /> Şablona Dön
@@ -385,7 +427,7 @@ export function LetterStep({
                         )}
                       </div>
                       <p className="text-xs text-slate-500 leading-relaxed">
-                        Profilinize ve forma girdiğiniz bilgilere göre Claude Sonnet 4.6 size özel mektup yazar.
+                        Profilinize ve forma girdiğiniz bilgilere göre VizeAkıl size özel mektup yazar.
                         Sonucu beğenmezseniz şablona dönebilirsiniz.
                       </p>
                       {aiError && (
@@ -397,6 +439,81 @@ export function LetterStep({
                         <ul className="space-y-1 pl-4 list-disc text-xs text-slate-600">
                           {aiTips.map((t, i) => <li key={i}>{t}</li>)}
                         </ul>
+                      )}
+
+                      {/* Kalite skoru — AI çıktısı varken göster */}
+                      {aiText && (scoreLoading || score) && (
+                        <div className="p-3 bg-slate-50 border border-slate-100 rounded-xl">
+                          {scoreLoading && !score && (
+                            <div className="flex items-center gap-2 text-xs text-slate-500">
+                              <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                              Konsolosluk gözüyle değerlendiriliyor…
+                            </div>
+                          )}
+                          {score && (
+                            <div className="space-y-2">
+                              <div className="flex items-center justify-between">
+                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Konsolosluk Skoru</span>
+                                <span className={`text-xs font-bold px-2 py-0.5 rounded ${
+                                  score.grade === 'A' ? 'bg-emerald-100 text-emerald-700' :
+                                  score.grade === 'B' ? 'bg-sky-100 text-sky-700' :
+                                  score.grade === 'C' ? 'bg-amber-100 text-amber-700' :
+                                  'bg-rose-100 text-rose-700'
+                                }`}>Grade {score.grade}</span>
+                              </div>
+                              <div className="flex items-baseline gap-2">
+                                <span className="text-2xl font-bold text-slate-900">{score.score}</span>
+                                <span className="text-xs text-slate-400">/ 100</span>
+                              </div>
+                              <p className="text-xs text-slate-600 italic">{score.verdict}</p>
+                              {score.strengths.length > 0 && (
+                                <div>
+                                  <div className="text-[10px] font-bold text-emerald-600 uppercase tracking-wide mb-1">Güçlü Yönler</div>
+                                  <ul className="space-y-0.5 pl-4 list-disc text-xs text-slate-600">
+                                    {score.strengths.map((s, i) => <li key={i}>{s}</li>)}
+                                  </ul>
+                                </div>
+                              )}
+                              {score.weaknesses.length > 0 && (
+                                <div>
+                                  <div className="text-[10px] font-bold text-rose-600 uppercase tracking-wide mb-1">İyileştirme Alanları</div>
+                                  <ul className="space-y-0.5 pl-4 list-disc text-xs text-slate-600">
+                                    {score.weaknesses.map((w, i) => <li key={i}>{w}</li>)}
+                                  </ul>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Revize et — AI çıktısı varken göster */}
+                      {aiText && (
+                        <div className="pt-2 border-t border-slate-100 space-y-2">
+                          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">
+                            Revize Talebi
+                          </label>
+                          <textarea
+                            rows={2}
+                            placeholder="Örn: Türkiye bağlarını daha güçlü vurgula / Daha kısa yaz / Meslek detayını artır"
+                            value={reviseFeedback}
+                            onChange={e => setReviseFeedback(e.target.value)}
+                            disabled={reviseLoading}
+                            className="w-full px-3 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 resize-none disabled:opacity-50"
+                          />
+                          <button
+                            type="button"
+                            onClick={runRevise}
+                            disabled={reviseLoading || !reviseFeedback.trim()}
+                            className="w-full py-2 bg-slate-900 hover:bg-slate-800 disabled:opacity-40 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5"
+                          >
+                            {reviseLoading ? (
+                              <><RefreshCw className="w-3.5 h-3.5 animate-spin" /> Revize ediliyor…</>
+                            ) : (
+                              <><RefreshCw className="w-3.5 h-3.5" /> Revize Et</>
+                            )}
+                          </button>
+                        </div>
                       )}
                     </div>
   
