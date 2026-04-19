@@ -65,8 +65,11 @@ import {
   askRefusalAnalysis,
   type RefusalFinding,
   askBankAnalysis,
+  askSgkAnalysis, type SgkAnalysisResult,
+  askCrossConsistency, type CrossConsistencyResult,
   askRedFlagScan,
 } from './lib/ai';
+import { extractPdfText } from './lib/pdfExtract';
 import ResearchInsightsWidget from './components/ResearchInsightsWidget';
 import { HelpModal } from './components/modals/HelpModal';
 import { CountryGuideModal } from './components/modals/CountryGuideModal';
@@ -1288,9 +1291,71 @@ export default function App() {
     setConsistencyChecked(true);
   };
 
+  // PDF'den çıkarılmış ham metin (banka ekstresi) — çapraz tutarlılık için saklanır
+  const [bankRawText, setBankRawText] = useState<string>('');
+
+  // ── SGK Hizmet Dökümü (Bank modal içinde panel) ─────────────────────────
+  const [sgkFile, setSgkFile] = useState<string>('');
+  const [sgkRawText, setSgkRawText] = useState<string>('');
+  const [sgkResult, setSgkResult] = useState<SgkAnalysisResult | null>(null);
+  const [sgkLoading, setSgkLoading] = useState(false);
+  const [sgkError, setSgkError] = useState<string | null>(null);
+  const [consistencyResult, setConsistencyResult] = useState<CrossConsistencyResult | null>(null);
+  const [consistencyLoading, setConsistencyLoading] = useState(false);
+
+  const handleSgkUpload = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    const file = files[0];
+    setSgkFile(file.name);
+    setSgkLoading(true);
+    setSgkError(null);
+    setConsistencyResult(null);
+    try {
+      let rawText = '';
+      if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+        rawText = await extractPdfText(file);
+      }
+      setSgkRawText(rawText);
+      const res = await askSgkAnalysis({
+        fileName: file.name,
+        rawText: rawText || undefined,
+        declaredEmployer: '',
+        declaredMonthlyIncome: aiBankIncome || profile.monthlyIncome || '',
+      });
+      setSgkResult(res);
+    } catch (err) {
+      setSgkError(err instanceof Error ? err.message : 'SGK analizi başarısız.');
+    } finally {
+      setSgkLoading(false);
+    }
+  };
+
+  const runCrossConsistency = async () => {
+    if (!aiBankResult || !sgkResult) return;
+    setConsistencyLoading(true);
+    try {
+      const res = await askCrossConsistency({
+        bank: {
+          income: aiBankIncome || profile.monthlyIncome || '',
+          balance: aiBankBalance || profile.bankBalance || '',
+          rawText: bankRawText || undefined,
+        },
+        sgk: {
+          monthlyIncome: aiBankIncome || profile.monthlyIncome || '',
+          rawText: sgkRawText || undefined,
+        },
+      });
+      setConsistencyResult(res);
+    } catch {
+      setConsistencyResult(null);
+    } finally {
+      setConsistencyLoading(false);
+    }
+  };
+
   // ── Özellik 8: Banka Dökümü — AI + Kural Bazlı Analizi ──────────────
   // Claude'dan önce dene; başarısız olursa lokal kural motoruna düş.
-  const analyzeWithRules = async (fileName: string) => {
+  const analyzeWithRules = async (fileName: string, rawText?: string) => {
     setAiBankLoading(true);
     setAiBankResult(null);
 
@@ -1308,6 +1373,7 @@ export default function App() {
         months,
         salaryRegular: aiBankSalaryRegular,
         largeDeposit: aiBankLargeDeposit,
+        rawText: rawText || bankRawText || undefined,
       });
       setAiBankResult(ai);
       setAiBankLoading(false);
@@ -1396,11 +1462,20 @@ export default function App() {
     }, 1800);
   };
 
-  const handleAiBankUpload = (files: FileList | null) => {
+  const handleAiBankUpload = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
     const file = files[0];
     setAiBankFile(file.name);
-    analyzeWithRules(file.name);
+    let rawText = '';
+    if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+      try {
+        rawText = await extractPdfText(file);
+        setBankRawText(rawText);
+      } catch (err) {
+        console.warn('[aibank] PDF metin çıkarımı başarısız:', err);
+      }
+    }
+    analyzeWithRules(file.name, rawText);
   };
 
   // ── Özellik 9: Red Flag Checker — profil sync helper ─────
@@ -3985,6 +4060,132 @@ Signature: _______________     Date: ${today}`;
                       <div className="p-3 bg-amber-50 border border-amber-200 rounded-2xl flex gap-2">
                         <Info className="w-4 h-4 text-amber-600 shrink-0 mt-0.5"/>
                         <p className="text-xs text-amber-800">Bu rapor VizeAkıl kural motoru tarafından oluşturulmuştur. Son karar konsolosluk memuruna aittir.</p>
+                      </div>
+
+                      {/* SGK + Çapraz Tutarlılık Paneli */}
+                      <div className="p-5 bg-white border-2 border-indigo-100 rounded-2xl space-y-4">
+                        <div className="flex items-center gap-2">
+                          <Sparkles className="w-5 h-5 text-indigo-600" />
+                          <h4 className="font-bold text-slate-900">SGK Dökümü ile Çapraz Kontrol</h4>
+                        </div>
+                        <p className="text-xs text-slate-500">
+                          e-Devlet'ten "SGK 4A Hizmet Dökümü" PDF'ini yükleyin — istihdam sürekliliğini skorlayıp banka verinizle tutarlılığını kontrol edelim.
+                        </p>
+
+                        {!sgkResult && !sgkLoading && (
+                          <label className="flex flex-col items-center justify-center gap-3 p-6 border-2 border-dashed border-indigo-200 hover:border-indigo-400 hover:bg-indigo-50/30 rounded-2xl cursor-pointer transition-all">
+                            <input type="file" accept=".pdf" className="hidden"
+                              onChange={e => handleSgkUpload(e.target.files)} />
+                            <Upload className="w-6 h-6 text-indigo-500" />
+                            <div className="text-center">
+                              <p className="font-bold text-slate-700 text-sm">SGK 4A Hizmet Dökümü PDF</p>
+                              <p className="text-xs text-slate-400 mt-1">e-Devlet → "SGK Tescil ve Hizmet Dökümü" → PDF indir</p>
+                            </div>
+                          </label>
+                        )}
+
+                        {sgkLoading && (
+                          <div className="py-6 flex items-center justify-center gap-2 text-sm text-indigo-700">
+                            <RefreshCw className="w-4 h-4 animate-spin" />
+                            VizeAkıl SGK dökümünü inceliyor…
+                          </div>
+                        )}
+
+                        {sgkError && (
+                          <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-700">
+                            {sgkError}
+                          </div>
+                        )}
+
+                        {sgkResult && (
+                          <div className="space-y-3">
+                            <div className={`p-4 rounded-2xl border-2 ${sgkResult.score >= 80 ? 'bg-emerald-50 border-emerald-300' : sgkResult.score >= 65 ? 'bg-blue-50 border-blue-300' : sgkResult.score >= 50 ? 'bg-amber-50 border-amber-300' : 'bg-rose-50 border-rose-300'}`}>
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">SGK Skoru</p>
+                                  <p className="text-2xl font-bold text-slate-900">{sgkResult.score}<span className="text-sm text-slate-400">/100</span></p>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-lg">{sgkResult.gradeEmoji}</span>
+                                  <span className="font-bold text-sm px-3 py-1 rounded-lg bg-white/60 text-slate-800">{sgkResult.grade}</span>
+                                </div>
+                              </div>
+                              <p className="text-xs text-slate-700 mt-2 leading-relaxed">{sgkResult.summary}</p>
+                              {(sgkResult.employerCount !== null || sgkResult.gapsDetected) && (
+                                <div className="flex gap-2 mt-3 flex-wrap">
+                                  {sgkResult.employerCount !== null && (
+                                    <span className="text-[10px] font-bold bg-white/60 text-slate-700 px-2 py-1 rounded-lg">
+                                      {sgkResult.employerCount} işveren
+                                    </span>
+                                  )}
+                                  {sgkResult.gapsDetected && (
+                                    <span className="text-[10px] font-bold bg-amber-100 text-amber-800 px-2 py-1 rounded-lg">
+                                      Kesinti var
+                                    </span>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+
+                            {sgkResult.negatives.length > 0 && (
+                              <ul className="space-y-1 pl-4 list-disc text-xs text-slate-600">
+                                {sgkResult.negatives.map((n, i) => <li key={i}>{n}</li>)}
+                              </ul>
+                            )}
+
+                            {/* Çapraz Tutarlılık tetikleyici */}
+                            {!consistencyResult && !consistencyLoading && (
+                              <button
+                                type="button"
+                                onClick={runCrossConsistency}
+                                className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm font-bold flex items-center justify-center gap-2"
+                              >
+                                <Sparkles className="w-4 h-4" />
+                                Banka ↔ SGK Çapraz Kontrol
+                              </button>
+                            )}
+
+                            {consistencyLoading && (
+                              <div className="py-3 flex items-center justify-center gap-2 text-xs text-indigo-700">
+                                <RefreshCw className="w-4 h-4 animate-spin" />
+                                Çapraz kontrol yapılıyor…
+                              </div>
+                            )}
+
+                            {consistencyResult && (
+                              <div className={`p-4 rounded-2xl border-2 ${consistencyResult.ok ? 'bg-emerald-50 border-emerald-200' : 'bg-rose-50 border-rose-200'}`}>
+                                <div className="flex items-center gap-2 mb-2">
+                                  {consistencyResult.ok ? (
+                                    <span className="text-xs font-bold text-emerald-700">✓ Tutarlı</span>
+                                  ) : (
+                                    <span className="text-xs font-bold text-rose-700">⚠ Çelişki Tespit Edildi</span>
+                                  )}
+                                </div>
+                                <p className="text-xs text-slate-700 leading-relaxed">{consistencyResult.summary}</p>
+                                {consistencyResult.issues.length > 0 && (
+                                  <ul className="mt-3 space-y-2">
+                                    {consistencyResult.issues.map((iss, i) => (
+                                      <li key={i} className="bg-white/70 rounded-xl p-3 border border-slate-100">
+                                        <div className="flex items-start gap-2">
+                                          <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded shrink-0 ${
+                                            iss.severity === 'critical' ? 'bg-rose-100 text-rose-700' :
+                                            iss.severity === 'warn' ? 'bg-amber-100 text-amber-800' :
+                                            'bg-slate-100 text-slate-700'
+                                          }`}>{iss.severity.toUpperCase()}</span>
+                                          <div className="flex-1 min-w-0">
+                                            <p className="text-xs font-bold text-slate-800">{iss.field}</p>
+                                            <p className="text-xs text-slate-600 mt-0.5">{iss.message}</p>
+                                            <p className="text-xs text-indigo-700 mt-1">→ {iss.suggestion}</p>
+                                          </div>
+                                        </div>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
                     </div>
                   )}

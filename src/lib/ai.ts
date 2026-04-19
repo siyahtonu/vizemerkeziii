@@ -212,6 +212,7 @@ export interface BankAnalysisInput {
   months: number;           // 3 / 6 / 12
   salaryRegular: boolean;
   largeDeposit: boolean;
+  rawText?: string;         // PDF'den çıkarılmış ham metin (opsiyonel)
 }
 
 /**
@@ -220,11 +221,15 @@ export interface BankAnalysisInput {
  * Dönüş BankAnalysisResult şemasına birebir uyar (mevcut UI değişmeden çalışır).
  */
 export async function askBankAnalysis(input: BankAnalysisInput): Promise<BankAnalysisResult> {
+  const { rawText, ...summary } = input;
+  const rawBlock = rawText
+    ? `\n\nHAM EKSTRE METNİ (ilk 4000 karakter):\n"""\n${rawText.slice(0, 4000)}\n"""\n\nHam metindeki gerçek işlem/tarih örüntülerini kullan — kullanıcı girdisi ile çelişki varsa ham metne öncelik ver.`
+    : '';
   const prompt = `Sen bir vize ofisi banka dökümü analistisin. Aşağıdaki başvurucu verilerini
 konsolosluk gözüyle değerlendir ve 0-100 arası skor üret.
 
 Veriler (JSON):
-${JSON.stringify(input, null, 2)}
+${JSON.stringify(summary, null, 2)}${rawBlock}
 
 Skor referansı:
 - 80+ çok iyi (A): düzenli maaş, yeterli bakiye, temiz hareket.
@@ -561,4 +566,138 @@ Kurallar:
     throw new Error('AI yanıtı beklenmedik formatta.');
   }
   return parsed.tactics;
+}
+
+// ── SGK Hizmet Dökümü Analizi ────────────────────────────────────────────
+export interface SgkAnalysisInput {
+  fileName: string;
+  rawText?: string;              // e-Devlet SGK 4A hizmet dökümü metni
+  declaredJobStartDate?: string; // kullanıcının beyan ettiği işe giriş (ISO)
+  declaredEmployer?: string;     // beyan edilen mevcut işveren
+  declaredMonthlyIncome?: string;// beyan edilen aylık gelir (TL)
+}
+
+export interface SgkAnalysisResult {
+  score: number;                 // 0-100
+  grade: 'A' | 'B' | 'C' | 'D';
+  gradeEmoji: string;
+  employerCount: number | null;  // son 2 yılda tahmini işveren sayısı
+  gapsDetected: boolean;         // kesinti/boşluk var mı
+  positives: string[];
+  negatives: string[];
+  tips: string[];
+  summary: string;
+}
+
+/**
+ * SGK 4A hizmet dökümündeki istihdam sürekliliğini konsolosluk gözüyle skorlar.
+ * Ham metin varsa örüntü analizi yapar; yoksa beyan verisine göre hafif skor üretir.
+ */
+export async function askSgkAnalysis(input: SgkAnalysisInput): Promise<SgkAnalysisResult> {
+  const { rawText, ...summary } = input;
+  const rawBlock = rawText
+    ? `\n\nHAM SGK METNİ (ilk 4000 karakter):\n"""\n${rawText.slice(0, 4000)}\n"""`
+    : '\n\n(Ham metin yok — sadece beyan verisi ile değerlendir.)';
+
+  const prompt = `Sen Türkiye'de vize başvurularını değerlendiren bir analistsin. Başvurucunun
+SGK 4A hizmet dökümünü konsolosluk gözüyle analiz et: istihdam sürekliliği, işveren sayısı,
+kesinti/boşluk, beyan ile belge tutarlılığı.
+
+Beyan verisi (JSON):
+${JSON.stringify(summary, null, 2)}${rawBlock}
+
+Skor referansı:
+- 80+ (A): 2+ yıl aynı işveren, kesintisiz, düzenli prim.
+- 65-79 (B): son 2 yıl içinde 1 işveren değişikliği veya küçük boşluk.
+- 50-64 (C): sık işveren değişikliği veya 30+ gün boşluk.
+- <50 (D): son 6 ayda girilmiş, uzun kesinti, eski kayıtsızlık.
+
+ÇIKTI SADECE JSON (başka metin EKLEME):
+{
+  "score": 0-100,
+  "grade": "A | B | C | D",
+  "gradeEmoji": "🟢 | 🔵 | 🟡 | 🔴",
+  "employerCount": null veya sayı,
+  "gapsDetected": true | false,
+  "positives": ["2-4 Türkçe güçlü yön"],
+  "negatives": ["0-4 Türkçe eksik/risk"],
+  "tips": ["2-4 Türkçe somut eylem"],
+  "summary": "1-2 cümle Türkçe özet"
+}`;
+
+  const raw = await askAI(prompt);
+  const parsed = extractJSON<SgkAnalysisResult>(raw);
+  if (!parsed || typeof parsed.score !== 'number') {
+    throw new Error('AI yanıtı beklenmedik formatta.');
+  }
+  return parsed;
+}
+
+// ── Belgeler Arası Çapraz Tutarlılık ─────────────────────────────────────
+export interface CrossConsistencyInput {
+  bank?: { income?: string; balance?: string; employerFromText?: string; rawText?: string };
+  sgk?:  { employer?: string; monthlyIncome?: string; rawText?: string };
+  letterData?: { employer?: string; income?: string; jobStartDate?: string };
+}
+
+export interface ConsistencyIssue {
+  severity: 'critical' | 'warn' | 'info';
+  field: string;              // örn. "İşveren adı" / "Aylık gelir"
+  message: string;            // çelişkinin Türkçe açıklaması
+  suggestion: string;         // nasıl giderilir
+}
+
+export interface CrossConsistencyResult {
+  ok: boolean;                // hiç kritik çelişki yoksa true
+  issues: ConsistencyIssue[];
+  summary: string;
+}
+
+/**
+ * Banka + SGK + niyet mektubu verilerini karşılaştırır; işveren adı, gelir,
+ * işe giriş tarihi gibi alanlarda çelişki tespit eder.
+ */
+export async function askCrossConsistency(input: CrossConsistencyInput): Promise<CrossConsistencyResult> {
+  // Ham metinleri kırp
+  const trimmed: CrossConsistencyInput = {
+    bank: input.bank ? { ...input.bank, rawText: input.bank.rawText?.slice(0, 2500) } : undefined,
+    sgk:  input.sgk  ? { ...input.sgk,  rawText: input.sgk.rawText?.slice(0, 2500) } : undefined,
+    letterData: input.letterData,
+  };
+
+  const prompt = `Sen vize dosyası çapraz kontrol analistisin. Aşağıdaki 3 kaynaktaki
+(banka ekstresi, SGK 4A dökümü, niyet/işveren mektubu verisi) bilgileri karşılaştır ve
+çelişkileri tespit et. Mektupta yazan işveren ile SGK'daki son işveren aynı mı?
+Banka'daki düzenli maaş tutarı ile beyan edilen aylık gelir uyumlu mu?
+İşe giriş tarihi SGK'da görünüyor mu?
+
+Kaynaklar (JSON):
+${JSON.stringify(trimmed, null, 2)}
+
+ÇIKTI SADECE JSON:
+{
+  "ok": true | false,
+  "issues": [
+    {
+      "severity": "critical | warn | info",
+      "field": "Türkçe alan adı",
+      "message": "Türkçe çelişki açıklaması — hangi kaynak ne diyor",
+      "suggestion": "Türkçe düzeltme önerisi"
+    }
+  ],
+  "summary": "1-2 cümle Türkçe genel değerlendirme"
+}
+
+Kurallar:
+- Sadece gerçekten kaynakta olan verilerden çelişki üret; eksik alanı "issue" olarak yazma.
+- severity=critical: otomatik ret tetikleyen uyumsuzluk (isim/işveren çelişkisi).
+- severity=warn: açıklama istenebilir fark (%20+ gelir sapması gibi).
+- Hiç çelişki yoksa issues=[] ve ok=true dön.`;
+
+  const raw = await askAI(prompt);
+  const parsed = extractJSON<CrossConsistencyResult>(raw);
+  if (!parsed || !Array.isArray(parsed.issues)) {
+    throw new Error('AI yanıtı beklenmedik formatta.');
+  }
+  return parsed;
 }
