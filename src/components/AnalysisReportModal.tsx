@@ -83,6 +83,7 @@ export function AnalysisReportModal({
   isOpen, onClose, profile, currentScore, currentConfidence, rejectionMatches, actionItems,
 }: Props) {
   const printRef = useRef<HTMLDivElement>(null);
+  const printingRef = useRef(false);
 
   // ── Ülke skorları — tüm ülkeler için hesapla ─────────────────────────────
   const countryRankings = useMemo(() => {
@@ -157,8 +158,12 @@ export function AnalysisReportModal({
   // korudukları için PDF'de boş sayfalar çıkıyor. Print sırasında rapor
   // kökünün ata zincirini korur, kalan DOM dallarını geçici display:none yapar.
   function handlePrint() {
+    // Reentrancy guard: hızlı çift tıklamada 2. çağrı modifiye edilmiş
+    // DOM'u "orijinal" sanıp cleanup sırasında display:none'u geri yazıyordu.
+    if (printingRef.current) return;
     const reportEl = printRef.current;
-    if (!reportEl) { window.print(); return; }
+    if (!reportEl) return;
+    printingRef.current = true;
 
     const keep = new Set<Element>();
     for (let n: Element | null = reportEl; n; n = n.parentElement) keep.add(n);
@@ -189,7 +194,10 @@ export function AnalysisReportModal({
       el.style.height = 'auto';
     });
 
+    let cleanedUp = false;
     const cleanup = () => {
+      if (cleanedUp) return;
+      cleanedUp = true;
       hidden.forEach(({ el, display }) => { el.style.display = display; });
       ancestors.forEach(({ el, position, overflow, maxHeight, height }) => {
         el.style.position = position;
@@ -198,8 +206,12 @@ export function AnalysisReportModal({
         el.style.height = height;
       });
       window.removeEventListener('afterprint', cleanup);
+      clearTimeout(safety);
+      printingRef.current = false;
     };
     window.addEventListener('afterprint', cleanup);
+    // Safari iOS bazen afterprint ateşlemez → 30sn sonra zorla restore.
+    const safety = window.setTimeout(cleanup, 30000);
 
     setTimeout(() => window.print(), 50);
   }
