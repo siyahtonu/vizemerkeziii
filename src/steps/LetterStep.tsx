@@ -1,14 +1,16 @@
 // ============================================================
 // LetterStep — Profesyonel Vize Belgesi Oluşturucu
 // ============================================================
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Download, ArrowLeft, Briefcase, Wallet, PenTool, Map, X, Star } from 'lucide-react';
-import type { LetterData } from '../types';
+import { Download, ArrowLeft, Briefcase, Wallet, PenTool, Map, X, Star, Sparkles, RefreshCw } from 'lucide-react';
+import type { LetterData, ProfileData } from '../types';
+import { askCoverLetter } from '../lib/ai';
 
 interface Props {
   activeLetterType: 'cover' | 'sponsor' | 'employer' | 'itinerary';
   letterData: LetterData;
+  profile: ProfileData;
   onNavigate: (step: string) => void;
   onLetterTypeChange: (t: 'cover' | 'sponsor' | 'employer' | 'itinerary') => void;
   onLetterDataChange: React.Dispatch<React.SetStateAction<LetterData>>;
@@ -18,13 +20,41 @@ interface Props {
 }
 
 export function LetterStep({
-  activeLetterType, letterData, onNavigate,
+  activeLetterType, letterData, profile, onNavigate,
   onLetterTypeChange, onLetterDataChange,
   buildLetterBody, generatePDF, generatePDFEN,
 }: Props) {
   const setStep = onNavigate;
   const setActiveLetterType = onLetterTypeChange;
   const setLetterData = onLetterDataChange;
+
+  // ── AI kişiselleştirme state'i ─────────────────────────────────────────
+  // Her belge tipinin AI çıktısını ayrı tut; belge tipi değişince sıfırla.
+  const [aiText, setAiText] = useState<string | null>(null);
+  const [aiTips, setAiTips] = useState<string[]>([]);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Belge tipi değiştiğinde AI çıktısı bu tipin değil — temizle.
+    setAiText(null);
+    setAiTips([]);
+    setAiError(null);
+  }, [activeLetterType]);
+
+  const runAiLetter = async () => {
+    setAiLoading(true);
+    setAiError(null);
+    try {
+      const res = await askCoverLetter(letterData, profile, activeLetterType);
+      setAiText(res.body);
+      setAiTips(res.tips || []);
+    } catch (err) {
+      setAiError(err instanceof Error ? err.message : 'AI yanıt vermedi.');
+    } finally {
+      setAiLoading(false);
+    }
+  };
   return (
             <motion.div
                 key="letter"
@@ -317,9 +347,57 @@ export function LetterStep({
                       </div>
                       <div className="p-5 overflow-y-auto max-h-[55vh]">
                         <pre className="text-slate-300 text-[11px] leading-relaxed font-mono whitespace-pre-wrap break-words">
-                          {buildLetterBody(activeLetterType)}
+                          {aiText ?? buildLetterBody(activeLetterType)}
                         </pre>
                       </div>
+                    </div>
+
+                    {/* AI kişiselleştirme şeridi */}
+                    <div className="p-4 bg-white border border-slate-100 rounded-2xl space-y-3">
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-2">
+                          <Sparkles className="w-4 h-4 text-indigo-600" />
+                          <span className="text-sm font-bold text-slate-800">
+                            {aiText ? 'Claude Versiyonu Aktif' : 'Claude ile Kişiselleştir'}
+                          </span>
+                        </div>
+                        {aiText ? (
+                          <button
+                            type="button"
+                            onClick={() => { setAiText(null); setAiTips([]); }}
+                            className="flex items-center gap-1 text-xs font-bold text-slate-500 hover:text-slate-700"
+                          >
+                            <X className="w-3.5 h-3.5" /> Şablona Dön
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={runAiLetter}
+                            disabled={aiLoading}
+                            className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white rounded-lg text-xs font-bold flex items-center gap-1.5"
+                          >
+                            {aiLoading ? (
+                              <><RefreshCw className="w-3.5 h-3.5 animate-spin" /> Yazıyor…</>
+                            ) : (
+                              <>Üret</>
+                            )}
+                          </button>
+                        )}
+                      </div>
+                      <p className="text-xs text-slate-500 leading-relaxed">
+                        Profilinize ve forma girdiğiniz bilgilere göre Claude Sonnet 4.6 size özel mektup yazar.
+                        Sonucu beğenmezseniz şablona dönebilirsiniz.
+                      </p>
+                      {aiError && (
+                        <div className="p-2.5 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-700">
+                          {aiError}
+                        </div>
+                      )}
+                      {aiTips.length > 0 && (
+                        <ul className="space-y-1 pl-4 list-disc text-xs text-slate-600">
+                          {aiTips.map((t, i) => <li key={i}>{t}</li>)}
+                        </ul>
+                      )}
                     </div>
   
                     {/* İndir butonları — TR + EN */}

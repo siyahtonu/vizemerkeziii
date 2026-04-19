@@ -60,7 +60,12 @@ import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { jsPDF } from 'jspdf';
 import { SEO } from './components/SEO';
 import { apiUrl } from './lib/api';
-import { askCopilot, type CopilotResult } from './lib/ai';
+import {
+  askCopilot, type CopilotResult,
+  askRefusalAnalysis,
+  askBankAnalysis,
+  askRedFlagScan,
+} from './lib/ai';
 import { HelpModal } from './components/modals/HelpModal';
 import { CountryGuideModal } from './components/modals/CountryGuideModal';
 import { DocChecklistModal } from './components/modals/DocChecklistModal';
@@ -186,6 +191,8 @@ export default function App() {
   const [refusalText, setRefusalText] = useState('');
   const [refusalResult, setRefusalResult] = useState<RefusalRule[]>([]);
   const [refusalAnalyzed, setRefusalAnalyzed] = useState(false);
+  const [refusalLoading, setRefusalLoading] = useState(false);
+  const [refusalError, setRefusalError] = useState<string | null>(null);
 
   // ── VFS Randevu Takip Botu ─────────────────────────────────────────────────
   const [isAppointmentOpen, setIsAppointmentOpen] = useState(false);
@@ -222,6 +229,8 @@ export default function App() {
   const [rfHasSgk, setRfHasSgk] = useState(true);
   const [redFlagResult, setRedFlagResult] = useState<{severity:'critical'|'warn'|'ok'; msg: string}[]>([]);
   const [rfAnalyzed, setRfAnalyzed] = useState(false);
+  const [rfLoading, setRfLoading] = useState(false);
+  const [rfError, setRfError] = useState<string | null>(null);
 
   // Özellik 10: Kişiye Özel Evrak Sihirbazı
   const [wizardCountry, setWizardCountry] = useState<'schengen'|'uk'|'usa'>('schengen');
@@ -1167,22 +1176,43 @@ export default function App() {
   }, [profile, currentScore]);
 
   // ── Özellik 1: Ret Mektubu Analizi ──────────────────────────
-  const analyzeRefusal = () => {
-    const text = refusalText.toLowerCase();
-    const matched = refusalRules.filter(rule =>
-      rule.keywords.some(kw => text.includes(kw.toLowerCase()))
-    );
-    setRefusalResult(matched.length > 0 ? matched : [{
-      keywords: [], category: 'document', severity: 'medium', waitMonths: 1,
-      title: 'Genel / Belirtilmemiş Red',
-      actions: [
-        'Ret gerekçesini tam metin olarak kopyala ve tekrar yapıştır',
-        'Tüm belgeleri baştan gözden geçir — tutarsızlık ara',
-        'En az 1-2 ay bekleyerek güçlü bir dosyayla tekrar başvur',
-        'Bir vize danışmanıyla yüz yüze görüşmeyi değerlendir',
-      ]
-    }]);
-    setRefusalAnalyzed(true);
+  // Önce Claude'a sor; AI başarısız olursa keyword-tabanlı fallback'e düş.
+  const analyzeRefusal = async () => {
+    setRefusalLoading(true);
+    setRefusalError(null);
+    try {
+      const findings = await askRefusalAnalysis(refusalText);
+      if (findings.length === 0) {
+        setRefusalResult([{
+          keywords: [], category: 'document', severity: 'medium', waitMonths: 1,
+          title: 'Net bir ret gerekçesi bulunamadı',
+          actions: [
+            'Mektubun tamamını kopyaladığınızdan emin olun',
+            'Gerekçeyi orijinal dilde (İngilizce/Türkçe) yapıştırın',
+            'Gerekirse konsolosluktan yazılı ret detayı talep edin',
+          ],
+        }]);
+      } else {
+        setRefusalResult(findings);
+      }
+      setRefusalAnalyzed(true);
+      markToolCompleted('refusal');
+    } catch (err) {
+      // AI yanıt vermezse keyword fallback — eski davranışı koru
+      const text = refusalText.toLowerCase();
+      const matched = refusalRules.filter(rule =>
+        rule.keywords.some(kw => text.includes(kw.toLowerCase()))
+      );
+      if (matched.length > 0) {
+        setRefusalResult(matched);
+        setRefusalAnalyzed(true);
+        markToolCompleted('refusal');
+      } else {
+        setRefusalError(err instanceof Error ? err.message : 'Analiz başarısız.');
+      }
+    } finally {
+      setRefusalLoading(false);
+    }
   };
 
   // ── Özellik 6: Belge Tutarlılık Kontrolü ────────────────────
@@ -1225,16 +1255,36 @@ export default function App() {
     setConsistencyChecked(true);
   };
 
-  // ── Özellik 8: Banka Dökümü Kural Bazlı Analizi ─────────────────────
-  const analyzeWithRules = (fileName: string) => {
+  // ── Özellik 8: Banka Dökümü — AI + Kural Bazlı Analizi ──────────────
+  // Claude'dan önce dene; başarısız olursa lokal kural motoruna düş.
+  const analyzeWithRules = async (fileName: string) => {
     setAiBankLoading(true);
     setAiBankResult(null);
 
+    const income = parseInt(aiBankIncome || profile.monthlyIncome || '0') || 0;
+    const balance = parseInt(aiBankBalance || profile.bankBalance || '0') || 0;
+    const months = parseInt(aiBankMonths || '3') || 3;
+    const country = profile.targetCountry || 'Schengen';
+
+    try {
+      const ai = await askBankAnalysis({
+        fileName: fileName || '(dosyasız analiz)',
+        country,
+        income: String(income),
+        balance: String(balance),
+        months,
+        salaryRegular: aiBankSalaryRegular,
+        largeDeposit: aiBankLargeDeposit,
+      });
+      setAiBankResult(ai);
+      setAiBankLoading(false);
+      markToolCompleted('aibank');
+      return;
+    } catch (err) {
+      console.warn('[aibank] AI başarısız, fallback:', err);
+    }
+
     setTimeout(() => {
-      const income = parseInt(aiBankIncome || profile.monthlyIncome || '0') || 0;
-      const balance = parseInt(aiBankBalance || profile.bankBalance || '0') || 0;
-      const months = parseInt(aiBankMonths || '3') || 3;
-      const country = profile.targetCountry || 'Schengen';
 
       let score = 0;
       const positives: string[] = [];
@@ -1309,6 +1359,7 @@ export default function App() {
         summary: summaryText,
       });
       setAiBankLoading(false);
+      markToolCompleted('aibank');
     }, 1800);
   };
 
@@ -1319,13 +1370,61 @@ export default function App() {
     analyzeWithRules(file.name);
   };
 
-  // ── Özellik 9: Red Flag Checker ─────────────────────────
-  const analyzeRedFlags = () => {
+  // ── Özellik 9: Red Flag Checker — profil sync helper ─────
+  // AI ve kural-tabanlı iki kod yolu da aynı profil güncellemesini yapar.
+  const syncRedFlagProfile = (balance: number, days: number, dailyEur: number) => {
+    setProfile(prev => {
+      const updates: Partial<ProfileData> = {};
+      if (balance > 0 && balance >= (parseInt(rfFlight) || 0) + (parseInt(rfHotel) || 0) + (days * dailyEur * 40) * 1.5) {
+        updates.bankSufficientBalance = true;
+      }
+      if (days > 0 && dailyEur >= 80) updates.dailyBudgetSufficient = true;
+      if (rfHasInsurance) { updates.hasTravelInsurance = true; updates.hasHealthInsurance = true; }
+      if (rfHasReturn) { updates.hasReturnTicket = true; updates.paidReservations = true; }
+      if (rfHasSgk) { updates.hasSgkJob = true; updates.tieCategories = { ...prev.tieCategories, employment: true }; }
+      if (rfHasProperty) {
+        updates.tieCategories = { ...(updates.tieCategories ?? prev.tieCategories), property: true };
+        updates.hasAssets = true;
+      }
+      return { ...prev, ...updates };
+    });
+  };
+
+  const analyzeRedFlags = async () => {
+    setRfLoading(true);
+    setRfError(null);
     const balance = parseInt(rfBalance) || 0;
     const flight = parseInt(rfFlight) || 0;
     const hotel = parseInt(rfHotel) || 0;
     const days = parseInt(rfDays) || 0;
     const dailyEur = parseInt(rfDailyBudgetEur) || 60;
+
+    try {
+      const findings = await askRedFlagScan({
+        bakiyeTL: balance,
+        ucakTL: flight,
+        otelTL: hotel,
+        seyahatGunu: days,
+        gunlukButceEur: dailyEur,
+        sigortaVar: rfHasInsurance,
+        sigortaTumSureyiKapsiyor: rfInsuranceCoversAll,
+        donusBiletiVar: rfHasReturn,
+        ilkYurtDisi: rfFirstTrip,
+        mulkVar: rfHasProperty,
+        sgkVar: rfHasSgk,
+        hedefUlke: profile.targetCountry,
+      });
+      setRedFlagResult(findings);
+      setRfAnalyzed(true);
+      markToolCompleted('redflag');
+      syncRedFlagProfile(balance, days, dailyEur);
+      setRfLoading(false);
+      return;
+    } catch (err) {
+      // AI başarısız → kural tabanlı fallback
+      console.warn('[redflag] AI başarısız, fallback:', err);
+    }
+
     const eurToTry = 40; // yaklaşık kur
     const totalTripTry = flight + hotel + (days * dailyEur * eurToTry);
 
@@ -1393,53 +1492,9 @@ export default function App() {
 
     setRedFlagResult(flags);
     setRfAnalyzed(true);
-
-    // v3.4: Sonuçları profile'a NON-DESTRUCTIVE yansıt — kullanıcının mevcut
-    // işaretlerini ezme, sadece pozitif sinyalleri ekle. Kullanıcı eksik
-    // bilgiyi başka yerde manuel düzeltebilir.
-    setProfile(prev => {
-      const updates: Partial<ProfileData> = {};
-
-      // Banka bakiyesi: sadece OK ise true yaz
-      const balanceFlag = flags[0];
-      if (balanceFlag?.severity === 'ok') {
-        updates.bankSufficientBalance = true;
-      }
-
-      // Günlük bütçe: sadece yeterliyse true yaz
-      if (days > 0 && dailyEur >= 80) {
-        updates.dailyBudgetSufficient = true;
-      }
-
-      // Sigorta: kullanıcı "sigortası var" işaretlediyse profile'a yaz.
-      // "Tüm seyahati kapsıyor" kutusu ayrı bir critical uyarı üretir ama
-      // hasTravelInsurance bayrağını bloklamaz — aksi hâlde sigortayı
-      // seçen kullanıcı panelde "Kritik" görüyordu.
-      if (rfHasInsurance) {
-        updates.hasTravelInsurance = true;
-        updates.hasHealthInsurance = true;
-      }
-
-      // Dönüş bileti: sadece varsa true yaz
-      if (rfHasReturn) {
-        updates.hasReturnTicket = true;
-        updates.paidReservations = true;
-      }
-
-      // SGK: sadece kullanıcı işaretlediyse true yaz (false ezme — emekli/öğrenci profilini bozar)
-      if (rfHasSgk) {
-        updates.hasSgkJob = true;
-        updates.tieCategories = { ...prev.tieCategories, employment: true };
-      }
-
-      // Mülkiyet
-      if (rfHasProperty) {
-        updates.tieCategories = { ...(updates.tieCategories ?? prev.tieCategories), property: true };
-        updates.hasAssets = true;
-      }
-
-      return { ...prev, ...updates };
-    });
+    markToolCompleted('redflag');
+    syncRedFlagProfile(balance, days, dailyEur);
+    setRfLoading(false);
   };
 
   // ── Özellik 10: Kişiye Özel Evrak Sihirbazı ─────────────────────
@@ -3201,17 +3256,30 @@ Signature: _______________     Date: ${today}`;
                       />
                       <button
                         onClick={analyzeRefusal}
-                        disabled={refusalText.trim().length < 10}
+                        disabled={refusalText.trim().length < 10 || refusalLoading}
                         className="w-full py-4 bg-rose-600 hover:bg-rose-500 disabled:opacity-40 text-white rounded-2xl font-bold flex items-center justify-center gap-2 transition-all"
                       >
-                        <Sparkles className="w-5 h-5" /> Analiz Et — Aksiyon Planı Oluştur
+                        {refusalLoading ? (
+                          <>
+                            <RefreshCw className="w-5 h-5 animate-spin" /> Claude analiz ediyor…
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles className="w-5 h-5" /> AI ile Analiz Et — Aksiyon Planı Oluştur
+                          </>
+                        )}
                       </button>
+                      {refusalError && (
+                        <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl text-sm text-rose-700">
+                          {refusalError} — tekrar deneyin.
+                        </div>
+                      )}
                     </div>
                   ) : (
                     <div className="space-y-6">
                       <div className="flex items-center justify-between">
                         <h4 className="font-bold text-slate-900 text-lg">Tespit Edilen {refusalResult.length} Sorun</h4>
-                        <button onClick={() => { setRefusalAnalyzed(false); setRefusalText(''); setRefusalResult([]); }}
+                        <button onClick={() => { setRefusalAnalyzed(false); setRefusalText(''); setRefusalResult([]); setRefusalError(null); }}
                           className="flex items-center gap-1 text-sm font-bold text-rose-600 hover:underline">
                           <RefreshCw className="w-4 h-4" /> Yeniden Analiz
                         </button>
@@ -3923,16 +3991,26 @@ Signature: _______________     Date: ${today}`;
                         </div>
                       </div>
                       <button type="button" onClick={analyzeRedFlags}
-                        className="w-full py-3 bg-rose-700 hover:bg-rose-800 text-white font-bold rounded-2xl transition-colors text-sm">
-                        Kırmızı Bayrakları Tara
+                        disabled={rfLoading}
+                        className="w-full py-3 bg-rose-700 hover:bg-rose-800 disabled:opacity-50 text-white font-bold rounded-2xl transition-colors text-sm flex items-center justify-center gap-2">
+                        {rfLoading ? (
+                          <><RefreshCw className="w-4 h-4 animate-spin"/> Claude tarıyor…</>
+                        ) : (
+                          <><Sparkles className="w-4 h-4"/> AI ile Kırmızı Bayrakları Tara</>
+                        )}
                       </button>
+                      {rfError && (
+                        <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-700">
+                          {rfError}
+                        </div>
+                      )}
                     </>
                   ) : (
                     <>
                       <div className="flex items-center gap-2 mb-2">
                         <XCircle className="w-5 h-5 text-rose-600"/>
                         <h4 className="font-bold text-slate-900">Risk Analizi Raporu</h4>
-                        <button onClick={()=>{setRfAnalyzed(false);setRedFlagResult([]);}}
+                        <button onClick={()=>{setRfAnalyzed(false);setRedFlagResult([]);setRfError(null);}}
                           className="ml-auto flex items-center gap-1 text-sm font-bold text-rose-600 hover:underline">
                           <RefreshCw className="w-4 h-4"/> Yeniden Tara
                         </button>
@@ -4978,13 +5056,14 @@ Signature: _______________     Date: ${today}`;
           )}
 
           {step === 'tactics' && (
-            <TacticsStep onNavigate={setStep} />
+            <TacticsStep onNavigate={setStep} profile={profile} />
           )}
 
           {step === 'letter' && (
             <LetterStep
               activeLetterType={activeLetterType}
               letterData={letterData}
+              profile={profile}
               onNavigate={setStep}
               onLetterTypeChange={setActiveLetterType}
               onLetterDataChange={setLetterData}

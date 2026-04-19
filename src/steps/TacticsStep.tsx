@@ -3,14 +3,18 @@
 // Kaynak: R-2077 ampirik analizi + core.ts puanlama + blog yazıları
 // Her taktik, algoritmadaki gerçek ağırlıkla eşleştirilmiştir.
 // ============================================================
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   CheckCircle2, ShieldCheck, ArrowLeft, Info, Briefcase, Globe, Wallet, PenTool,
-  Home, Calendar, Plane, FileText, AlertTriangle, MessageSquare,
+  Home, Calendar, Plane, FileText, AlertTriangle, MessageSquare, Sparkles, RefreshCw, Zap,
 } from 'lucide-react';
+import type { ProfileData } from '../types';
+import { askPersonalTactics, type PersonalTactic } from '../lib/ai';
 
 interface Props {
   onNavigate: (step: string) => void;
+  profile: ProfileData;
 }
 
 interface Tactic {
@@ -142,8 +146,25 @@ const colorClasses: Record<Tactic['color'], { bg: string; text: string; ring: st
   orange:  { bg: 'bg-orange-50',  text: 'text-orange-600',  ring: 'ring-orange-100' },
 };
 
-export function TacticsStep({ onNavigate }: Props) {
+export function TacticsStep({ onNavigate, profile }: Props) {
   const setStep = onNavigate;
+
+  const [aiTactics, setAiTactics] = useState<PersonalTactic[] | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
+
+  const runAiTactics = async () => {
+    setAiLoading(true);
+    setAiError(null);
+    try {
+      setAiTactics(await askPersonalTactics(profile));
+    } catch (err) {
+      setAiError(err instanceof Error ? err.message : 'AI yanıt vermedi.');
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
   return (
     <motion.div
       key="tactics"
@@ -177,6 +198,79 @@ export function TacticsStep({ onNavigate }: Props) {
           eşleştirilmiştir. Her taktik için <strong>gerçek puan etkisi</strong> ve
           <strong> veri kaynağı</strong> gösterilir — gönül rahatlığıyla uygulayın.
         </p>
+      </div>
+
+      {/* Kişiye Özel Taktikler (Claude) */}
+      <div className="rounded-2xl border border-indigo-100 bg-gradient-to-br from-indigo-50/60 to-white p-6 space-y-4">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-xs uppercase tracking-wider font-semibold text-indigo-600 mb-1 flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5" /> Size Özel
+            </p>
+            <h3 className="text-lg font-bold text-slate-900">Profilinize göre en etkili 5 taktik</h3>
+            <p className="text-sm text-slate-600 mt-1">
+              13 genel taktiğin üstüne, Claude profilinizdeki zayıflık ve güçleri analiz ederek
+              kişiselleştirilmiş 5 madde çıkarır.
+            </p>
+          </div>
+          {!aiTactics && (
+            <button
+              type="button"
+              onClick={runAiTactics}
+              disabled={aiLoading}
+              className="shrink-0 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white rounded-xl text-sm font-bold flex items-center gap-2"
+            >
+              {aiLoading ? (
+                <><RefreshCw className="w-4 h-4 animate-spin" /> Üretiliyor…</>
+              ) : (
+                <><Zap className="w-4 h-4" /> Üret</>
+              )}
+            </button>
+          )}
+        </div>
+
+        {aiError && (
+          <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-700">
+            {aiError}
+          </div>
+        )}
+
+        {aiTactics && (
+          <div className="space-y-3">
+            {aiTactics.map((t, i) => (
+              <div
+                key={i}
+                className={`p-4 rounded-xl border ${t.urgent ? 'bg-rose-50/60 border-rose-200' : 'bg-white border-slate-200'}`}
+              >
+                <div className="flex items-start gap-3">
+                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${t.urgent ? 'bg-rose-600 text-white' : 'bg-indigo-600 text-white'}`}>
+                    {i + 1}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap mb-1">
+                      <h4 className="font-bold text-slate-900 text-sm">{t.title}</h4>
+                      {t.urgent && (
+                        <span className="text-[9px] font-bold bg-rose-600 text-white px-1.5 py-0.5 rounded uppercase tracking-wider">
+                          Acil
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-sm text-slate-700 leading-relaxed">{t.detail}</p>
+                    <p className="text-xs font-semibold text-indigo-600 mt-2">Etki: {t.impact}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={runAiTactics}
+              disabled={aiLoading}
+              className="flex items-center gap-1 text-xs font-bold text-indigo-600 hover:underline"
+            >
+              <RefreshCw className="w-3.5 h-3.5" /> Yeniden üret
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 gap-4">
