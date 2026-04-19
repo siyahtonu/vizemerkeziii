@@ -60,6 +60,7 @@ import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { jsPDF } from 'jspdf';
 import { SEO } from './components/SEO';
 import { apiUrl } from './lib/api';
+import { askCopilot, type CopilotResult } from './lib/ai';
 import { HelpModal } from './components/modals/HelpModal';
 import { CountryGuideModal } from './components/modals/CountryGuideModal';
 import { DocChecklistModal } from './components/modals/DocChecklistModal';
@@ -171,6 +172,10 @@ export default function App() {
   const [isHowToOpen, setIsHowToOpen] = useState(false);
   const [isCalculatorOpen, setIsCalculatorOpen] = useState(false);
   const [isCopilotOpen, setIsCopilotOpen] = useState(false);
+  // Copilot AI cevabı, yükleniyor/hata durumları
+  const [copilotLoading, setCopilotLoading] = useState(false);
+  const [copilotData, setCopilotData] = useState<CopilotResult | null>(null);
+  const [copilotError, setCopilotError] = useState<string | null>(null);
   const [isDocumentListOpen, setIsDocumentListOpen] = useState(false);
   const [isSchengenComparatorOpen, setIsSchengenComparatorOpen] = useState(false);
   const [isSocialMediaOpen, setIsSocialMediaOpen] = useState(false);
@@ -2476,6 +2481,35 @@ Signature: _______________     Date: ${today}`;
     }
   };
 
+  // ── Copilot: açılınca AI'dan kişiye özel 3 adım + ülke taktiği ─────────
+  // Her açılışta yeniden çağırmak token israfı — profile hash değişmediyse
+  // cache'lenmiş veri gösterilir. (Kaba invalidation: isCopilotOpen true olduğu
+  // anda data yoksa fetch et.)
+  React.useEffect(() => {
+    if (!isCopilotOpen || copilotData || copilotLoading) return;
+    let cancelled = false;
+    setCopilotLoading(true);
+    setCopilotError(null);
+    askCopilot(profile)
+      .then((result) => {
+        if (cancelled) return;
+        setCopilotData(result);
+        markToolCompleted('copilot');
+      })
+      .catch((err: unknown) => {
+        if (cancelled) return;
+        const msg = err instanceof Error ? err.message : 'Bilinmeyen hata.';
+        setCopilotError(msg);
+      })
+      .finally(() => {
+        if (!cancelled) setCopilotLoading(false);
+      });
+    return () => { cancelled = true; };
+  // profile dışarıdan değişirse de tekrar tetiklemek mantıksız;
+  // bağımlılıklara yalnız isCopilotOpen koyuyoruz.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isCopilotOpen]);
+
   // ── Custom Cursor: masaüstünde varsayılan AÇIK, mobilde devre dışı ──────
   const [customCursorEnabled, setCustomCursorEnabled] = React.useState<boolean>(() => {
     try {
@@ -4461,26 +4495,53 @@ Signature: _______________     Date: ${today}`;
                   <div className="space-y-4">
                     <div className="p-4 bg-blue-50 rounded-2xl border border-blue-100">
                       <p className="text-sm text-blue-800 leading-relaxed">
-                        Merhaba! Ben senin vize sürecindeki asistanınım. Profilini analiz ettim. İşte şu an yapman gereken <strong>en kritik 3 adım:</strong>
+                        Profilini inceledim. İşte senin için <strong>en kritik 3 adım:</strong>
                       </p>
                     </div>
-                    
-                    <div className="space-y-3">
-                      {[
-                        { step: 1, text: "Banka hesabındaki son toplu girişi belgele veya 30 gün bekle.", status: 'urgent' },
-                        { step: 2, text: "SGK dökümünü barkodlu olarak e-devletten indir.", status: 'pending' },
-                        { step: 3, text: "Niyet mektubunda işine döneceğini kanıtlayan ek cümleler ekle.", status: 'pending' }
-                      ].map((item, i) => (
-                        <div key={`copilot-step-${i}`} className="flex gap-4 items-start p-4 bg-white border border-slate-100 rounded-2xl shadow-sm">
-                          <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ${
-                            item.status === 'urgent' ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-600'
-                          }`}>
-                            {item.step}
+
+                    {/* Loading skeleton */}
+                    {copilotLoading && (
+                      <div className="space-y-3">
+                        {[0,1,2].map(i => (
+                          <div key={i} className="flex gap-4 items-start p-4 bg-white border border-slate-100 rounded-2xl shadow-sm animate-pulse">
+                            <div className="w-6 h-6 rounded-full bg-slate-200 shrink-0"/>
+                            <div className="flex-1 space-y-2">
+                              <div className="h-3 bg-slate-200 rounded w-full"/>
+                              <div className="h-3 bg-slate-200 rounded w-4/5"/>
+                            </div>
                           </div>
-                          <p className="text-sm text-slate-700">{item.text}</p>
-                        </div>
-                      ))}
-                    </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Error state */}
+                    {!copilotLoading && copilotError && (
+                      <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl">
+                        <p className="text-xs text-rose-700 mb-2">AI servisine ulaşılamadı: {copilotError}</p>
+                        <button
+                          onClick={() => { setCopilotData(null); setCopilotError(null); }}
+                          className="text-xs font-bold text-rose-700 underline"
+                        >
+                          Tekrar dene
+                        </button>
+                      </div>
+                    )}
+
+                    {/* AI cevabı */}
+                    {!copilotLoading && !copilotError && copilotData && (
+                      <div className="space-y-3">
+                        {copilotData.steps.map((item, i) => (
+                          <div key={`copilot-step-${i}`} className="flex gap-4 items-start p-4 bg-white border border-slate-100 rounded-2xl shadow-sm">
+                            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ${
+                              item.urgent ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-600'
+                            }`}>
+                              {i + 1}
+                            </div>
+                            <p className="text-sm text-slate-700 leading-relaxed">{item.text}</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
                   <div className="space-y-4">
@@ -4489,17 +4550,17 @@ Signature: _______________     Date: ${today}`;
                       {profile.targetCountry} İçin Özel Taktikler
                     </h4>
                     <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100 space-y-3">
-                      {profile.targetCountry === 'Almanya' && (
-                        <p className="text-xs text-slate-600 leading-relaxed">
-                          Almanya için <strong>finansal süreklilik</strong> bakiyeden daha önemlidir. Son 3 ayın her gününde hesapta hareket olması güven verir.
-                        </p>
+                      {copilotLoading && (
+                        <div className="space-y-2 animate-pulse">
+                          <div className="h-3 bg-slate-200 rounded w-full"/>
+                          <div className="h-3 bg-slate-200 rounded w-5/6"/>
+                          <div className="h-3 bg-slate-200 rounded w-3/4"/>
+                        </div>
                       )}
-                      {profile.targetCountry === 'ABD' && (
-                        <p className="text-xs text-slate-600 leading-relaxed">
-                          ABD mülakatında <strong>ilk 20 saniye</strong> kritiktir. Kısa, net ve Türkiye'ye döneceğinizi kanıtlayan cevaplar hazırlayın.
-                        </p>
+                      {!copilotLoading && copilotData?.countryTip && (
+                        <p className="text-xs text-slate-600 leading-relaxed">{copilotData.countryTip}</p>
                       )}
-                      <button 
+                      <button
                         onClick={() => {
                           setIsCopilotOpen(false);
                           setStep('tactics');
