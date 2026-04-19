@@ -165,20 +165,47 @@ export function AnalysisReportModal({
   return (
     <>
       {/* ── Print CSS ─────────────────────────────────────────────── */}
+      {/*
+        Not: Modal overlay'i "position: fixed + overflow-y-auto" ile açılıyor.
+        Yazdırmada "fixed" ataları her sayfada viewport'u tekrar çizer;
+        "overflow" ise içeriği viewport boyuna kırpar → aynı ilk sayfa 23 kez.
+        Altta report-overlay/report-container'ı static + overflow:visible'a
+        çekerek içeriğin doğal akışla birden fazla sayfaya yayılmasını sağlıyoruz.
+      */}
       <style>{`
         @media print {
           body * { visibility: hidden !important; }
           #analysis-report-print, #analysis-report-print * { visibility: visible !important; }
-          #analysis-report-print { position: absolute !important; left: 0 !important; top: 0 !important; width: 100% !important; }
+          .report-overlay {
+            position: static !important;
+            overflow: visible !important;
+            background: #fff !important;
+            padding: 0 !important;
+            display: block !important;
+          }
+          .report-container {
+            max-width: none !important;
+            width: 100% !important;
+            box-shadow: none !important;
+            border-radius: 0 !important;
+          }
+          #analysis-report-print {
+            position: static !important;
+            width: 100% !important;
+            max-height: none !important;
+            overflow: visible !important;
+          }
+          html, body { height: auto !important; overflow: visible !important; }
           .no-print { display: none !important; }
-          .print-page-break { page-break-before: always; }
+          .print-page-break { page-break-before: always; break-before: page; }
+          section, .rounded-xl, table { page-break-inside: avoid; break-inside: avoid; }
           @page { margin: 15mm 12mm; }
         }
       `}</style>
 
       {/* ── Modal overlay ────────────────────────────────────────────── */}
-      <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/60 overflow-y-auto p-4 sm:p-8">
-        <div className="w-full max-w-4xl bg-white rounded-2xl shadow-2xl">
+      <div className="report-overlay fixed inset-0 z-50 flex items-start justify-center bg-black/60 overflow-y-auto p-4 sm:p-8">
+        <div className="report-container w-full max-w-4xl bg-white rounded-2xl shadow-2xl">
 
           {/* ── Modal başlık ────────────────────────────────────────── */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 no-print sticky top-0 bg-white rounded-t-2xl z-10">
