@@ -3199,15 +3199,15 @@ Signature: _______________     Date: ${today}`;
                   >
                     Kapat
                   </button>
-                  <button 
+                  <button
                     onClick={() => {
                       setIsCalculatorOpen(false);
-                      setStep('assessment');
+                      setStep(wizardDone ? 'dashboard' : 'assessment');
                     }}
                     className="btn-primary flex-[2] flex items-center justify-center gap-2"
                   >
                     <Zap className="w-5 h-5 text-amber-400" />
-                    Şimdi Başvuruyu Başlat
+                    {wizardDone ? 'Panele Dön' : 'Şimdi Başvuruyu Başlat'}
                   </button>
                 </div>
               </motion.div>
@@ -3261,11 +3261,11 @@ Signature: _______________     Date: ${today}`;
                       >
                         {refusalLoading ? (
                           <>
-                            <RefreshCw className="w-5 h-5 animate-spin" /> Claude analiz ediyor…
+                            <RefreshCw className="w-5 h-5 animate-spin" /> VizeAkıl ret gerekçesini ayrıştırıyor…
                           </>
                         ) : (
                           <>
-                            <Sparkles className="w-5 h-5" /> AI ile Analiz Et — Aksiyon Planı Oluştur
+                            <Sparkles className="w-5 h-5" /> Analiz Et — Aksiyon Planı Oluştur
                           </>
                         )}
                       </button>
@@ -3728,8 +3728,8 @@ Signature: _______________     Date: ${today}`;
                         <Sparkles className="w-12 h-12 text-blue-600" />
                       </motion.div>
                       <div className="text-center">
-                        <p className="font-bold text-blue-700 text-lg">Analiz ediliyor...</p>
-                        <p className="text-sm text-slate-500 mt-1">{aiBankFile || 'Kural motoru çalışıyor...'}</p>
+                        <p className="font-bold text-blue-700 text-lg">VizeAkıl banka dökümünü inceliyor…</p>
+                        <p className="text-sm text-slate-500 mt-1">{aiBankFile || 'Rapor hazırlanıyor…'}</p>
                       </div>
                     </div>
                   )}
@@ -3994,9 +3994,9 @@ Signature: _______________     Date: ${today}`;
                         disabled={rfLoading}
                         className="w-full py-3 bg-rose-700 hover:bg-rose-800 disabled:opacity-50 text-white font-bold rounded-2xl transition-colors text-sm flex items-center justify-center gap-2">
                         {rfLoading ? (
-                          <><RefreshCw className="w-4 h-4 animate-spin"/> Claude tarıyor…</>
+                          <><RefreshCw className="w-4 h-4 animate-spin"/> VizeAkıl tarıyor…</>
                         ) : (
-                          <><Sparkles className="w-4 h-4"/> AI ile Kırmızı Bayrakları Tara</>
+                          <><Sparkles className="w-4 h-4"/> Kırmızı Bayrakları Tara</>
                         )}
                       </button>
                       {rfError && (
@@ -4651,17 +4651,25 @@ Signature: _______________     Date: ${today}`;
                   </div>
                 </div>
 
-                <div className="p-8 border-t border-slate-100 bg-slate-50">
-                  <button 
+                <div className="p-8 border-t border-slate-100 bg-slate-50 space-y-2">
+                  <button
                     onClick={() => {
                       setIsCopilotOpen(false);
-                      setStep('assessment');
+                      setStep(wizardDone ? 'tactics' : 'assessment');
                     }}
                     className="w-full py-4 bg-gradient-to-r from-brand-500 to-brand-600 text-white rounded-2xl font-bold flex items-center justify-center gap-2 shadow-md shadow-brand-500/15 hover:-translate-y-0.5 transition-all duration-300"
                   >
                     <Zap className="w-5 h-5 text-amber-400" />
-                    Şimdi Başvuruyu Başlat
+                    {wizardDone ? 'Tüm Taktikleri Uygula' : 'Şimdi Başvuruyu Başlat'}
                   </button>
+                  {wizardDone && (
+                    <button
+                      onClick={() => setIsCopilotOpen(false)}
+                      className="w-full py-2 text-xs font-bold text-slate-500 hover:text-slate-700"
+                    >
+                      Kapat ve Panele Dön
+                    </button>
+                  )}
                 </div>
               </motion.div>
             </div>
