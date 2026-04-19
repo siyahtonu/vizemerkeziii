@@ -3310,7 +3310,7 @@ Signature: _______________     Date: ${today}`;
                   <button
                     onClick={() => {
                       setIsCalculatorOpen(false);
-                      setStep(wizardDone ? 'dashboard' : 'assessment');
+                      setStep(wizardDone ? 'dashboard' : 'onboarding');
                     }}
                     className="btn-primary flex-[2] flex items-center justify-center gap-2"
                   >
@@ -4947,7 +4947,7 @@ Signature: _______________     Date: ${today}`;
                   <button
                     onClick={() => {
                       setIsCopilotOpen(false);
-                      setStep(wizardDone ? 'tactics' : 'assessment');
+                      setStep(wizardDone ? 'tactics' : 'onboarding');
                     }}
                     className="w-full py-4 bg-gradient-to-r from-brand-500 to-brand-600 text-white rounded-2xl font-bold flex items-center justify-center gap-2 shadow-md shadow-brand-500/15 hover:-translate-y-0.5 transition-all duration-300"
                   >
