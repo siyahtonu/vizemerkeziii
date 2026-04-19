@@ -143,7 +143,13 @@ function summarizeProfile(profile: ProfileData) {
 }
 
 // ── Ret Mektubu Analizi ──────────────────────────────────────────────────
-export type RefusalFinding = RefusalRule;
+export interface RefusalTimelineStep {
+  when: string;    // "Hemen", "1 hafta", "1 ay", "3 ay" gibi zaman etiketi
+  step: string;    // somut eylem
+}
+export interface RefusalFinding extends RefusalRule {
+  timeline?: RefusalTimelineStep[];
+}
 
 /**
  * Konsolosluktan gelen ret mektubu metnini Claude'a yollar, hangi gerekçelerin
@@ -172,13 +178,20 @@ ${trimmed.slice(0, 3500)}
       "category": "financial | ties | purpose | document | history",
       "severity": "critical | high | medium",
       "waitMonths": 3,
-      "actions": ["somut eylem 1", "somut eylem 2", "somut eylem 3"]
+      "actions": ["somut eylem 1", "somut eylem 2", "somut eylem 3"],
+      "timeline": [
+        { "when": "Hemen", "step": "bugün yapılacak ilk eylem" },
+        { "when": "1 hafta", "step": "1 hafta içinde tamamlanacak adım" },
+        { "when": "1 ay", "step": "1 ay içinde toplanacak belge/kanıt" },
+        { "when": "Yeniden başvuru", "step": "başvuru anında yapılacak eylem" }
+      ]
     }
   ]
 }
 
 Kurallar:
 - Her "actions" maddesi Türkçe, 1 cümle, uygulanabilir olsun.
+- "timeline" her finding için 3-5 adım: "when" zaman etiketi ("Hemen" / "1 hafta" / "1 ay" / "3 ay" / "Yeniden başvuru"); "step" o zamanda yapılacak eylem.
 - waitMonths: bu sebep giderilmeden yeniden başvuru için tavsiye edilen bekleme süresi.
 - En fazla 5 finding dön. Mektupta net bir sebep yoksa boş liste dön.`;
 

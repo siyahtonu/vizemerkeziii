@@ -328,6 +328,49 @@ router.post('/submit', submitLimiter, (req, res) => {
   });
 });
 
+// ── POST /api/outcomes/refusal-log ────────────────────────────────────────────
+// Anonim ret paylaşımı — kullanıcı Ret Analizi modalında "havuza ekle" dediğinde
+// kayıt yaratır; e-posta veya ön kayıt gerekmez. Outcome direkt 'ret'.
+router.post('/refusal-log', submitLimiter, (req, res) => {
+  const { country, visaType, rejectionCode, rejectionNotes, profileScore, profileSegment } =
+    req.body as {
+      country?: string;
+      visaType?: string;
+      rejectionCode?: string;
+      rejectionNotes?: string;
+      profileScore?: number;
+      profileSegment?: string;
+    };
+
+  if (!country || typeof country !== 'string' || country.length > 80) {
+    return res.status(400).json({ error: 'Geçersiz ülke.' });
+  }
+
+  const id = crypto.randomUUID();
+  const now = new Date().toISOString();
+  const record: ApplicationRecord = {
+    id,
+    email: `anon-${id.slice(0, 8)}@vizeakil.local`,   // anonim işaretleyici
+    country,
+    visaType: visaType ?? 'Schengen (C)',
+    applicationDate: now,                              // anonim — gerçek tarih yok
+    profileScore: typeof profileScore === 'number' ? profileScore : 0,
+    profileSegment: profileSegment ?? 'unknown',
+    outcome: 'ret',
+    rejectionCode: rejectionCode ?? undefined,
+    rejectionNotes: typeof rejectionNotes === 'string' ? rejectionNotes.slice(0, 2000) : undefined,
+    reportedAt: now,
+    createdAt: now,
+  };
+
+  applications.push(record);
+  saveApplications(applications);
+
+  console.log(`[outcomes] Anonim ret kaydı: ${country}${rejectionCode ? ` (${rejectionCode})` : ''}`);
+
+  return res.json({ success: true, id, message: 'Teşekkürler — anonim olarak kaydedildi.' });
+});
+
 // ── GET /api/outcomes/stats ───────────────────────────────────────────────────
 // İstatistikler (ileride admin paneli için)
 router.get('/stats', (req, res) => {

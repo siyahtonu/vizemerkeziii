@@ -63,9 +63,11 @@ import { apiUrl } from './lib/api';
 import {
   askCopilot, type CopilotResult,
   askRefusalAnalysis,
+  type RefusalFinding,
   askBankAnalysis,
   askRedFlagScan,
 } from './lib/ai';
+import ResearchInsightsWidget from './components/ResearchInsightsWidget';
 import { HelpModal } from './components/modals/HelpModal';
 import { CountryGuideModal } from './components/modals/CountryGuideModal';
 import { DocChecklistModal } from './components/modals/DocChecklistModal';
@@ -189,10 +191,11 @@ export default function App() {
   // Özellik 1: Ret Mektubu
   const [isRefusalOpen, setIsRefusalOpen] = useState(false);
   const [refusalText, setRefusalText] = useState('');
-  const [refusalResult, setRefusalResult] = useState<RefusalRule[]>([]);
+  const [refusalResult, setRefusalResult] = useState<RefusalFinding[]>([]);
   const [refusalAnalyzed, setRefusalAnalyzed] = useState(false);
   const [refusalLoading, setRefusalLoading] = useState(false);
   const [refusalError, setRefusalError] = useState<string | null>(null);
+  const [refusalLogStatus, setRefusalLogStatus] = useState<'idle'|'loading'|'success'|'error'>('idle');
 
   // ── VFS Randevu Takip Botu ─────────────────────────────────────────────────
   const [isAppointmentOpen, setIsAppointmentOpen] = useState(false);
@@ -1212,6 +1215,36 @@ export default function App() {
       }
     } finally {
       setRefusalLoading(false);
+    }
+  };
+
+  // ── Ret kaydını anonim havuza yolla (feedback loop) ─────────
+  const submitRefusalToPool = async () => {
+    if (refusalLogStatus === 'loading' || refusalLogStatus === 'success') return;
+    setRefusalLogStatus('loading');
+    try {
+      // En kritik finding'in kategorisini rejection code proxy'si olarak kullan.
+      const critical = refusalResult.find(r => r.severity === 'critical') ?? refusalResult[0];
+      const profileSegment = profile.isStudent ? 'student'
+        : profile.isPublicSectorEmployee ? 'public_sector'
+        : profile.hasSgkJob ? 'employed'
+        : 'unemployed';
+      const res = await fetch(apiUrl('/api/outcomes/refusal-log'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          country: profile.targetCountry || 'Belirtilmedi',
+          visaType: 'Schengen (C)',
+          rejectionCode: critical?.category ? `AI-${critical.category}` : 'DIGER',
+          rejectionNotes: refusalText.slice(0, 2000),
+          profileScore: currentScore,
+          profileSegment,
+        }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      setRefusalLogStatus('success');
+    } catch {
+      setRefusalLogStatus('error');
     }
   };
 
@@ -3279,7 +3312,7 @@ Signature: _______________     Date: ${today}`;
                     <div className="space-y-6">
                       <div className="flex items-center justify-between">
                         <h4 className="font-bold text-slate-900 text-lg">Tespit Edilen {refusalResult.length} Sorun</h4>
-                        <button onClick={() => { setRefusalAnalyzed(false); setRefusalText(''); setRefusalResult([]); setRefusalError(null); }}
+                        <button onClick={() => { setRefusalAnalyzed(false); setRefusalText(''); setRefusalResult([]); setRefusalError(null); setRefusalLogStatus('idle'); }}
                           className="flex items-center gap-1 text-sm font-bold text-rose-600 hover:underline">
                           <RefreshCw className="w-4 h-4" /> Yeniden Analiz
                         </button>
@@ -3302,13 +3335,31 @@ Signature: _______________     Date: ${today}`;
                               )}
                             </div>
                           </div>
-                          <div className="p-5 space-y-2">
-                            {rule.actions.map((action, j) => (
-                              <div key={j} className="flex items-start gap-3">
-                                <div className="w-5 h-5 rounded-full bg-brand-500 text-white flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">{j+1}</div>
-                                <p className="text-sm text-slate-700 leading-relaxed">{action}</p>
+                          <div className="p-5 space-y-4">
+                            {/* Aksiyonlar */}
+                            <div className="space-y-2">
+                              {rule.actions.map((action, j) => (
+                                <div key={j} className="flex items-start gap-3">
+                                  <div className="w-5 h-5 rounded-full bg-brand-500 text-white flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">{j+1}</div>
+                                  <p className="text-sm text-slate-700 leading-relaxed">{action}</p>
+                                </div>
+                              ))}
+                            </div>
+                            {/* Zaman Çizelgesi — AI varsa */}
+                            {rule.timeline && rule.timeline.length > 0 && (
+                              <div className="pt-4 border-t border-slate-100">
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Zaman Çizelgesi</p>
+                                <ol className="relative border-l-2 border-slate-200 ml-2 space-y-4">
+                                  {rule.timeline.map((t, k) => (
+                                    <li key={k} className="pl-5 relative">
+                                      <span className="absolute -left-[7px] top-1 w-3 h-3 rounded-full bg-brand-500 border-2 border-white shadow" />
+                                      <div className="text-[10px] font-bold text-brand-600 uppercase tracking-wide">{t.when}</div>
+                                      <div className="text-sm text-slate-700 leading-relaxed mt-0.5">{t.step}</div>
+                                    </li>
+                                  ))}
+                                </ol>
                               </div>
-                            ))}
+                            )}
                           </div>
                         </div>
                       ))}
@@ -3321,6 +3372,46 @@ Signature: _______________     Date: ${today}`;
                           </p>
                         </div>
                       </div>
+
+                      {/* Anonim havuza ekle */}
+                      <div className="p-5 bg-slate-50 border border-slate-200 rounded-2xl">
+                        <div className="flex items-start gap-3 mb-3">
+                          <Info className="w-5 h-5 text-slate-500 shrink-0 mt-0.5" />
+                          <div className="text-sm text-slate-700 leading-relaxed">
+                            <p className="font-bold text-slate-800 mb-1">Bu reddi anonim olarak paylaş</p>
+                            <p>Ret metniniz e-posta veya kimlik bilgisi olmadan havuza eklenir. Verileriniz algoritmayı kalibre etmek için kullanılır.</p>
+                          </div>
+                        </div>
+                        {refusalLogStatus === 'success' ? (
+                          <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-sm text-emerald-800">
+                            Teşekkürler — anonim olarak kaydedildi.
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={submitRefusalToPool}
+                            disabled={refusalLogStatus === 'loading'}
+                            className="w-full py-3 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white rounded-xl text-sm font-bold flex items-center justify-center gap-2"
+                          >
+                            {refusalLogStatus === 'loading' ? (
+                              <><RefreshCw className="w-4 h-4 animate-spin" /> Gönderiliyor…</>
+                            ) : (
+                              <>Anonim Olarak Havuza Ekle</>
+                            )}
+                          </button>
+                        )}
+                        {refusalLogStatus === 'error' && (
+                          <p className="text-xs text-rose-700 mt-2">Kaydedilemedi — tekrar deneyin.</p>
+                        )}
+                      </div>
+
+                      {/* Benzer vakalar + olası ret sebepleri */}
+                      {profile.targetCountry && (
+                        <div className="p-5 bg-white border border-slate-200 rounded-2xl">
+                          <h4 className="font-bold text-slate-900 mb-3">Benzer profiller ne yaşadı?</h4>
+                          <ResearchInsightsWidget profile={profile} />
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
