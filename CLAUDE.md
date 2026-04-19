@@ -61,7 +61,7 @@ Final skor 5 katmanlı bir pipeline'dır ([core.ts:185-227](src/scoring/core.ts#
 ### Backend
 
 [server/index.ts](server/index.ts) router'ları yükler:
-- `/api/gemini` — `GEMINI_API_KEY` **yalnızca sunucuda** tutulur, asla client'a sızmamalı. AI mektup/taktik üretimi buradan geçer.
+- `/api/ai` — Claude Sonnet 4.6 proxy'si (`@anthropic-ai/sdk`). `ANTHROPIC_API_KEY` **yalnızca sunucuda** tutulur, asla client'a sızmamalı. AI mektup/taktik üretimi buradan geçer.
 - `/api/payment` — Iyzipay entegrasyonu
 - `/api/appointments` — node-cron ile randevu izleyici
 - `/api/outcomes` — kullanıcı geri bildirim havuzu (feedback loop)
@@ -81,6 +81,6 @@ Final skor 5 katmanlı bir pipeline'dır ([core.ts:185-227](src/scoring/core.ts#
 ## Env değişkenleri
 
 `.env.local` dosyasında (gitignore'lu):
-- `GEMINI_API_KEY` — backend için zorunlu
+- `ANTHROPIC_API_KEY` — backend için zorunlu (Claude API anahtarı)
 - `VITE_API_URL` — production frontend build'inde backend origin'i (örn. `https://api.vizeakil.com`); dev'de boş bırakılır
 - Iyzipay, SMTP ve `x-admin-secret` / `x-check-secret` gibi sırlar ilgili router dosyalarında okunur

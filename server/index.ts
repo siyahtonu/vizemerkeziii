@@ -42,32 +42,38 @@ const apiLimiter = rateLimit({
   message: { error: 'Çok fazla istek gönderildi. Lütfen 1 dakika bekleyin.' },
 });
 
-// ── POST /api/gemini ──────────────────────────────────────
-// Frontend buraya { prompt: string } gönderir, API key sunucuda kalır.
-app.post('/api/gemini', apiLimiter, async (req, res) => {
+// ── POST /api/ai ──────────────────────────────────────────
+// Frontend buraya { prompt: string } gönderir, Claude'a forward eder,
+// API key sunucuda kalır. Model: Claude Sonnet 4.6.
+app.post('/api/ai', apiLimiter, async (req, res) => {
   const { prompt } = req.body as { prompt?: string };
 
   if (!prompt || typeof prompt !== 'string' || prompt.length > 4000) {
     return res.status(400).json({ error: 'Geçersiz istek.' });
   }
 
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
     return res.status(503).json({ error: 'AI servisi şu an kullanılamıyor.' });
   }
 
   try {
-    // Dinamik import — @google/genai zaten package.json'da mevcut
-    const { GoogleGenAI } = await import('@google/genai');
-    const ai = new GoogleGenAI({ apiKey });
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.0-flash',
-      contents: prompt,
+    // Dinamik import — @anthropic-ai/sdk zaten package.json'da mevcut
+    const { default: Anthropic } = await import('@anthropic-ai/sdk');
+    const client = new Anthropic({ apiKey });
+    const message = await client.messages.create({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 2048,
+      messages: [{ role: 'user', content: prompt }],
     });
-    const text = response.text ?? '';
+    // İçerik blokları arasında text olanları birleştir
+    const text = message.content
+      .filter((b) => b.type === 'text')
+      .map((b) => (b as { text: string }).text)
+      .join('\n');
     return res.json({ result: text });
   } catch (err: unknown) {
-    console.error('[/api/gemini] Hata:', err);
+    console.error('[/api/ai] Hata:', err);
     return res.status(500).json({ error: 'AI servisi yanıt vermedi.' });
   }
 });

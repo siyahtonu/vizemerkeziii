@@ -15,6 +15,6 @@ View your app in AI Studio: https://ai.studio/apps/c6509edd-0bcf-436d-879f-f5d74
 
 1. Install dependencies:
    `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
+2. Set the `ANTHROPIC_API_KEY` in [.env.local](.env.local) to your Claude API key (https://console.anthropic.com/settings/keys)
 3. Run the app:
    `npm run dev`
