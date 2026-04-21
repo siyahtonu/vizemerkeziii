@@ -1,0 +1,66 @@
+# VizeAkıl
+
+> Türk vatandaşları için Schengen, İngiltere, ABD ve Kanada vize başvurusu profil değerlendirme aracı. Yapay zeka destekli risk skoru, ret olasılığı tahmini, başvuru taktikleri ve niyet mektubu üretir. n=2077 gerçek vakaya dayalı ampirik model; kişisel veriler tarayıcının localStorage'unda kalır, sunucuya iletilmez.
+
+Site Türkçe yayın yapar; hedef kitle Türkiye'den vize başvurusu yapacak bireysel başvurucular (öğrenci, çalışan, emekli, ev hanımı, serbest meslek, kamu görevlisi). Temel araçlar ücretsizdir.
+
+## Başlıca Sayfalar
+
+- [Ana sayfa — genel tanıtım](https://vizeakil.com/): Profil skoru aracının girişi, ücretsiz ülke karşılaştırma tabloları ve blog rehberlerine navigasyon.
+- [Değerlendirmeye başla](https://vizeakil.com/basla): Çok adımlı başvuru profili formu; finans, meslek, bağlar, seyahat geçmişi, amaç girdisi toplar.
+- [Hakkımızda](https://vizeakil.com/hakkimizda): Skorlama metodolojisi ve veri kaynakları özeti.
+- [İletişim](https://vizeakil.com/iletisim): E-posta iletişim formu.
+
+## Ülke Rehberleri
+
+- [Almanya Vizesi Nasıl Alınır (2026)](https://vizeakil.com/blog/almanya-vizesi-nasil-alinir-2026): Türk başvurucular için randevu, belgeler, geri dönüş bağları.
+- [Schengen Vizesi Nasıl Alınır](https://vizeakil.com/blog/schengen-vizesi-nasil-alinir): Genel Schengen başvuru rehberi, konsolosluk seçimi, cascade kuralı.
+- [ABD Vizesi Nasıl Alınır (2026)](https://vizeakil.com/blog/abd-vizesi-nasil-alinir-2026): DS-160, mülakat, 214(b) reddi ve Türkiye bağları.
+- [Kanada Vizesi Nasıl Alınır (2026)](https://vizeakil.com/blog/kanada-vizesi-nasil-alinir-2026): IRCC başvuru akışı ve destekleyici belgeler.
+- [2026 Schengen: Kolay ve Zor Ülkeler](https://vizeakil.com/blog/2026-schengen-kolay-zor-ulkeler): Ret oranı, bekleme süresi ve başvuru zorluğu kıyaslaması.
+- [Dubai: e-Vize mi Kapıda Vize mi](https://vizeakil.com/blog/dubai-evize-mi-kapida-vize-mi): Türk pasaportu BAE seçenekleri.
+- [Kapıda Vize Veren Ülkeler (2026)](https://vizeakil.com/blog/kapida-vize-veren-ulkeler-2026): Türk vatandaşları için vizesiz/kapıda vize listesi.
+
+## Ret ve İtiraz
+
+- [Schengen Vize Ret Kodları C1–C14](https://vizeakil.com/blog/schengen-vize-ret-kodlari-c1-c14): Ret gerekçelerinin anlamları ve karşı-argümanlar.
+- [Schengen Reddi — Madde 8 İtiraz](https://vizeakil.com/blog/schengen-reddi-madde-8-itiraz): Vize Kodeksi Madde 8 çerçevesinde itiraz prosedürü.
+- [Pasaportunda Ret Varken Yeni Başvuru](https://vizeakil.com/blog/pasaportunda-ret-varken-yeni-vize): Önceki retten sonra yeniden başvuru stratejisi.
+
+## Finansal ve Belgeler
+
+- [Vize için Banka Hesabında Ne Kadar Para](https://vizeakil.com/blog/vize-icin-banka-hesabinda-ne-kadar-para): Ülke bazlı minimum bakiye ve 28 gün kuralı.
+- [DS-160 Form Doldurma Rehberi](https://vizeakil.com/blog/ds-160-form-doldurma-rehberi): ABD vize formu için adım adım rehber.
+- [İngiltere Tier-4 Niyet Mektubu](https://vizeakil.com/blog/ingiltere-tier4-niyet-mektubu): Öğrenci vizesi için niyet mektubu şablonu.
+
+## Başvurucu Profilleri
+
+- [Öğrenci / Sponsorsuz ABD Turist Vizesi](https://vizeakil.com/blog/ogrenci-sponsorsuz-amerika-turist-vizesi): 214(b) riskini azaltma taktikleri.
+- [Ev Hanımı — İtalya Schengen Vizesi](https://vizeakil.com/blog/ev-hanimi-italya-schengen-vizesi): Eş destekli başvuru dosyası yapısı.
+- [Freelance — İngiltere Vize Başvurusu](https://vizeakil.com/blog/freelance-ingiltere-vize-basvurusu): Serbest çalışan için UKVI gelir kanıtları.
+- [Emekli — Yunanistan Kapı Vizesi (2026)](https://vizeakil.com/blog/emekli-yunanistan-kapi-vizesi-2026): Meis, Midilli ve Sakız kapı vize kuralları.
+
+## Randevu ve Süreç
+
+- [Vize Randevusu Nasıl Alınır](https://vizeakil.com/blog/vize-randevusu-nasil-alinir): iData, VFS, Gerry's ve doğrudan konsolosluk randevu adımları.
+- [Fransa Vize Randevu Alternatifleri](https://vizeakil.com/blog/fransa-vize-randevu-alternatif): Fransa için şehir ve merkez seçenekleri.
+- [Vize Mülakatında Heyecan](https://vizeakil.com/blog/vize-mulakatinda-heyecan): Mülakat öncesi hazırlık ve stres yönetimi.
+
+## Seyahat Politikası
+
+- [F-1 ve J-1 Vize Farkları](https://vizeakil.com/blog/f1-j1-vizesi-farklari): ABD öğrenci vs. kültürel değişim vizesi karşılaştırması.
+- [Cascade Kuralı (Schengen)](https://vizeakil.com/blog/cascade-kurali-schengen-vizesi): Çok girişli uzun vadeli vize verilme mantığı.
+- [EES Sistemi Nedir](https://vizeakil.com/blog/ees-sistemi-nedir): 2026 Schengen giriş/çıkış biyometrik sistemi.
+- [İngiltere eVisa Rehberi](https://vizeakil.com/blog/ingiltere-evisa-rehberi): BRP yerine geçen elektronik vize.
+- [Dijital Göçebe Vizesi (2026)](https://vizeakil.com/blog/dijital-nomad-vizesi-2026): Uzaktan çalışanlar için ülke seçenekleri.
+
+## Yasal
+
+- [KVKK](https://vizeakil.com/kvkk)
+- [Gizlilik Politikası](https://vizeakil.com/gizlilik-politikasi)
+- [Kullanım Koşulları](https://vizeakil.com/kullanim-kosullari)
+
+## Teknik Kaynaklar
+
+- [sitemap.xml](https://vizeakil.com/sitemap.xml)
+- [robots.txt](https://vizeakil.com/robots.txt)
