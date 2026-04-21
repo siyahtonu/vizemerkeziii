@@ -614,7 +614,7 @@ export function AssessmentStep({
                         transition={{ duration: 0.9, ease: 'easeOut' }}
                       />
                     </div>
-                    <div className="flex flex-wrap gap-2 text-xs mb-4">
+                    <div className="flex flex-wrap gap-2 text-xs mb-2">
                       <span className={`px-2.5 py-1 rounded-full font-bold ${
                         currentConfidence.label === 'Yüksek' ? 'bg-emerald-50 text-emerald-600' :
                         currentConfidence.label === 'Orta' ? 'bg-amber-50 text-amber-600' :
@@ -626,6 +626,9 @@ export function AssessmentStep({
                         %{currentConfidence.low}–%{currentConfidence.high}
                       </span>
                     </div>
+                    <p className="text-[11px] text-slate-400 leading-relaxed mb-4">
+                      Bu bir istatistiksel tahmindir. Konsolosluk kararı bağlayıcıdır.
+                    </p>
                     <ScoreStory profile={profile} score={currentScore} />
                     <div className="mt-4">
                       <ScoreRadarMini profile={profile} />
@@ -713,6 +716,9 @@ export function AssessmentStep({
                             %{currentConfidence.low}–%{currentConfidence.high}
                           </span>
                         </div>
+                        <p className="text-[11px] text-slate-400 leading-relaxed">
+                          Bu bir istatistiksel tahmindir. Konsolosluk kararı bağlayıcıdır.
+                        </p>
                         <ScoreStory profile={profile} score={currentScore} />
                         <ScoreRadarMini profile={profile} />
                       </div>

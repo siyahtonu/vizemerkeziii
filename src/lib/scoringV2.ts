@@ -431,7 +431,8 @@ function calibrateForCountry(base: number, countryCode: string, p: ProfileV2): n
     if (val === true || (typeof val === 'number' && val >= 1)) calibrated += 3;
   }
 
-  // Bayes blending: profil skoru × 0.65 + Türk başarı oranı × 0.35
+  // Lineer kalibrasyon (ağırlıklı ortalama, Bayes posterior değil):
+  // profil skoru × 0.65 + Türk başarı oranı × 0.35
   const raw = Math.max(0, Math.min(calibrated, 100)) / 100;
   const blended = raw * 0.65 + trSuccessRate * 0.35;
   return Math.max(0, Math.min(100, blended * 100));

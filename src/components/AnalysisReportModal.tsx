@@ -385,7 +385,7 @@ export function AnalysisReportModal({
               <div className="rounded-xl bg-slate-50 border border-slate-200 p-4 text-sm leading-relaxed text-slate-700">
                 <strong>Algoritmik Değerlendirme:</strong>{' '}
                 {profile.targetCountry} için hesaplanan başarı skoru <strong>%{targetScore}</strong> olup
-                Bayes blending (%65 profil + %35 tarihsel ret oranı), profil-ülke matrisi (çarpan: {breakdown.countryFactor.toFixed(2)}),
+                lineer kalibrasyon (%65 profil + %35 tarihsel ret oranı), profil-ülke matrisi (çarpan: {breakdown.countryFactor.toFixed(2)}),
                 {breakdown.consulateCity ? ` ${breakdown.consulateCity} konsolosluğu kalibrasyonu,` : ''}
                 {' '}ve mevsimsel düzeltmeden oluşmaktadır.
                 Ham profil puanı <strong>{breakdown.rawScore}/100</strong>'dür.
@@ -689,7 +689,7 @@ export function AnalysisReportModal({
                   <div className="text-slate-400">Finansal, Mesleki, Bağlar, Seyahat, Başvuru, Güven</div>
                 </div>
                 <div className="rounded-xl bg-slate-50 border border-slate-200 p-3 space-y-1">
-                  <div className="font-bold text-slate-700">Bayes Blending</div>
+                  <div className="font-bold text-slate-700">Lineer Kalibrasyon</div>
                   <div>(Ham/100) × 0.65 + (1 - RetOranı) × 0.35 = <strong>{(breakdown.blendedScore * 100).toFixed(1)}</strong></div>
                   <div className="text-slate-400">Tarihsel ret oranı ağırlıklı düzeltme</div>
                 </div>

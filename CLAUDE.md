@@ -40,13 +40,14 @@ Geliştirme için iki süreç birlikte çalışmalı: `npm run dev` (frontend) *
 
 Tüm skorlama mantığı **[src/scoring/](src/scoring/)** altındadır ve **versiyonlanmıştır** (şu an v3.x). Hesaplamayı App.tsx içinde inline yazmayın; her zaman `core.ts`'teki fonksiyonları çağırın.
 
-Final skor 5 katmanlı bir pipeline'dır ([core.ts:185-227](src/scoring/core.ts#L185)):
+Final skor 6 katmanlı bir pipeline'dır ([core.ts:185-227](src/scoring/core.ts#L185)):
 
 1. **`calculateRawScore`** — 8 bölümlü kural tabanlı 0-100 ham puan (finansal, mesleki, bağlar, seyahat, başvuru, güven, ülke özel, veto cap'leri). Bölüm 8 (`vetoCap`) son dakika mevduat / overstay gibi kritik durumlarda skoru üst sınırla zorla kırpar.
-2. **Bayes blending** — `(raw/100) * 0.65 + (1 - trRejRate) * 0.35` ile [matrices.ts](src/scoring/matrices.ts) `TR_REJECTION_RATES` tablosu kullanılarak ülke baz hızıyla harmanlanır.
+2. **Lineer kalibrasyon** — `(raw/100) * 0.65 + (1 - trRejRate) * 0.35` ile [matrices.ts](src/scoring/matrices.ts) `TR_REJECTION_RATES` tablosu kullanılarak ülke baz hızıyla harmanlanır. NOT: "Bayes" değil — ağırlıklı ortalamadır; posterior türetmez.
 3. **`getProfileCountryFactor`** — segment × ülke matrisi.
 4. **Konsolosluk kalibrasyonu** — `applicantCity` varsa şehir → konsolosluk zone → ruh hali çarpanı.
 5. **Mevsimsellik** — `applyMonth` varsa ay/yıl × ülke kalibrasyonu (max ±%8 etki).
+6. **Final veto tavan** — `computeVetoCap(data)` hard ceiling olarak en sonda yeniden uygulanır; Katman 2-5'teki çarpanlar kritik kırmızı bayrakları aşamaz.
 
 `calculateScoreDetailed` UI'da "Neden bu skor?" breakdown'u için katmanları ayrı döner. Skorlama değişiklikleri [src/scoring/__tests__/](src/scoring/__tests__/) altındaki snapshot/regresyon testlerini etkileyebilir — `npm test` çalıştırın.
 

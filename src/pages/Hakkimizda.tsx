@@ -76,10 +76,11 @@ const Hakkimizda: React.FC = () => (
               üzerinden 0-100 aralığında bir ham puan hesaplanır.
             </li>
             <li>
-              <span className="font-semibold text-slate-900">Bayes harmanlama:</span>{' '}
-              Ham puan, hedef ülkenin Türk vatandaşları için kamuya açık ret oranı ile istatistiksel
-              olarak harmanlanır. Böylece skor yalnızca bireysel profili değil, o ülkenin genel katılık
-              düzeyini de yansıtır.
+              <span className="font-semibold text-slate-900">Lineer kalibrasyon:</span>{' '}
+              Ham puan, hedef ülkenin Türk vatandaşları için kamuya açık ret oranıyla ağırlıklı ortalama
+              olarak harmanlanır (Bayes posterior değil; baz ret oranını profil puanına kademeli enjekte
+              eden bir kalibrasyon katmanı). Böylece skor yalnızca bireysel profili değil, o ülkenin
+              genel katılık düzeyini de yansıtır.
             </li>
             <li>
               <span className="font-semibold text-slate-900">Profil-ülke uyum matrisi:</span>{' '}

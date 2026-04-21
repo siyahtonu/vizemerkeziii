@@ -232,32 +232,43 @@ export const calculateRawScore = (data: ProfileData, simValue: number = 0): numb
   // ─────────────────────────────────────────────────────────
   // BÖLÜM 8: VETO — Kritik eşik aşıldığında skoru zorla kırp
   // v2.5: Son dakika mevduat Türklerde #1 ret sebebi (%43)
+  // NOT: Aynı tavan pipeline'ın en sonunda da uygulanır — sonraki
+  // kalibrasyon katmanları (2-5) cezayı yumuşatamaz.
   // ─────────────────────────────────────────────────────────
-  let vetoCap = 100;
-
-  if (data.hasSuspiciousLargeDeposit) {
-    // Eski: -10 ceza. v2.5: skor 30'un üzerine çıkamaz
-    vetoCap = Math.min(vetoCap, 30);
-  }
-  if (!data.noOverstayHistory) {
-    vetoCap = Math.min(vetoCap, 10);
-  }
-
+  const vetoCap = computeVetoCap(data);
   score = Math.min(score, vetoCap);
   return Math.max(0, Math.min(score, 100));
 };
 
 // ============================================================
-// calculateScore: Bayes blending ile kalibre edilmiş final skor
+// computeVetoCap: Kritik kırmızı bayrakların tanımladığı hard ceiling
+// - Son dakika büyük mevduat       → max 30
+// - Süre aşımı (overstay) geçmişi  → max 10
+// Hem calculateRawScore içinde hem de final pipeline sonunda uygulanır.
+// Böylece kalibrasyon çarpanları veto'yu aşamaz.
+// ============================================================
+export const computeVetoCap = (data: ProfileData): number => {
+  let cap = 100;
+  if (data.hasSuspiciousLargeDeposit) cap = Math.min(cap, 30);
+  if (!data.noOverstayHistory)        cap = Math.min(cap, 10);
+  return cap;
+};
+
+// ============================================================
+// calculateScore: kalibre edilmiş final skor
 //
 // Pipeline:
-//   1. calculateRawScore     → ham profil puanı (0-100)
-//   2. Bayes blending        → (raw/100)×0.65 + (1-trRejRate)×0.35
-//   3. PROFILE_COUNTRY_MATRIX → ülke × segment çarpanı
+//   1. calculateRawScore       → ham profil puanı (0-100)
+//   2. Lineer kalibrasyon      → (raw/100)×0.65 + (1-trRejRate)×0.35
+//      (NOT: "Bayes" DEĞİL — ağırlıklı ortalama; posterior türetmiyor.
+//       Türkiye baz ret oranını profil puanına kademeli enjekte ediyor.)
+//   3. PROFILE_COUNTRY_MATRIX  → ülke × segment çarpanı
 //   4. CONSULATE_MATRIX (v3.1) → şehir × konsolosluk × segment kalibrasyonu
 //      (applicantCity tanımlıysa; yoksa bu adım atlanır → geriye uyumlu)
 //   5. SEASONAL_MULTIPLIER (v3.2) → ay × ülke × profil gücü kalibrasyonu
 //      (applyMonth tanımlıysa; yoksa 1.0 → geriye uyumlu)
+//   6. VETO TAVAN (final)      → son dakika mevduat/overstay gibi kritik
+//      kırmızı bayraklar hard ceiling olarak en sonda yeniden dayatılır.
 // ============================================================
 export const calculateScore = (data: ProfileData, simValue: number = 0): number => {
   const raw = calculateRawScore(data, simValue);
@@ -288,7 +299,9 @@ export const calculateScore = (data: ProfileData, simValue: number = 0): number 
     seasonalFactor = 0.92 + 0.08 * sm;
   }
 
-  return Math.max(0, Math.min(100, Math.round(blended * countryFactor * consulateFactor * seasonalFactor * 100)));
+  const calibrated = Math.round(blended * countryFactor * consulateFactor * seasonalFactor * 100);
+  const vetoCap = computeVetoCap(data);
+  return Math.max(0, Math.min(100, Math.min(calibrated, vetoCap)));
 };
 
 // ============================================================
@@ -297,10 +310,11 @@ export const calculateScore = (data: ProfileData, simValue: number = 0): number 
 // ============================================================
 export interface ScoreBreakdown {
   rawScore:        number;   // Ham profil puanı
-  blendedScore:    number;   // Bayes blending sonrası (0-1)
+  blendedScore:    number;   // Lineer kalibrasyon sonrası (0-1)
   countryFactor:   number;   // Profil-ülke matrisi çarpanı
   consulateFactor: number;   // Konsolosluk kalibrasyonu çarpanı
   seasonalFactor:  number;   // Mevsimsellik kalibrasyonu çarpanı
+  vetoCap:         number;   // Kritik kırmızı bayrak tavanı (son adımda uygulanır)
   finalScore:      number;   // Tüm katmanlar sonrası (0-100)
   consulateCity:   string | null;
   consulateMood:   string | null;
@@ -339,13 +353,17 @@ export const calculateScoreDetailed = (data: ProfileData, simValue = 0): ScoreBr
     seasonalFactor = 0.92 + 0.08 * sm;
   }
 
+  const calibrated = Math.round(blendedScore * countryFactor * consulateFactor * seasonalFactor * 100);
+  const vetoCap = computeVetoCap(data);
+
   return {
     rawScore,
     blendedScore,
     countryFactor,
     consulateFactor,
     seasonalFactor,
-    finalScore: Math.max(0, Math.min(100, Math.round(blendedScore * countryFactor * consulateFactor * seasonalFactor * 100))),
+    vetoCap,
+    finalScore: Math.max(0, Math.min(100, Math.min(calibrated, vetoCap))),
     consulateCity,
     consulateMood,
     consulateWaitDays,

@@ -594,8 +594,8 @@ export function calculateRejectionRisk(profile: ProfileData, currentScore?: numb
   // ── Genel Skor Hesabı ───────────────────────────────────────────────────
   //
   // Tasarım prensibi: Kullanıcı iki farklı sayı görmemeli.
-  // "Güncel Başarı Skoru" (currentScore) zaten Bayes blend ile kalibre
-  // edilmiş, ülke ret oranını içeriyor — tek gerçek sayı o.
+  // "Güncel Başarı Skoru" (currentScore) zaten lineer kalibrasyon ile
+  // kalibre edilmiş, ülke ret oranını içeriyor — tek gerçek sayı o.
   //
   // R-2077'nin görevi: faktör breakdown'ı (hangi alan güçlü/zayıf).
   // Headline skor her zaman currentScore'dan türer.

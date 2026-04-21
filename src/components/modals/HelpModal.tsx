@@ -60,7 +60,7 @@ export function HelpModal({ isOpen, onClose }: Props) {
               <div className="p-4 bg-brand-50 border border-brand-100 rounded-2xl">
                 <h4 className="text-sm font-bold text-brand-800 mb-2">Skor Nasıl Hesaplanır?</h4>
                 <p className="text-xs text-brand-700 leading-relaxed">
-                  Skor, 6 kategoride değerlendirme yapılarak hesaplanır: <strong>Finansal (25p)</strong>, <strong>Mesleki (20p)</strong>, <strong>Seyahat Geçmişi (20p)</strong>, <strong>Aile & Bağ (10p)</strong>, <strong>Amaç & Taahhüt (15p)</strong> ve <strong>Kalite & Güven (10p)</strong>. Toplam 100 puan üzerinden hesaplanan ham skor, ülkenin Türk başvurucular için gerçek ret oranıyla Bayes yöntemiyle harmanlanır. 82+ = yeşil, 65-81 = sarı, 65 altı = kırmızı risk bölgesi.
+                  Skor, 6 kategoride değerlendirme yapılarak hesaplanır: <strong>Finansal (25p)</strong>, <strong>Mesleki (20p)</strong>, <strong>Seyahat Geçmişi (20p)</strong>, <strong>Aile & Bağ (10p)</strong>, <strong>Amaç & Taahhüt (15p)</strong> ve <strong>Kalite & Güven (10p)</strong>. Toplam 100 puan üzerinden hesaplanan ham skor, ülkenin Türk başvurucular için gerçek ret oranıyla lineer kalibrasyon ile harmanlanır (ağırlıklı ortalama). 82+ = yeşil, 65-81 = sarı, 65 altı = kırmızı risk bölgesi. Skor istatistiksel tahmindir; nihai karar konsoloslukta verilir.
                 </p>
               </div>
 

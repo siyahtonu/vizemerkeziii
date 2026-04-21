@@ -390,7 +390,10 @@ export function DashboardStep({
                         reasons={explainConfidence(profile, currentScore)}
                       />
 
-  
+                      <p className="text-[11px] text-slate-400 leading-relaxed mt-3">
+                        Bu bir istatistiksel tahmindir. Konsolosluk kararı bağlayıcıdır.
+                      </p>
+
                       {/* Öncelikli adımlar */}
                       {actionItems.length > 0 && currentScore < 82 && (
                         <ActionItemsList items={actionItems} />

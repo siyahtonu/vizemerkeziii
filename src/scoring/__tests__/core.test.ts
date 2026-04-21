@@ -3,7 +3,7 @@
 // calculateRawScore & calculateScore
 // ============================================================
 import { describe, test, expect } from 'vitest';
-import { calculateRawScore, calculateScore } from '../core';
+import { calculateRawScore, calculateScore, computeVetoCap } from '../core';
 import { BASE_PROFILE } from './fixtures';
 import type { ProfileData } from '../../types';
 
@@ -177,8 +177,8 @@ describe('calculateRawScore — İngiltere', () => {
   });
 });
 
-// ── calculateScore (Bayes Blending) ─────────────────────────────────────────
-describe('calculateScore — Bayes blending', () => {
+// ── calculateScore (Lineer Kalibrasyon) ─────────────────────────────────────
+describe('calculateScore — lineer kalibrasyon', () => {
   test('0-100 aralığında kalır', () => {
     const s = calculateScore(BASE_PROFILE);
     expect(s).toBeGreaterThanOrEqual(0);
@@ -197,7 +197,7 @@ describe('calculateScore — Bayes blending', () => {
     expect(publicSector).toBeGreaterThan(selfEmployed);
   });
 
-  test('Bayes blending: raw=0 bile pozitif skor üretebilir (ülke etkisi)', () => {
+  test('lineer kalibrasyon: raw=0 bile pozitif skor üretebilir (ülke etkisi)', () => {
     // Çok kötü bir profil bile %35 ülke başarı katkısından fayda sağlar
     const worst = calculateScore(p({
       hasSuspiciousLargeDeposit: true,
@@ -205,5 +205,39 @@ describe('calculateScore — Bayes blending', () => {
       targetCountry: 'Yunanistan',
     }));
     expect(worst).toBeGreaterThanOrEqual(0);
+  });
+});
+
+// ── Veto cap pipeline'ın SONUNDA uygulanır (Katman 2-5 aşamaz) ─────────────
+describe('computeVetoCap & final pipeline tavanı', () => {
+  test('computeVetoCap: temiz profil → 100', () => {
+    expect(computeVetoCap(BASE_PROFILE)).toBe(100);
+  });
+
+  test('computeVetoCap: son dakika mevduat → 30', () => {
+    expect(computeVetoCap(p({ hasSuspiciousLargeDeposit: true }))).toBe(30);
+  });
+
+  test('computeVetoCap: overstay → 10 (en sert tavan kazanır)', () => {
+    expect(computeVetoCap(p({ hasSuspiciousLargeDeposit: true, noOverstayHistory: false }))).toBe(10);
+  });
+
+  test('final skor son dakika mevduat tavanını aşamaz (Yunanistan gibi düşük ret oranlı ülke bile)', () => {
+    // Yunanistan ret oranı ~%10 → (1-0.10)*0.35 = 0.315 baz katkı.
+    // Eski pipeline: raw=30 kapansa bile blend sonrası ~49'a çıkabiliyordu.
+    // Yeni pipeline: final min(calibrated, vetoCap) → ≤ 30.
+    const s = calculateScore(p({
+      hasSuspiciousLargeDeposit: true,
+      targetCountry: 'Yunanistan',
+    }));
+    expect(s).toBeLessThanOrEqual(30);
+  });
+
+  test('final skor overstay tavanını aşamaz', () => {
+    const s = calculateScore(p({
+      noOverstayHistory: false,
+      targetCountry: 'Yunanistan',
+    }));
+    expect(s).toBeLessThanOrEqual(10);
   });
 });

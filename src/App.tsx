@@ -176,6 +176,7 @@ export default function App() {
     return 'Almanya';
   });
   const [onboardingProfile, setOnboardingProfile] = useState('');
+  const [onboardingCountryPickerOpen, setOnboardingCountryPickerOpen] = useState(false);
   const [isTermsOpen, setIsTermsOpen] = useState(false);
   const [isKvkkOpen, setIsKvkkOpen] = useState(false);
   const [isFaqOpen, setIsFaqOpen] = useState(false);
@@ -5227,18 +5228,69 @@ Signature: _______________     Date: ${today}`;
               {/* onboardingStep 0 veya 1 → profil seçimi (direkt /basla URL'i ya da sıfırlama sonrası fallback) */}
               {(onboardingStep === 0 || onboardingStep === 1) && (
                 <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }} className="space-y-8">
-                  {/* Geri + Ülke badge */}
-                  <div className="flex items-center gap-3">
+                  {/* Geri + Ülke değiştirici + (varsa) kaydedilmiş profile devam */}
+                  <div className="flex items-center gap-3 flex-wrap">
                     <button onClick={() => setStep('hero')}
                       className="p-2.5 rounded-xl text-slate-400 hover:text-brand-600 hover:bg-brand-50 transition-all duration-200">
                       <ArrowLeft className="w-4 h-4" />
                     </button>
-                    <div className="flex items-center gap-2 bg-white border border-slate-100 rounded-full px-4 py-2 shadow-sm">
-                      <span className="text-base">
-                        {({'Almanya':'🇩🇪','İngiltere':'🇬🇧','ABD':'🇺🇸','Fransa':'🇫🇷','Hollanda':'🇳🇱','İtalya':'🇮🇹','Yunanistan':'🇬🇷'} as Record<string,string>)[onboardingCountry] || '🌍'}
-                      </span>
-                      <span className="text-xs font-semibold text-slate-700">{onboardingCountry}</span>
+                    <div className="relative">
+                      <button
+                        type="button"
+                        onClick={() => setOnboardingCountryPickerOpen(v => !v)}
+                        title="Ülkeyi değiştir"
+                        className="flex items-center gap-2 bg-white border border-slate-100 rounded-full px-4 py-2 shadow-sm hover:border-brand-200 hover:shadow transition-all"
+                      >
+                        <span className="text-base">
+                          {({'Almanya':'🇩🇪','İngiltere':'🇬🇧','ABD':'🇺🇸','Fransa':'🇫🇷','Hollanda':'🇳🇱','İtalya':'🇮🇹','Yunanistan':'🇬🇷'} as Record<string,string>)[onboardingCountry] || '🌍'}
+                        </span>
+                        <span className="text-xs font-semibold text-slate-700">{onboardingCountry}</span>
+                        <ChevronDown className={`w-3 h-3 text-slate-400 transition-transform ${onboardingCountryPickerOpen ? 'rotate-180' : ''}`} />
+                      </button>
+                      {onboardingCountryPickerOpen && (
+                        <div className="absolute top-full mt-2 left-0 z-20 bg-white border border-slate-200 rounded-2xl shadow-xl p-2 w-56 max-h-72 overflow-y-auto">
+                          {([
+                            { label: 'Almanya',    flag: '🇩🇪' },
+                            { label: 'İngiltere',  flag: '🇬🇧' },
+                            { label: 'ABD',        flag: '🇺🇸' },
+                            { label: 'Fransa',     flag: '🇫🇷' },
+                            { label: 'Hollanda',   flag: '🇳🇱' },
+                            { label: 'İtalya',     flag: '🇮🇹' },
+                            { label: 'Yunanistan', flag: '🇬🇷' },
+                          ]).map(({ label, flag }) => (
+                            <button
+                              key={label}
+                              type="button"
+                              onClick={() => {
+                                setOnboardingCountry(label);
+                                // Sadece targetCountry güncellenir — diğer form cevapları korunur.
+                                setProfile(prev => ({ ...prev, targetCountry: label }));
+                                setOnboardingCountryPickerOpen(false);
+                              }}
+                              className={`w-full flex items-center gap-2 px-3 py-2 rounded-xl text-left text-sm transition-colors ${
+                                label === onboardingCountry
+                                  ? 'bg-brand-50 text-brand-700 font-semibold'
+                                  : 'text-slate-700 hover:bg-slate-50'
+                              }`}
+                            >
+                              <span className="text-base">{flag}</span>
+                              <span>{label}</span>
+                              {label === onboardingCountry && <CheckCircle2 className="w-3.5 h-3.5 text-brand-600 ml-auto" />}
+                            </button>
+                          ))}
+                        </div>
+                      )}
                     </div>
+                    {hasSavedProfile && (
+                      <button
+                        type="button"
+                        onClick={() => setStep('assessment')}
+                        className="ml-auto text-xs font-semibold text-brand-600 hover:text-brand-700 hover:underline"
+                        title="Eski cevaplarınla devam et"
+                      >
+                        Kaydedilmiş profille devam et →
+                      </button>
+                    )}
                   </div>
 
                   <div>
@@ -5314,13 +5366,18 @@ Signature: _______________     Date: ${today}`;
                     </div>
 
                     <div>
-                      <div className={`text-7xl sm:text-8xl font-bold score-num ${
+                      <div className={`text-6xl sm:text-7xl font-bold score-num ${
                         currentScore >= 82 ? 'text-emerald-500' :
                         currentScore >= 65 ? 'text-amber-500' : 'text-rose-500'
                       }`}>
-                        %{currentScore}
+                        %{currentConfidence.low}–%{currentConfidence.high}
                       </div>
-                      <p className="text-xs text-slate-400 mt-3 font-light">Tahmini onay ihtimali</p>
+                      <p className="text-xs text-slate-400 mt-3 font-light">
+                        Tahmini onay aralığı · {currentConfidence.label.toLowerCase()} güven
+                      </p>
+                      <p className="text-[11px] text-slate-400 mt-2 font-light max-w-sm mx-auto leading-relaxed">
+                        Bu bir istatistiksel tahmindir. Konsolosluk kararı bağlayıcıdır.
+                      </p>
                     </div>
 
                     {/* Status badge */}
