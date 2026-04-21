@@ -98,8 +98,10 @@ export interface ProfileData {
   strategyRoute: string[];
 
   // ── Algoritma v3.0 Ek Alanlar ─────────────────────────────────────────
-  lastVisaYear: number;       // #1 Temporal: son vizenin yılı (0 = bilinmiyor)
-  lastRejectionYear: number;  // #1 Temporal: son reddin yılı (0 = red yok)
+  // lastVisaYear / lastRejectionYear sentinel değerleri için EVENT_YEAR
+  // enum'u ve isEventYearNone / isEventYearUnknown yardımcıları: src/scoring/algorithms.ts
+  lastVisaYear: number;       // EVENT_YEAR.NONE=-1 (hiç yok) | EVENT_YEAR.UNKNOWN=0 | >0 gerçek yıl
+  lastRejectionYear: number;  // EVENT_YEAR.NONE=-1 (ret yok) | EVENT_YEAR.UNKNOWN=0 | >0 gerçek yıl
   applicantAge: number;       // #2 Context: başvurucu yaşı (0 = belirtilmedi)
 
   // ── Form/UI Alanları ──────────────────────────────────────────────────
@@ -122,6 +124,15 @@ export interface ProfileData {
   // Kullanıcının daha önce ziyaret ettiği vizesiz ülkeler (isim listesi).
   // Algoritma maksimum scoreBoost değerine göre +0/+1/+2 ham puan ekler.
   visitedVisaFreeCountries?: string[];
+
+  // ── Cascade Kuralı (v3.9) — 15 Temmuz 2025 / C(2025) 4694 ────────────
+  // Son 3 yıl içinde kurallara uygun (overstay/ihlal yok) kullanılmış
+  // Schengen vize sayısı. AB Cascade kuralı bu sayıya göre kademeli
+  // daha uzun süreli MEV hakkı tanır:
+  //   1 → 6 ay MEV hakkı   | 2 → 1 yıl MEV   | 3+ → 3–5 yıl MEV
+  // Skorlama: hedef Schengen ise ve geçmiş temizse pozitif bonus.
+  // Undefined / 0 → bonus yok.
+  schengenVisasLast3Years?: number;
 }
 
 export interface Conflict {

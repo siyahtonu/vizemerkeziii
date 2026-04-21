@@ -3,7 +3,7 @@
 // calculateRawScore & calculateScore
 // ============================================================
 import { describe, test, expect } from 'vitest';
-import { calculateRawScore, calculateScore, computeVetoCap } from '../core';
+import { calculateRawScore, calculateScore, computeVetoCap, getCascadeStatus, isSchengenTarget } from '../core';
 import { BASE_PROFILE } from './fixtures';
 import type { ProfileData } from '../../types';
 
@@ -126,6 +126,35 @@ describe('calculateRawScore — temporal decay', () => {
     const recent = calculateRawScore(p({ hasPreviousRefusal: true, previousRefusalDisclosed: false, lastRejectionYear: thisYear - 1 }));
     expect(old).toBeGreaterThan(recent); // eski ret daha az ceza
   });
+
+  test('v3.8: 5 yıl önceki ret hâlâ belirgin ceza taşır (REFUSAL lambda=0.10)', () => {
+    // Eski lambda=0.35 ile 5 yıl önceki undisclosed ret cezası ~-3'e düşüyordu.
+    // Yeni lambda=0.10 ile decay ≈ 0.606 → penalty = round(20 * 0.606) = 12.
+    // Temiz profil ile arasında en az 8 puan fark olmalı (ret hâlâ ağırlıklı).
+    const clean = calculateRawScore(p({ hasPreviousRefusal: false, lastRejectionYear: -1 }));
+    const fiveYearOldRefusal = calculateRawScore(p({
+      hasPreviousRefusal: true, previousRefusalDisclosed: false,
+      lastRejectionYear: thisYear - 5,
+    }));
+    expect(clean - fiveYearOldRefusal).toBeGreaterThanOrEqual(8);
+  });
+
+  test('v3.8: vize onay decay < ret decay (retler daha yavaş erir)', () => {
+    // Onay 8 yıl önce → neredeyse unutulmuş.
+    // Ret 8 yıl önce → hâlâ hissedilir cezası var.
+    const oldVisaOnly = calculateRawScore(p({
+      hasHighValueVisa: true, lastVisaYear: thisYear - 8,
+      hasPreviousRefusal: false,
+    }));
+    const oldRefusalOnly = calculateRawScore(p({
+      hasHighValueVisa: false, lastVisaYear: -1,
+      hasPreviousRefusal: true, previousRefusalDisclosed: false,
+      lastRejectionYear: thisYear - 8,
+    }));
+    // 8 yaşındaki onay +4 puan civarı (20 * e^-1.6 ≈ 4).
+    // 8 yaşındaki ret -9 puan civarı (20 * e^-0.8 ≈ 9) — hâlâ ciddi ceza.
+    expect(oldRefusalOnly).toBeLessThan(oldVisaOnly - 10);
+  });
 });
 
 // ── Context Multiplier (Bağ Cezası) ──────────────────────────────────────────
@@ -239,5 +268,105 @@ describe('computeVetoCap & final pipeline tavanı', () => {
       targetCountry: 'Yunanistan',
     }));
     expect(s).toBeLessThanOrEqual(10);
+  });
+});
+
+// ── Cascade Kuralı (v3.9 — C(2025) 4694) ─────────────────────────────────
+describe('Cascade kuralı (getCascadeStatus)', () => {
+  test('isSchengenTarget: Schengen ülkeleri ayırt edilir', () => {
+    expect(isSchengenTarget('Almanya')).toBe(true);
+    expect(isSchengenTarget('Yunanistan')).toBe(true);
+    expect(isSchengenTarget('İngiltere')).toBe(false);
+    expect(isSchengenTarget('ABD')).toBe(false);
+  });
+
+  test('non-Schengen hedef → eligible=false, bonus=0', () => {
+    const st = getCascadeStatus(p({
+      targetCountry: 'ABD', schengenVisasLast3Years: 3,
+    }));
+    expect(st.eligible).toBe(false);
+    expect(st.bonus).toBe(0);
+    expect(st.disqualifier).toBe('non_schengen');
+  });
+
+  test('schengenVisasLast3Years = 0 veya tanımsız → bonus=0', () => {
+    expect(getCascadeStatus(p({ targetCountry: 'Almanya' })).bonus).toBe(0);
+    expect(getCascadeStatus(p({ targetCountry: 'Almanya', schengenVisasLast3Years: 0 })).bonus).toBe(0);
+  });
+
+  test('2 yasal Schengen + temiz → tier 3, bonus=7', () => {
+    const st = getCascadeStatus(p({
+      targetCountry: 'İtalya',
+      schengenVisasLast3Years: 2,
+      noOverstayHistory: true,
+      hasPreviousRefusal: false,
+    }));
+    expect(st.eligible).toBe(true);
+    expect(st.tier).toBe(3);
+    expect(st.bonus).toBe(7);
+  });
+
+  test('3+ yasal Schengen → tier 4, bonus=10', () => {
+    const st = getCascadeStatus(p({
+      targetCountry: 'Almanya',
+      schengenVisasLast3Years: 4,
+      noOverstayHistory: true,
+      hasPreviousRefusal: false,
+    }));
+    expect(st.tier).toBe(4);
+    expect(st.bonus).toBe(10);
+  });
+
+  test('overstay cascade haklarını iptal eder (eligible=false, bonus=0)', () => {
+    const st = getCascadeStatus(p({
+      targetCountry: 'İtalya',
+      schengenVisasLast3Years: 3,
+      noOverstayHistory: false,
+    }));
+    expect(st.eligible).toBe(false);
+    expect(st.bonus).toBe(0);
+    expect(st.disqualifier).toBe('overstay');
+  });
+
+  test('gizlenmiş ret → eligible=false', () => {
+    const st = getCascadeStatus(p({
+      targetCountry: 'İtalya',
+      schengenVisasLast3Years: 2,
+      hasPreviousRefusal: true,
+      previousRefusalDisclosed: false,
+    }));
+    expect(st.eligible).toBe(false);
+    expect(st.disqualifier).toBe('refusal');
+  });
+
+  test('beyan edilmiş ret bonusu yarıya indirir (2 Schengen: 7 → 4)', () => {
+    const st = getCascadeStatus(p({
+      targetCountry: 'İtalya',
+      schengenVisasLast3Years: 2,
+      hasPreviousRefusal: true,
+      previousRefusalDisclosed: true,
+    }));
+    expect(st.eligible).toBe(true);
+    expect(st.bonus).toBe(4); // Math.round(7/2)
+  });
+
+  test('calculateRawScore: 2 Schengen kullanımı skoru belirgin artırır (+≥6)', () => {
+    const clean  = calculateRawScore(p({
+      targetCountry: 'Almanya', schengenVisasLast3Years: 0,
+    }));
+    const cascade = calculateRawScore(p({
+      targetCountry: 'Almanya', schengenVisasLast3Years: 2,
+    }));
+    expect(cascade - clean).toBeGreaterThanOrEqual(6);
+  });
+
+  test('calculateScore: non-Schengen hedefte cascade bonusu uygulanmaz', () => {
+    const withField = calculateScore(p({
+      targetCountry: 'ABD', schengenVisasLast3Years: 3,
+    }));
+    const without   = calculateScore(p({
+      targetCountry: 'ABD', schengenVisasLast3Years: 0,
+    }));
+    expect(withField).toBe(without);
   });
 });

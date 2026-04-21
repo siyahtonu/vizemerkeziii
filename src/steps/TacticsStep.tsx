@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import type { ProfileData } from '../types';
 import { askPersonalTactics, type PersonalTactic } from '../lib/ai';
+import { getCascadeStatus } from '../scoring/core';
 
 interface Props {
   onNavigate: (step: string) => void;
@@ -127,7 +128,7 @@ const TACTICS: Tactic[] = [
     icon: Info,
     title: '13. Zamanlama: Yoğun Sezonu Kaçır',
     desc: 'Konsolosluklar yaz aylarında (Mayıs-Ağustos) iş yükü artınca derinlemesine inceleme yerine yüzeysel kararlar verir — bu güçlü profiller için dezavantaj. Eylül-Kasım ve Şubat-Nisan pencereleri "derin inceleme" modunda geçer; hazırlıklı profiller bu aylarda +5-8% avantaj elde eder. Zamanlama Analizi aracı aylık pencere skorunu gösterir.',
-    impact: 'Mevsimsellik çarpanı: ×0.92 — ×1.08 (final skorun %8\'i)',
+    impact: 'Mevsimsellik çarpanı: ×0.97 — ×1.03 (final skorun ~%3\'ü)',
     source: 'scoring/seasonal.ts · getSeasonalMultiplier',
     color: 'cyan',
   },
@@ -199,6 +200,40 @@ export function TacticsStep({ onNavigate, profile }: Props) {
           <strong> veri kaynağı</strong> gösterilir — gönül rahatlığıyla uygulayın.
         </p>
       </div>
+
+      {/* Cascade MEV stratejisi — sadece eligible profillerde (v3.9) */}
+      {(() => {
+        const cs = getCascadeStatus(profile);
+        if (!cs.eligible) return null;
+        const tierLabel =
+          cs.tier === 4 ? '5 yıllık çok girişli' :
+          cs.tier === 3 ? '3 yıllık çok girişli' :
+          cs.tier === 2 ? '1 yıllık çok girişli' :
+                          '6 aylık çok girişli';
+        return (
+          <div className="rounded-2xl border border-emerald-200 bg-emerald-50/50 p-6">
+            <p className="text-xs uppercase tracking-wider font-semibold text-emerald-700 mb-2 flex items-center gap-1.5">
+              <span>🪜</span> Cascade Stratejisi
+            </p>
+            <h3 className="text-lg font-bold text-emerald-900 mb-2">
+              Bir sonraki hedef: {tierLabel} Schengen vizesi
+            </h3>
+            <p className="text-sm text-slate-700 leading-relaxed">
+              Önceki Schengen vizelerinizi kurallara uygun kullandığınız için C(2025) 4694
+              cascade kuralı kapsamındasınız. Bu başvuruda konsolosluk bir sonraki kademedeki
+              çok girişli vizeyi vermekle <strong>yükümlüdür</strong> — tek giriş vize verirse
+              itiraz hakkınız doğar. Dilekçenizde "cascade hakkım çerçevesinde {tierLabel} vize
+              talep ediyorum" ifadesini açıkça belirtin.
+            </p>
+            <a
+              href="/blog/cascade-kurali-schengen-vizesi"
+              className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700 hover:underline mt-3"
+            >
+              Cascade rehberini oku → /blog/cascade-kurali
+            </a>
+          </div>
+        );
+      })()}
 
       {/* Kişiye Özel Taktikler (Claude) */}
       <div className="rounded-2xl border border-indigo-100 bg-gradient-to-br from-indigo-50/60 to-white p-6 space-y-4">

@@ -9,6 +9,7 @@ import ScoreStory from '../components/ScoreStory';
 import BenchmarkCard from '../components/BenchmarkCard';
 import { useCountUp } from '../hooks/useCountUp';
 import { ScoreRadarMini } from '../components/ScoreRadarMini';
+import { isSchengenTarget, getCascadeStatus } from '../scoring/core';
 
 interface ActionItem {
   title: string;
@@ -561,9 +562,63 @@ export function AssessmentStep({
                         </p>
                       )}
                     </div>
+
+                    {/* Cascade Kuralı — sadece Schengen hedefli başvurularda görünür (v3.9) */}
+                    {isSchengenTarget(profile.targetCountry) && (() => {
+                      const count  = profile.schengenVisasLast3Years ?? 0;
+                      const status = getCascadeStatus(profile);
+                      return (
+                        <div className="mt-4 bg-emerald-50/60 border border-emerald-200 rounded-2xl p-4">
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="text-base">🪜</span>
+                            <span className="text-sm font-bold text-emerald-900">Cascade Geçmişi</span>
+                            <span className="ml-auto text-[10px] text-emerald-500 bg-emerald-100 px-2 py-0.5 rounded-full">
+                              15 Tem 2025 · C(2025) 4694
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-slate-600 leading-relaxed mb-3">
+                            Son 3 yıl içinde kurallara uygun kullandığınız Schengen vizesi sayısı.
+                            Cascade kuralı bu sayıya göre kademeli daha uzun MEV hakkı tanır.
+                          </p>
+                          <div className="grid grid-cols-5 gap-1.5 mb-2">
+                            {[0, 1, 2, 3, 4].map(n => {
+                              const active = count === n || (n === 4 && count >= 4);
+                              return (
+                                <button
+                                  key={n}
+                                  type="button"
+                                  onClick={() => setProfile(prev => ({ ...prev, schengenVisasLast3Years: n }))}
+                                  className={`py-2 rounded-xl text-sm font-bold border transition-all ${
+                                    active
+                                      ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
+                                      : 'bg-white text-slate-600 border-slate-200 hover:border-emerald-300'
+                                  }`}
+                                >
+                                  {n === 4 ? '4+' : n}
+                                </button>
+                              );
+                            })}
+                          </div>
+                          <div className="text-[11px] text-slate-600 leading-relaxed">
+                            {status.eligible ? (
+                              <span>
+                                <strong className="text-emerald-700">{status.label}.</strong>{' '}
+                                Skorunuza <strong>+{status.bonus} ham puan</strong> bonus uygulandı.
+                              </span>
+                            ) : count > 0 ? (
+                              <span className="text-amber-700">{status.label}.</span>
+                            ) : (
+                              <span className="text-slate-500">
+                                Henüz kullanılmış Schengen vizeniz yoksa boş bırakın.
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
-  
+
                 {/* Puan Artırma Kılavuzu */}
                 {actionItems.length > 0 && (
                   <div className="space-y-3">

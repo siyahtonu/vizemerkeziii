@@ -41,6 +41,18 @@ export function overrideDifficultCountries(list: string[]): void {
   DIFFICULT_COUNTRIES = new Set(list);
 }
 
+// ── Schengen üye ülkeleri (Türk vatandaşları için geçerli 2026) ──────────
+// Cascade kuralı (C(2025) 4694) bu listede yer alan tüm ülkeler için
+// geçerlidir. Bir Schengen ülkesinin vizesi başka Schengen ülkesi için
+// kademeli hak kazandırır. İngiltere/ABD bu listede YOKTUR.
+export const SCHENGEN_COUNTRIES = new Set<string>([
+  'Almanya', 'Avusturya', 'Belçika', 'Çekya', 'Danimarka', 'Estonya',
+  'Finlandiya', 'Fransa', 'Hollanda', 'Hırvatistan', 'İspanya', 'İsveç',
+  'İsviçre', 'İtalya', 'İzlanda', 'Letonya', 'Liechtenstein', 'Litvanya',
+  'Lüksemburg', 'Macaristan', 'Malta', 'Norveç', 'Polonya', 'Portekiz',
+  'Slovakya', 'Slovenya', 'Yunanistan',
+]);
+
 // ── #4 Profil-Ülke Uyum Matrisi (v2 — tam matris) ────────────────────────
 // Mantık: Belirli profil × ülke kombinasyonları tarihsel olarak daha/az uyumlu.
 // Kaynak: Schengen Visa Statistics 2024-2026 + AB Komisyon segment raporları + uzman kalibrasyonu.

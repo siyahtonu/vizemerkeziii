@@ -4,10 +4,81 @@
 // ============================================================
 
 import type { ProfileData } from '../types';
-import { TR_REJECTION_RATES } from './matrices';
-import { temporalDecay, getReturnTieMultiplier, getProfileCountryFactor, getConsulateAdjustment, resolveSegment } from './algorithms';
+import { TR_REJECTION_RATES, SCHENGEN_COUNTRIES } from './matrices';
+import { temporalDecay, DECAY_LAMBDA, EVENT_YEAR, isEventYearNone, getReturnTieMultiplier, getProfileCountryFactor, getConsulateAdjustment, resolveSegment } from './algorithms';
 import { getSeasonalMultiplier } from './seasonal';
 import { getVisaFreeBonus } from '../data/countries';
+
+// ── Cascade Kuralı Yardımcıları (v3.9) ──────────────────────────────────
+// 15 Temmuz 2025'te yürürlüğe giren AB C(2025) 4694 düzenlemesi:
+// "Son 3 yılda kurallara uygun kullanılmış Schengen vizesi" varsa konsolosluk
+// bir sonraki başvuruda kademeli daha uzun MEV vermek ZORUNDA. Skorlama
+// bunu bona fide traveller sinyali olarak yansıtır.
+
+export interface CascadeStatus {
+  /** Cascade haklarından faydalanabilir mi? */
+  eligible: boolean;
+  /** Tahmini kademe: 0 = yok, 1 = 6 ay MEV, 2 = 1 yıl MEV, 3 = 3 yıl MEV, 4 = 5 yıl MEV */
+  tier: 0 | 1 | 2 | 3 | 4;
+  /** Neden eligible değil (eligible=false ise dolu) */
+  disqualifier?: 'non_schengen' | 'no_history' | 'overstay' | 'refusal' | 'pending';
+  /** Skor bonusu (ham puan) */
+  bonus: number;
+  /** İnsan okur açıklama */
+  label: string;
+}
+
+/** Hedef ülke Schengen üyesi mi? */
+export const isSchengenTarget = (country: string): boolean =>
+  SCHENGEN_COUNTRIES.has(country);
+
+/**
+ * Cascade kuralı uygunluk kontrolü ve kademe tahmini.
+ * Saf-fonksiyon: herhangi bir mutasyon yapmaz, rapor objesi döner.
+ */
+export const getCascadeStatus = (data: ProfileData): CascadeStatus => {
+  const count = data.schengenVisasLast3Years ?? 0;
+
+  if (!isSchengenTarget(data.targetCountry)) {
+    return { eligible: false, tier: 0, disqualifier: 'non_schengen', bonus: 0,
+             label: 'Cascade yalnız Schengen ülkeleri içindir' };
+  }
+  if (count <= 0) {
+    return { eligible: false, tier: 0, disqualifier: 'no_history', bonus: 0,
+             label: 'Son 3 yılda kullanılmış Schengen vizesi yok' };
+  }
+  // Overstay cascade haklarını sıfırlar (C(2025) 4694 temel şart).
+  if (!data.noOverstayHistory) {
+    return { eligible: false, tier: 0, disqualifier: 'overstay', bonus: 0,
+             label: 'Overstay geçmişi cascade haklarını iptal eder' };
+  }
+  // Beyan edilmemiş ret cascade güven zincirini kırar.
+  if (data.hasPreviousRefusal && !data.previousRefusalDisclosed) {
+    return { eligible: false, tier: 0, disqualifier: 'refusal', bonus: 0,
+             label: 'Gizlenmiş ret geçmişi cascade uygunluğunu bozar' };
+  }
+
+  // Tier & bonus haritası — konservatif; ampirik vaka sayısı az olduğu
+  // için band dar tutulur (max +10 ham puan).
+  let tier: CascadeStatus['tier'];
+  let bonus: number;
+  let label: string;
+  if (count >= 3) {
+    tier = 4; bonus = 10; label = '5 yıl MEV adayı — en yüksek kademe';
+  } else if (count === 2) {
+    tier = 3; bonus = 7;  label = '3 yıl MEV adayı — güçlü cascade profili';
+  } else {
+    tier = 2; bonus = 4;  label = '1 yıl MEV adayı — cascade başlangıç kademesi';
+  }
+
+  // Beyan edilmiş ret bonusu yarıya indirir (temiz zincir bozulmuş ama şeffaf).
+  if (data.hasPreviousRefusal && data.previousRefusalDisclosed) {
+    bonus = Math.round(bonus / 2);
+    label = `${label} (beyan edilmiş ret nedeniyle bonus azaltıldı)`;
+  }
+
+  return { eligible: true, tier, bonus, label };
+};
 
 // ============================================================
 // calculateRawScore: ülke kalibrasyonu öncesi ham skor (0-100)
@@ -115,14 +186,17 @@ export const calculateRawScore = (data: ProfileData, simValue: number = 0): numb
   // BÖLÜM 5: SEYAHAT GEÇMİŞİ (Maks 20 puan)
   // #1 Temporal Decay: eski vize/ret olayları zamanla daha az ağırlık taşır
   // ─────────────────────────────────────────────────────────
-  const visaDecay = temporalDecay(data.lastVisaYear, 0.20);
+  const visaDecay = temporalDecay(data.lastVisaYear, DECAY_LAMBDA.VISA);
   if (data.hasHighValueVisa) score += Math.round(20 * visaDecay);
   else if (data.hasOtherVisa) score += Math.round(12 * visaDecay);
   else if (data.travelHistoryNonVisa) score += 6;
 
   if (!data.noOverstayHistory) score -= 45; // Süre aşımı → neredeyse kesin ret
 
-  const refusalDecay = temporalDecay(data.lastRejectionYear, 0.35);
+  // Ret cezası onay'dan daha yavaş erir — konsolosluklar VIS kayıtlarında
+  // retleri uzun süre tutar; "2 yıl önceki ret artık önemli değil" illüzyonunu
+  // kırmak için REFUSAL lambda VISA'dan düşüktür (bkz. algorithms.ts yorumu).
+  const refusalDecay = temporalDecay(data.lastRejectionYear, DECAY_LAMBDA.REFUSAL);
   if (data.hasPreviousRefusal && !data.previousRefusalDisclosed) score -= Math.round(20 * refusalDecay);
   if (data.hasPreviousRefusal && data.previousRefusalDisclosed) score -= Math.round(5 * refusalDecay);
 
@@ -197,7 +271,7 @@ export const calculateRawScore = (data: ProfileData, simValue: number = 0): numb
       && data.highSavingsAmount
       && !isEliteTraveler
       && !data.travelHistoryNonVisa
-      && data.lastVisaYear === -1
+      && isEventYearNone(data.lastVisaYear)
       && activeTieCount <= 1
       && segment !== 'retired'
       && segment !== 'sponsor') {
@@ -223,11 +297,20 @@ export const calculateRawScore = (data: ProfileData, simValue: number = 0): numb
       && !data.isMarried
       && !data.hasChildren
       && !data.hasSgkJob
-      && data.lastVisaYear === -1
+      && isEventYearNone(data.lastVisaYear)
       && !data.travelHistoryNonVisa
       && (data.targetCountry === 'ABD' || data.targetCountry === 'İngiltere')) {
     score -= 3;
   }
+
+  // ─────────────────────────────────────────────────────────
+  // BÖLÜM 7.6: CASCADE KURALI (v3.9 — 15 Temmuz 2025 / C(2025) 4694)
+  // Son 3 yılda kurallara uygun kullanılmış Schengen vizesi olan
+  // başvurucular için "bona fide traveller" bonusu. Schengen hedefli
+  // başvurularda kademeli MEV hakkını skorda yansıtır.
+  // getCascadeStatus tüm overstay/ret/ülke kontrollerini yapar.
+  // ─────────────────────────────────────────────────────────
+  score += getCascadeStatus(data).bonus;
 
   // ─────────────────────────────────────────────────────────
   // BÖLÜM 8: VETO — Kritik eşik aşıldığında skoru zorla kırp
@@ -276,18 +359,23 @@ export const calculateScore = (data: ProfileData, simValue: number = 0): number 
   const blended = (raw / 100) * 0.65 + (1 - trRejRate) * 0.35;
   const countryFactor = getProfileCountryFactor(data);
 
-  // Konsolosluk kalibrasyonu: sadece applicantCity varsa uygula
+  // Konsolosluk kalibrasyonu (v3.1 → v3.8): sadece applicantCity varsa uygula
+  // Etki ±%10 ile sınırlı. Önceki ±%15 katsayısı TR_REJECTION_RATES (Katman 2)
+  // ile çift sayım riski taşıyordu — ülke ret oranı zaten konsolosluk
+  // katılığını kısmen içeriyor; bu katman sadece şehir ince ayarı yapmalı.
   let consulateFactor = 1.0;
   if (data.applicantCity) {
     const adj = getConsulateAdjustment(data);
     if (adj.profile !== null) {
-      consulateFactor = 0.85 + 0.15 * adj.totalMultiplier;
+      consulateFactor = 0.90 + 0.10 * adj.totalMultiplier;
     }
   }
 
-  // Mevsimsellik kalibrasyonu (v3.2): applyMonth tanımlıysa uygula
-  // Ağırlık: final skorda %8 belirleyici (hafif sinyal)
-  // Formül: 0.92 (base) + 0.08 × seasonalMultiplier
+  // Mevsimsellik kalibrasyonu (v3.2 → v3.8): applyMonth tanımlıysa uygula
+  // Ağırlık: final skorda ±%3 belirleyici (düşük sinyal).
+  // Formül: 0.97 (base) + 0.03 × seasonalMultiplier
+  // Not: Önceki ±%8 band literatüre göre (Schengen aylık ret farkı ~%2-3)
+  // agresifti; tahminde sahte hassasiyete yol açıyordu.
   let seasonalFactor = 1.0;
   if (data.applyMonth) {
     const sm = getSeasonalMultiplier(
@@ -296,7 +384,7 @@ export const calculateScore = (data: ProfileData, simValue: number = 0): number 
       data.applyMonth,
       data.applyYear,
     );
-    seasonalFactor = 0.92 + 0.08 * sm;
+    seasonalFactor = 0.97 + 0.03 * sm;
   }
 
   const calibrated = Math.round(blended * countryFactor * consulateFactor * seasonalFactor * 100);
@@ -335,7 +423,7 @@ export const calculateScoreDetailed = (data: ProfileData, simValue = 0): ScoreBr
   if (data.applicantCity) {
     const adj = getConsulateAdjustment(data);
     if (adj.profile) {
-      consulateFactor  = 0.85 + 0.15 * adj.totalMultiplier;
+      consulateFactor  = 0.90 + 0.10 * adj.totalMultiplier;
       consulateCity    = adj.resolvedCity;
       consulateMood    = adj.profile.mood;
       consulateWaitDays = adj.profile.appointmentWaitDays;
@@ -350,7 +438,7 @@ export const calculateScoreDetailed = (data: ProfileData, simValue = 0): ScoreBr
       data.applyMonth,
       data.applyYear,
     );
-    seasonalFactor = 0.92 + 0.08 * sm;
+    seasonalFactor = 0.97 + 0.03 * sm;
   }
 
   const calibrated = Math.round(blendedScore * countryFactor * consulateFactor * seasonalFactor * 100);

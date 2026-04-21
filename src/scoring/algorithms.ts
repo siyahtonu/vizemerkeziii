@@ -10,19 +10,42 @@ import type { ConsulateProfile, ProfileSegment, ConsulateCity } from './matrices
 // ── #1 Temporal Decay (Zamansal Ağırlık) ─────────────────────────────────
 // Mantık: Konsoloslar eski vizelere yeni vizeler kadar değer vermez.
 // Formül: weight = e^(-lambda * yearsAgo)
-// lambda=0.20 → 5 yıl: %37 ağırlık | 10 yıl: %14 ağırlık
-// lambda=0.35 → 3 yıl: %35 ağırlık | 5 yıl: %17 ağırlık (ret cezası için)
 //
-// eventYear konvansiyonu:
-//   -1 = "hiç yok" (ilk başvuru / temiz geçmiş) → 0.0 ağırlık
-//    0 = "bilinmiyor / girilmedi" → ~5 yıl önce varsayımı (yarı ağırlık)
-//   >0 = gerçek yıl → exp decay
-// Bilinmiyen yıl için tam ağırlık uygulamak, kullanıcıyı yıl girmediği için
+// Olay türüne göre lambda sabitleri (DECAY_LAMBDA):
+//   VISA     = 0.20 → 5 yıl: %37 | 10 yıl: %14  (onay geçmişi orta hızda erir)
+//   REFUSAL  = 0.10 → 5 yıl: %61 | 10 yıl: %37  (ret VIS'te kalır — yavaş erir)
+//   OVERSTAY = -   → decay kullanılmaz (overstay kalıcı kırmızı bayrak,
+//                    core.ts'de sabit -45 veto uygulanır)
+//
+// eventYear konvansiyonu (EVENT_YEAR sabitine bakın):
+//   NONE    (-1) = "hiç yok" (ilk başvuru / temiz geçmiş) → 0.0 ağırlık
+//   UNKNOWN ( 0) = "bilinmiyor / girilmedi" → ~5 yıl önce varsayımı (yarı ağırlık)
+//   >0           = gerçek yıl → exp decay
+// Bilinmeyen yıl için tam ağırlık uygulamak, kullanıcıyı yıl girmediği için
 // maksimum cezayla karşılaştırırdı. Konservatif 5-yıl varsayımı adil denge.
-export const temporalDecay = (eventYear: number, lambda = 0.20): number => {
-  if (eventYear < 0) return 0.0; // -1 = "hiç yok" → sıfır ağırlık
-  if (!eventYear || eventYear === 0) {
-    return Math.exp(-lambda * 5); // bilinmiyor → 5 yıl önce varsay
+export const DECAY_LAMBDA = {
+  VISA:    0.20,
+  REFUSAL: 0.10,
+} as const;
+
+// ── Olay yılı sentinel değerleri ─────────────────────────────────────────
+// ProfileData.lastVisaYear ve lastRejectionYear'da kullanılır.
+// Magic number yerine isimlendirilmiş sabit — UI ve skorlama call site'ları
+// ortak referans olarak bunu kullanır.
+export const EVENT_YEAR = {
+  NONE:    -1, // hiç yok
+  UNKNOWN:  0, // bilinmiyor / girilmedi
+} as const;
+
+/** EVENT_YEAR.NONE durumunu kontrol eder (hiç vize / ret yok). */
+export const isEventYearNone    = (y: number): boolean => y === EVENT_YEAR.NONE;
+/** EVENT_YEAR.UNKNOWN durumunu kontrol eder (girilmemiş). */
+export const isEventYearUnknown = (y: number): boolean => y === EVENT_YEAR.UNKNOWN;
+
+export const temporalDecay = (eventYear: number, lambda: number = DECAY_LAMBDA.VISA): number => {
+  if (isEventYearNone(eventYear)) return 0.0;          // -1 = "hiç yok" → sıfır ağırlık
+  if (isEventYearUnknown(eventYear)) {
+    return Math.exp(-lambda * 5);                       // bilinmiyor → 5 yıl önce varsay
   }
   const yearsAgo = Math.max(0, new Date().getFullYear() - eventYear);
   return Math.exp(-lambda * yearsAgo);
@@ -108,7 +131,7 @@ export const explainConfidence = (data: ProfileData, finalScore: number): Confid
 
   const noTravelSignal =
     !data.hasHighValueVisa && !data.hasOtherVisa && !data.travelHistoryNonVisa
-    && data.lastVisaYear === 0 && data.lastRejectionYear === 0;
+    && isEventYearUnknown(data.lastVisaYear) && isEventYearUnknown(data.lastRejectionYear);
   if (noTravelSignal) {
     reasons.push({ key: 'no_travel_history', text: 'Seyahat geçmişi belirtilmemiş; profil sinyali zayıf kaldı.' });
   }

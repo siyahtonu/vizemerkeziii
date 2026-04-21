@@ -15,6 +15,7 @@ import type { ProfileData } from '../types';
 import type { CountryWarning } from '../lib/scoringV2';
 import { apiUrl } from '../lib/api';
 import { explainConfidence } from '../scoring/algorithms';
+import { getCascadeStatus } from '../scoring/core';
 import { ProfileRadarChart } from '../components/ProfileRadarChart';
 import { CountryRanking } from '../components/CountryRanking';
 import { WhatIfSimulator } from '../components/WhatIfSimulator';
@@ -393,6 +394,32 @@ export function DashboardStep({
                       <p className="text-[11px] text-slate-400 leading-relaxed mt-3">
                         Bu bir istatistiksel tahmindir. Konsolosluk kararı bağlayıcıdır.
                       </p>
+
+                      {/* Cascade rozeti — Schengen + eligible profil (v3.9) */}
+                      {(() => {
+                        const cs = getCascadeStatus(profile);
+                        if (!cs.eligible) return null;
+                        const tierLabel =
+                          cs.tier === 4 ? '5 yıl MEV'  :
+                          cs.tier === 3 ? '3 yıl MEV'  :
+                          cs.tier === 2 ? '1 yıl MEV'  :
+                                          '6 ay MEV';
+                        return (
+                          <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50/70 px-4 py-3 flex items-start gap-3">
+                            <span className="text-xl leading-none mt-0.5">🪜</span>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-bold text-emerald-900">
+                                Cascade Profili · Hedef kademe: {tierLabel}
+                              </p>
+                              <p className="text-[11px] text-emerald-800/80 leading-relaxed mt-0.5">
+                                15 Temmuz 2025 / C(2025) 4694 uyarınca önceki kurallara uygun Schengen
+                                kullanımınız sizi uzun süreli çok girişli vize adayı yapar. Taktikler
+                                ekranında "MEV stratejisi" yolunu inceleyin.
+                              </p>
+                            </div>
+                          </div>
+                        );
+                      })()}
 
                       {/* Öncelikli adımlar */}
                       {actionItems.length > 0 && currentScore < 82 && (

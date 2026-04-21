@@ -9,6 +9,7 @@ import paymentRouter from './payment.js';
 import appointmentRouter from './appointmentWatcher.js';
 import outcomesRouter from './outcomes.js';
 import contactRouter from './contact.js';
+import ratesRouter from './rates.js';
 
 const app = express();
 app.use(express.json());
@@ -89,6 +90,12 @@ app.use('/api/outcomes', outcomesRouter);
 
 // ── İletişim formu ────────────────────────────────────────
 app.use('/api/contact', contactRouter);
+
+// ── Ret oranı canlı güncelleme ────────────────────────────
+// GET public; POST admin (x-admin-secret) — public/data/countries.json'ı
+// kod deploy'u olmadan güncellemek için. Frontend boot'ta zaten bu
+// JSON'u fetch ediyor (useCountryRates hook'u).
+app.use('/api/rates', ratesRouter);
 
 // ── Sağlık kontrolü ───────────────────────────────────────
 app.get('/api/health', (_req, res) => {

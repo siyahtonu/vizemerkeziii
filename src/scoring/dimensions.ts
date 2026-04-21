@@ -3,7 +3,8 @@
 // Her boyut bağımsız 0-100 değer döndürür
 // ============================================================
 import type { ProfileData } from '../types';
-import { temporalDecay, resolveSegment } from './algorithms';
+import { temporalDecay, DECAY_LAMBDA, resolveSegment } from './algorithms';
+import { getCascadeStatus } from './core';
 
 export interface DimensionScores {
   financial:    number; // Finansal güç
@@ -91,12 +92,12 @@ export function getTravelScore(data: ProfileData): number {
   if (!data.noOverstayHistory) return 0; // veto
 
   let pts = 0;
-  const vDecay = temporalDecay(data.lastVisaYear, 0.20);
+  const vDecay = temporalDecay(data.lastVisaYear, DECAY_LAMBDA.VISA);
   if (data.hasHighValueVisa)       pts += Math.round(20 * vDecay);
   else if (data.hasOtherVisa)      pts += Math.round(12 * vDecay);
   else if (data.travelHistoryNonVisa) pts += 6;
 
-  const rDecay = temporalDecay(data.lastRejectionYear, 0.35);
+  const rDecay = temporalDecay(data.lastRejectionYear, DECAY_LAMBDA.REFUSAL);
   if (data.hasPreviousRefusal && !data.previousRefusalDisclosed) pts -= Math.round(10 * rDecay);
   if (data.hasPreviousRefusal &&  data.previousRefusalDisclosed) pts -= Math.round(3  * rDecay);
 
@@ -106,6 +107,9 @@ export function getTravelScore(data: ProfileData): number {
     else if (data.hasHighValueVisa || data.hasOtherVisa) pts += 2;
     else if (data.travelHistoryNonVisa) pts += 1;
   }
+
+  // v3.9: Cascade sinyali seyahat eksenine doğrudan yansır (max +5)
+  pts += Math.min(5, Math.round(getCascadeStatus(data).bonus / 2));
 
   return Math.max(0, Math.min(100, Math.round((pts / TRAVEL_MAX) * 100)));
 }

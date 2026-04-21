@@ -229,7 +229,7 @@ const SeasonalRiskWidget: React.FC<Props> = ({
       {/* Footer: Sezonsal Çarpan */}
       <div className="mx-4 mt-3 mb-4 flex items-center justify-between text-[10px] text-slate-400">
         <span>Sezonsal çarpan: ×{advice.seasonalMultiplier.toFixed(3)}</span>
-        <span>Skor etkisi: {advice.seasonalMultiplier >= 1 ? '+' : ''}{Math.round((advice.seasonalMultiplier - 1) * 100 * 0.08)}%</span>
+        <span>Skor etkisi: {advice.seasonalMultiplier >= 1 ? '+' : ''}{Math.round((advice.seasonalMultiplier - 1) * 100 * 0.03)}%</span>
       </div>
 
     </div>

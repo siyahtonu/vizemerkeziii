@@ -227,11 +227,22 @@ function getCountryInfo(country: string): CountryInfo {
 // ── Ana Algoritma ──────────────────────────────────────────────────────────
 
 /**
+ * R-2077 faktör breakdown'ı.
+ *
+ * ÖNEMLİ: Bu fonksiyon artık ikinci bir "headline skor" üretmez.
+ *   - `overallScore` / `approvalChance` doğrudan `currentScore`'dan türer
+ *     (veto varsa 45'e kırpılır). Yani `calculateScore` tek gerçek sayıdır.
+ *   - R-2077 faktörleri (n=2077 ampirik ağırlıklar) yalnızca breakdown,
+ *     issues listesi ve tool action'ları üretmek için çalışır.
+ *
+ * Bu tasarım, kullanıcının iki farklı sayı (dashboard skoru vs. widget skoru)
+ * görme riskini elimine eder. Geçmişte blend/forced-consistency ile aynı hizada
+ * tutulmaya çalışılıyordu; artık tasarımen tek kaynak.
+ *
  * @param profile        Kullanıcı profil verisi
- * @param currentScore   Mevcut kalibre edilmiş skor (calculateScore çıktısı, 0-100).
- *                       Verilirse iki algoritma ağırlıklı blend ile tutarlı hale getirilir.
+ * @param currentScore   calculateScore çıktısı (0-100). Zorunlu — headline sayı buradan gelir.
  */
-export function calculateRejectionRisk(profile: ProfileData, currentScore?: number): RejectionRiskResult {
+export function calculateRejectionRisk(profile: ProfileData, currentScore: number): RejectionRiskResult {
   const factors: FactorScore[] = [];
   const vetoes: string[] = [];
   const segment = resolveSegment(profile);
@@ -598,24 +609,13 @@ export function calculateRejectionRisk(profile: ProfileData, currentScore?: numb
   // kalibre edilmiş, ülke ret oranını içeriyor — tek gerçek sayı o.
   //
   // R-2077'nin görevi: faktör breakdown'ı (hangi alan güçlü/zayıf).
-  // Headline skor her zaman currentScore'dan türer.
+  // Headline skor her zaman currentScore'dan türer; veto durumunda 45'e bastırılır.
   //
-  // currentScore verilirse → doğrudan kullan (tutarlılık)
-  // currentScore verilmezse → R-2077 ham skoru kullan (standalone mod)
+  // countryModifier yalnızca UI gösterimi için (breakdown'da "ülke zorluk" işareti).
+  // Skoru tekrar blend'lemez.
 
-  const rawScore = factors.reduce((sum, f) => sum + f.weighted, 0);
-  const countryMod = getCountryModifier(profile.targetCountry ?? '');
-  const riskRawScore = clamp(Math.round(rawScore * countryMod));
-
-  // finalScore = tek gerçek sayı, iki ekranda da aynı görünür
-  const baseScore = currentScore !== undefined ? currentScore : riskRawScore;
-
-  // Veto koşulları: sahte rezervasyon / süre aşımı / ret gizleme → skor bastırılır
   const hasVeto = vetoes.length > 0;
-  const finalScore = hasVeto ? Math.min(baseScore, 45) : baseScore;
-
-  // approvalChance = finalScore ile birebir aynı
-  // (currentScore zaten onay olasılığını temsil ediyor)
+  const finalScore = clamp(hasVeto ? Math.min(currentScore, 45) : currentScore);
   const approvalChance = finalScore;
 
   // Risk seviyesi — finalScore eşiklerine göre
@@ -673,7 +673,7 @@ export function calculateRejectionRisk(profile: ProfileData, currentScore?: numb
     factors,
     vetoes,
     topActions,
-    countryModifier: countryMod,
+    countryModifier: getCountryModifier(profile.targetCountry ?? ''),
     countryInfo: getCountryInfo(profile.targetCountry ?? ''),
     summary,
   };
