@@ -475,6 +475,114 @@ export function AssessmentStep({
                       </div>
                     </div>
 
+                    {/* Pasaport Muafiyeti (v3.10) — yanlış kişiye yanlış umut satmamak için */}
+                    <div className="mt-4 bg-white border border-slate-200 rounded-2xl p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-sm font-bold text-slate-800">Pasaport Durumu</span>
+                        <span className="ml-auto text-[10px] text-slate-400">Muafiyet kontrolü</span>
+                      </div>
+                      <p className="text-[11px] text-slate-500 leading-relaxed mb-3">
+                        Yeşil pasaport veya çifte vatandaşlık varsa bazı ülkelere vize gerekmeyebilir. Doğru bilgi için aşağıyı işaretleyin.
+                      </p>
+                      <div className="space-y-2">
+                        <label className="flex items-start gap-2 cursor-pointer select-none">
+                          <input
+                            type="checkbox"
+                            checked={profile.hasGreenPassport === true}
+                            onChange={(e) => setProfile(prev => ({ ...prev, hasGreenPassport: e.target.checked }))}
+                            className="mt-0.5 w-4 h-4 accent-brand-600 rounded"
+                          />
+                          <span className="text-xs text-slate-700 leading-snug">
+                            <strong>Yeşil (hizmet) pasaportum var.</strong>
+                            <span className="text-slate-400"> — Schengen'e 90 gün vizesiz giriş hakkı</span>
+                          </span>
+                        </label>
+                        <label className="flex items-start gap-2 cursor-pointer select-none">
+                          <input
+                            type="checkbox"
+                            checked={profile.hasDualEuCitizenship === true}
+                            onChange={(e) => setProfile(prev => ({ ...prev, hasDualEuCitizenship: e.target.checked }))}
+                            className="mt-0.5 w-4 h-4 accent-brand-600 rounded"
+                          />
+                          <span className="text-xs text-slate-700 leading-snug">
+                            <strong>Çifte vatandaşlığım var.</strong>
+                            <span className="text-slate-400"> — Hedef ülke vatandaşıysam vize gerekmez</span>
+                          </span>
+                        </label>
+                        {profile.hasDualEuCitizenship && (
+                          <div className="ml-6 mt-1">
+                            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">İkinci vatandaşlık</label>
+                            <input
+                              type="text"
+                              placeholder="örn. Almanya, İngiltere, ABD"
+                              value={profile.dualCitizenshipCountry ?? ''}
+                              onChange={(e) => setProfile(prev => ({ ...prev, dualCitizenshipCountry: e.target.value || undefined }))}
+                              className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-800 outline-none focus:border-brand-400 transition-colors placeholder:text-slate-300"
+                            />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Cinsiyet + Askerlik (v3.10) — sadece 20-41 yaş + UK/ABD hedefinde anlamlı */}
+                    {profile.applicantAge >= 20 && profile.applicantAge <= 41
+                      && (profile.targetCountry === 'ABD' || profile.targetCountry === 'İngiltere') && (
+                      <div className="mt-4 bg-white border border-slate-200 rounded-2xl p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-sm font-bold text-slate-800">Askerlik Durumu</span>
+                          <span className="ml-auto text-[10px] text-slate-400">UK/ABD için anlamlı</span>
+                        </div>
+                        <p className="text-[11px] text-slate-500 leading-relaxed mb-3">
+                          UK ve ABD konsolosları, 20-41 yaş aralığındaki TR erkek başvuruculara askerlik durumunu dolaylı sorar
+                          (214(b) / V4.2 kategorisi). Beyan etmek sinyali netleştirir.
+                        </p>
+                        <div className="grid grid-cols-3 gap-2 mb-3">
+                          {(['male', 'female', 'other'] as const).map(g => (
+                            <button
+                              key={g}
+                              type="button"
+                              onClick={() => setProfile(prev => ({ ...prev, applicantGender: g }))}
+                              className={`px-3 py-2 rounded-xl text-xs font-semibold border transition-colors ${
+                                profile.applicantGender === g
+                                  ? 'bg-slate-900 text-white border-slate-900'
+                                  : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300'
+                              }`}
+                            >
+                              {g === 'male' ? 'Erkek' : g === 'female' ? 'Kadın' : 'Belirtmek istemiyorum'}
+                            </button>
+                          ))}
+                        </div>
+                        {profile.applicantGender === 'male' && (
+                          <div className="grid grid-cols-2 gap-2">
+                            {([
+                              { v: 'completed', label: 'Tamamladım' },
+                              { v: 'exempt',    label: 'Muafım' },
+                              { v: 'deferred',  label: 'Tecilli' },
+                              { v: 'active',    label: 'Profesyonel asker' },
+                            ] as const).map(opt => (
+                              <button
+                                key={opt.v}
+                                type="button"
+                                onClick={() => setProfile(prev => ({ ...prev, militaryStatus: opt.v }))}
+                                className={`px-3 py-2 rounded-xl text-xs font-semibold border transition-colors ${
+                                  profile.militaryStatus === opt.v
+                                    ? 'bg-brand-600 text-white border-brand-600'
+                                    : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300'
+                                }`}
+                              >
+                                {opt.label}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                        {profile.militaryStatus === 'deferred' && (
+                          <p className="text-[11px] text-amber-600 mt-2">
+                            Tecilli profilde konsolosluk "hizmetten kaçış" ihtimalini inceler. Niyet mektubunda net dönüş tarihi + aile/iş bağları vurgulanmalı.
+                          </p>
+                        )}
+                      </div>
+                    )}
+
                     {/* #16 Mesleki kıdem slider — işveren / çalışan için */}
                     {(applicantType === 'employer' || applicantType === 'employee' || applicantType === 'self') && (
                       <div className="mt-4 bg-white border border-slate-200 rounded-2xl p-4">

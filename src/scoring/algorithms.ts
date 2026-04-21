@@ -4,7 +4,7 @@
 // ============================================================
 
 import type { ProfileData } from '../types';
-import { PROFILE_COUNTRY_MATRIX, CONSULATE_MATRIX, CITY_TO_CONSULATE_ZONE } from './matrices';
+import { SEGMENT_FACTORS, CONSULATE_MATRIX, CITY_TO_CONSULATE_ZONE } from './matrices';
 import type { ConsulateProfile, ProfileSegment, ConsulateCity } from './matrices';
 
 // ── #1 Temporal Decay (Zamansal Ağırlık) ─────────────────────────────────
@@ -65,13 +65,13 @@ export const getReturnTieMultiplier = (ctx: ContextProfile): number => {
   return 1.0;
 };
 
-// ── #4 Profil-Ülke Faktörü ───────────────────────────────────────────────
-// resolveSegment kullanılır — önceki inline mantık sponsor+55+ durumunda
-// segmenti yanlışlıkla 'retired' ile ezebiliyordu.
-export const getProfileCountryFactor = (data: ProfileData): number => {
-  const country = data.targetCountry;
+// ── #4 Profil-Segment Faktörü (v3.10) ────────────────────────────────────
+// Önceki `getProfileCountryFactor` ülke sinyalini Katman 2 TR_REJECTION_RATES
+// ile çift sayıyordu (bkz. matrices.ts SEGMENT_FACTORS açıklaması).
+// Artık yalnız segment boyutu; ülke farkı base rate'te tek yerden gelir.
+export const getProfileSegmentFactor = (data: ProfileData): number => {
   const segment = resolveSegment(data);
-  return PROFILE_COUNTRY_MATRIX[segment]?.[country] ?? 1.0;
+  return SEGMENT_FACTORS[segment] ?? 1.0;
 };
 
 // ── #5 Eksik Veri Tespiti ─────────────────────────────────────────────────

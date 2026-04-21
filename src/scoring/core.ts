@@ -5,7 +5,7 @@
 
 import type { ProfileData } from '../types';
 import { TR_REJECTION_RATES, SCHENGEN_COUNTRIES } from './matrices';
-import { temporalDecay, DECAY_LAMBDA, EVENT_YEAR, isEventYearNone, getReturnTieMultiplier, getProfileCountryFactor, getConsulateAdjustment, resolveSegment } from './algorithms';
+import { temporalDecay, DECAY_LAMBDA, EVENT_YEAR, isEventYearNone, getReturnTieMultiplier, getProfileSegmentFactor, getConsulateAdjustment, resolveSegment } from './algorithms';
 import { getSeasonalMultiplier } from './seasonal';
 import { getVisaFreeBonus } from '../data/countries';
 
@@ -78,6 +78,26 @@ export const getCascadeStatus = (data: ProfileData): CascadeStatus => {
   }
 
   return { eligible: true, tier, bonus, label };
+};
+
+// ============================================================
+// Askerlik Durumu Sinyali (v3.10)
+// ============================================================
+// Saf fonksiyon: sinyal uygulanabilir mi kontrol eder, değilse 0 döner.
+// Yaş aralığı 20-41: askere alma çağı (21-41 yasal aralık; 20 son okul
+// mezuniyeti için buffer).
+export const getMilitaryStatusSignal = (data: ProfileData): number => {
+  if (data.applicantGender !== 'male') return 0;
+  if (data.applicantAge < 20 || data.applicantAge > 41) return 0;
+  if (data.targetCountry !== 'ABD' && data.targetCountry !== 'İngiltere') return 0;
+
+  switch (data.militaryStatus) {
+    case 'completed': return +2;
+    case 'exempt':    return +2;
+    case 'active':    return +2;
+    case 'deferred':  return -3;
+    default:          return 0; // 'n_a' veya tanımsız
+  }
 };
 
 // ============================================================
@@ -313,6 +333,19 @@ export const calculateRawScore = (data: ProfileData, simValue: number = 0): numb
   score += getCascadeStatus(data).bonus;
 
   // ─────────────────────────────────────────────────────────
+  // BÖLÜM 7.7: ASKERLİK DURUMU (v3.10)
+  // TR erkek başvurucular için UK/ABD konsolosları askerliğini henüz
+  // yapmamış adayları "hizmetten kaçış" kategorisinde işaretleyebilir
+  // (US: 214(b), UK: V4.2). Sinyal dar ölçekli:
+  //   • Sadece erkek + 20-41 yaş + hedef UK/ABD durumunda aktif
+  //   • tamamlandı/muaf: +2 (obligation fulfilled — bağ sinyali)
+  //   • tecilli:         -3 (göç riski şüphesi)
+  //   • profesyonel asker: +2 (public_sector benzeri kurumsal bağ)
+  // Kadın / 41+ / Schengen hedefi / bilgi yok → etki yok.
+  // ─────────────────────────────────────────────────────────
+  score += getMilitaryStatusSignal(data);
+
+  // ─────────────────────────────────────────────────────────
   // BÖLÜM 8: VETO — Kritik eşik aşıldığında skoru zorla kırp
   // v2.5: Son dakika mevduat Türklerde #1 ret sebebi (%43)
   // NOT: Aynı tavan pipeline'ın en sonunda da uygulanır — sonraki
@@ -340,36 +373,30 @@ export const computeVetoCap = (data: ProfileData): number => {
 // ============================================================
 // calculateScore: kalibre edilmiş final skor
 //
-// Pipeline:
+// Pipeline (v3.10 — ülke çift-sayımı ve konsolosluk çarpanı kaldırıldı):
 //   1. calculateRawScore       → ham profil puanı (0-100)
 //   2. Lineer kalibrasyon      → (raw/100)×0.65 + (1-trRejRate)×0.35
 //      (NOT: "Bayes" DEĞİL — ağırlıklı ortalama; posterior türetmiyor.
-//       Türkiye baz ret oranını profil puanına kademeli enjekte ediyor.)
-//   3. PROFILE_COUNTRY_MATRIX  → ülke × segment çarpanı
-//   4. CONSULATE_MATRIX (v3.1) → şehir × konsolosluk × segment kalibrasyonu
-//      (applicantCity tanımlıysa; yoksa bu adım atlanır → geriye uyumlu)
-//   5. SEASONAL_MULTIPLIER (v3.2) → ay × ülke × profil gücü kalibrasyonu
+//       Ülke sinyali TEK yerden burada giriyor: base rate.)
+//   3. SEGMENT_FACTORS         → profil segment çarpanı (ülke boyutu yok)
+//      (Eski PROFILE_COUNTRY_MATRIX n=2077 ile hücre başına ~13 gözlem
+//       istatistik gürültüsüydü ve Katman 2 ile çift sayıyordu.)
+//   4. SEASONAL_MULTIPLIER     → ay × ülke × profil gücü kalibrasyonu
 //      (applyMonth tanımlıysa; yoksa 1.0 → geriye uyumlu)
-//   6. VETO TAVAN (final)      → son dakika mevduat/overstay gibi kritik
+//   5. VETO TAVAN (final)      → son dakika mevduat/overstay gibi kritik
 //      kırmızı bayraklar hard ceiling olarak en sonda yeniden dayatılır.
+//
+// KALDIRILAN: Konsolosluk mood multiplier (v3.1-3.9). "İstanbul konsolosluğu
+// strict × 0.95" sabiti ampirik olarak savunulamıyordu (vaka başına <10 gözlem,
+// konsolosluk bazlı ret oranları zaten TR_REJECTION_RATES'e dâhil).
+// `getConsulateAdjustment` hâlâ UI'da bilgi amaçlı kullanılıyor (bekleme süresi,
+// mood göstergesi) ama final skorda çarpan değil.
 // ============================================================
 export const calculateScore = (data: ProfileData, simValue: number = 0): number => {
   const raw = calculateRawScore(data, simValue);
   const trRejRate = TR_REJECTION_RATES[data.targetCountry] ?? 0.15;
   const blended = (raw / 100) * 0.65 + (1 - trRejRate) * 0.35;
-  const countryFactor = getProfileCountryFactor(data);
-
-  // Konsolosluk kalibrasyonu (v3.1 → v3.8): sadece applicantCity varsa uygula
-  // Etki ±%10 ile sınırlı. Önceki ±%15 katsayısı TR_REJECTION_RATES (Katman 2)
-  // ile çift sayım riski taşıyordu — ülke ret oranı zaten konsolosluk
-  // katılığını kısmen içeriyor; bu katman sadece şehir ince ayarı yapmalı.
-  let consulateFactor = 1.0;
-  if (data.applicantCity) {
-    const adj = getConsulateAdjustment(data);
-    if (adj.profile !== null) {
-      consulateFactor = 0.90 + 0.10 * adj.totalMultiplier;
-    }
-  }
+  const segmentFactor = getProfileSegmentFactor(data);
 
   // Mevsimsellik kalibrasyonu (v3.2 → v3.8): applyMonth tanımlıysa uygula
   // Ağırlık: final skorda ±%3 belirleyici (düşük sinyal).
@@ -380,30 +407,36 @@ export const calculateScore = (data: ProfileData, simValue: number = 0): number 
   if (data.applyMonth) {
     const sm = getSeasonalMultiplier(
       data.targetCountry,
-      Math.round(blended * countryFactor * consulateFactor * 100),
+      Math.round(blended * segmentFactor * 100),
       data.applyMonth,
       data.applyYear,
     );
     seasonalFactor = 0.97 + 0.03 * sm;
   }
 
-  const calibrated = Math.round(blended * countryFactor * consulateFactor * seasonalFactor * 100);
+  const calibrated = Math.round(blended * segmentFactor * seasonalFactor * 100);
   const vetoCap = computeVetoCap(data);
   return Math.max(0, Math.min(100, Math.min(calibrated, vetoCap)));
 };
 
 // ============================================================
 // calculateScoreDetailed: Kalibrasyon katmanlarını ayrı döner
-// UI'da "Neden bu skor?" breakdownı için kullanılır
+// UI'da "Neden bu skor?" breakdownı için kullanılır.
+//
+// v3.10 değişiklikleri:
+//   • countryFactor → segmentFactor (ülke boyutu kaldırıldı)
+//   • consulateFactor kaldırıldı (çarpan değil)
+//   • consulateCity/Mood/WaitDays UI bilgi amaçlı tutuluyor
 // ============================================================
 export interface ScoreBreakdown {
   rawScore:        number;   // Ham profil puanı
   blendedScore:    number;   // Lineer kalibrasyon sonrası (0-1)
-  countryFactor:   number;   // Profil-ülke matrisi çarpanı
-  consulateFactor: number;   // Konsolosluk kalibrasyonu çarpanı
+  segmentFactor:   number;   // Profil segment çarpanı (v3.10)
   seasonalFactor:  number;   // Mevsimsellik kalibrasyonu çarpanı
   vetoCap:         number;   // Kritik kırmızı bayrak tavanı (son adımda uygulanır)
   finalScore:      number;   // Tüm katmanlar sonrası (0-100)
+  // UI bilgi alanları (skora dahil değil — kullanıcıya bekleme süresi /
+  // konsolosluk tutumu göstermek için; v3.10'dan itibaren çarpan değil)
   consulateCity:   string | null;
   consulateMood:   string | null;
   consulateWaitDays: number | null;
@@ -413,9 +446,8 @@ export const calculateScoreDetailed = (data: ProfileData, simValue = 0): ScoreBr
   const rawScore     = calculateRawScore(data, simValue);
   const trRejRate    = TR_REJECTION_RATES[data.targetCountry] ?? 0.15;
   const blendedScore = (rawScore / 100) * 0.65 + (1 - trRejRate) * 0.35;
-  const countryFactor = getProfileCountryFactor(data);
+  const segmentFactor = getProfileSegmentFactor(data);
 
-  let consulateFactor = 1.0;
   let consulateCity: string | null = null;
   let consulateMood: string | null = null;
   let consulateWaitDays: number | null = null;
@@ -423,7 +455,6 @@ export const calculateScoreDetailed = (data: ProfileData, simValue = 0): ScoreBr
   if (data.applicantCity) {
     const adj = getConsulateAdjustment(data);
     if (adj.profile) {
-      consulateFactor  = 0.90 + 0.10 * adj.totalMultiplier;
       consulateCity    = adj.resolvedCity;
       consulateMood    = adj.profile.mood;
       consulateWaitDays = adj.profile.appointmentWaitDays;
@@ -434,21 +465,20 @@ export const calculateScoreDetailed = (data: ProfileData, simValue = 0): ScoreBr
   if (data.applyMonth) {
     const sm = getSeasonalMultiplier(
       data.targetCountry,
-      Math.round(blendedScore * countryFactor * consulateFactor * 100),
+      Math.round(blendedScore * segmentFactor * 100),
       data.applyMonth,
       data.applyYear,
     );
     seasonalFactor = 0.97 + 0.03 * sm;
   }
 
-  const calibrated = Math.round(blendedScore * countryFactor * consulateFactor * seasonalFactor * 100);
+  const calibrated = Math.round(blendedScore * segmentFactor * seasonalFactor * 100);
   const vetoCap = computeVetoCap(data);
 
   return {
     rawScore,
     blendedScore,
-    countryFactor,
-    consulateFactor,
+    segmentFactor,
     seasonalFactor,
     vetoCap,
     finalScore: Math.max(0, Math.min(100, Math.min(calibrated, vetoCap))),

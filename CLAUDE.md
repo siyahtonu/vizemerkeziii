@@ -40,14 +40,15 @@ Geliştirme için iki süreç birlikte çalışmalı: `npm run dev` (frontend) *
 
 Tüm skorlama mantığı **[src/scoring/](src/scoring/)** altındadır ve **versiyonlanmıştır** (şu an v3.x). Hesaplamayı App.tsx içinde inline yazmayın; her zaman `core.ts`'teki fonksiyonları çağırın.
 
-Final skor 6 katmanlı bir pipeline'dır ([core.ts:185-227](src/scoring/core.ts#L185)):
+Final skor 5 katmanlı bir pipeline'dır (v3.10 — konsolosluk çarpanı ve ülke çift-sayımı kaldırıldı):
 
 1. **`calculateRawScore`** — 8 bölümlü kural tabanlı 0-100 ham puan (finansal, mesleki, bağlar, seyahat, başvuru, güven, ülke özel, veto cap'leri). Bölüm 8 (`vetoCap`) son dakika mevduat / overstay gibi kritik durumlarda skoru üst sınırla zorla kırpar.
-2. **Lineer kalibrasyon** — `(raw/100) * 0.65 + (1 - trRejRate) * 0.35` ile [matrices.ts](src/scoring/matrices.ts) `TR_REJECTION_RATES` tablosu kullanılarak ülke baz hızıyla harmanlanır. NOT: "Bayes" değil — ağırlıklı ortalamadır; posterior türetmez.
-3. **`getProfileCountryFactor`** — segment × ülke matrisi.
-4. **Konsolosluk kalibrasyonu** — `applicantCity` varsa şehir → konsolosluk zone → ruh hali çarpanı.
-5. **Mevsimsellik** — `applyMonth` varsa ay/yıl × ülke kalibrasyonu (max ±%8 etki).
-6. **Final veto tavan** — `computeVetoCap(data)` hard ceiling olarak en sonda yeniden uygulanır; Katman 2-5'teki çarpanlar kritik kırmızı bayrakları aşamaz.
+2. **Lineer kalibrasyon** — `(raw/100) * 0.65 + (1 - trRejRate) * 0.35` ile [matrices.ts](src/scoring/matrices.ts) `TR_REJECTION_RATES` tablosu kullanılarak ülke baz hızıyla harmanlanır. NOT: "Bayes" değil — ağırlıklı ortalamadır; posterior türetmez. Ülke sinyali **sadece** bu katmanda.
+3. **`getProfileSegmentFactor`** — tek boyutlu segment çarpanı (`SEGMENT_FACTORS`). Önceki `PROFILE_COUNTRY_MATRIX` (7×16 = 112 hücre) v3.10'da kaldırıldı: hem Katman 2 ile çift sayıyordu, hem de n=2077 ile hücre başına ~13 gözlem istatistik gürültüsüydü.
+4. **Mevsimsellik** — `applyMonth` varsa ay/yıl × ülke kalibrasyonu (±%3 etki).
+5. **Final veto tavan** — `computeVetoCap(data)` hard ceiling olarak en sonda yeniden uygulanır; Katman 2-4'teki çarpanlar kritik kırmızı bayrakları aşamaz.
+
+**KALDIRILAN (v3.10):** Konsolosluk mood multiplier (eski Katman 4, ±%10). `getConsulateAdjustment` hâlâ UI'da bekleme süresi/mood göstermek için kullanılıyor ama skora çarpılmıyor — konsolosluk bazlı ret eğilimi zaten `TR_REJECTION_RATES`'e dâhildi, ikinci kez çarpmak çift sayımdı.
 
 `calculateScoreDetailed` UI'da "Neden bu skor?" breakdown'u için katmanları ayrı döner. Skorlama değişiklikleri [src/scoring/__tests__/](src/scoring/__tests__/) altındaki snapshot/regresyon testlerini etkileyebilir — `npm test` çalıştırın.
 

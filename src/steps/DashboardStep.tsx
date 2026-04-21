@@ -16,6 +16,7 @@ import type { CountryWarning } from '../lib/scoringV2';
 import { apiUrl } from '../lib/api';
 import { explainConfidence } from '../scoring/algorithms';
 import { getCascadeStatus } from '../scoring/core';
+import { checkVisaExemption } from '../lib/visaExemption';
 import { ProfileRadarChart } from '../components/ProfileRadarChart';
 import { CountryRanking } from '../components/CountryRanking';
 import { WhatIfSimulator } from '../components/WhatIfSimulator';
@@ -255,6 +256,9 @@ export function DashboardStep({
     !profile.isMarried && !profile.cleanCriminalRecord &&
     !profile.hasTravelInsurance;
 
+  // ── Vize muafiyeti (v3.10 self-silencing) ────────────────────────────
+  const exemption = checkVisaExemption(profile);
+
   return (
             <motion.div
                 key="dashboard"
@@ -263,6 +267,41 @@ export function DashboardStep({
                 exit={{ opacity: 0, scale: 0.98 }}
                 className="space-y-6 sm:space-y-10"
               >
+
+                {/* ── VİZE MUAFİYETİ BANNER (v3.10) ─────────────────────
+                    Kullanıcı zaten vize gerektirmeyen bir statüdeyse, skor
+                    göstermek yanlış. Banner prominence bilgilendirme odaklı,
+                    satış odaklı değil. */}
+                {exemption.exempt && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className={`rounded-2xl border p-6 flex flex-col sm:flex-row items-start gap-5 ${
+                      exemption.toolUnsuitable
+                        ? 'bg-emerald-50 border-emerald-200'
+                        : 'bg-sky-50 border-sky-200'
+                    }`}
+                  >
+                    <BadgeCheck className={`w-10 h-10 shrink-0 ${
+                      exemption.toolUnsuitable ? 'text-emerald-600' : 'text-sky-600'
+                    }`} />
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-bold text-slate-900 text-base">
+                        {exemption.toolUnsuitable
+                          ? 'Vize gerekmiyor — bu araç sizin durumunuza uygun değil'
+                          : 'Koşullu muafiyet — belirli sınırlar dahilinde vizesiz giriş hakkınız var'}
+                      </h3>
+                      <p className="text-slate-700 text-sm mt-2 leading-relaxed">
+                        {exemption.message}
+                      </p>
+                      {exemption.conditional && (
+                        <p className="text-[12px] text-slate-500 mt-2">
+                          90 gün üzeri, çalışma, öğrenim gibi ziyaret tiplerinde standart vize süreci işler — o durumda bu araç yine yararlıdır.
+                        </p>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
 
                 {/* ── BOŞ DURUM BANNER ────────────────────────────────── */}
                 {isEmptyProfile && (
@@ -332,9 +371,12 @@ export function DashboardStep({
                     </div>
   
                     <div className="p-5">
-                      {/* Skor satırı */}
+                      {/* Skor satırı — aralık primary, point estimate subtext.
+                          Felsefi gerekçe: tahmin belirsizliği ±15-20 puan; tek "%82"
+                          sahte hassasiyet. Aralık + güven kategorisi dürüst gösterim. */}
                       <div className="flex items-center gap-5 mb-5">
-                        {/* Dairesel skor */}
+                        {/* Dairesel gösterge — point estimate ile büyüyen daire,
+                            içinde aralık yazısı (tek sayı değil). */}
                         <div className="relative w-20 h-20 shrink-0">
                           <svg className="w-20 h-20 -rotate-90" viewBox="0 0 100 100">
                             <circle cx="50" cy="50" r="42" fill="none" stroke="#e2e8f0" strokeWidth="10"/>
@@ -347,21 +389,27 @@ export function DashboardStep({
                               className="transition-all duration-700"
                             />
                           </svg>
-                          <div className="absolute inset-0 flex flex-col items-center justify-center">
-                            <span className={`text-xl font-bold ${currentScore >= 82 ? 'text-emerald-600' : currentScore >= 65 ? 'text-amber-600' : 'text-red-600'}`}>
-                              %{currentScore}
+                          <div className="absolute inset-0 flex flex-col items-center justify-center leading-none">
+                            <span className={`text-[11px] font-bold tracking-tight ${currentScore >= 82 ? 'text-emerald-600' : currentScore >= 65 ? 'text-amber-600' : 'text-red-600'}`}>
+                              %{currentConfidence.low}–%{currentConfidence.high}
                             </span>
+                            <span className="text-[9px] text-slate-400 mt-0.5">tahmin %{currentScore}</span>
                           </div>
                         </div>
                         {/* Durum metni */}
                         <div className="flex-1">
-                          {currentScore >= 82 ? (
+                          {currentConfidence.low >= 70 ? (
                             <>
                               <div className="flex items-center gap-2 mb-1">
                                 <span className="text-base font-bold text-emerald-700">Başvuruya Hazır</span>
                                 <CheckCircle2 className="w-5 h-5 text-emerald-500"/>
+                                <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded-full">
+                                  {currentConfidence.label} güven
+                                </span>
                               </div>
-                              <p className="text-sm text-slate-500">Profiliniz güçlü. Belge paketinizi hazırlayın.</p>
+                              <p className="text-sm text-slate-500">
+                                Tahmin aralığının alt ucu %{currentConfidence.low} — sağlam profil. Belge paketinizi hazırlayın.
+                              </p>
                               <button onClick={() => setStep('letter')}
                                 className="mt-2 inline-flex items-center gap-1.5 text-xs font-bold bg-emerald-600 text-white px-3 py-1.5 rounded-lg hover:bg-emerald-700 transition-colors">
                                 <FileText className="w-3.5 h-3.5"/> Niyet Mektubu Oluştur
@@ -369,20 +417,26 @@ export function DashboardStep({
                             </>
                           ) : (
                             <>
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded-full">
+                                  {currentConfidence.label} güven
+                                </span>
+                              </div>
                               <div className="text-sm text-slate-500 mb-1">
-                                Hedef <span className="font-bold text-slate-900">%82</span> — <span className="font-bold text-amber-600">{82 - currentScore} puan eksik</span>
+                                Güvenli bölge <span className="font-bold text-slate-900">%70+</span> alt uç —
+                                {' '}<span className="font-bold text-amber-600">şu an %{currentConfidence.low}</span>
                               </div>
                               <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
-                                <div className={`h-full rounded-full transition-all duration-500 ${currentScore >= 65 ? 'bg-amber-400' : 'bg-rose-400'}`}
-                                  style={{width:`${Math.min(currentScore,100)}%`}}/>
+                                <div className={`h-full rounded-full transition-all duration-500 ${currentConfidence.low >= 55 ? 'bg-amber-400' : 'bg-rose-400'}`}
+                                  style={{width:`${Math.min(currentConfidence.low,100)}%`}}/>
                               </div>
-                              <p className="text-xs text-slate-400 mt-1">Aşağıdaki adımları tamamlayarak skoru artırın</p>
+                              <p className="text-xs text-slate-400 mt-1">Aşağıdaki adımlar aralığı yukarı çeker</p>
                             </>
                           )}
                         </div>
                       </div>
-  
-                      {/* Güven aralığı bandı + sebepleri */}
+
+                      {/* Güven aralığı bandı + sebepleri (genişletilebilir açıklama) */}
                       <ConfidenceBadge
                         low={currentConfidence.low}
                         high={currentConfidence.high}
@@ -706,7 +760,7 @@ export function DashboardStep({
                       {feedbackStep === 'register' && (
                         <div className="space-y-4">
                           <div className="p-3 bg-indigo-50 border border-indigo-100 rounded-xl text-xs text-indigo-700 leading-relaxed">
-                            Başvuru tarihini girin. 4-5 hafta sonra sonucunuzu e-postayla soracağız.
+                            Başvuru tarihini girin. 6 hafta (42 gün) sonra sonucunuzu e-postayla soracağız.
                             Yanıtınız algoritmamızı gerçek verilerle kalibre eder — anonim işlenir.
                           </div>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -792,7 +846,7 @@ export function DashboardStep({
                         <div className="space-y-4">
                           <div className="p-3 bg-emerald-50 border border-emerald-100 rounded-xl text-xs text-emerald-700">
                             Başvuru kaydedildi! Başvurunuz sonuçlandıysa hemen bildirebilir,
-                            veya sonuç bekliyorsanız 4-5 hafta içinde e-posta ile hatırlatacağız.
+                            veya sonuç bekliyorsanız 6 hafta (42 gün) içinde e-posta ile hatırlatacağız.
                           </div>
                           <div>
                             <div className="text-xs font-bold text-slate-500 mb-2">Başvurunuz sonuçlandı mı?</div>

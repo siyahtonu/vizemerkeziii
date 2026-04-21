@@ -119,9 +119,9 @@ const TACTICS: Tactic[] = [
   {
     icon: Globe,
     title: '12. Ülke Seçimi: Profilinize Uyanı Seç',
-    desc: 'Aynı profil Almanya\'da ret, İspanya\'da onay alabilir. Profil-ülke matrisi: ev hanımı/sponsor profilleri İtalya-Yunanistan-Portekiz\'de daha yüksek onay; genç-çalışan profilleri Fransa-Almanya-Hollanda\'da rekabetçi. Sosyal medya analizine göre Portekiz %91, Almanya %78 onay oranı.',
-    impact: 'Ülke çarpanı: ×0.85 — ×1.20 (profil-ülke matrisi)',
-    source: 'matrices.ts PROFILE_COUNTRY_MATRIX · COUNTRY_DB',
+    desc: 'Aynı profil Almanya\'da ret, İspanya\'da onay alabilir. Ülke farkı doğrudan tarihsel ret oranlarına yansır: Yunanistan %6, Portekiz %9, Almanya %23, Danimarka %66. Profil-segment çarpanı (emekli/kamu 1.07, öğrenci/sponsor 0.92-0.97, işsiz 0.87) bağımsız bir eksen; ikisini çarparak karar verin.',
+    impact: 'Ülke ret oranı: %6 — %66 · Segment çarpanı: ×0.87 — ×1.07',
+    source: 'matrices.ts TR_REJECTION_RATES · SEGMENT_FACTORS · COUNTRY_DB',
     color: 'blue',
   },
   {

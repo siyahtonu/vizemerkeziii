@@ -205,7 +205,7 @@ function analyzeSegmentByCountry(apps: ApplicationRecord[]): SegmentAnalysis[] {
     if (total < MIN_N_SEGMENT) {
       note = `Örneklem yetersiz (n=${total}).`;
     } else if (approvalRate < 0.40) {
-      note = `DÜŞÜK kabul — PROFILE_COUNTRY_MATRIX'te bu segment × ülke çarpanının düşürülmesi değerlendirilmeli.`;
+      note = `DÜŞÜK kabul — SEGMENT_FACTORS bu segmenti düşürmeli; ülke sinyali TR_REJECTION_RATES'te.`;
     } else if (approvalRate > 0.90) {
       note = `YÜKSEK kabul — bu kombinasyon "yumuşak" kategorisi; avantaj sinyali olarak kullanılabilir.`;
     } else {
@@ -262,7 +262,7 @@ function formatReport(
   // 3. Segment × ülke
   lines.push(`## 3. Segment × Ülke Kombinasyonları`);
   lines.push('');
-  lines.push(`Minimum örneklem: **${MIN_N_SEGMENT}** vaka. PROFILE_COUNTRY_MATRIX için düzenleme sinyalleri.`);
+  lines.push(`Minimum örneklem: **${MIN_N_SEGMENT}** vaka. SEGMENT_FACTORS için düzenleme sinyalleri (v3.10 — ülke boyutu kaldırıldı).`);
   lines.push('');
   lines.push('| Kombinasyon | n | Kabul oranı | Not |');
   lines.push('|---|---:|---:|---|');
@@ -275,7 +275,7 @@ function formatReport(
   lines.push('');
   lines.push('1. **Ülke oranları** → `src/scoring/matrices.ts` içindeki `TR_REJECTION_RATES` tablosunu manuel olarak güncelleyin. Önerilen değerler delta’nın %70’i kadar sıçrama yapar; tek adımda tam delta uygulamak overfitting riskidir.');
   lines.push('2. **Skor kovası sapması** → Sistemik (birkaç kova birlikte kayıyorsa), Bayes karışım ağırlıklarını (`(raw/100)*0.65 + (1-trRejRate)*0.35`) yeniden değerlendirin. Tek kova sapıyorsa ilgili skor bölümündeki ağırlıkları kontrol edin.');
-  lines.push('3. **Segment × ülke** → Anormal kabul/ret oranları için `PROFILE_COUNTRY_MATRIX` (matrices.ts) içindeki çarpan değerini adım adım değiştirin.');
+  lines.push('3. **Segment çarpanı** → Anormal kabul/ret oranları için `SEGMENT_FACTORS` (matrices.ts) içindeki değeri adım adım değiştirin. Ülke boyutu v3.10\'da kaldırıldı — ülke sapmaları için TR_REJECTION_RATES güncellenir.');
   lines.push('');
   lines.push('**Her güncelleme sonrası:** `npm test` çalıştırın. Test fixture’ları değiştiyse commit mesajında kalibrasyon tarihi ve örneklem boyutu belirtilmelidir.');
 

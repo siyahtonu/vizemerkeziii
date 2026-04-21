@@ -3,7 +3,7 @@
 // calculateRawScore & calculateScore
 // ============================================================
 import { describe, test, expect } from 'vitest';
-import { calculateRawScore, calculateScore, computeVetoCap, getCascadeStatus, isSchengenTarget } from '../core';
+import { calculateRawScore, calculateScore, computeVetoCap, getCascadeStatus, isSchengenTarget, getMilitaryStatusSignal } from '../core';
 import { BASE_PROFILE } from './fixtures';
 import type { ProfileData } from '../../types';
 
@@ -368,5 +368,56 @@ describe('Cascade kuralı (getCascadeStatus)', () => {
       targetCountry: 'ABD', schengenVisasLast3Years: 0,
     }));
     expect(withField).toBe(without);
+  });
+});
+
+// ── Askerlik Durumu Sinyali (v3.10) ──────────────────────────────────────
+describe('getMilitaryStatusSignal', () => {
+  test('Schengen hedefinde etki yok (UK/ABD harici nötr)', () => {
+    expect(getMilitaryStatusSignal(p({
+      applicantGender: 'male', applicantAge: 28, targetCountry: 'Almanya',
+      militaryStatus: 'deferred',
+    }))).toBe(0);
+  });
+
+  test('Kadın başvurucuda etki yok', () => {
+    expect(getMilitaryStatusSignal(p({
+      applicantGender: 'female', applicantAge: 28, targetCountry: 'ABD',
+      militaryStatus: 'deferred',
+    }))).toBe(0);
+  });
+
+  test('41 yaş üstü erkekte etki yok (çağ dışı)', () => {
+    expect(getMilitaryStatusSignal(p({
+      applicantGender: 'male', applicantAge: 45, targetCountry: 'ABD',
+      militaryStatus: 'deferred',
+    }))).toBe(0);
+  });
+
+  test('Erkek + 20-41 + ABD + tecilli → -3 ceza', () => {
+    expect(getMilitaryStatusSignal(p({
+      applicantGender: 'male', applicantAge: 25, targetCountry: 'ABD',
+      militaryStatus: 'deferred',
+    }))).toBe(-3);
+  });
+
+  test('Erkek + 20-41 + UK + tamamladı → +2 bonus', () => {
+    expect(getMilitaryStatusSignal(p({
+      applicantGender: 'male', applicantAge: 32, targetCountry: 'İngiltere',
+      militaryStatus: 'completed',
+    }))).toBe(2);
+  });
+
+  test('militaryStatus tanımsızsa nötr (henüz cevaplanmamış)', () => {
+    expect(getMilitaryStatusSignal(p({
+      applicantGender: 'male', applicantAge: 25, targetCountry: 'ABD',
+    }))).toBe(0);
+  });
+
+  test('calculateScore: tecilli profil, hedef Almanya → askerlik etkisizi', () => {
+    const base = { applicantGender: 'male' as const, applicantAge: 25, targetCountry: 'Almanya' };
+    const deferred = calculateScore(p({ ...base, militaryStatus: 'deferred' }));
+    const completed = calculateScore(p({ ...base, militaryStatus: 'completed' }));
+    expect(deferred).toBe(completed);
   });
 });

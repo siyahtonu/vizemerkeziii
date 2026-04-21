@@ -133,6 +133,30 @@ export interface ProfileData {
   // Skorlama: hedef Schengen ise ve geçmiş temizse pozitif bonus.
   // Undefined / 0 → bonus yok.
   schengenVisasLast3Years?: number;
+
+  // ── Vize Muafiyeti / Self-Silencing (v3.10) ───────────────────────────
+  // Kullanıcı zaten vizeye ihtiyaç duymuyor olabilir. Bu durumda araç
+  // onu dürüstçe bilgilendirmeli — yanlış umut satmak etik dışı.
+  //   • Yeşil pasaport (hizmet pasaportu): Schengen + 90 gün vizesiz
+  //   • EU çifte vatandaşlığı: Hiçbir Schengen vizesi gerekmez
+  //   • UK çifte vatandaşlığı: UK vizesi gerekmez (ABD için de geçerli)
+  // checkVisaExemption fonksiyonu bu alanları hedef ülkeye göre yorumlar.
+  hasGreenPassport?: boolean;
+  hasDualEuCitizenship?: boolean;
+  dualCitizenshipCountry?: string;
+
+  // ── Askerlik Durumu (v3.10) ───────────────────────────────────────────
+  // TR erkek başvurucular için UK/ABD konsolosları "askerlikten kaçış"
+  // sinyalini değerlendirir (214(b) / V4.2 kategorisi). Soru yalnızca
+  // cinsiyet=erkek + yaş 20-41 + hedef ülke UK/ABD koşullarında sorulur;
+  // bu dışındaki profillerde skor etkisi yoktur.
+  //   completed  → tamamlandı (nötr-pozitif)
+  //   exempt     → muaf (çürük/şartlı/çift vatandaşlık muafiyeti)
+  //   deferred   → tecilli (UK/ABD için negatif sinyal)
+  //   active     → profesyonel asker (nötr-pozitif, bağ sinyali)
+  //   n_a        → uygulanmaz (kadın, 41+ yaş, vb.)
+  applicantGender?: 'male' | 'female' | 'other';
+  militaryStatus?: 'completed' | 'exempt' | 'deferred' | 'active' | 'n_a';
 }
 
 export interface Conflict {

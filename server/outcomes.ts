@@ -1,8 +1,13 @@
 /**
  * VizeAkıl — Başvuru Sonuç Takip Sistemi (Feedback Loop)
  * ═══════════════════════════════════════════════════════
- * Kullanıcıların başvuru tarihini kaydeder, 4-8 hafta sonra
+ * Kullanıcıların başvuru tarihini kaydeder, 42 gün sonra
  * otomatik follow-up e-postası gönderir, gelen sonuçları depolar.
+ *
+ * Window seçimi (v3.10):
+ *   42 gün ≈ ortalama Schengen işlem süresi (15-20 gün) + kullanıcının
+ *   seyahat edip dönmesi için makul buffer (3-4 hafta). Daha erken
+ *   sormak "hâlâ bekliyor" yanıtı üretiyor — bilgi değeri düşük.
  *
  * Bu veriyle algoritma gerçek vakalarla kalibre edilebilir.
  *
@@ -136,7 +141,7 @@ async function sendFollowupEmail(app: ApplicationRecord): Promise<boolean> {
         <p style="color: #334155; font-size: 15px;">
           Merhaba,<br><br>
           <strong>${appDate}</strong> tarihinde <strong>${app.country}</strong> vizesi için başvuru yaptığınızı kaydetmiştiniz.
-          Başvurunuz genellikle bu süreçte sonuçlanmış olur.
+          Başvurunuzdan bu yana yaklaşık 6 hafta geçti — genellikle sonuç bu süre içinde netleşir.
         </p>
 
         <div style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin: 16px 0; text-align: center;">
@@ -189,8 +194,15 @@ async function sendFollowupEmail(app: ApplicationRecord): Promise<boolean> {
 }
 
 // ── Günlük follow-up tarayıcısı ───────────────────────────────────────────────
-// 4 hafta (28 gün) geçmiş + follow-up gönderilmemiş + sonuç bildirilmemiş → gönder
-// 8 hafta (56 gün) geçmiş + 2. hatırlatma gönderilmemiş + sonuç hâlâ yok → gönder
+// v3.10: 28 gün → 42 gün. Erken sorunca "hâlâ bekliyor" yanıtı alıp
+// kullanıcıyı rahatsız ediyorduk; 42 gün (~6 hafta) cevap kesinliği yüksek.
+//
+//   1. follow-up: 42 gün (± 28 gün pencere)  + henüz gönderilmemiş
+//   2. hatırlatma: 70 gün + 1. gönderilmiş + hâlâ yanıt yok
+const FOLLOWUP_FIRST_DAY = 42;
+const FOLLOWUP_WINDOW_DAYS = 28;   // 42-70 arası pencereden kaçırma
+const FOLLOWUP_REMINDER_DAY = 70;
+
 async function runFollowupCheck(): Promise<void> {
   const now = new Date();
   const changed: string[] = [];
@@ -201,8 +213,10 @@ async function runFollowupCheck(): Promise<void> {
     const appDate = new Date(app.applicationDate);
     const daysSince = Math.floor((now.getTime() - appDate.getTime()) / (1000 * 60 * 60 * 24));
 
-    // İlk follow-up: 28-35 gün arası + henüz gönderilmemiş
-    if (daysSince >= 28 && daysSince <= 56 && !app.followupSentAt) {
+    // İlk follow-up: 42 günden sonra + pencere içinde + henüz gönderilmemiş
+    if (daysSince >= FOLLOWUP_FIRST_DAY
+        && daysSince <= FOLLOWUP_FIRST_DAY + FOLLOWUP_WINDOW_DAYS
+        && !app.followupSentAt) {
       console.log(`[outcomes] Follow-up gönderiliyor → ${app.email} (${app.country}, ${daysSince} gün)`);
       const sent = await sendFollowupEmail(app);
       if (sent) {
@@ -211,8 +225,8 @@ async function runFollowupCheck(): Promise<void> {
       }
     }
 
-    // İkinci hatırlatma: 56+ gün + 1. gönderilmiş + 2. gönderilmemiş
-    if (daysSince > 56 && app.followupSentAt && !app.followupReminderSentAt) {
+    // İkinci hatırlatma: 70+ gün + 1. gönderilmiş + 2. gönderilmemiş
+    if (daysSince > FOLLOWUP_REMINDER_DAY && app.followupSentAt && !app.followupReminderSentAt) {
       console.log(`[outcomes] 2. hatırlatma gönderiliyor → ${app.email} (${app.country}, ${daysSince} gün)`);
       const sent = await sendFollowupEmail(app);
       if (sent) {
@@ -285,7 +299,7 @@ router.post('/register', submitLimiter, (req, res) => {
   return res.json({
     success: true,
     id,
-    message: `${country} başvurunuz kaydedildi. Yaklaşık 4-5 hafta sonra sonucu soruyoruz.`,
+    message: `${country} başvurunuz kaydedildi. Yaklaşık 6 hafta sonra (42 gün) sonucu soruyoruz.`,
   });
 });
 

@@ -11,7 +11,6 @@ import type { RejectionPattern } from '../data/refusals';
 import { calculateScore, calculateScoreDetailed } from '../scoring/core';
 import { getDimensionScores, DIMENSION_LABELS, DIMENSION_TIPS } from '../scoring/dimensions';
 import { TR_REJECTION_RATES } from '../scoring/matrices';
-import { getProfileCountryFactor } from '../scoring/algorithms';
 import { getTimingAdvice } from '../scoring/seasonal';
 import { calculateTripCost, COUNTRY_COSTS } from '../data/countries';
 
@@ -385,9 +384,8 @@ export function AnalysisReportModal({
               <div className="rounded-xl bg-slate-50 border border-slate-200 p-4 text-sm leading-relaxed text-slate-700">
                 <strong>Algoritmik Değerlendirme:</strong>{' '}
                 {profile.targetCountry} için hesaplanan başarı skoru <strong>%{targetScore}</strong> olup
-                lineer kalibrasyon (%65 profil + %35 tarihsel ret oranı), profil-ülke matrisi (çarpan: {breakdown.countryFactor.toFixed(2)}),
-                {breakdown.consulateCity ? ` ${breakdown.consulateCity} konsolosluğu kalibrasyonu,` : ''}
-                {' '}ve mevsimsel düzeltmeden oluşmaktadır.
+                lineer kalibrasyon (%65 profil + %35 tarihsel ret oranı), profil-segment çarpanı ({breakdown.segmentFactor.toFixed(2)})
+                ve mevsimsel düzeltmeden oluşmaktadır.
                 Ham profil puanı <strong>{breakdown.rawScore}/100</strong>'dür.
                 {safeCountries.length > 0
                   ? ` Güçlü onay ihtimali olan ülkeler: ${safeCountries.slice(0, 3).map(c => `${c.flag} ${c.country} (%${c.score})`).join(', ')}.`
@@ -694,17 +692,17 @@ export function AnalysisReportModal({
                   <div className="text-slate-400">Tarihsel ret oranı ağırlıklı düzeltme</div>
                 </div>
                 <div className="rounded-xl bg-slate-50 border border-slate-200 p-3 space-y-1">
-                  <div className="font-bold text-slate-700">Profil-Ülke Matrisi</div>
-                  <div>Çarpan: <strong>{breakdown.countryFactor.toFixed(3)}</strong> (Segment: {segment})</div>
-                  <div className="text-slate-400">Tarihsel segment × ülke uyum verileri</div>
+                  <div className="font-bold text-slate-700">Profil Segment Çarpanı</div>
+                  <div>Çarpan: <strong>{breakdown.segmentFactor.toFixed(3)}</strong> (Segment: {segment})</div>
+                  <div className="text-slate-400">v3.10: Ülke sinyali base rate'te tekilleştirildi</div>
                 </div>
                 <div className="rounded-xl bg-slate-50 border border-slate-200 p-3 space-y-1">
-                  <div className="font-bold text-slate-700">Konsolosluk + Mevsim</div>
+                  <div className="font-bold text-slate-700">Mevsimsel Kalibrasyon</div>
                   <div>
-                    Konsülosluk: {breakdown.consulateCity ?? 'N/A'} ({breakdown.consulateFactor.toFixed(3)})
-                    · Mevsim: {breakdown.seasonalFactor.toFixed(3)}
+                    Mevsim çarpanı: <strong>{breakdown.seasonalFactor.toFixed(3)}</strong>
+                    {breakdown.consulateCity ? ` · Konsolosluk: ${breakdown.consulateCity} (bilgi)` : ''}
                   </div>
-                  <div className="text-slate-400">v3.1 konsolosluk + v3.2 mevsimsel kalibrasyon</div>
+                  <div className="text-slate-400">v3.2 mevsimsel kalibrasyon · Konsolosluk çarpanı v3.10'da kaldırıldı</div>
                 </div>
               </div>
             </section>

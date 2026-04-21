@@ -10,7 +10,7 @@ import {
   getTimingAdvice,
 } from '../seasonal';
 import {
-  getProfileCountryFactor,
+  getProfileSegmentFactor,
   getConsulateAdjustment,
   findNearestConsulate,
   getReturnTieMultiplier,
@@ -224,39 +224,38 @@ describe('getTimingAdvice', () => {
 });
 
 // ─────────────────────────────────────────────────────────────
-// getProfileCountryFactor
+// getProfileSegmentFactor (v3.10 — ülke boyutu kaldırıldı)
 // ─────────────────────────────────────────────────────────────
-describe('getProfileCountryFactor', () => {
+describe('getProfileSegmentFactor', () => {
 
-  it('kamu çalışanı Almanya → employed den daha yüksek çarpan', () => {
-    const publicFactor   = getProfileCountryFactor({ ...BASE_PROFILE, isPublicSectorEmployee: true });
-    const employedFactor = getProfileCountryFactor({ ...BASE_PROFILE, isPublicSectorEmployee: false });
+  it('kamu çalışanı → employed den daha yüksek çarpan', () => {
+    const publicFactor   = getProfileSegmentFactor({ ...BASE_PROFILE, isPublicSectorEmployee: true });
+    const employedFactor = getProfileSegmentFactor({ ...BASE_PROFILE, isPublicSectorEmployee: false });
     expect(publicFactor).toBeGreaterThan(employedFactor);
   });
 
-  it('öğrenci Almanya → employed den daha düşük çarpan (göç riski)', () => {
-    const studentFactor  = getProfileCountryFactor({ ...BASE_PROFILE, isStudent: true, hasSgkJob: false, hasAssets: false });
-    const employedFactor = getProfileCountryFactor({ ...BASE_PROFILE, isStudent: false });
+  it('öğrenci → employed den daha düşük çarpan (gelir ispat zorluğu)', () => {
+    const studentFactor  = getProfileSegmentFactor({ ...BASE_PROFILE, isStudent: true, hasSgkJob: false, hasAssets: false });
+    const employedFactor = getProfileSegmentFactor({ ...BASE_PROFILE, isStudent: false });
     expect(studentFactor).toBeLessThan(employedFactor);
   });
 
-  it('emekli (55+, varlıklı, SGK yok) Yunanistan → yüksek çarpan (>1.10)', () => {
-    const retiredFactor = getProfileCountryFactor({
+  it('emekli (55+, varlıklı, SGK yok) → kamu çalışanı ile aynı üst bant (≥1.07)', () => {
+    const retiredFactor = getProfileSegmentFactor({
       ...BASE_PROFILE,
-      targetCountry: 'Yunanistan',
       isStudent: false,
       isPublicSectorEmployee: false,
       hasSgkJob: false,
       hasAssets: true,
       applicantAge: 60,
     });
-    expect(retiredFactor).toBeGreaterThan(1.10);
+    // v3.10: ülke farkı kaldırıldı; segment çarpanı sabit 1.07 (retired)
+    expect(retiredFactor).toBeGreaterThanOrEqual(1.07);
   });
 
-  it('işsiz (SGK yok, varlık yok) Almanya → en düşük çarpan (<0.90)', () => {
-    const unemployedFactor = getProfileCountryFactor({
+  it('işsiz (SGK yok, varlık yok) → en düşük çarpan (<0.90)', () => {
+    const unemployedFactor = getProfileSegmentFactor({
       ...BASE_PROFILE,
-      targetCountry: 'Almanya',
       isStudent: false,
       isPublicSectorEmployee: false,
       hasSgkJob: false,
@@ -266,9 +265,12 @@ describe('getProfileCountryFactor', () => {
     expect(unemployedFactor).toBeLessThan(0.90);
   });
 
-  it('tanımsız ülke → 1.0 döner', () => {
-    const factor = getProfileCountryFactor({ ...BASE_PROFILE, targetCountry: 'Bilinmeyen' });
-    expect(factor).toBe(1.0);
+  it('ülke boyutu kaldırıldı: targetCountry değişimi çarpanı değiştirmez', () => {
+    const almanyaFactor = getProfileSegmentFactor({ ...BASE_PROFILE, targetCountry: 'Almanya' });
+    const yunanFactor   = getProfileSegmentFactor({ ...BASE_PROFILE, targetCountry: 'Yunanistan' });
+    const bilinmeyen    = getProfileSegmentFactor({ ...BASE_PROFILE, targetCountry: 'Bilinmeyen' });
+    expect(almanyaFactor).toBe(yunanFactor);
+    expect(almanyaFactor).toBe(bilinmeyen);
   });
 });
 
