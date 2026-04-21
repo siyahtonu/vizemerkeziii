@@ -10,6 +10,7 @@ import appointmentRouter from './appointmentWatcher.js';
 import outcomesRouter from './outcomes.js';
 import contactRouter from './contact.js';
 import ratesRouter from './rates.js';
+import answenaRouter from './answena.js';
 
 const app = express();
 app.use(express.json());
@@ -96,6 +97,10 @@ app.use('/api/contact', contactRouter);
 // kod deploy'u olmadan güncellemek için. Frontend boot'ta zaten bu
 // JSON'u fetch ediyor (useCountryRates hook'u).
 app.use('/api/rates', ratesRouter);
+
+// ── Answena (AI-SEO skorlama) proxy'si ────────────────────
+// Tüm endpoint'ler admin-gated; ANSWENA_API_KEY sunucuda kalır.
+app.use('/api/answena', answenaRouter);
 
 // ── Sağlık kontrolü ───────────────────────────────────────
 app.get('/api/health', (_req, res) => {
