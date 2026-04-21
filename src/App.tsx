@@ -237,6 +237,17 @@ export default function App() {
   const [rfAnalyzed, setRfAnalyzed] = useState(false);
   const [rfLoading, setRfLoading] = useState(false);
   const [rfError, setRfError] = useState<string | null>(null);
+  const [rfSuggestions, setRfSuggestions] = useState<{
+    country: string;
+    days: number;
+    dailyBudgetEur: number;
+    hotelTry: number;
+    flightTry: number;
+    totalTry: number;
+    balanceMinTry: number;
+    balanceIdealTry: number;
+    hotelPerNightEur: number;
+  } | null>(null);
 
   // Özellik 10: Kişiye Özel Evrak Sihirbazı
   const [wizardCountry, setWizardCountry] = useState<'schengen'|'uk'|'usa'>('schengen');
@@ -1498,6 +1509,45 @@ export default function App() {
     });
   };
 
+  // ── Bütçe Tutarlılık Önerileri ────────────────────────────────────────────
+  // Hedef ülke + gün sayısı girildiğinde ideal tutarları hesaplar. Kullanıcıya
+  // "bakiyen/otelin/günlük bütçen/uçağın şu kadar olmalı" şeklinde somut hedef
+  // verir. Kaynaklar: Schengen min €50/gün, UK Appendix FM finans eşikleri,
+  // 2026 ort. uçak ve otel fiyatları. (EUR/TRY ~40 yaklaşımıyla.)
+  const computeBudgetSuggestions = (days: number, country: string) => {
+    if (days <= 0) return null;
+    const EUR_TRY = 40;
+    // Ülke bazlı referanslar (€/gece otel, €/gün bütçe, gidiş-dönüş uçak TL)
+    const tier: { daily: number; hotelPerNight: number; flightTry: number } =
+      country === 'ABD'
+        ? { daily: 110, hotelPerNight: 130, flightTry: 45000 }
+        : country === 'İngiltere'
+        ? { daily: 90,  hotelPerNight: 95,  flightTry: 18000 }
+        : country === 'Fransa' || country === 'Hollanda'
+        ? { daily: 85,  hotelPerNight: 95,  flightTry: 13000 }
+        : country === 'İtalya' || country === 'Yunanistan'
+        ? { daily: 75,  hotelPerNight: 80,  flightTry: 11000 }
+        : /* Almanya ve diğer Schengen */
+          { daily: 80,  hotelPerNight: 85,  flightTry: 12000 };
+
+    const hotelTry = Math.round(days * tier.hotelPerNight * EUR_TRY);
+    const flightTry = tier.flightTry;
+    const dailyTry = days * tier.daily * EUR_TRY;
+    const totalTry = hotelTry + flightTry + dailyTry;
+    // Konsolosluk 1.2× minimum, 1.5× rahat bakiye bekler.
+    return {
+      country,
+      days,
+      dailyBudgetEur: tier.daily,
+      hotelPerNightEur: tier.hotelPerNight,
+      hotelTry,
+      flightTry,
+      totalTry,
+      balanceMinTry: Math.round(totalTry * 1.2),
+      balanceIdealTry: Math.round(totalTry * 1.5),
+    };
+  };
+
   const analyzeRedFlags = async () => {
     setRfLoading(true);
     setRfError(null);
@@ -1506,6 +1556,9 @@ export default function App() {
     const hotel = parseInt(rfHotel) || 0;
     const days = parseInt(rfDays) || 0;
     const dailyEur = parseInt(rfDailyBudgetEur) || 60;
+
+    // AI path'ten önce hesapla — hangi dal çalışırsa çalışsın öneri gözüksün.
+    setRfSuggestions(computeBudgetSuggestions(days, profile.targetCountry || 'Almanya'));
 
     try {
       const findings = await askRedFlagScan({
@@ -2215,6 +2268,9 @@ Signature: _______________     Date: ${today}`;
   const handleReset = useCallback(() => {
     try { localStorage.removeItem(PROFILE_STORAGE_KEY); } catch { /* noop */ }
     setProfile(DEFAULT_PROFILE);
+    // onboardingStep önceki akıştan 2'de kalmış olabilir — profil seçimine
+    // (step 1) döndürmezsek kullanıcı boş profille skor ekranını görür.
+    setOnboardingStep(1);
     setStep('onboarding');
   }, []); // DEFAULT_PROFILE is a module-level constant value, safe as empty dep
 
@@ -4203,7 +4259,7 @@ Signature: _______________     Date: ${today}`;
           {isRedFlagOpen && (
             <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
               <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}
-                onClick={() => { setIsRedFlagOpen(false); setRfAnalyzed(false); setRedFlagResult([]); }}
+                onClick={() => { setIsRedFlagOpen(false); setRfAnalyzed(false); setRedFlagResult([]); setRfSuggestions(null); }}
                 className="absolute inset-0 bg-slate-950/60 backdrop-blur-md" />
               <motion.div initial={{opacity:0,scale:0.95,y:20}} animate={{opacity:1,scale:1,y:0}}
                 exit={{opacity:0,scale:0.95,y:20}}
@@ -4219,7 +4275,7 @@ Signature: _______________     Date: ${today}`;
                       <h3 className="text-2xl font-bold">Başvuru Risk Tarayıcısı</h3>
                       <p className="text-rose-100 text-sm mt-1">ChatGPT'nin yapamadığı şey: dosyanızdaki mantıksal çelişkileri bulur, konsolosluğun göreceği kırmızı bayrakları işaretler.</p>
                     </div>
-                    <button onClick={() => { setIsRedFlagOpen(false); setRfAnalyzed(false); setRedFlagResult([]); }}
+                    <button onClick={() => { setIsRedFlagOpen(false); setRfAnalyzed(false); setRedFlagResult([]); setRfSuggestions(null); }}
                       className="p-2 hover:bg-white/10 rounded-full transition-colors"><X className="w-6 h-6"/></button>
                   </div>
                 </div>
@@ -4303,7 +4359,7 @@ Signature: _______________     Date: ${today}`;
                       <div className="flex items-center gap-2 mb-2">
                         <XCircle className="w-5 h-5 text-rose-600"/>
                         <h4 className="font-bold text-slate-900">Risk Analizi Raporu</h4>
-                        <button onClick={()=>{setRfAnalyzed(false);setRedFlagResult([]);setRfError(null);}}
+                        <button onClick={()=>{setRfAnalyzed(false);setRedFlagResult([]);setRfError(null);setRfSuggestions(null);}}
                           className="ml-auto flex items-center gap-1 text-sm font-bold text-rose-600 hover:underline">
                           <RefreshCw className="w-4 h-4"/> Yeniden Tara
                         </button>
@@ -4325,6 +4381,47 @@ Signature: _______________     Date: ${today}`;
                           </div>
                         ))}
                       </div>
+
+                      {/* Tutarlılık için önerilen tutarlar — ülke + gün bazlı hedef rakamlar */}
+                      {rfSuggestions && (() => {
+                        const s = rfSuggestions;
+                        const fmt = (n: number) => n.toLocaleString('tr-TR');
+                        const balance = parseInt(rfBalance) || 0;
+                        const flight = parseInt(rfFlight) || 0;
+                        const hotel = parseInt(rfHotel) || 0;
+                        const dailyEur = parseInt(rfDailyBudgetEur) || 60;
+                        const row = (label: string, user: string, target: string, ok: boolean) => (
+                          <div className="grid grid-cols-[1fr_auto_auto] items-baseline gap-3 py-2 border-b border-slate-100 last:border-b-0">
+                            <span className="text-xs font-semibold text-slate-700">{label}</span>
+                            <span className={`text-xs ${ok ? 'text-slate-500' : 'text-rose-600 font-bold'}`}>{user}</span>
+                            <span className="text-xs font-bold text-emerald-700 whitespace-nowrap">→ {target}</span>
+                          </div>
+                        );
+                        return (
+                          <div className="p-5 bg-gradient-to-br from-sky-50 to-indigo-50 border border-sky-200 rounded-2xl">
+                            <div className="flex items-center gap-2 mb-1">
+                              <Target className="w-4 h-4 text-indigo-600"/>
+                              <h5 className="text-sm font-bold text-slate-900">Tutarlı başvuru için önerilen tutarlar</h5>
+                            </div>
+                            <p className="text-[11px] text-slate-500 mb-3 leading-relaxed">
+                              {s.country} · {s.days} gün · ort. €{s.hotelPerNightEur}/gece otel, €{s.dailyBudgetEur}/gün kişisel harcama baz alındı.
+                              Sol: sizin girdiğiniz · sağ: konsolosluğun tutarlı gördüğü hedef.
+                            </p>
+                            <div>
+                              {row('Banka bakiyesi (min)', balance ? `₺${fmt(balance)}` : '—', `₺${fmt(s.balanceMinTry)}`, balance >= s.balanceMinTry)}
+                              {row('Banka bakiyesi (rahat)', balance ? `₺${fmt(balance)}` : '—', `₺${fmt(s.balanceIdealTry)}`, balance >= s.balanceIdealTry)}
+                              {row('Otel toplam', hotel ? `₺${fmt(hotel)}` : '—', `₺${fmt(s.hotelTry)}`, hotel >= Math.round(s.hotelTry * 0.85))}
+                              {row('Günlük bütçe', `€${dailyEur}`, `€${s.dailyBudgetEur}`, dailyEur >= s.dailyBudgetEur)}
+                              {row('Uçak bileti (gidiş-dönüş)', flight ? `₺${fmt(flight)}` : '—', `₺${fmt(s.flightTry)}`, flight >= Math.round(s.flightTry * 0.8))}
+                              {row('Tahmini toplam maliyet', '—', `₺${fmt(s.totalTry)}`, true)}
+                            </div>
+                            <p className="text-[11px] text-slate-400 mt-3 leading-relaxed">
+                              Bakiye kuralı: toplam maliyetin 1.2× minimumu, 1.5× rahat seviyesidir. Konsolosluk bu iki eşik arasını "yeterli" kabul eder.
+                            </p>
+                          </div>
+                        );
+                      })()}
+
                       <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl">
                         <p className="text-xs text-slate-500">
                           {redFlagResult.filter(f=>f.severity==='critical').length === 0
@@ -5127,7 +5224,8 @@ Signature: _______________     Date: ${today}`;
               exit={{ opacity: 0 }}
               className="max-w-lg mx-auto py-12 sm:py-20 px-4"
             >
-              {onboardingStep === 1 && (
+              {/* onboardingStep 0 veya 1 → profil seçimi (direkt /basla URL'i ya da sıfırlama sonrası fallback) */}
+              {(onboardingStep === 0 || onboardingStep === 1) && (
                 <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }} className="space-y-8">
                   {/* Geri + Ülke badge */}
                   <div className="flex items-center gap-3">
