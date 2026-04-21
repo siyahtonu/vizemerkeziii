@@ -9,6 +9,7 @@ import { X, Download, AlertTriangle, CheckCircle2, TrendingUp, Globe } from 'luc
 import type { ProfileData } from '../types';
 import type { RejectionPattern } from '../data/refusals';
 import { calculateScore, calculateScoreDetailed } from '../scoring/core';
+import { explainConfidence } from '../scoring/algorithms';
 import { getDimensionScores, DIMENSION_LABELS, DIMENSION_TIPS } from '../scoring/dimensions';
 import { TR_REJECTION_RATES } from '../scoring/matrices';
 import { getTimingAdvice } from '../scoring/seasonal';
@@ -150,6 +151,16 @@ export function AnalysisReportModal({
 
   // ── Öncelikli riskler ─────────────────────────────────────────────────────
   const topRisks = rejectionMatches.slice(0, 5);
+
+  // ── Belirsizlik kaynakları (güven aralığı açıklaması) ────────────────────
+  // Skoru tek bir sayı gibi sunmak yerine: aralığın neden bu kadar geniş/dar
+  // olduğunu kullanıcıya açıkça söylüyoruz. Eksik alan varsa adıyla anılır —
+  // böylece kullanıcı bandı daraltmak için neyi doldurması gerektiğini bilir.
+  const confidenceReasons = useMemo(
+    () => explainConfidence(profile, currentScore),
+    [profile, currentScore],
+  );
+  const confidenceComplete = confidenceReasons.length === 1 && confidenceReasons[0].key === 'complete';
 
   // ── Yazdır ───────────────────────────────────────────────────────────────
   // Rapor DOM'unu izole etmeden window.print() çağırırsak, rapor dışındaki
@@ -391,6 +402,45 @@ export function AnalysisReportModal({
                   ? ` Güçlü onay ihtimali olan ülkeler: ${safeCountries.slice(0, 3).map(c => `${c.flag} ${c.country} (%${c.score})`).join(', ')}.`
                   : ' Profil güçlendirilmeden onay oranı yüksek ülkeler için de risk mevcuttur.'}
               </div>
+            </section>
+
+            {/* ── 2b. BELİRSİZLİK KAYNAKLARI ─────────────────────────────
+                 Güven aralığı neden bu kadar geniş? Kullanıcının doldurmadığı
+                 her alan aralığı genişletir; burada hangi alanların bandı
+                 daralttığını açıkça söylüyoruz. explainConfidence, hero
+                 card'da gösterilen reason listesinin aynısını üretir. */}
+            <section>
+              <h2 className="text-base font-bold text-slate-900 uppercase tracking-wide mb-3 flex items-center gap-2">
+                <span className="w-1 h-5 bg-amber-500 rounded-full inline-block" />
+                Güven Aralığı — Neden %{currentConfidence.low}–%{currentConfidence.high}?
+              </h2>
+              {confidenceComplete ? (
+                <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-4 text-sm text-emerald-800 leading-relaxed">
+                  <strong>Kalibrasyon sinyalleri tamam.</strong>{' '}
+                  Önemli alanların tümünü doldurdunuz — skor aralığı mümkün olduğunca dar tutuldu.
+                  Daha dar bir bant verebilmek için daha geniş vaka verisine ihtiyacımız var.
+                </div>
+              ) : (
+                <div className="rounded-xl bg-amber-50 border border-amber-200 p-4 text-sm leading-relaxed">
+                  <p className="text-amber-900 font-medium mb-2">
+                    Skoru <strong>%{currentScore}</strong> olarak değil,
+                    <strong> %{currentConfidence.low}–%{currentConfidence.high}</strong> aralığı olarak sunuyoruz.
+                    Aralığın bu genişlikte olmasının nedenleri:
+                  </p>
+                  <ul className="space-y-1.5 text-amber-900 pl-0 list-none">
+                    {confidenceReasons.map((r) => (
+                      <li key={r.key} className="flex items-start gap-2">
+                        <span className="shrink-0 w-1.5 h-1.5 rounded-full bg-amber-600 mt-2" />
+                        <span>{r.text}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <p className="text-[11px] text-amber-800/80 mt-3 italic">
+                    Eksik alanları doldurup raporu yeniden üretirseniz bant daralır.
+                    Skoru tek sayı gibi göstermek istemiyoruz — belirsizliği gizlemek yanıltıcı olurdu.
+                  </p>
+                </div>
+              )}
             </section>
 
             {/* ── 3. PROFİL BOYUT ANALİZİ ───────────────────────────── */}
