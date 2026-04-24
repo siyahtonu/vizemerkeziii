@@ -233,10 +233,10 @@
     @apply outline-none ring-4 ring-brand-100 ring-offset-0;
   }
 
-  /* ── Glass card ── */
+  /* ── Glass card — beyaz kart, blur kaldırıldı (editorial ton) ── */
   .glass-card {
-    @apply bg-white/70 backdrop-blur-xl border border-white/40 rounded-3xl;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.04);
+    @apply bg-white border border-slate-100 rounded-3xl;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.02), 0 4px 16px rgba(0,0,0,0.03);
   }
 
   /* ── Hover lift ── */

@@ -59,6 +59,7 @@ const OUTCOME_OPTIONS: Array<{
 const OutcomeReport: React.FC = () => {
   const [params] = useSearchParams();
   const id = params.get('id') ?? '';
+  const token = params.get('token') ?? '';
   const initialOutcome = params.get('outcome') as Outcome | null;
 
   const [outcome, setOutcome] = useState<Outcome | ''>(
@@ -104,6 +105,9 @@ const OutcomeReport: React.FC = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id,
+          // token: yeni kayıtlarda e-posta linkinden gelir, eski kayıtlarda undefined'dir.
+          // Backend token zorunluluğunu kaydın durumuna göre karar verir.
+          token: token || undefined,
           outcome,
           rejectionCode: outcome === 'ret' ? (rejectionCode || undefined) : undefined,
           rejectionNotes: outcome === 'ret' ? (rejectionNotes.trim() || undefined) : undefined,

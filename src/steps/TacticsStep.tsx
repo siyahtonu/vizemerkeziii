@@ -4,7 +4,7 @@
 // Her taktik, algoritmadaki gerçek ağırlıkla eşleştirilmiştir.
 // ============================================================
 import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import {
   CheckCircle2, ShieldCheck, ArrowLeft, Info, Briefcase, Globe, Wallet, PenTool,
   Home, Calendar, Plane, FileText, AlertTriangle, MessageSquare, Sparkles, RefreshCw, Zap,

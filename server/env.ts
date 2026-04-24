@@ -9,3 +9,29 @@ import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.join(__dirname, '..', '.env.local') });
+
+// ── Startup validation ─────────────────────────────────────────────────────
+// Kritik secret'lar eksikse:
+//   - production: fail-fast, süreç kapanır (yanlış deploy'u engeller)
+//   - development: sadece uyarı logu (her dev ortamında tümü gerekmeyebilir)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const REQUIRED_IN_PROD = [
+  'ANTHROPIC_API_KEY',   // /api/ai proxy
+  'JWT_SECRET',          // payment premium token'ı
+  'ADMIN_SECRET',        // admin endpoint'leri (outcomes, rates, appointments, answena)
+  'CHECK_SECRET',        // outcomes check script
+] as const;
+
+const missing = REQUIRED_IN_PROD.filter((k) => !process.env[k]);
+if (missing.length > 0) {
+  if (process.env.NODE_ENV === 'production') {
+    console.error(
+      `[env] KRİTİK: Aşağıdaki env değişkenleri tanımlı değil, üretim başlatılamıyor:\n  - ${missing.join('\n  - ')}`
+    );
+    process.exit(1);
+  } else {
+    console.warn(
+      `[env] Uyarı: Aşağıdaki env değişkenleri eksik (geliştirmede izin verilir, üretime çıkmadan tanımlayın):\n  - ${missing.join('\n  - ')}`
+    );
+  }
+}

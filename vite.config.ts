@@ -31,10 +31,11 @@ export default defineConfig({
       output: {
         manualChunks: {
           'vendor-react':  ['react', 'react-dom', 'react-router-dom'],
-          'vendor-motion': ['motion'],
+          'vendor-motion': ['motion', 'motion/react'],
           'vendor-pdf':    ['jspdf'],
           'vendor-icons':  ['lucide-react'],
           'vendor-helmet': ['react-helmet-async'],
+          'vendor-pdfjs':  ['pdfjs-dist'],
         },
       },
     },

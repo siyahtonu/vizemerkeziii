@@ -1,7 +1,37 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, ShieldCheck, AlertTriangle } from 'lucide-react';
 import { SEO } from '../components/SEO';
+
+// ────────────────────────────────────────────────────────────────────────────
+// DİKKAT — OPERASYON EKİBİNE NOT:
+// Aşağıdaki alanlar gerçek veri sorumlusu bilgileriyle doldurulmadan sayfa
+// yayına çıkmamalıdır. KVKK Madde 10 ve Aydınlatma Yükümlülüğü Tebliği
+// uyarınca bu alanların placeholder ile kalması uyumsuzluktur.
+//
+//  1. [Şirket Unvanı A.Ş.]   → gerçek ticari unvan
+//  2. [MERSİS Numarası]      → MERSİS 16 haneli numara
+//  3. [Vergi Dairesi / No]   → bağlı olunan vergi dairesi ve no
+//  4. [Kayıtlı Adres]        → ticaret siciline kayıtlı adres
+//  5. [KEP Adresi]           → kayıtlı elektronik posta
+//
+// Sayfanın üstünde (yalnız geliştirme ortamında görünür) bir uyarı bandı
+// mevcut; gerçek bilgileri girip bu yorum bloğunu ve <DraftBanner>'ı
+// kaldırdığınızda sayfa yayına hazır sayılır.
+// ────────────────────────────────────────────────────────────────────────────
+const IS_DEV = import.meta.env.DEV;
+
+const DraftBanner: React.FC = () => (
+  <div className="mb-6 rounded-lg border border-amber-300 bg-amber-50 p-4 flex gap-3 items-start">
+    <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+    <div className="text-sm text-amber-900">
+      <strong className="block mb-1">TASLAK — yayına çıkmadan önce doldurulmalı</strong>
+      Veri sorumlusu kimliği (Ticari unvan, MERSİS, Vergi No, Kayıtlı Adres, KEP) alanları
+      placeholder durumunda. KVKK Aydınlatma Yükümlülüğü Tebliği uyarınca bu bilgiler yayına
+      çıkmadan gerçek değerleriyle değiştirilmelidir. Bu uyarı yalnızca geliştirme ortamında görünür.
+    </div>
+  </div>
+);
 
 const KVKK: React.FC = () => (
   <div className="min-h-screen bg-slate-50">
@@ -23,6 +53,7 @@ const KVKK: React.FC = () => (
     </nav>
 
     <main className="max-w-4xl mx-auto px-4 sm:px-6 py-12">
+      {IS_DEV && <DraftBanner />}
       <h1 className="text-3xl font-bold text-slate-900 mb-2">Kişisel Verilerin Korunması Hakkında Aydınlatma Metni</h1>
       <p className="text-slate-500 text-sm mb-2">Yürürlük tarihi: 19 Nisan 2026</p>
       <p className="text-slate-500 text-sm mb-8">Versiyon: 2.0</p>
@@ -54,7 +85,7 @@ const KVKK: React.FC = () => (
             <li><strong>Kimlik Bilgisi:</strong> Ad, soyad; yalnızca kullanıcının kendisinin girmesi hâlinde.</li>
             <li><strong>İletişim Bilgisi:</strong> E-posta adresi, teslim sonuç bildirimlerinde ileti alınabilmesi için.</li>
             <li><strong>Müşteri İşlem:</strong> Vize profil değerlendirmesine ilişkin kullanıcı girdileri; meslek segmenti, gelir aralığı, seyahat geçmişi, hedef ülke, medeni hâl.</li>
-            <li><strong>Finansal Bilgi:</strong> Kullanıcının manuel olarak beyan ettiği bakiye ve aylık gelir aralığı. Banka dökümü ve benzeri ham finansal evrak sunucularımızda saklanmaz; analiz yalnızca tarayıcı ortamında gerçekleştirilir.</li>
+            <li><strong>Finansal Bilgi:</strong> Kullanıcının manuel olarak beyan ettiği bakiye ve aylık gelir aralığı. Kullanıcı bu isteğe bağlı özellikleri kullandığında banka dökümü veya SGK hizmet dökümünden çıkarılan metin, değerlendirme amacıyla üçüncü taraf yapay zekâ sağlayıcısına (aşağıda 5. bölümde belirtilen alıcı kategorisi) iletilebilir; bu evraklar sunucularımızda kalıcı olarak saklanmaz.</li>
             <li><strong>İşlem Güvenliği:</strong> IP adresi, tarayıcı türü, oturum tanımlayıcıları; güvenlik ve dolandırıcılık önleme amacıyla.</li>
             <li><strong>Pazarlama Bilgisi:</strong> Yalnızca açık rıza verilmesi hâlinde; e-bülten tercihleri ve kampanya iletişim kayıtları.</li>
           </ul>
@@ -93,6 +124,7 @@ const KVKK: React.FC = () => (
           </p>
           <ul className="list-disc pl-5 mt-2 space-y-1.5 text-sm">
             <li><strong>Hizmet altyapısı sağlayıcıları:</strong> Barındırma (hosting), e-posta gönderim, hata izleme ve yedekleme hizmeti veren iş ortakları. Yurt dışı aktarım yalnızca KVKK Madde 9 kapsamında güvenceli ülkelere veya yeterli korumayı sağlayan taahhütname imzalanmış firmalara yönelik gerçekleştirilir.</li>
+            <li><strong>Yapay zekâ değerlendirme hizmeti sağlayıcısı:</strong> Kişiselleştirilmiş skor açıklaması, ret sebebi analizi, banka/SGK döküm yorumlaması ve kapak mektubu üretimi için Anthropic PBC (ABD) hizmetlerinden faydalanılmaktadır. Bu amaçla, yalnızca ilgili istek için gerekli olan metin ve profil alanları Anthropic API'sine iletilmektedir. Anthropic'in kamuya açık ticari kullanım şartları uyarınca API üzerinden iletilen veriler varsayılan olarak model eğitimi amacıyla kullanılmamaktadır. Bu aktarım, yurt dışına veri aktarımı niteliğindedir ve KVKK Madde 9 kapsamında açık rızanız alınarak gerçekleştirilir.</li>
             <li><strong>Ödeme altyapısı:</strong> Premium özellikler için tercih edilen ödeme kuruluşu (iyzico) nezdinde zorunlu işlem verileri.</li>
             <li><strong>Yasal merciler:</strong> Kanunen yetkili kamu kurum ve kuruluşlarının taleplerine yönelik, mevzuatın öngördüğü çerçevede.</li>
           </ul>

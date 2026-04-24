@@ -2,7 +2,7 @@
 // LetterStep — Profesyonel Vize Belgesi Oluşturucu
 // ============================================================
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { Download, ArrowLeft, Briefcase, Wallet, PenTool, Map, X, Star, Sparkles, RefreshCw } from 'lucide-react';
 import type { LetterData, ProfileData } from '../types';
 import { askCoverLetter, askLetterScore, askLetterRevise, type LetterQualityScore } from '../lib/ai';

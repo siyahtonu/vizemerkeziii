@@ -79,6 +79,11 @@ interface ApplicationRecord {
   rejectionNotes?: string;       // Serbest metin (opsiyonel)
   reportedAt?: string;
 
+  // Yetkilendirme: /submit'te record ID'ye ek doğrulama.
+  // Sadece e-posta linkini alan kişi sonucu bildirebilir; UUID tahmin/sızıntısına karşı.
+  // Geriye uyumluluk: bu alan yoksa (eski kayıtlar) token aranmaz (aşağıda /submit).
+  reportToken?: string;
+
   createdAt: string;
 }
 
@@ -116,7 +121,11 @@ function createTransporter() {
     host, port,
     secure: port === 465,
     auth: { user, pass },
-    tls: { rejectUnauthorized: false },
+    // TLS sertifika doğrulaması aktif; kurumsal self-signed CA için
+    // SMTP_TLS_ALLOW_SELF_SIGNED=1 env'i ile açılabilir.
+    tls: {
+      rejectUnauthorized: process.env.SMTP_TLS_ALLOW_SELF_SIGNED !== '1',
+    },
   });
 }
 
@@ -127,7 +136,10 @@ async function sendFollowupEmail(app: ApplicationRecord): Promise<boolean> {
     return false;
   }
 
-  const reportUrl = `https://vizeakil.com/sonuc-bildir?id=${app.id}`;
+  // Yetkilendirme token'ı varsa linkte taşı — /submit bunu doğrular.
+  // Geriye uyumluluk: token'ı olmayan eski kayıtlarda URL eskisi gibi gider.
+  const tokenParam = app.reportToken ? `&token=${app.reportToken}` : '';
+  const reportUrl = `https://vizeakil.com/sonuc-bildir?id=${app.id}${tokenParam}`;
   const appDate = new Date(app.applicationDate).toLocaleDateString('tr-TR', {
     day: 'numeric', month: 'long', year: 'numeric',
   });
@@ -280,6 +292,10 @@ router.post('/register', submitLimiter, (req, res) => {
   }
 
   const id = crypto.randomUUID();
+  // Yetkilendirme token'ı (128 bit) — sadece e-posta linkiyle gelen kişi
+  // sonucu bildirebilsin. ID'nin kendisi de UUID ama listelenebilir/sızabilir
+  // diye ek bir paylaşılmamış secret tutuyoruz.
+  const reportToken = crypto.randomBytes(16).toString('hex');
   const record: ApplicationRecord = {
     id,
     email: email.toLowerCase().trim(),
@@ -288,6 +304,7 @@ router.post('/register', submitLimiter, (req, res) => {
     applicationDate: appDate.toISOString(),
     profileScore: typeof profileScore === 'number' ? profileScore : 0,
     profileSegment: profileSegment ?? 'employed',
+    reportToken,
     createdAt: new Date().toISOString(),
   };
 
@@ -299,6 +316,7 @@ router.post('/register', submitLimiter, (req, res) => {
   return res.json({
     success: true,
     id,
+    reportToken, // frontend panel ekranında /submit'e gönderirken kullanır
     message: `${country} başvurunuz kaydedildi. Yaklaşık 6 hafta sonra (42 gün) sonucu soruyoruz.`,
   });
 });
@@ -306,9 +324,10 @@ router.post('/register', submitLimiter, (req, res) => {
 // ── POST /api/outcomes/submit ─────────────────────────────────────────────────
 // Kullanıcı sonucu bildirir (e-posta linki veya uygulama içinden)
 router.post('/submit', submitLimiter, (req, res) => {
-  const { id, outcome, rejectionCode, rejectionNotes } =
+  const { id, token, outcome, rejectionCode, rejectionNotes } =
     req.body as {
       id?: string;
+      token?: string;
       outcome?: 'onay' | 'ret' | 'bekliyor';
       rejectionCode?: string;
       rejectionNotes?: string;
@@ -321,6 +340,15 @@ router.post('/submit', submitLimiter, (req, res) => {
   const record = applications.find(a => a.id === id);
   if (!record) {
     return res.status(404).json({ error: 'Kayıt bulunamadı.' });
+  }
+
+  // reportToken yetkilendirmesi — kaydın token'ı varsa eşleşmek zorunda.
+  // Geriye uyumluluk: eski kayıtlarda reportToken yok, o durumda eski davranış
+  // korunur (sadece id yeter). Yeni kayıtlar token olmadan kabul edilmez.
+  if (record.reportToken) {
+    if (!token || typeof token !== 'string' || token !== record.reportToken) {
+      return res.status(403).json({ error: 'Yetkilendirme başarısız. Lütfen e-postadaki linki kullanın.' });
+    }
   }
 
   record.outcome = outcome;

@@ -76,7 +76,11 @@ function createTransporter() {
     port,
     secure: port === 465,
     auth: { user, pass },
-    tls: { rejectUnauthorized: false },
+    // TLS sertifika doğrulaması aktif; kurumsal self-signed CA için
+    // SMTP_TLS_ALLOW_SELF_SIGNED=1 env'i ile açılabilir.
+    tls: {
+      rejectUnauthorized: process.env.SMTP_TLS_ALLOW_SELF_SIGNED !== '1',
+    },
   });
 }
 

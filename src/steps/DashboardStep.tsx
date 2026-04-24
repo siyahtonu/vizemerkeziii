@@ -2,14 +2,14 @@
 // DashboardStep — Ana Kontrol Paneli
 // ============================================================
 import React from 'react';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import {
   CheckCircle2, Circle, FileText, ShieldCheck, FileCheck, TrendingUp, Download,
   AlertCircle, Globe, Stethoscope, PenTool, Zap, Clock, Brain, LayoutList,
   MessageSquare, AlertTriangle, Map, Check, X, Calendar, Plane, Upload,
   Sparkles, Star, RefreshCw, XCircle, ChevronDown, ChevronUp,
   Banknote, ClipboardList, Target, ArrowLeft, ChevronRight, Wallet,
-  Briefcase, Info, Euro, BadgeCheck, Stamp, ExternalLink, ScanLine, Bell,
+  Briefcase, Info, Euro, BadgeCheck, Stamp, ExternalLink, ScanLine, Bell, Lock,
 } from 'lucide-react';
 import type { ProfileData } from '../types';
 import type { CountryWarning } from '../lib/scoringV2';
@@ -76,6 +76,7 @@ export interface DashboardStepProps {
   fbDate: string;
   fbStatus: string;
   fbRegisteredId: string;
+  fbRegisteredToken: string;
   fbOutcome: string;
   fbRejCode: string;
   fbRejNotes: string;
@@ -98,6 +99,7 @@ export interface DashboardStepProps {
   onFbDateChange: React.Dispatch<React.SetStateAction<string>>;
   onFbStatusChange: React.Dispatch<React.SetStateAction<string>>;
   onFbRegisteredIdChange: React.Dispatch<React.SetStateAction<string>>;
+  onFbRegisteredTokenChange: React.Dispatch<React.SetStateAction<string>>;
   onFbOutcomeChange: React.Dispatch<React.SetStateAction<string>>;
   onFbRejCodeChange: React.Dispatch<React.SetStateAction<string>>;
   onFbRejNotesChange: React.Dispatch<React.SetStateAction<string>>;
@@ -218,12 +220,12 @@ export function DashboardStep({
   profile, currentScore, currentConfidence, countryWarning,
   rejectionMatches, intelligence, bankHealthScore, roadmap, actionItems,
   baseScoreWithoutUs, isPremium, simulatorValue, isOcrScanning, ocrResults,
-  letterData, feedbackStep, fbEmail, fbDate, fbStatus, fbRegisteredId,
+  letterData, feedbackStep, fbEmail, fbDate, fbStatus, fbRegisteredId, fbRegisteredToken,
   fbOutcome, fbRejCode, fbRejNotes, dashToolTab, showRiskDetail, usedTools, completedTools,
   onNavigate, onProfileUpdate, onProfileSet, onReset, onSimulatorValueChange,
   onOcrUpload, onGeneratePDF, onOpenReportModal, onOpenTool,
   onFeedbackStepChange, onFbEmailChange, onFbDateChange, onFbStatusChange,
-  onFbRegisteredIdChange, onFbOutcomeChange, onFbRejCodeChange, onFbRejNotesChange,
+  onFbRegisteredIdChange, onFbRegisteredTokenChange, onFbOutcomeChange, onFbRejCodeChange, onFbRejNotesChange,
   onDashToolTabChange, onShowRiskDetailChange,
   setIsAiBankOpen, setIsAppointmentOpen, setIsBankPlanOpen, setIsCalculatorOpen,
   setIsCommunityOpen, setIsConsistencyOpen, setIsCopilotOpen, setIsCountryGuideOpen,
@@ -244,6 +246,7 @@ export function DashboardStep({
   const setFbDate = onFbDateChange;
   const setFbStatus = onFbStatusChange;
   const setFbRegisteredId = onFbRegisteredIdChange;
+  const setFbRegisteredToken = onFbRegisteredTokenChange;
   const setFbOutcome = onFbOutcomeChange;
   const setFbRejCode = onFbRejCodeChange;
   const setFbRejNotes = onFbRejNotesChange;
@@ -534,32 +537,32 @@ export function DashboardStep({
                         ))}
                       </div>
                       {!isPremium
-                        ? <button onClick={() => setIsUpgradeOpen(true)} className="text-[10px] bg-amber-50 text-amber-600 border border-amber-100 font-bold px-2 py-1 rounded-lg mb-1">🔒 Premium</button>
-                        : <span className="text-[10px] bg-emerald-50 text-emerald-600 border border-emerald-100 font-bold px-2 py-1 rounded-lg mb-1">✓ Premium</span>
+                        ? <button onClick={() => setIsUpgradeOpen(true)} className="inline-flex items-center gap-1 text-[10px] bg-amber-50 text-amber-600 border border-amber-100 font-bold px-2 py-1 rounded-lg mb-1"><Lock className="w-3 h-3" aria-hidden="true" /> Premium</button>
+                        : <span className="inline-flex items-center gap-1 text-[10px] bg-emerald-50 text-emerald-600 border border-emerald-100 font-bold px-2 py-1 rounded-lg mb-1"><Check className="w-3 h-3" aria-hidden="true" /> Premium</span>
                       }
                     </div>
                     <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                       {([
-                        { tab: 'hazirlik', label: 'Evrak Listesi',         desc: 'Ülkenize özel belge listesi.',                     icon: FileCheck,    color: 'bg-emerald-500', id: 'docs',         setter: setIsDocumentListOpen },
-                        { tab: 'hazirlik', label: 'Belge Kontrol',         desc: 'Eksiksiz evrak listesini PDF olarak indirin.',      icon: FileCheck,    color: 'bg-gradient-to-br from-indigo-500 to-indigo-600',  id: 'docchecklist', setter: setIsDocChecklistOpen },
-                        { tab: 'hazirlik', label: 'Randevu Takip Botu',    desc: 'VFS randevusu açılınca bildirim alın.',             icon: Calendar,     color: 'bg-gradient-to-br from-teal-400 to-teal-500',    id: 'appointment',  setter: setIsAppointmentOpen },
-                        { tab: 'hazirlik', label: 'Banka Hazırlık Planı',  desc: 'Aylık giriş/çıkış hedeflerini görün.',             icon: Banknote,     color: 'bg-gradient-to-br from-emerald-400 to-emerald-600',   id: 'bankplan',     setter: setIsBankPlanOpen },
-                        { tab: 'hazirlik', label: 'Belge Tutarlılık',      desc: 'Pasaport, SGK, banka tarihleri uyuşuyor mu?',      icon: CheckCircle2, color: 'bg-gradient-to-br from-slate-400 to-slate-500',   id: 'consistency',  setter: setIsConsistencyOpen },
-                        { tab: 'hazirlik', label: 'Vizesiz Ülkeler',       desc: 'Türk pasaportuyla vize gerektirmeyen ülkeler.',    icon: Plane,        color: 'bg-gradient-to-br from-emerald-400 to-green-500', id: 'visafree',     setter: setIsVisaFreeOpen },
-                        { tab: 'hazirlik', label: 'Maliyet Hesaplayıcı',   desc: 'Vize + uçak + konaklama + günlük toplam bütçe.',   icon: Wallet,       color: 'bg-gradient-to-br from-indigo-500 to-brand-600',  id: 'cost',         setter: setIsCostCalculatorOpen },
-                        { tab: 'hazirlik', label: '90/180 Gün Hesaplayıcı',desc: 'Schengen 90/180 kuralı — kalan gün ve yeni giriş tarihi.', icon: Calendar, color: 'bg-gradient-to-br from-amber-500 to-orange-600',  id: 'daycalc',      setter: setIsDayCalculatorOpen },
-                        { tab: 'analiz',   label: 'Vize Danışmanım',       desc: 'Yapay zeka ile en kritik 3 adımı öğrenin.',        icon: MessageSquare, color: 'bg-gradient-to-br from-blue-400 to-blue-500',   id: 'copilot',      setter: setIsCopilotOpen },
-                        { tab: 'analiz',   label: 'Kırmızı Bayrak',        desc: 'Otomatik ret gerekçelerini önceden tespit edin.',  icon: XCircle,      color: 'bg-gradient-to-br from-red-400 to-red-500',     id: 'redflag',      setter: setIsRedFlagOpen },
-                        { tab: 'analiz',   label: 'Banka Dökümü Analizi',  desc: 'Ekstrenizi konsolosluk gözüyle değerlendirin.',    icon: Sparkles,     color: 'bg-gradient-to-br from-blue-500 to-indigo-600',    id: 'aibank',       setter: setIsAiBankOpen },
-                        { tab: 'analiz',   label: 'Senaryo Oluşturucu',    desc: '"Bakiyem şu kadar olsa" skora etkisini görün.',   icon: Zap,          color: 'bg-gradient-to-br from-brand-500 to-brand-600',   id: 'calculator',   setter: setIsCalculatorOpen },
-                        { tab: 'analiz',   label: 'Ret Mektubu Analizi',   desc: 'Ret kodunuzu yapıştırın, nedenini öğrenin.',      icon: AlertTriangle, color: 'bg-gradient-to-br from-rose-400 to-rose-500',   id: 'refusal',      setter: setIsRefusalOpen },
-                        { tab: 'analiz',   label: 'Ret Nedeni Haritası',   desc: '2021-2026 gerçek ret kodları — ülke bazında.',     icon: AlertCircle,  color: 'bg-gradient-to-br from-orange-400 to-orange-500',  id: 'refusalmap',   setter: setIsRefusalMapOpen },
-                        { tab: 'ulke',     label: 'Ülke Kıyaslayıcı',     desc: 'Ret oranı ve zorluk puanına göre ülke karşılaştır.', icon: Globe,     color: 'bg-gradient-to-br from-indigo-400 to-indigo-500',  id: 'comparator',   setter: setIsSchengenComparatorOpen },
-                        { tab: 'ulke',     label: 'Nereye Gidebilirim?',   desc: 'Profilinizle en yüksek onay alacağınız 5 ülke.',  icon: Plane,        color: 'bg-gradient-to-br from-sky-400 to-sky-500',     id: 'countryguide', setter: setIsCountryGuideOpen },
-                        { tab: 'ulke',     label: 'Çoklu Ülke Planlayıcı', desc: 'Birden fazla ülke turu için optimum sıra.',      icon: Map,          color: 'bg-gradient-to-br from-cyan-400 to-cyan-500',    id: 'multicountry', setter: setIsMultiCountryOpen },
-                        { tab: 'ulke',     label: 'Mülakat Pratiği',       desc: 'ABD/UK mülakatı — 78 soruluk simülatör.',         icon: Brain,        color: 'bg-gradient-to-br from-amber-400 to-amber-500',   id: 'interview',    setter: setIsInterviewSimOpen },
-                        { tab: 'ulke',     label: 'Sosyal Medya Denetimi', desc: 'Hesaplarınızdaki vize-riskli paylaşımları bulun.', icon: ShieldCheck, color: 'bg-gradient-to-br from-violet-400 to-violet-500',  id: 'socialmedia',  setter: setIsSocialMediaOpen },
-                        { tab: 'ulke',     label: 'Topluluk & Benchmark',  desc: 'Benzer profillerin onay/ret deneyimlerini okuyun.', icon: Star,      color: 'bg-gradient-to-br from-slate-500 to-slate-600',   id: 'community',    setter: setIsCommunityOpen },
+                        { tab: 'hazirlik', label: 'Evrak Listesi',         desc: 'Ülkenize özel belge listesi.',                     icon: FileCheck,    color: 'bg-emerald-500',  id: 'docs',         setter: setIsDocumentListOpen },
+                        { tab: 'hazirlik', label: 'Belge Kontrol',         desc: 'Eksiksiz evrak listesini PDF olarak indirin.',      icon: FileCheck,    color: 'bg-indigo-500',   id: 'docchecklist', setter: setIsDocChecklistOpen },
+                        { tab: 'hazirlik', label: 'Randevu Takip Botu',    desc: 'VFS randevusu açılınca bildirim alın.',             icon: Calendar,     color: 'bg-teal-500',     id: 'appointment',  setter: setIsAppointmentOpen },
+                        { tab: 'hazirlik', label: 'Banka Hazırlık Planı',  desc: 'Aylık giriş/çıkış hedeflerini görün.',             icon: Banknote,     color: 'bg-emerald-600',  id: 'bankplan',     setter: setIsBankPlanOpen },
+                        { tab: 'hazirlik', label: 'Belge Tutarlılık',      desc: 'Pasaport, SGK, banka tarihleri uyuşuyor mu?',      icon: CheckCircle2, color: 'bg-slate-500',    id: 'consistency',  setter: setIsConsistencyOpen },
+                        { tab: 'hazirlik', label: 'Vizesiz Ülkeler',       desc: 'Türk pasaportuyla vize gerektirmeyen ülkeler.',    icon: Plane,        color: 'bg-emerald-500',  id: 'visafree',     setter: setIsVisaFreeOpen },
+                        { tab: 'hazirlik', label: 'Maliyet Hesaplayıcı',   desc: 'Vize + uçak + konaklama + günlük toplam bütçe.',   icon: Wallet,       color: 'bg-brand-600',    id: 'cost',         setter: setIsCostCalculatorOpen },
+                        { tab: 'hazirlik', label: '90/180 Gün Hesaplayıcı',desc: 'Schengen 90/180 kuralı — kalan gün ve yeni giriş tarihi.', icon: Calendar, color: 'bg-amber-500', id: 'daycalc',     setter: setIsDayCalculatorOpen },
+                        { tab: 'analiz',   label: 'Vize Danışmanım',       desc: 'Yapay zeka ile en kritik 3 adımı öğrenin.',        icon: MessageSquare, color: 'bg-blue-500',    id: 'copilot',      setter: setIsCopilotOpen },
+                        { tab: 'analiz',   label: 'Kırmızı Bayrak',        desc: 'Otomatik ret gerekçelerini önceden tespit edin.',  icon: XCircle,      color: 'bg-red-500',      id: 'redflag',      setter: setIsRedFlagOpen },
+                        { tab: 'analiz',   label: 'Banka Dökümü Analizi',  desc: 'Ekstrenizi konsolosluk gözüyle değerlendirin.',    icon: Sparkles,     color: 'bg-indigo-600',   id: 'aibank',       setter: setIsAiBankOpen },
+                        { tab: 'analiz',   label: 'Senaryo Oluşturucu',    desc: '"Bakiyem şu kadar olsa" skora etkisini görün.',   icon: Zap,          color: 'bg-brand-600',    id: 'calculator',   setter: setIsCalculatorOpen },
+                        { tab: 'analiz',   label: 'Ret Mektubu Analizi',   desc: 'Ret kodunuzu yapıştırın, nedenini öğrenin.',      icon: AlertTriangle, color: 'bg-rose-500',    id: 'refusal',      setter: setIsRefusalOpen },
+                        { tab: 'analiz',   label: 'Ret Nedeni Haritası',   desc: '2021-2026 gerçek ret kodları — ülke bazında.',     icon: AlertCircle,  color: 'bg-orange-500',   id: 'refusalmap',   setter: setIsRefusalMapOpen },
+                        { tab: 'ulke',     label: 'Ülke Kıyaslayıcı',     desc: 'Ret oranı ve zorluk puanına göre ülke karşılaştır.', icon: Globe,     color: 'bg-indigo-500',   id: 'comparator',   setter: setIsSchengenComparatorOpen },
+                        { tab: 'ulke',     label: 'Nereye Gidebilirim?',   desc: 'Profilinizle en yüksek onay alacağınız 5 ülke.',  icon: Plane,        color: 'bg-sky-500',      id: 'countryguide', setter: setIsCountryGuideOpen },
+                        { tab: 'ulke',     label: 'Çoklu Ülke Planlayıcı', desc: 'Birden fazla ülke turu için optimum sıra.',      icon: Map,          color: 'bg-cyan-600',     id: 'multicountry', setter: setIsMultiCountryOpen },
+                        { tab: 'ulke',     label: 'Mülakat Pratiği',       desc: 'ABD/UK mülakatı — 78 soruluk simülatör.',         icon: Brain,        color: 'bg-amber-500',    id: 'interview',    setter: setIsInterviewSimOpen },
+                        { tab: 'ulke',     label: 'Sosyal Medya Denetimi', desc: 'Hesaplarınızdaki vize-riskli paylaşımları bulun.', icon: ShieldCheck, color: 'bg-violet-500',   id: 'socialmedia',  setter: setIsSocialMediaOpen },
+                        { tab: 'ulke',     label: 'Topluluk & Benchmark',  desc: 'Benzer profillerin onay/ret deneyimlerini okuyun.', icon: Star,      color: 'bg-slate-600',    id: 'community',    setter: setIsCommunityOpen },
                       ] as const)
                         .filter(t => t.tab === dashToolTab)
                         .map(({ label, desc, icon: Icon, color, id, setter }) => {
@@ -598,7 +601,7 @@ export function DashboardStep({
                                 <div className="flex-1 min-w-0 mt-5">
                                   <div className="flex items-center gap-1.5 mb-0.5 flex-wrap">
                                     <span className={`text-sm font-bold ${locked ? 'text-slate-400' : 'text-slate-900'}`}>{label}</span>
-                                    {locked && <span className="text-[9px] font-bold bg-amber-100 text-amber-600 px-1 py-0.5 rounded">🔒</span>}
+                                    {locked && <Lock className="w-3 h-3 text-amber-500 shrink-0" aria-hidden="true" />}
                                     {!locked && !PREMIUM_TOOLS.includes(id) && <span className="text-[9px] font-bold bg-emerald-100 text-emerald-600 px-1 py-0.5 rounded">Ücretsiz</span>}
                                   </div>
                                   <p className={`text-xs leading-relaxed ${locked ? 'text-slate-400' : 'text-slate-500'}`}>{desc}</p>
@@ -818,6 +821,7 @@ export function DashboardStep({
                                   const data = await res.json();
                                   if (res.ok) {
                                     setFbRegisteredId(data.id ?? '');
+                                    setFbRegisteredToken(data.reportToken ?? '');
                                     setFbStatus('success');
                                     setFeedbackStep('submit');
                                   } else {
@@ -826,6 +830,7 @@ export function DashboardStep({
                                 } catch {
                                   // dev mode fallback
                                   setFbRegisteredId('dev-' + Date.now());
+                                  setFbRegisteredToken('');
                                   setFbStatus('success');
                                   setFeedbackStep('submit');
                                 }
@@ -909,6 +914,7 @@ export function DashboardStep({
                                     headers: { 'Content-Type': 'application/json' },
                                     body: JSON.stringify({
                                       id: fbRegisteredId,
+                                      token: fbRegisteredToken || undefined,
                                       outcome: fbOutcome,
                                       rejectionCode: fbRejCode || undefined,
                                       rejectionNotes: fbRejNotes || undefined,

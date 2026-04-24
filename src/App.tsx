@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import React, { useState, useMemo, useCallback, useEffect, lazy, Suspense } from 'react';
 import {
   CheckCircle2,
   Circle,
@@ -57,7 +57,6 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { jsPDF } from 'jspdf';
 import { SEO } from './components/SEO';
 import { apiUrl } from './lib/api';
 import {
@@ -70,14 +69,15 @@ import {
   askRedFlagScan,
 } from './lib/ai';
 import { extractPdfText } from './lib/pdfExtract';
-import ResearchInsightsWidget from './components/ResearchInsightsWidget';
-import { HelpModal } from './components/modals/HelpModal';
-import { CountryGuideModal } from './components/modals/CountryGuideModal';
-import { DocChecklistModal } from './components/modals/DocChecklistModal';
-import { CostCalculatorModal } from './components/modals/CostCalculatorModal';
-import { DayCalculatorModal } from './components/modals/DayCalculatorModal';
 import type { CountryWarning } from './lib/scoringV2';
-import { RejectionRiskWidget } from './components/RejectionRiskWidget';
+
+// ── Lazy modallar: kullanıcı tıklamadan yüklenmiyor ─────────────────────────
+const ResearchInsightsWidget = lazy(() => import('./components/ResearchInsightsWidget'));
+const HelpModal            = lazy(() => import('./components/modals/HelpModal').then(m => ({ default: m.HelpModal })));
+const CountryGuideModal    = lazy(() => import('./components/modals/CountryGuideModal').then(m => ({ default: m.CountryGuideModal })));
+const DocChecklistModal    = lazy(() => import('./components/modals/DocChecklistModal').then(m => ({ default: m.DocChecklistModal })));
+const CostCalculatorModal  = lazy(() => import('./components/modals/CostCalculatorModal').then(m => ({ default: m.CostCalculatorModal })));
+const DayCalculatorModal   = lazy(() => import('./components/modals/DayCalculatorModal').then(m => ({ default: m.DayCalculatorModal })));
 
 // ── Modüler İmportlar ────────────────────────────────────────────────────────
 import type { ProfileData, Conflict, RoadmapItem, LetterData } from './types';
@@ -101,17 +101,20 @@ import {
 import { calculateRawScore, calculateScore } from './scoring/core';
 import { useCountryRates } from './hooks/useCountryRates';
 import { WidgetBoundary } from './components/ErrorBoundary';
-import { WhatIfSimulator } from './components/WhatIfSimulator';
-import { ProfileRadarChart } from './components/ProfileRadarChart';
-import { CountryRanking } from './components/CountryRanking';
-import { EvidenceChecklist } from './components/EvidenceChecklist';
-import { AssessmentStep } from './steps/AssessmentStep';
-import { TacticsStep } from './steps/TacticsStep';
-import { LetterStep } from './steps/LetterStep';
-import { DashboardStep, type DashboardStepProps } from './steps/DashboardStep';
 import { StepProgress } from './components/StepProgress';
-import { AnalysisReportModal } from './components/AnalysisReportModal';
 import { SocialProofBar } from './components/SocialProofBar';
+// NOT: RejectionRiskWidget, WhatIfSimulator, ProfileRadarChart, CountryRanking,
+// EvidenceChecklist import edilmiyor — App.tsx içinde kullanılmıyorlar. DashboardStep
+// kendi chunk'ında kendi ihtiyaçlarını yüklüyor.
+
+// ── Lazy step bileşenleri: her biri kendi chunk'ında ────────────────────────
+const AssessmentStep     = lazy(() => import('./steps/AssessmentStep').then(m => ({ default: m.AssessmentStep })));
+const TacticsStep        = lazy(() => import('./steps/TacticsStep').then(m => ({ default: m.TacticsStep })));
+const LetterStep         = lazy(() => import('./steps/LetterStep').then(m => ({ default: m.LetterStep })));
+const DashboardStep      = lazy(() => import('./steps/DashboardStep').then(m => ({ default: m.DashboardStep })));
+const AnalysisReportModal = lazy(() => import('./components/AnalysisReportModal').then(m => ({ default: m.AnalysisReportModal })));
+// Type-only import: DashboardStepProps
+import type { DashboardStepProps } from './steps/DashboardStep';
 
 export default function App() {
   const navigate = useNavigate();
@@ -153,26 +156,33 @@ export default function App() {
   // TEST MODU: Tüm premium araçlar açık — ödeme entegrasyonu tamamlanınca false yapılacak
   const [isPremium, setIsPremium] = useState(true);
 
+  // Yeni ({ ts, data }) veya eski (düz) profile blob'unu normalize eder.
+  // cleanCriminalRecord hassas alandır, bu okumalarda kontrol edilmez.
+  const readSavedProfileBlob = (): Partial<ProfileData> | null => {
+    try {
+      const raw = JSON.parse(localStorage.getItem(PROFILE_STORAGE_KEY) || 'null');
+      if (!raw || typeof raw !== 'object') return null;
+      if ('ts' in raw && 'data' in raw) return raw.data as Partial<ProfileData>;
+      return raw as Partial<ProfileData>;
+    } catch { return null; }
+  };
+
   // #18 Devam Et banneri — mount'ta bir kez kontrol et
   const hasSavedProfile = useMemo(() => {
-    try {
-      const saved = JSON.parse(localStorage.getItem(PROFILE_STORAGE_KEY) || 'null');
-      if (!saved) return false;
-      return !!(saved.bankSufficientBalance || saved.hasSgkJob || saved.hasHighValueVisa ||
-        saved.hasAssets || saved.isMarried || saved.cleanCriminalRecord ||
-        (saved.applicantAge && saved.applicantAge > 0) ||
-        (saved.yearsInCurrentJob && saved.yearsInCurrentJob > 0));
-    } catch { return false; }
+    const saved = readSavedProfileBlob();
+    if (!saved) return false;
+    return !!(saved.bankSufficientBalance || saved.hasSgkJob || saved.hasHighValueVisa ||
+      saved.hasAssets || saved.isMarried ||
+      (saved.applicantAge && saved.applicantAge > 0) ||
+      (saved.yearsInCurrentJob && saved.yearsInCurrentJob > 0));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // mount-only
   const [isUpgradeOpen, setIsUpgradeOpen] = useState(false);
   const [isAnalysisReportOpen, setIsAnalysisReportOpen] = useState(false);
   const [onboardingStep, setOnboardingStep] = useState(0);
   const [onboardingCountry, setOnboardingCountry] = useState(() => {
-    try {
-      const saved = JSON.parse(localStorage.getItem(PROFILE_STORAGE_KEY) || 'null');
-      if (saved?.targetCountry && typeof saved.targetCountry === 'string') return saved.targetCountry;
-    } catch { /* noop */ }
+    const saved = readSavedProfileBlob();
+    if (saved?.targetCountry && typeof saved.targetCountry === 'string') return saved.targetCountry;
     return 'Almanya';
   });
   const [onboardingProfile, setOnboardingProfile] = useState('');
@@ -217,6 +227,9 @@ export default function App() {
   const [fbDate, setFbDate] = useState('');
   const [fbStatus, setFbStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [fbRegisteredId, setFbRegisteredId] = useState('');
+  // /register endpoint'i yeni kayıtlarda `reportToken` döner; /submit'te
+  // yetkilendirme için kullanılır. Eski kayıtlarda boştur (geriye uyum).
+  const [fbRegisteredToken, setFbRegisteredToken] = useState('');
   const [fbOutcome, setFbOutcome] = useState<'onay' | 'ret' | 'bekliyor' | ''>('');
   const [fbRejCode, setFbRejCode] = useState('');
   const [fbRejNotes, setFbRejNotes] = useState('');
@@ -283,7 +296,7 @@ export default function App() {
       const valid = ['employer', 'employee', 'student', 'self', 'unemployed', 'retired', 'minor', 'sponsor'];
       if (saved && valid.includes(saved)) return saved as 'employer' | 'employee' | 'student' | 'self' | 'unemployed' | 'retired' | 'minor' | 'sponsor';
       // Eski profilden çıkar: saved applicantType yoksa profile.isStudent / hasSponsor'dan türet
-      const savedProfile = JSON.parse(localStorage.getItem(PROFILE_STORAGE_KEY) || 'null');
+      const savedProfile = readSavedProfileBlob();
       if (savedProfile?.hasSponsor) return 'sponsor';
       if (savedProfile?.isStudent) return 'student';
     } catch { /* noop */ }
@@ -536,12 +549,44 @@ export default function App() {
     applicantAge: 0,
   };
 
+  // ── localStorage Persist Stratejisi (KVKK uyumu) ─────────────────────────
+  // KVKK Madde 12 / OWASP A02: PII'yi şifresiz persistent storage'da tutma.
+  // Çözüm: hassas alanları KAYDETME + 30 günlük TTL.
+  // Kaydedilmeyen alanlar (parasal, ret geçmişi, özel nitelikli veriler):
+  //   bankBalance, monthlyIncome, monthlyInflow, monthlyOutflow,
+  //   lastRejectionYear, hasPreviousRefusal, previousRefusalDisclosed,
+  //   cleanCriminalRecord (KVKK Madde 6 özel nitelikli: ceza/mahkumiyet)
+  // Sadece skor hesaplamayı devam ettirmek için bool/preference alanları kalır.
+  const SENSITIVE_KEYS_NOT_PERSISTED: (keyof ProfileData)[] = [
+    'bankBalance', 'monthlyIncome', 'monthlyInflow', 'monthlyOutflow',
+    'lastRejectionYear', 'hasPreviousRefusal', 'previousRefusalDisclosed',
+    'cleanCriminalRecord',
+  ];
+  const PROFILE_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 gün
+
+  const stripSensitive = (p: ProfileData): Partial<ProfileData> => {
+    const clean: Partial<ProfileData> = { ...p };
+    for (const k of SENSITIVE_KEYS_NOT_PERSISTED) {
+      delete clean[k];
+    }
+    return clean;
+  };
+
   const [profile, setProfile] = useState<ProfileData>(() => {
     try {
       const saved = localStorage.getItem(PROFILE_STORAGE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
-        // Eski sürüm uyumluluğu: eksik alanları DEFAULT ile tamamla
+        // Yeni format: { ts, data }. TTL geçtiyse reddet.
+        if (parsed && typeof parsed === 'object' && parsed.ts && parsed.data) {
+          if (Date.now() - parsed.ts > PROFILE_TTL_MS) {
+            localStorage.removeItem(PROFILE_STORAGE_KEY);
+            return DEFAULT_PROFILE;
+          }
+          return { ...DEFAULT_PROFILE, ...parsed.data };
+        }
+        // Eski format (zaman damgası yok) — uyum için kabul et; bir sonraki
+        // kaydet'te yeni formata çevrilir. Hassas alanlar zaten DEFAULT'tan gelir.
         return { ...DEFAULT_PROFILE, ...parsed };
       }
     } catch { /* bozuk veri — varsayılan kullan */ }
@@ -550,7 +595,10 @@ export default function App() {
 
   // ── Profil otomatik kaydet ────────────────────────────────────────────────
   useEffect(() => {
-    try { localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(profile)); } catch { /* noop */ }
+    try {
+      const payload = { ts: Date.now(), data: stripSensitive(profile) };
+      localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(payload));
+    } catch { /* noop */ }
   }, [profile]);
 
   // v3.4: Risk Tarayıcı modalı açıldığında checkbox'ları profile'dan init et
@@ -2275,7 +2323,8 @@ Signature: _______________     Date: ${today}`;
     setStep('onboarding');
   }, []); // DEFAULT_PROFILE is a module-level constant value, safe as empty dep
 
-  const generatePDFEN = (type: 'cover' | 'sponsor' | 'employer' | 'itinerary' = 'cover') => {
+  const generatePDFEN = async (type: 'cover' | 'sponsor' | 'employer' | 'itinerary' = 'cover') => {
+    const { jsPDF } = await import('jspdf');
     const doc = new jsPDF();
     const today = new Date().toLocaleDateString('en-GB');
     const titles: Record<string, string> = {
@@ -2323,7 +2372,8 @@ Signature: _______________     Date: ${today}`;
     doc.save(`VizeAkil_EN_${titles[type].replace(/\s+/g, '_')}_${(letterData.fullName || 'Document').replace(/\s+/g, '_')}.pdf`);
   };
 
-  const generatePDF = (type: 'cover' | 'sponsor' | 'employer' | 'itinerary' = 'cover') => {
+  const generatePDF = async (type: 'cover' | 'sponsor' | 'employer' | 'itinerary' = 'cover') => {
+    const { jsPDF } = await import('jspdf');
     const doc = new jsPDF();
     const today = new Date().toLocaleDateString('tr-TR');
     const titles: Record<string, string> = {
@@ -2369,7 +2419,8 @@ Signature: _______________     Date: ${today}`;
   };
 
   // ── Belge Kontrol Listesi PDF ─────────────────────────────────────────────
-  const generateDocumentChecklistPDF = () => {
+  const generateDocumentChecklistPDF = async () => {
+    const { jsPDF } = await import('jspdf');
     const doc = new jsPDF();
     const today = new Date().toLocaleDateString('tr-TR');
     const country = profile.targetCountry || 'Schengen';
@@ -2546,8 +2597,9 @@ Signature: _______________     Date: ${today}`;
   };
 
   // ── Kişiye Özel Sihirbaz Evrak Listesi PDF ────────────────────────────────
-  const generateWizardDocListPDF = () => {
+  const generateWizardDocListPDF = async () => {
     if (wizardResult.length === 0) return;
+    const { jsPDF } = await import('jspdf');
     const doc = new jsPDF();
     const today = new Date().toLocaleDateString('tr-TR');
     const countryLabel = wizardCountry === 'schengen' ? 'Schengen' : wizardCountry === 'uk' ? 'Ingiltere' : 'ABD';
@@ -3542,7 +3594,9 @@ Signature: _______________     Date: ${today}`;
                       {profile.targetCountry && (
                         <div className="p-5 bg-white border border-slate-200 rounded-2xl">
                           <h4 className="font-bold text-slate-900 mb-3">Benzer profiller ne yaşadı?</h4>
-                          <ResearchInsightsWidget profile={profile} />
+                          <Suspense fallback={<div className="h-24 flex items-center justify-center"><div className="w-5 h-5 border-2 border-brand-200 border-t-brand-600 rounded-full animate-spin" /></div>}>
+                            <ResearchInsightsWidget profile={profile} />
+                          </Suspense>
                         </div>
                       )}
                     </div>
@@ -5436,6 +5490,7 @@ Signature: _______________     Date: ${today}`;
 
 
           {step === 'assessment' && (
+            <Suspense fallback={<div className="min-h-[50vh] flex items-center justify-center"><div className="w-8 h-8 border-4 border-brand-200 border-t-brand-600 rounded-full animate-spin" /></div>}>
             <AssessmentStep
               profile={profile}
               currentScore={currentScore}
@@ -5448,9 +5503,11 @@ Signature: _______________     Date: ${today}`;
               onApplicantTypeChange={setApplicantType}
               onProfileToggle={handleProfileToggle}
             />
+            </Suspense>
           )}
 
           {step === 'dashboard' && (
+            <Suspense fallback={<div className="min-h-[50vh] flex items-center justify-center"><div className="w-8 h-8 border-4 border-brand-200 border-t-brand-600 rounded-full animate-spin" /></div>}>
             <DashboardStep
               profile={profile}
               currentScore={currentScore}
@@ -5472,6 +5529,7 @@ Signature: _______________     Date: ${today}`;
               fbDate={fbDate}
               fbStatus={fbStatus}
               fbRegisteredId={fbRegisteredId}
+              fbRegisteredToken={fbRegisteredToken}
               fbOutcome={fbOutcome}
               fbRejCode={fbRejCode}
               fbRejNotes={fbRejNotes}
@@ -5493,6 +5551,7 @@ Signature: _______________     Date: ${today}`;
               onFbDateChange={setFbDate}
               onFbStatusChange={setFbStatus}
               onFbRegisteredIdChange={setFbRegisteredId}
+              onFbRegisteredTokenChange={setFbRegisteredToken}
               onFbOutcomeChange={setFbOutcome}
               onFbRejCodeChange={setFbRejCode}
               onFbRejNotesChange={setFbRejNotes}
@@ -5520,13 +5579,17 @@ Signature: _______________     Date: ${today}`;
               setIsUpgradeOpen={setIsUpgradeOpen}
               setIsVisaFreeOpen={setIsVisaFreeOpen}
             />
+            </Suspense>
           )}
 
           {step === 'tactics' && (
+            <Suspense fallback={<div className="min-h-[50vh] flex items-center justify-center"><div className="w-8 h-8 border-4 border-brand-200 border-t-brand-600 rounded-full animate-spin" /></div>}>
             <TacticsStep onNavigate={setStep} profile={profile} />
+            </Suspense>
           )}
 
           {step === 'letter' && (
+            <Suspense fallback={<div className="min-h-[50vh] flex items-center justify-center"><div className="w-8 h-8 border-4 border-brand-200 border-t-brand-600 rounded-full animate-spin" /></div>}>
             <LetterStep
               activeLetterType={activeLetterType}
               letterData={letterData}
@@ -5538,20 +5601,25 @@ Signature: _______________     Date: ${today}`;
               generatePDF={generatePDF}
               generatePDFEN={generatePDFEN}
             />
+            </Suspense>
           )}
         </AnimatePresence>
       </main>
 
       {/* ── Kişisel Analiz Raporu Modalı ─────────────────────────────── */}
-      <AnalysisReportModal
-        isOpen={isAnalysisReportOpen}
-        onClose={() => setIsAnalysisReportOpen(false)}
-        profile={profile}
-        currentScore={currentScore}
-        currentConfidence={currentConfidence}
-        rejectionMatches={rejectionMatches}
-        actionItems={actionItems}
-      />
+      {isAnalysisReportOpen && (
+        <Suspense fallback={null}>
+          <AnalysisReportModal
+            isOpen={isAnalysisReportOpen}
+            onClose={() => setIsAnalysisReportOpen(false)}
+            profile={profile}
+            currentScore={currentScore}
+            currentConfidence={currentConfidence}
+            rejectionMatches={rejectionMatches}
+            actionItems={actionItems}
+          />
+        </Suspense>
+      )}
 
       {/* Footer — tek & birleşik */}
       <footer className="max-w-5xl mx-auto px-4 sm:px-6 py-12 space-y-8 mt-8 border-t border-slate-100">
@@ -7476,42 +7544,62 @@ Signature: _______________     Date: ${today}`;
       </AnimatePresence>
 
       {/* ── ARAÇ: Belge Kontrol Listesi ──────────────────────────────────────── */}
-      <DocChecklistModal
-        isOpen={isDocChecklistOpen}
-        onClose={() => setIsDocChecklistOpen(false)}
-        profile={profile}
-        onDownloadPDF={generateDocumentChecklistPDF}
-        onProfileUpdate={(updates) => {
-          setProfile(prev => ({ ...prev, ...updates }));
-          // En az bir belge işaretlendiyse aracı tamamlandı say
-          if (Object.keys(updates).length > 0) markToolCompleted('docchecklist');
-        }}
-      />
+      {isDocChecklistOpen && (
+        <Suspense fallback={null}>
+          <DocChecklistModal
+            isOpen={isDocChecklistOpen}
+            onClose={() => setIsDocChecklistOpen(false)}
+            profile={profile}
+            onDownloadPDF={generateDocumentChecklistPDF}
+            onProfileUpdate={(updates) => {
+              setProfile(prev => ({ ...prev, ...updates }));
+              // En az bir belge işaretlendiyse aracı tamamlandı say
+              if (Object.keys(updates).length > 0) markToolCompleted('docchecklist');
+            }}
+          />
+        </Suspense>
+      )}
 
       {/* ── ARAÇ: Maliyet Hesaplayıcı ────────────────────────────────────────── */}
-      <CostCalculatorModal
-        isOpen={isCostCalculatorOpen}
-        onClose={() => setIsCostCalculatorOpen(false)}
-        country={profile.targetCountry}
-      />
+      {isCostCalculatorOpen && (
+        <Suspense fallback={null}>
+          <CostCalculatorModal
+            isOpen={isCostCalculatorOpen}
+            onClose={() => setIsCostCalculatorOpen(false)}
+            country={profile.targetCountry}
+          />
+        </Suspense>
+      )}
 
       {/* ── ARAÇ: 90/180 Günlük Hesaplayıcı ──────────────────────────────────── */}
-      <DayCalculatorModal
-        isOpen={isDayCalculatorOpen}
-        onClose={() => setIsDayCalculatorOpen(false)}
-      />
+      {isDayCalculatorOpen && (
+        <Suspense fallback={null}>
+          <DayCalculatorModal
+            isOpen={isDayCalculatorOpen}
+            onClose={() => setIsDayCalculatorOpen(false)}
+          />
+        </Suspense>
+      )}
       {/* ── ARAÇ 18: Nereye Gidebilirim ────────────────────────────────── */}
-      <CountryGuideModal
-        isOpen={isCountryGuideOpen}
-        onClose={() => setIsCountryGuideOpen(false)}
-        currentScore={currentScore}
-      />
+      {isCountryGuideOpen && (
+        <Suspense fallback={null}>
+          <CountryGuideModal
+            isOpen={isCountryGuideOpen}
+            onClose={() => setIsCountryGuideOpen(false)}
+            currentScore={currentScore}
+          />
+        </Suspense>
+      )}
 
       {/* ── YARDIM SAYFASI ─────────────────────────────────────────────── */}
-      <HelpModal
-        isOpen={isHelpOpen}
-        onClose={() => setIsHelpOpen(false)}
-      />
+      {isHelpOpen && (
+        <Suspense fallback={null}>
+          <HelpModal
+            isOpen={isHelpOpen}
+            onClose={() => setIsHelpOpen(false)}
+          />
+        </Suspense>
+      )}
 
       {/* WhatsApp Destek Butonu — sabit, sağ alt */}
       <a

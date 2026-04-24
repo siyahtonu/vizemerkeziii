@@ -24,7 +24,12 @@ function createTransporter() {
     host, port,
     secure: port === 465,
     auth: { user, pass },
-    tls: { rejectUnauthorized: false },
+    // TLS sertifika doğrulaması aktif — standart SMTP sağlayıcıları (Gmail,
+    // Sendgrid, Amazon SES, vs.) için varsayılan. Kurumsal self-signed CA
+    // kullanılıyorsa SMTP_TLS_ALLOW_SELF_SIGNED=1 env'iyle açılabilir.
+    tls: {
+      rejectUnauthorized: process.env.SMTP_TLS_ALLOW_SELF_SIGNED !== '1',
+    },
   });
 }
 
@@ -76,7 +81,12 @@ router.post('/', contactLimiter, async (req, res) => {
     return res.status(503).json({ error: 'Mesaj servisi şu an kullanılamıyor.' });
   }
 
-  const to = process.env.CONTACT_TO ?? 'kornemre@hotmail.com';
+  // CONTACT_TO zorunlu — hardcoded fallback yok (kişisel e-postaya sızıntı engeli)
+  const to = process.env.CONTACT_TO;
+  if (!to) {
+    console.error('[contact] CONTACT_TO env değişkeni tanımlı değil — mesaj gönderilemedi.');
+    return res.status(503).json({ error: 'Mesaj servisi şu an kullanılamıyor.' });
+  }
   const fromAddr = process.env.SMTP_USER!;
 
   const html = `

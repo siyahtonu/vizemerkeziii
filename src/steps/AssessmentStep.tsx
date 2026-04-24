@@ -2,7 +2,7 @@
 // AssessmentStep — Hızlı Profil Analizi
 // ============================================================
 import React, { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import { CheckCircle2, Circle, ShieldCheck, ChevronRight, ArrowLeft, Briefcase, Home, Globe, Wallet, Zap, ChevronLeft } from 'lucide-react';
 import type { ProfileData } from '../types';
 import ScoreStory from '../components/ScoreStory';
@@ -399,6 +399,7 @@ export function AssessmentStep({
                         <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Yaşınız</label>
                         <input
                           type="number"
+                          inputMode="numeric"
                           min={18} max={90}
                           placeholder="28"
                           value={profile.applicantAge || ''}
@@ -424,6 +425,7 @@ export function AssessmentStep({
                         {profile.lastVisaYear !== -1 && (
                           <input
                             type="number"
+                            inputMode="numeric"
                             min={2000} max={new Date().getFullYear()}
                             placeholder="örn. 2022"
                             value={profile.lastVisaYear || ''}
@@ -457,6 +459,7 @@ export function AssessmentStep({
                         {profile.lastRejectionYear !== -1 && (
                           <input
                             type="number"
+                            inputMode="numeric"
                             min={2000} max={new Date().getFullYear()}
                             placeholder="örn. 2020"
                             value={profile.lastRejectionYear || ''}
@@ -647,6 +650,7 @@ export function AssessmentStep({
                           <label className="block text-xs font-bold text-indigo-500 uppercase tracking-wider mb-1.5">Yıl</label>
                           <input
                             type="number"
+                            inputMode="numeric"
                             min={new Date().getFullYear()}
                             max={new Date().getFullYear() + 2}
                             placeholder={String(new Date().getFullYear())}
@@ -827,7 +831,7 @@ export function AssessmentStep({
                   <div className="sticky top-8 space-y-4">
                     {/* Skor kartı */}
                     <div className="bg-white border-2 border-slate-100 rounded-3xl p-6 relative overflow-hidden shadow-sm">
-                      <div className="absolute top-0 right-0 w-40 h-40 bg-brand-500/[0.06] blur-[60px] rounded-full pointer-events-none" />
+                      <div className="absolute top-0 right-0 w-32 h-32 bg-brand-500/[0.05] blur-2xl rounded-full pointer-events-none" />
 
                       {/* Delta badge */}
                       <AnimatePresence>
