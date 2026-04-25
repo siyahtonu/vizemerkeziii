@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Plane, Layers, LayoutList, Download } from 'lucide-react';
 import { ensureTurkishFont, TR_FONT } from '../../lib/pdfFont';
@@ -30,13 +30,17 @@ const ALL_COUNTRIES: CountryEntry[] = [
 export function CountryGuideModal({ isOpen, onClose, currentScore }: Props) {
   const [view, setView] = useState<'cards' | 'table'>('cards');
 
-  const scored = ALL_COUNTRIES.map(c => {
-    const personalApproval = Math.round(
-      (currentScore / 100) * c.approvalBase * c.difficulty +
-      (1 - c.difficulty) * c.approvalBase * 0.3,
-    );
-    return { ...c, personalApproval: Math.min(99, Math.max(15, personalApproval)) };
-  }).sort((a, b) => b.personalApproval - a.personalApproval);
+  // useMemo ile referans stabil: aksi halde her render'da yeni array → handleDownloadPdf
+  // useCallback'i her render'da yeni fn döner ve memoization anlamsızlaşırdı.
+  const scored = useMemo(() =>
+    ALL_COUNTRIES.map(c => {
+      const personalApproval = Math.round(
+        (currentScore / 100) * c.approvalBase * c.difficulty +
+        (1 - c.difficulty) * c.approvalBase * 0.3,
+      );
+      return { ...c, personalApproval: Math.min(99, Math.max(15, personalApproval)) };
+    }).sort((a, b) => b.personalApproval - a.personalApproval),
+  [currentScore]);
 
   const approvalColor = (v: number) =>
     v >= 75 ? 'text-emerald-600' : v >= 55 ? 'text-amber-600' : 'text-rose-600';

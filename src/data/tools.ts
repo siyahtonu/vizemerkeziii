@@ -233,3 +233,16 @@ export const BANK_PLAN_PARAMS: Record<string, { dailyEur: number; minDays: numbe
 
 // Premium tool IDs
 export const PREMIUM_TOOLS = ['copilot', 'comparator', 'refusal', 'aibank', 'socialmedia', 'redflag', 'interview', 'multicountry', 'bankplan', 'refusalmap'];
+
+// AI çağrısı yapan araç ID'leri — DeepSeek (Çin) API'sine veri gönderir,
+// KVKK Madde 9 açık rıza gerektirir. openTool bu set'teki bir tool için
+// rıza alınmadıysa konsente modalı açar, action'ı kuyruğa alır.
+export const AI_TOOL_IDS: ReadonlySet<string> = new Set([
+  'copilot',     // askCopilot — profil özeti DeepSeek'e
+  'refusal',     // askRefusalAnalysis — ret mektubu metni
+  'aibank',      // askBankAnalysis — banka ekstresi ham metin
+  'redflag',     // askRedFlagScan — profil + ekstrelerden risk taraması
+  'consistency', // askCrossConsistency — SGK/banka/kimlik karşılaştırma
+  // 'interview', 'socialmedia', 'multicountry', 'bankplan', 'refusalmap' AI'a
+  // gitmiyor (lokal hesap) — bunlar gate dışında tutuluyor.
+]);

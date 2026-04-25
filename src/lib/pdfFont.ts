@@ -103,6 +103,44 @@ export async function ensureTurkishFont(doc: jsPDF): Promise<boolean> {
 export const TR_FONT = FONT_NAME;
 
 /**
+ * PDF dosya adı için güvenli string üretir — path traversal ve özel karakter
+ * sorunlarını engeller (RFC 5987 / RFC 6266 uyumlu).
+ *
+ * Riskler:
+ *   - Kullanıcı `letterData.fullName` gibi alanlara `../etc/passwd` veya
+ *     Türkçe karakter (İ, Ğ, Ş) yazabilir; bazı tarayıcılarda Content-Disposition
+ *     bunu "?????.pdf" olarak çevirir
+ *   - AI cevabından gelen `fileName` prompt injection ile zarar verebilir
+ *
+ * Bu helper:
+ *   - Türkçe karakterleri ASCII'ye normalize eder (İ → I, Ğ → G, vb.)
+ *   - Yalnızca alfanümerik + `_` + `-` bırakır
+ *   - 80 karakter ile sınırlandırır
+ *   - Boş string yerine fallback döner
+ */
+export function safePdfFilename(input: string | null | undefined, fallback = 'Belge'): string {
+  if (!input) return fallback;
+  // Türkçe → ASCII
+  const trMap: Record<string, string> = {
+    'İ': 'I', 'I': 'I', 'ı': 'i',
+    'Ğ': 'G', 'ğ': 'g',
+    'Ü': 'U', 'ü': 'u',
+    'Ş': 'S', 'ş': 's',
+    'Ö': 'O', 'ö': 'o',
+    'Ç': 'C', 'ç': 'c',
+  };
+  const normalized = input.replace(/[İIıĞğÜüŞşÖöÇç]/g, (ch) => trMap[ch] ?? ch);
+  // Sadece alfanumerik, alt-tire, tire bırak; diğerlerini alt-tireye çevir
+  const cleaned = normalized
+    .replace(/\s+/g, '_')
+    .replace(/[^a-zA-Z0-9_\-]/g, '')
+    .replace(/_+/g, '_')
+    .replace(/^_+|_+$/g, '');
+  if (cleaned.length === 0) return fallback;
+  return cleaned.slice(0, 80);
+}
+
+/**
  * Font'u arka planda önbelleğe alır (PDF üretimine girmeden).
  * Dashboard yüklendiğinde `requestIdleCallback` ile çağrılır; kullanıcı PDF
  * butonuna bastığında font cache'ten anında gelir, gecikme yaşanmaz.

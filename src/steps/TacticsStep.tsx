@@ -16,6 +16,12 @@ import { getCascadeStatus } from '../scoring/core';
 interface Props {
   onNavigate: (step: string) => void;
   profile: ProfileData;
+  /**
+   * AI gerektiren işlem için KVKK Madde 9 açık rıza kapısı — App.tsx'ten gelir.
+   * Rıza varsa action'ı hemen çalıştırır; yoksa global consent modalı açar.
+   * (askPersonalTactics — profil özeti DeepSeek API'ye gider.)
+   */
+  requireAiConsent: (action: () => void) => void;
 }
 
 interface Tactic {
@@ -147,14 +153,14 @@ const colorClasses: Record<Tactic['color'], { bg: string; text: string; ring: st
   orange:  { bg: 'bg-orange-50',  text: 'text-orange-600',  ring: 'ring-orange-100' },
 };
 
-export function TacticsStep({ onNavigate, profile }: Props) {
+export function TacticsStep({ onNavigate, profile, requireAiConsent }: Props) {
   const setStep = onNavigate;
 
   const [aiTactics, setAiTactics] = useState<PersonalTactic[] | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
 
-  const runAiTactics = async () => {
+  const _runAiTacticsImpl = async () => {
     setAiLoading(true);
     setAiError(null);
     try {
@@ -165,6 +171,7 @@ export function TacticsStep({ onNavigate, profile }: Props) {
       setAiLoading(false);
     }
   };
+  const runAiTactics = () => requireAiConsent(() => { void _runAiTacticsImpl(); });
 
   return (
     <motion.div

@@ -17,12 +17,19 @@ interface Props {
   buildLetterBody: (type: string) => string;
   generatePDF: (type: string) => void;
   generatePDFEN: (type: string) => void;
+  /**
+   * AI gerektiren işlem için KVKK Madde 9 açık rıza kapısı — App.tsx'ten gelir.
+   * Rıza varsa action'ı hemen çalıştırır; yoksa global consent modalı açar.
+   * (Cover Letter, Letter Score, Letter Revise hepsi DeepSeek API'ye gider.)
+   */
+  requireAiConsent: (action: () => void) => void;
 }
 
 export function LetterStep({
   activeLetterType, letterData, profile, onNavigate,
   onLetterTypeChange, onLetterDataChange,
   buildLetterBody, generatePDF, generatePDFEN,
+  requireAiConsent,
 }: Props) {
   const setStep = onNavigate;
   const setActiveLetterType = onLetterTypeChange;
@@ -63,7 +70,8 @@ export function LetterStep({
     }
   };
 
-  const runAiLetter = async () => {
+  // KVKK kapısının arkasındaki gerçek AI işlemleri.
+  const _runAiLetterImpl = async () => {
     setAiLoading(true);
     setAiError(null);
     setScore(null);
@@ -71,7 +79,7 @@ export function LetterStep({
       const res = await askCoverLetter(letterData, profile, activeLetterType);
       setAiText(res.body);
       setAiTips(res.tips || []);
-      // Mektup hazır; 2. turda kalite skorla.
+      // Mektup hazır; 2. turda kalite skorla (zaten rıza var, doğrudan çağrı).
       void scoreLetter(res.body);
     } catch (err) {
       setAiError(err instanceof Error ? err.message : 'AI yanıt vermedi.');
@@ -79,8 +87,9 @@ export function LetterStep({
       setAiLoading(false);
     }
   };
+  const runAiLetter = () => requireAiConsent(() => { void _runAiLetterImpl(); });
 
-  const runRevise = async () => {
+  const _runReviseImpl = async () => {
     if (!aiText || !reviseFeedback.trim()) return;
     setReviseLoading(true);
     setAiError(null);
@@ -97,6 +106,7 @@ export function LetterStep({
       setReviseLoading(false);
     }
   };
+  const runRevise = () => requireAiConsent(() => { void _runReviseImpl(); });
   return (
             <motion.div
                 key="letter"

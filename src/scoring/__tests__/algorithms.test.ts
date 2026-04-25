@@ -147,4 +147,51 @@ describe('calculateConfidenceInterval', () => {
     const ci = calculateConfidenceInterval(100, 0.0);
     expect(ci.high).toBeLessThanOrEqual(100);
   });
+
+  // v3.11 width formülü: Math.round(10 - completeness * 7)
+  // Bu testler formül değişimi sessizce kırılmasın diye spesifik değerleri pin'ler.
+  test('width: completeness=1.0 → ±3', () => {
+    const ci = calculateConfidenceInterval(60, 1.0);
+    expect(ci.low).toBe(57);
+    expect(ci.high).toBe(63);
+  });
+
+  test('width: completeness=0.5 → ±7 (Math.round(10-3.5)=7)', () => {
+    const ci = calculateConfidenceInterval(60, 0.5);
+    expect(ci.low).toBe(53);
+    expect(ci.high).toBe(67);
+  });
+
+  test('width: completeness=0.0 → ±10', () => {
+    const ci = calculateConfidenceInterval(60, 0.0);
+    expect(ci.low).toBe(50);
+    expect(ci.high).toBe(70);
+  });
+
+  test('width: max ±10 — completeness=0 ile bile 10\'dan büyük olamaz', () => {
+    const ci = calculateConfidenceInterval(50, 0.0);
+    expect(ci.high - ci.low).toBeLessThanOrEqual(20);
+  });
+
+  // missingCount — KEY_FIELDS değişiminde regresyonu yakalar
+  test('missingCount: completeness=1.0 → 0', () => {
+    const ci = calculateConfidenceInterval(70, 1.0);
+    expect(ci.missingCount).toBe(0);
+  });
+
+  test('missingCount: completeness=0.0 → KEY_FIELDS.length', () => {
+    const ci = calculateConfidenceInterval(70, 0.0);
+    // KEY_FIELDS uzunluğu sabit; bilinmeyen sayı yerine pozitif bir tam sayı bekle.
+    expect(ci.missingCount).toBeGreaterThan(0);
+    expect(Number.isInteger(ci.missingCount)).toBe(true);
+  });
+
+  test('missingCount: completeness=0.5 → KEY_FIELDS / 2 civarı', () => {
+    const ci = calculateConfidenceInterval(70, 0.5);
+    // Tam orta — cinsten kaçınmak için: 0 ile completeness=1.0 arası
+    const ciFull = calculateConfidenceInterval(70, 1.0);
+    const ciEmpty = calculateConfidenceInterval(70, 0.0);
+    expect(ci.missingCount).toBeGreaterThan(ciFull.missingCount);
+    expect(ci.missingCount).toBeLessThan(ciEmpty.missingCount);
+  });
 });

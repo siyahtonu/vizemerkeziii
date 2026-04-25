@@ -4,9 +4,9 @@
 // Çıktı: kalemli EUR + TL breakdown + konsolosluk min kontrolü.
 // ============================================================
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { Calculator, Euro, Plane, Bed, Utensils, ShieldCheck, Info, AlertCircle, Users, Download } from 'lucide-react';
-import { ensureTurkishFont, TR_FONT } from '../lib/pdfFont';
+import { ensureTurkishFont, TR_FONT, safePdfFilename } from '../lib/pdfFont';
 import {
   COUNTRY_COSTS,
   calculateTripCost,
@@ -198,13 +198,18 @@ export const CostCalculatorWidget: React.FC<Props> = ({ country, eurToTry = DEFA
     doc.setTextColor(148, 163, 184);
     doc.text('Rakamlar 2026 piyasa ortalamasına göre tahmini.', 14, 285);
     doc.text('vizeakil.com', 196, 285, { align: 'right' });
-    doc.save(`VizeAkil_Maliyet_${country.replace(/\s+/g, '_')}_${today.replace(/\//g, '-')}.pdf`);
+    doc.save(`VizeAkil_Maliyet_${safePdfFilename(country)}_${today.replace(/\//g, '-')}.pdf`);
   };
 
-  // Modal header'ında PDF butonu için ref'e en güncel handler'ı yaz
-  if (downloadRef) {
-    downloadRef.current = handleDownloadPdf;
-  }
+  // Modal header'ında PDF butonu için ref'e en güncel handler'ı yaz.
+  // useEffect ile yan etkiye taşındı — render saflığı korunur (React 19 +
+  // Concurrent Mode'da render fonksiyonu birden çok kez çalışabilir).
+  useEffect(() => {
+    if (downloadRef) downloadRef.current = handleDownloadPdf;
+    return () => {
+      if (downloadRef) downloadRef.current = null;
+    };
+  }, [downloadRef, handleDownloadPdf]);
 
   return (
     <div className={embedded ? '' : 'bg-white rounded-2xl border border-slate-200 overflow-hidden'}>
@@ -335,18 +340,27 @@ export const CostCalculatorWidget: React.FC<Props> = ({ country, eurToTry = DEFA
         </div>
 
         {/* ── Toplam ────────────────────────────────────────── */}
-        <div className="rounded-xl bg-gradient-to-br from-indigo-600 to-brand-700 p-4 text-white">
-          <div className="flex items-end justify-between">
+        {/*
+          Editorial ton: gradient yerine düz koyu yüzey. Türk kullanıcısı için
+          asıl kritik bilgi TRY — bu yüzden TRY üstte ve daha büyük, EUR ikincil.
+        */}
+        <div className="rounded-xl bg-slate-900 p-4 text-white">
+          <div className="flex items-end justify-between gap-3">
             <div>
-              <div className="text-xs text-indigo-200">Tahmini toplam maliyet</div>
-              <div className="text-2xl font-black mt-0.5">{fmtEUR(breakdown.totalEUR)}</div>
-              <div className="text-xs text-indigo-200 mt-0.5">
-                ≈ {fmtTRY(breakdown.totalEUR * eurToTry)} <span className="opacity-70">(kur €1 ≈ ₺{eurToTry.toLocaleString('tr-TR', { minimumFractionDigits: 2 })})</span>
+              <div className="text-xs text-slate-400 uppercase tracking-wider">Tahmini Toplam</div>
+              <div className="text-2xl font-bold mt-1 text-white">
+                {fmtTRY(breakdown.totalEUR * eurToTry)}
+              </div>
+              <div className="text-sm text-slate-300 mt-0.5">
+                {fmtEUR(breakdown.totalEUR)}
+                <span className="ml-2 text-[11px] text-slate-500">
+                  (kur €1 ≈ ₺{eurToTry.toLocaleString('tr-TR', { minimumFractionDigits: 2 })})
+                </span>
               </div>
             </div>
-            <div className="text-right text-xs text-indigo-100">
+            <div className="text-right text-xs text-slate-400">
               <div>{days} gün · {travelers} kişi</div>
-              <div className="opacity-80">{TIER_LABEL[tier]} · {SEASON_LABEL[season]}</div>
+              <div>{TIER_LABEL[tier]} · {SEASON_LABEL[season]}</div>
             </div>
           </div>
         </div>

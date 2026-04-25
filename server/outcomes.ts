@@ -239,7 +239,7 @@ async function runFollowupCheck(): Promise<void> {
     if (daysSince >= FOLLOWUP_FIRST_DAY
         && daysSince <= FOLLOWUP_FIRST_DAY + FOLLOWUP_WINDOW_DAYS
         && !app.followupSentAt) {
-      console.log(`[outcomes] Follow-up gönderiliyor → ${app.email} (${app.country}, ${daysSince} gün)`);
+      console.log(`[outcomes] Follow-up gönderiliyor → ${maskEmail(app.email)} (${app.country}, ${daysSince} gün, id=${app.id})`);
       const sent = await sendFollowupEmail(app);
       if (sent) {
         app.followupSentAt = now.toISOString();
@@ -249,7 +249,7 @@ async function runFollowupCheck(): Promise<void> {
 
     // İkinci hatırlatma: 70+ gün + 1. gönderilmiş + 2. gönderilmemiş
     if (daysSince > FOLLOWUP_REMINDER_DAY && app.followupSentAt && !app.followupReminderSentAt) {
-      console.log(`[outcomes] 2. hatırlatma gönderiliyor → ${app.email} (${app.country}, ${daysSince} gün)`);
+      console.log(`[outcomes] 2. hatırlatma gönderiliyor → ${maskEmail(app.email)} (${app.country}, ${daysSince} gün, id=${app.id})`);
       const sent = await sendFollowupEmail(app);
       if (sent) {
         app.followupReminderSentAt = now.toISOString();
@@ -321,7 +321,7 @@ router.post('/register', submitLimiter, (req, res) => {
   applications.push(record);
   saveApplications(applications);
 
-  console.log(`[outcomes] Yeni kayıt: ${email} — ${country} — ${applicationDate}`);
+  console.log(`[outcomes] Yeni kayıt: ${maskEmail(email)} — ${country} — ${applicationDate} (id=${id})`);
 
   return res.json({
     success: true,

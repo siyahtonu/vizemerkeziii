@@ -89,7 +89,7 @@ import { visaFreeCountries, schengenCountries, multiCountryVisaData, getVisaFree
 import type { VisaFreeCountry, BankAnalysisResult, SchengenCountry } from './data/countries';
 import {
   socialMediaChecklist, interviewQuestions, BANK_PLAN_PARAMS,
-  PREMIUM_TOOLS, defaultCommunityEntries,
+  PREMIUM_TOOLS, AI_TOOL_IDS, defaultCommunityEntries,
   COMMUNITY_STORAGE_KEY, PROFILE_STORAGE_KEY
 } from './data/tools';
 import type { SocialMediaItem, InterviewQ, CommunityEntry } from './data/tools';
@@ -117,6 +117,49 @@ const DashboardStep      = lazy(() => import('./steps/DashboardStep').then(m => 
 const AnalysisReportModal = lazy(() => import('./components/AnalysisReportModal').then(m => ({ default: m.AnalysisReportModal })));
 // Type-only import: DashboardStepProps
 import type { DashboardStepProps } from './steps/DashboardStep';
+
+// ── KVKK Madde 9 Açık Rıza — modül seviyesi sabit ────────────────────────
+// Banka ekstresi, SGK döküm ham metni ve mali profil özeti DeepSeek (Çin)
+// API'sine gönderiliyor. KVKK Madde 9 yurt dışı veri transferi açık rıza şart.
+// localStorage'a yazma sadece bu helper'lar üzerinden yapılır.
+//
+// V2 format (audit trail için):
+//   { v: 2, ts: 1745580000000, scope: 'deepseek-cn-bank-sgk-profile' }
+// V1 sürümü ('1' string) eski kullanıcılar için geriye uyumlu okunur.
+const AI_CONSENT_KEY = 'vizeakil_ai_kvkk_consent_v1';
+const AI_CONSENT_SCOPE = 'deepseek-cn-bank-sgk-profile';
+
+interface AiConsentRecord {
+  v: 2;
+  ts: number;          // unix ms — onay verilme zamanı
+  scope: string;       // hangi veri kategorisi + hangi alıcıya rıza
+}
+
+function readAiConsentFromStorage(): boolean {
+  try {
+    const raw = localStorage.getItem(AI_CONSENT_KEY);
+    if (!raw) return false;
+    // V1 geriye uyumluluk
+    if (raw === '1') return true;
+    const parsed = JSON.parse(raw) as Partial<AiConsentRecord>;
+    return parsed.v === 2 && typeof parsed.ts === 'number' && parsed.scope === AI_CONSENT_SCOPE;
+  } catch { return false; }
+}
+
+function writeAiConsentToStorage(consented: boolean): void {
+  try {
+    if (consented) {
+      const record: AiConsentRecord = {
+        v: 2,
+        ts: Date.now(),
+        scope: AI_CONSENT_SCOPE,
+      };
+      localStorage.setItem(AI_CONSENT_KEY, JSON.stringify(record));
+    } else {
+      localStorage.removeItem(AI_CONSENT_KEY);
+    }
+  } catch { /* noop */ }
+}
 
 export default function App() {
   const navigate = useNavigate();
@@ -223,23 +266,48 @@ export default function App() {
   const [apptCountryFilter, setApptCountryFilter] = useState('Tümü');
   const [apptShowAvailableOnly, setApptShowAvailableOnly] = useState(false);
 
-  // ── KVKK Madde 9 Açık Rıza — Banka/SGK ham metni AI analizi ──────────────
-  // Banka ekstresi ve SGK döküm ham metni DeepSeek (Çin) API'sine gönderiliyor.
-  // KVKK Madde 9 yurt dışı veri transferi açık rıza şart. Kullanıcı bir kez
-  // onaylar, kararı localStorage'a kaydolur (kararı geri çekebilir).
-  const AI_CONSENT_KEY = 'vizeakil_ai_kvkk_consent_v1';
-  const [aiConsent, setAiConsent] = useState<boolean>(() => {
-    try { return localStorage.getItem(AI_CONSENT_KEY) === '1'; }
-    catch { return false; }
-  });
+  // ── KVKK Madde 9 Açık Rıza — Banka/SGK ham metni + tüm AI çağrıları ──────
+  // Detaylar AI_CONSENT_KEY sabiti ve grantAiConsent/revokeAiConsent helper'ları
+  // dosya tepesinde tanımlı. State sadece bu sabiti okuyup yazıyor.
+  const [aiConsent, setAiConsent] = useState<boolean>(readAiConsentFromStorage);
+  const [isAiConsentModalOpen, setIsAiConsentModalOpen] = useState(false);
+  // Rıza verildikten sonra çalıştırılacak action (ör. openTool, askCopilot vs.)
+  const [pendingAiAction, setPendingAiAction] = useState<(() => void) | null>(null);
+
   const grantAiConsent = () => {
-    try { localStorage.setItem(AI_CONSENT_KEY, '1'); } catch { /* noop */ }
+    writeAiConsentToStorage(true);
     setAiConsent(true);
+    setIsAiConsentModalOpen(false);
+    // Kuyrukta action varsa çalıştır
+    if (pendingAiAction) {
+      const action = pendingAiAction;
+      setPendingAiAction(null);
+      // Mikro task — modal kapanma animasyonundan sonra çalışsın
+      setTimeout(() => action(), 50);
+    }
   };
   const revokeAiConsent = () => {
-    try { localStorage.removeItem(AI_CONSENT_KEY); } catch { /* noop */ }
+    writeAiConsentToStorage(false);
     setAiConsent(false);
   };
+  const cancelAiConsent = () => {
+    setIsAiConsentModalOpen(false);
+    setPendingAiAction(null);
+  };
+
+  /**
+   * AI gerektiren bir işlem için rıza kontrolü yapar.
+   * Rıza varsa action'ı hemen çalıştırır.
+   * Yoksa action'ı kuyruğa alır ve consent modalını açar.
+   */
+  const requireAiConsent = useCallback((action: () => void) => {
+    if (aiConsent) {
+      action();
+    } else {
+      setPendingAiAction(() => action);
+      setIsAiConsentModalOpen(true);
+    }
+  }, [aiConsent]);
 
   // ── Feedback Loop — Başvuru Sonuç Takibi ──────────────────────────────────
   const [feedbackStep, setFeedbackStep] = useState<'register' | 'submit' | 'done'>('register');
@@ -2416,7 +2484,7 @@ Signature: _______________     Date: ${today}`;
 
   const generatePDFEN = async (type: 'cover' | 'sponsor' | 'employer' | 'itinerary' = 'cover') => {
     // Türkçe font yüklensin: kullanıcının adı/adresi Türkçe karakter içerebilir.
-    const [{ jsPDF }, { ensureTurkishFont, TR_FONT }] = await Promise.all([
+    const [{ jsPDF }, { ensureTurkishFont, TR_FONT, safePdfFilename }] = await Promise.all([
       import('jspdf'),
       import('./lib/pdfFont'),
     ]);
@@ -2465,11 +2533,11 @@ Signature: _______________     Date: ${today}`;
     doc.setTextColor(148, 163, 184);
     doc.text('This document was generated by VizeAkil.com Smart Document Generator 2.0. It does not constitute official legal advice or visa guarantee.', 14, pageHeight - 4);
 
-    doc.save(`VizeAkil_EN_${titles[type].replace(/\s+/g, '_')}_${(letterData.fullName || 'Document').replace(/\s+/g, '_')}.pdf`);
+    doc.save(`VizeAkil_EN_${safePdfFilename(titles[type])}_${safePdfFilename(letterData.fullName, 'Document')}.pdf`);
   };
 
   const generatePDF = async (type: 'cover' | 'sponsor' | 'employer' | 'itinerary' = 'cover') => {
-    const [{ jsPDF }, { ensureTurkishFont, TR_FONT }] = await Promise.all([
+    const [{ jsPDF }, { ensureTurkishFont, TR_FONT, safePdfFilename }] = await Promise.all([
       import('jspdf'),
       import('./lib/pdfFont'),
     ]);
@@ -2515,14 +2583,14 @@ Signature: _______________     Date: ${today}`;
     doc.setFontSize(7);
     doc.text('Bu belge VizeAkıl (vizeakil.com) Smart Document Generator 2.0 ile oluşturulmuştur. Resmi vize danışmanlığının yerini tutmaz.', 14, pageHeight - 4);
 
-    doc.save(`VizeAkil_${titles[type].replace(/\s+/g, '_')}_${(letterData.fullName || 'Belge').replace(/\s+/g, '_')}.pdf`);
+    doc.save(`VizeAkil_${safePdfFilename(titles[type])}_${safePdfFilename(letterData.fullName, 'Belge')}.pdf`);
   };
 
   // ── Belge Kontrol Listesi PDF ─────────────────────────────────────────────
   // İşaretli kalemleri (modal'daki Set) PDF'te de işaretli + üstü çizili gösterir.
   // Liste kaynağı buildSections — modal ile aynı kaynak (src/lib/docChecklist).
   const generateDocumentChecklistPDF = async (checked?: Set<string>) => {
-    const [{ jsPDF }, { ensureTurkishFont, TR_FONT }, { buildSections }] = await Promise.all([
+    const [{ jsPDF }, { ensureTurkishFont, TR_FONT, safePdfFilename }, { buildSections }] = await Promise.all([
       import('jspdf'),
       import('./lib/pdfFont'),
       import('./lib/docChecklist'),
@@ -2653,14 +2721,19 @@ Signature: _______________     Date: ${today}`;
     doc.setFontSize(7);
     doc.text('Bu liste VizeAkıl (vizeakil.com) tarafından profilinize göre oluşturulmuştur. Resmi vize danışmanlığının yerini tutmaz.', 14, pageHeight - 4);
 
-    doc.save(`VizeAkil_Belge_Kontrol_Listesi_${country}_${today.replace(/\//g, '-')}.pdf`);
+    doc.save(`VizeAkil_Belge_Kontrol_Listesi_${safePdfFilename(country, 'Schengen')}_${today.replace(/\//g, '-')}.pdf`);
   };
 
   // ── Kişiye Özel Sihirbaz Evrak Listesi PDF ────────────────────────────────
   const generateWizardDocListPDF = async () => {
     if (wizardResult.length === 0) return;
-    const { jsPDF } = await import('jspdf');
+    const [{ jsPDF }, { ensureTurkishFont, TR_FONT, safePdfFilename }] = await Promise.all([
+      import('jspdf'),
+      import('./lib/pdfFont'),
+    ]);
     const doc = new jsPDF();
+    await ensureTurkishFont(doc);
+    void TR_FONT; // mevcut kod helvetica kullanıyor; tamamen migration ayrı iş
     const today = new Date().toLocaleDateString('tr-TR');
     const countryLabel = wizardCountry === 'schengen' ? 'Schengen' : wizardCountry === 'uk' ? 'Ingiltere' : 'ABD';
     const employmentLabel = wizardEmployment === 'employee' ? 'Calisan'
@@ -2752,7 +2825,7 @@ Signature: _______________     Date: ${today}`;
     doc.setFontSize(7);
     doc.text('Bu liste VizeAkil (vizeakil.com) tarafindan profilinize gore olusturulmustur. Resmi vize danismanliginin yerini tutmaz.', 14, pageHeight - 4);
 
-    doc.save(`VizeAkil_Kisiye_Ozel_Evrak_Listesi_${normalizeTr(countryLabel)}_${today.replace(/\//g, '-')}.pdf`);
+    doc.save(`VizeAkil_Kisiye_Ozel_Evrak_Listesi_${safePdfFilename(countryLabel)}_${today.replace(/\//g, '-')}.pdf`);
   };
 
   // Kullanıcının bu seansta açtığı araçlar — "Devam ediyor / Tamamlanmadı"
@@ -2793,10 +2866,17 @@ Signature: _______________     Date: ${today}`;
     []
   );
 
-  // Open a tool: if premium-gated and not premium, show upgrade modal; else navigate to dashboard + open
+  // Open a tool: if premium-gated and not premium, show upgrade modal; if AI tool
+  // and KVKK rıza yoksa consent modal açıp action'ı kuyruğa al; else navigate to dashboard + open.
   const openTool = (toolId: string, setter: (b: boolean) => void) => {
     if (PREMIUM_TOOLS.includes(toolId) && !isPremium) {
       setIsUpgradeOpen(true);
+      return;
+    }
+    // KVKK Madde 9 — AI çağrısı yapan araçlar için açık rıza şart.
+    if (AI_TOOL_IDS.has(toolId) && !aiConsent) {
+      setPendingAiAction(() => () => openTool(toolId, setter));
+      setIsAiConsentModalOpen(true);
       return;
     }
     // Araca girildiğinde "kullanıldı" olarak işaretle
@@ -4059,31 +4139,35 @@ Signature: _______________     Date: ${today}`;
                 </div>
                 <div className="flex-1 overflow-y-auto p-8 space-y-6">
 
-                  {/* KVKK Madde 9 — açık rıza bandı (yurt dışı veri transferi) */}
+                  {/* KVKK Madde 9 — açık rıza durumu (defensive; gate openTool seviyesinde) */}
                   {!aiBankResult && !aiBankLoading && !aiConsent && (
-                    <div className="p-5 bg-amber-50 border-2 border-amber-300 rounded-2xl space-y-3">
+                    <div
+                      role="region"
+                      aria-labelledby="kvkk-bank-title"
+                      className="p-5 bg-slate-50 border border-slate-300 rounded-2xl space-y-3"
+                    >
                       <div className="flex items-start gap-3">
-                        <ShieldCheck className="w-5 h-5 text-amber-600 mt-0.5 shrink-0" />
+                        <ShieldCheck className="w-5 h-5 text-slate-700 mt-0.5 shrink-0" aria-hidden="true" />
                         <div>
-                          <h4 className="text-sm font-bold text-amber-900 mb-1">
+                          <h4 id="kvkk-bank-title" className="text-sm font-bold text-slate-900 mb-1">
                             KVKK Madde 9 — Yurt Dışı Veri Aktarımı Açık Rıza
                           </h4>
-                          <p className="text-xs text-amber-800 leading-relaxed">
+                          <p className="text-xs text-slate-700 leading-relaxed">
                             Yapay zekâ destekli banka/SGK döküm analizi sırasında, yüklediğiniz dosyadan çıkarılan
                             <strong> metin verisi DeepSeek (Çin Halk Cumhuriyeti)</strong> API'sine iletilir.
                             Çin, KVK Kurulu'nun yeterli korumaya sahip ülkeler listesinde değildir; bu nedenle
                             aktarım <strong>açık rızanıza</strong> dayanır. Veriler analiz dışında saklanmaz,
-                            üçüncü taraflarla paylaşılmaz. Detay: <Link to="/kvkk" target="_blank" className="underline font-bold">KVKK Aydınlatma Metni</Link>.
+                            üçüncü taraflarla paylaşılmaz. Detay: <a href="/kvkk" target="_blank" rel="noopener noreferrer" className="underline font-bold">KVKK Aydınlatma Metni</a>.
                           </p>
                           <button
                             type="button"
                             onClick={grantAiConsent}
-                            className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition-colors"
+                            className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2"
                           >
-                            <CheckCircle2 className="w-3.5 h-3.5" />
-                            Açık Rıza Veriyorum (Çin'e veri aktarımı dahil)
+                            <CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" />
+                            Açık Rıza Veriyorum
                           </button>
-                          <p className="text-[10px] text-amber-700 mt-2">
+                          <p className="text-[10px] text-slate-500 mt-2">
                             Rıza vermediğinizde dosyasız manuel form alanları çalışmaya devam eder; ham döküm
                             yüklemesi ve AI analizi devre dışı kalır.
                           </p>
@@ -4092,14 +4176,18 @@ Signature: _______________     Date: ${today}`;
                     </div>
                   )}
                   {!aiBankResult && !aiBankLoading && aiConsent && (
-                    <div className="px-3 py-2 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between gap-2 text-xs">
+                    <div
+                      role="status"
+                      aria-live="polite"
+                      className="px-3 py-2 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between gap-2 text-xs"
+                    >
                       <span className="text-emerald-700 flex items-center gap-1.5">
-                        <CheckCircle2 className="w-3.5 h-3.5" /> AI analizi için açık rızanız aktif (Çin transferi dahil)
+                        <CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" /> AI analizi için açık rızanız aktif (Çin transferi dahil)
                       </span>
                       <button
                         type="button"
                         onClick={revokeAiConsent}
-                        className="text-emerald-700 underline font-bold hover:text-emerald-900"
+                        className="text-emerald-700 underline font-bold hover:text-emerald-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-1 rounded"
                       >
                         Geri çek
                       </button>
@@ -5717,7 +5805,7 @@ Signature: _______________     Date: ${today}`;
 
           {step === 'tactics' && (
             <Suspense fallback={<div className="min-h-[50vh] flex items-center justify-center"><div className="w-8 h-8 border-4 border-brand-200 border-t-brand-600 rounded-full animate-spin" /></div>}>
-            <TacticsStep onNavigate={setStep} profile={profile} />
+            <TacticsStep onNavigate={setStep} profile={profile} requireAiConsent={requireAiConsent} />
             </Suspense>
           )}
 
@@ -5733,6 +5821,7 @@ Signature: _______________     Date: ${today}`;
               buildLetterBody={buildLetterBody}
               generatePDF={generatePDF}
               generatePDFEN={generatePDFEN}
+              requireAiConsent={requireAiConsent}
             />
             </Suspense>
           )}
@@ -5794,7 +5883,7 @@ Signature: _______________     Date: ${today}`;
         <div className="grid grid-cols-2 md:grid-cols-4 gap-10 pt-4">
           <div className="col-span-2 md:col-span-1">
             <div className="flex items-center gap-2.5 font-display font-bold text-lg text-slate-900 mb-3">
-              <div className="w-8 h-8 bg-gradient-to-br from-brand-500 to-brand-600 rounded-xl flex items-center justify-center shadow-sm shadow-brand-500/15">
+              <div className="w-8 h-8 bg-brand-600 rounded-xl flex items-center justify-center">
                 <ShieldCheck className="w-4 h-4 text-white" />
               </div>
               VizeAkıl
@@ -7376,7 +7465,7 @@ Signature: _______________     Date: ${today}`;
                     type="button"
                     onClick={async () => {
                       const { jsPDF } = await import('jspdf');
-                      const { ensureTurkishFont, TR_FONT } = await import('./lib/pdfFont');
+                      const { ensureTurkishFont, TR_FONT, safePdfFilename } = await import('./lib/pdfFont');
                       const doc = new jsPDF();
                       await ensureTurkishFont(doc);
                       const today = new Date().toLocaleDateString('tr-TR');
@@ -7440,7 +7529,7 @@ Signature: _______________     Date: ${today}`;
                       doc.setTextColor(148, 163, 184);
                       doc.text('Veriler 2021–2026 EU/UK/US istatistikleri + Türk başvurucu örnek havuzu.', 14, 285);
                       doc.text('vizeakil.com', 196, 285, { align: 'right' });
-                      doc.save(`VizeAkil_RetHaritasi_${country.replace(/\s+/g, '_')}_${today.replace(/\//g, '-')}.pdf`);
+                      doc.save(`VizeAkil_RetHaritasi_${safePdfFilename(country)}_${today.replace(/\//g, '-')}.pdf`);
                     }}
                     className="flex items-center gap-1.5 px-3 py-2 bg-orange-50 border border-orange-200 text-orange-700 rounded-xl text-xs font-bold hover:bg-orange-100 transition-colors"
                   >
@@ -7825,6 +7914,73 @@ Signature: _______________     Date: ${today}`;
             onClose={() => setIsHelpOpen(false)}
           />
         </Suspense>
+      )}
+
+      {/* ── KVKK Madde 9 Açık Rıza Modal'ı (global) ────────────────────── */}
+      {/*
+        Tüm AI tabanlı araçlar (Vize Danışmanım, Banka Analizi, Ret Mektubu vb.)
+        ilk kez kullanılırken bu modal açılır. Rıza verildikten sonra kullanıcı
+        AI özelliklerini kullanabilir; localStorage'a kayıtlı kalır, geri çekilebilir.
+      */}
+      {isAiConsentModalOpen && (
+        <div
+          className="fixed inset-0 z-[200] flex items-center justify-center p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="ai-consent-title"
+        >
+          <div
+            className="absolute inset-0 bg-slate-900/60 backdrop-blur-md"
+            onClick={cancelAiConsent}
+          />
+          <div className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl border border-slate-100 max-h-[92vh] overflow-y-auto">
+            <div className="p-6 border-b border-slate-100">
+              <div className="flex items-start gap-3">
+                <ShieldCheck className="w-6 h-6 text-amber-600 mt-0.5 shrink-0" aria-hidden="true" />
+                <div>
+                  <h3 id="ai-consent-title" className="text-lg font-bold text-slate-900">
+                    KVKK Madde 9 — Yapay Zekâ Hizmeti Açık Rıza
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-1">Yurt dışına veri aktarımı için onay gerekiyor</p>
+                </div>
+              </div>
+            </div>
+            <div className="px-6 py-5 space-y-4 text-sm text-slate-700 leading-relaxed">
+              <p>
+                Bu özellik, profil özetinizi, banka/SGK döküm metnini veya benzeri kullanıcı
+                girdisini <strong>DeepSeek (Hangzhou DeepSeek Artificial Intelligence Co., Ltd. — Çin Halk Cumhuriyeti)</strong> API'sine
+                ileterek yapay zekâ destekli analiz yapar.
+              </p>
+              <ul className="list-disc pl-5 space-y-1.5 text-xs">
+                <li>Çin Halk Cumhuriyeti, KVK Kurulu'nun yeterli korumaya sahip ülkeler listesinde değildir.</li>
+                <li>Bu nedenle aktarım <strong>açık rızanıza</strong> dayanır (KVKK Madde 9).</li>
+                <li>Veriler analiz dışında saklanmaz, model eğitimi için kullanılmaz.</li>
+                <li>Rızanızı dilediğiniz zaman geri çekebilirsiniz; AI özellikleri devre dışı kalır.</li>
+                <li>Detay: <a href="/kvkk" target="_blank" rel="noopener noreferrer" className="text-brand-600 underline font-bold">KVKK Aydınlatma Metni (yeni sekmede açılır)</a></li>
+              </ul>
+              <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-[11px] text-slate-500">
+                Rıza vermezseniz: Profil skoru, ülke karşılaştırma, ret kodu eşleştirme gibi
+                yerel hesaplama özellikleri çalışmaya devam eder.
+              </div>
+            </div>
+            <div className="p-6 border-t border-slate-100 flex flex-col-reverse sm:flex-row gap-2 sm:gap-3">
+              <button
+                type="button"
+                onClick={cancelAiConsent}
+                className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-sm font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
+              >
+                Vazgeç
+              </button>
+              <button
+                type="button"
+                onClick={grantAiConsent}
+                className="flex-1 py-3 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-sm font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2"
+              >
+                Açık Rıza Veriyorum
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* WhatsApp Destek Butonu — sabit, sağ alt */}

@@ -16,6 +16,7 @@ import jwt from 'jsonwebtoken';
 import rateLimit from 'express-rate-limit';
 import fs from 'fs';
 import path from 'path';
+import crypto from 'crypto';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -34,11 +35,18 @@ if (!jwtSecret || jwtSecret.length < 32) {
 // sonucu döner; saldırgan token'ı ele geçirirse teorik olarak kendi tarayıcısı
 // için tekrar JWT üretebilir. Bu Map tüketilmiş token'ları tutar (24 saat TTL).
 //
+// Token'lar SHA-256 hash'lenmiş olarak saklanır — sunucu disk imajı sızdığında
+// bile ham token değerleri tek yönlü hash'ten geri çıkarılamaz (CWE-312 mitigasyon).
+//
 // Persistent: applications.json pattern'i ile JSON dosyaya da yazılır.
 // Render restart/redeploy sonrasında pencere sıfırlanmasın diye. Multi-instance
 // deployment'te bu yine yetersizdir; o zaman Redis/Postgres'e taşınmalı.
 const TOKENS_FILE = path.join(__dirname, 'consumed-tokens.json');
 const TOKEN_REPLAY_WINDOW_MS = 24 * 60 * 60 * 1000; // 24 saat
+
+function hashToken(token: string): string {
+  return crypto.createHash('sha256').update(token).digest('hex');
+}
 
 function loadConsumedTokens(): Map<string, number> {
   try {
@@ -46,8 +54,13 @@ function loadConsumedTokens(): Map<string, number> {
       const raw = fs.readFileSync(TOKENS_FILE, 'utf-8');
       const arr = JSON.parse(raw) as Array<[string, number]>;
       const cutoff = Date.now() - TOKEN_REPLAY_WINDOW_MS;
-      // Yüklerken eski kayıtları zaten ele
-      return new Map(arr.filter(([, ts]) => ts >= cutoff));
+      // Yüklerken eski kayıtları ele.
+      // Geriye uyum: önceki sürüm raw token saklıyordu. SHA-256 hex 64 karakter;
+      // başka uzunluktaki kayıtlar (ham token, tipik ~32-64 char) sessizce
+      // dropped — yeni kayıtlar hash'li gelir.
+      return new Map(
+        arr.filter(([h, ts]) => ts >= cutoff && typeof h === 'string' && h.length === 64),
+      );
     }
   } catch (e) {
     console.error('[payment] consumed-tokens.json okunamadı:', e);
@@ -57,26 +70,43 @@ function loadConsumedTokens(): Map<string, number> {
 
 const consumedTokens: Map<string, number> = loadConsumedTokens();
 
+// I/O serileştirme — eş zamanlı iki callback persist çağırırsa son yazan kazanır
+// ve race oluşur. Tek bir Promise zinciri ile yazımları sıraya alıyoruz.
+// Ayrıca senkron writeFileSync yerine async fs.promises.writeFile kullanıyoruz —
+// event loop bloke olmaz, ödeme callback latency'si artmaz.
+let writeQueue: Promise<void> = Promise.resolve();
+
 function persistConsumedTokens(): void {
-  try {
-    const arr = Array.from(consumedTokens.entries());
-    fs.writeFileSync(TOKENS_FILE, JSON.stringify(arr), 'utf-8');
-  } catch (e) {
-    console.error('[payment] consumed-tokens.json yazılamadı:', e);
-  }
+  // Snapshot al ve sıraya ekle — sıradaki yazıcılar bu snapshot'tan sonra yazar.
+  const snapshot = Array.from(consumedTokens.entries());
+  writeQueue = writeQueue
+    .then(() => fs.promises.writeFile(TOKENS_FILE, JSON.stringify(snapshot), 'utf-8'))
+    .catch((e) => {
+      console.error('[payment] consumed-tokens.json yazılamadı:', e);
+    });
 }
 
-function markTokenConsumed(token: string): void {
-  consumedTokens.set(token, Date.now());
+function isTokenConsumed(token: string): boolean {
+  return consumedTokens.has(hashToken(token));
+}
+
+/**
+ * Token'ı atomik olarak Map'e ekler. Zaten varsa false döner (replay).
+ * Yeni eklendiğinde true döner. Bu fonksiyon JS'in single-threaded event loop
+ * sayesinde aynı async tick içinde atomik. Eş zamanlı iki callback yarışında
+ * ilk gelen true alır, ikincisi false ile erken çıkar.
+ */
+function tryConsumeToken(token: string): boolean {
+  const h = hashToken(token);
+  if (consumedTokens.has(h)) return false;
+  consumedTokens.set(h, Date.now());
   // Temizlik: 24 saatten eski kayıtları at
   const cutoff = Date.now() - TOKEN_REPLAY_WINDOW_MS;
-  for (const [t, ts] of consumedTokens) {
-    if (ts < cutoff) consumedTokens.delete(t);
+  for (const [k, ts] of consumedTokens) {
+    if (ts < cutoff) consumedTokens.delete(k);
   }
   persistConsumedTokens();
-}
-function isTokenConsumed(token: string): boolean {
-  return consumedTokens.has(token);
+  return true;
 }
 
 // ── iyzico istemcisi (lazy — API key yoksa /api/payment 503 döner) ────────
@@ -219,9 +249,13 @@ router.post('/callback', paymentLimiter, express.urlencoded({ extended: true }),
   const { token } = req.body as { token?: string };
   if (!token) return res.status(400).send('Token bulunamadı.');
 
-  // Replay koruması — 24 saat içinde aynı token bir daha kabul edilmez.
-  if (isTokenConsumed(token)) {
-    console.warn(`[payment] Replay denemesi tespit edildi (token kısmi): ${token.slice(0, 8)}...`);
+  // Atomik check-and-set: token'ı iyzipay.retrieve ÖNCESİ işaretle. Eş zamanlı
+  // iki callback aynı token ile gelirse ikinci denemenin tüm geri kalanı atlar.
+  // (Bir önceki sürümde retrieve sonrası işaretlemek race açıyordu — iki callback
+  // de iyzipay'e gidip iki ayrı JWT üretebiliyordu.) Token henüz Map'te değilse
+  // ekleyip true döner; varsa false döner ve burada erken çıkılır.
+  if (!tryConsumeToken(token)) {
+    console.warn(`[payment] Replay denemesi tespit edildi (hash kısmi): ${hashToken(token).slice(0, 8)}...`);
     return res.redirect(`${process.env.APP_URL}/?payment=duplicate`);
   }
 
@@ -231,12 +265,14 @@ router.post('/callback', paymentLimiter, express.urlencoded({ extended: true }),
   return new Promise<void>((resolve) => {
     iyzipay.checkoutForm.retrieve({ locale: 'tr', conversationId: '', token } as Parameters<typeof iyzipay.checkoutForm.retrieve>[0], (err: unknown, result: Record<string, unknown>) => {
       if (err || result.status !== 'success' || result.paymentStatus !== 'SUCCESS') {
+        // iyzipay başarısız döndü — token zaten "consumed" olarak işaretli kaldı
+        // (24h TTL ile silinecek). Saldırgan başarısız bir token'la spurious mark
+        // tetikleyemez çünkü token iyzipay tarafından üretilen tek seferlik bir
+        // değer; saldırgan bunu icat edemez.
+        console.error('[/api/payment/callback] iyzico retrieve hata:', err ?? result?.errorCode);
         res.redirect(`${process.env.APP_URL}/?payment=failed`);
         return resolve();
       }
-
-      // Token tüketildi olarak işaretle — iyzico sonucu başarılı, tekrar kullanımı engelle
-      markTokenConsumed(token);
 
       // ── JWT premium token oluştur ─────────────────────────────────────
       const premiumToken = jwt.sign(

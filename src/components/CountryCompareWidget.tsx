@@ -6,7 +6,7 @@
 import React, { useState, useMemo } from 'react';
 import { Download } from 'lucide-react';
 import { TR_REJECTION_RATES } from '../scoring/matrices';
-import { ensureTurkishFont, TR_FONT } from '../lib/pdfFont';
+import { ensureTurkishFont, TR_FONT, safePdfFilename } from '../lib/pdfFont';
 
 // ── Ülke meta verisi ─────────────────────────────────────────────────────────
 interface CountryMeta {
@@ -189,7 +189,7 @@ export function CountryCompareWidget({ defaultLeft = 'Almanya', defaultRight = '
             doc.setTextColor(148, 163, 184);
             doc.text('Veriler 2024-2025 EU/UK/US istatistik havuzuna dayanır.', 14, 285);
             doc.text('vizeakil.com', 196, 285, { align: 'right' });
-            doc.save(`VizeAkil_${left}_vs_${right}_${today.replace(/\//g, '-')}.pdf`);
+            doc.save(`VizeAkil_${safePdfFilename(left)}_vs_${safePdfFilename(right)}_${today.replace(/\//g, '-')}.pdf`);
           }}
           className="ml-1 inline-flex items-center gap-1 px-2 py-1 bg-white border border-slate-200 rounded-lg text-[10px] font-bold text-slate-600 hover:bg-slate-50 transition-colors"
         >

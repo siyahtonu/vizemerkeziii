@@ -65,7 +65,10 @@ export default defineConfig({
     include: ['src/**/__tests__/**/*.test.ts'],
     coverage: {
       provider: 'v8',
-      include: ['src/scoring/**'],
+      // src/scoring/** asıl skorlama motoru. src/lib/docChecklist.ts pure fn,
+      // 18 koşullu dal — coverage'a dahil. pdfFont.ts browser/fetch bağımlı,
+      // node test environment'ta false negative coverage üretir, hariç tut.
+      include: ['src/scoring/**', 'src/lib/docChecklist.ts'],
       reporter: ['text', 'html'],
     },
   },
