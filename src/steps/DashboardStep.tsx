@@ -1,7 +1,7 @@
 // ============================================================
 // DashboardStep — Ana Kontrol Paneli
 // ============================================================
-import React from 'react';
+import React, { useEffect } from 'react';
 import { motion } from 'motion/react';
 import {
   CheckCircle2, Circle, FileText, ShieldCheck, FileCheck, TrendingUp, Download,
@@ -252,6 +252,19 @@ export function DashboardStep({
   const setFbRejNotes = onFbRejNotesChange;
   const setDashToolTab = onDashToolTabChange;
   const setShowRiskDetail = onShowRiskDetailChange;
+
+  // ── Türkçe font idle prefetch ───────────────────────────────────────────
+  // Dashboard'da PDF üretimi yapan birden fazla araç var. Kullanıcı PDF'e
+  // bastığında font fetch (~310 KB) gecikme yaratıyordu. Burada idle window'da
+  // arka planda yüklüyoruz; tıklamada font cache'ten anında geliyor.
+  useEffect(() => {
+    let cancelled = false;
+    import('../lib/pdfFont').then(({ prefetchTurkishFont }) => {
+      if (!cancelled) prefetchTurkishFont();
+    });
+    return () => { cancelled = true; };
+  }, []);
+
   // ── Boş profil kontrolü ──────────────────────────────────────────────────
   const isEmptyProfile = currentScore <= 12 &&
     !profile.bankSufficientBalance && !profile.hasSgkJob &&

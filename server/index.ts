@@ -28,7 +28,12 @@ app.set('trust proxy', 1);
 // dışı — yalnızca API response'lar için gereksiz kısıt yaratmasın diye.
 app.use(helmet({
   contentSecurityPolicy: false,        // API-only; frontend ayrı origin
-  crossOriginResourcePolicy: { policy: 'cross-origin' }, // frontend'den fetch'e izin
+  // CORP: API yanıtları sadece izinli origin'lerden CORS ile çekilir; script/img
+  // olarak embed edilmesi senaryosu yok. 'same-site' yerine 'cross-origin' yine
+  // gerekli — vizeakil.com → api.vizeakil.com farklı subdomain (cross-origin).
+  // Yine de güvenli (CORS allow-list zaten kapısı). Daha kısıtlayıcı değer
+  // 'same-site' olurdu ama o tek-domain hosting senaryosu için.
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
 }));
 
 // Body size limit — varsayılan 100kb yerine açık limit; AI prompt 4000 char
@@ -118,6 +123,13 @@ app.post('/api/ai', aiLimiter, async (req, res) => {
     return res.status(503).json({ error: 'AI servisi şu an kullanılamıyor.' });
   }
 
+  // DeepSeek askıda kalmasın diye 25 sn server-side timeout. Render'ın
+  // 30 sn request timeout'una güvenmek yerine kontrol bizde kalsın —
+  // controller.abort() fetch'i koparır, Express worker serbest kalır.
+  const controller = new AbortController();
+  const timeoutMs = 25_000;
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+
   try {
     const upstream = await fetch(`${DEEPSEEK_BASE_URL}/chat/completions`, {
       method: 'POST',
@@ -134,6 +146,7 @@ app.post('/api/ai', aiLimiter, async (req, res) => {
           { role: 'user', content: prompt },
         ],
       }),
+      signal: controller.signal,
     });
 
     if (!upstream.ok) {
@@ -143,14 +156,30 @@ app.post('/api/ai', aiLimiter, async (req, res) => {
       return res.status(502).json({ error: 'AI servisi yanıt vermedi.' });
     }
 
-    const data = (await upstream.json()) as {
-      choices?: Array<{ message?: { content?: string } }>;
-    };
+    // Cloudflare/CDN HTML hata sayfası dönerse JSON parse patlar — yakala.
+    let data: { choices?: Array<{ message?: { content?: string } }> };
+    try {
+      data = await upstream.json();
+    } catch (parseErr: unknown) {
+      const fallbackText = await upstream.text().catch(() => '');
+      console.error(
+        '[/api/ai] DeepSeek JSON parse hatası',
+        parseErr instanceof Error ? parseErr.message : parseErr,
+        fallbackText.slice(0, 200),
+      );
+      return res.status(502).json({ error: 'AI servisi geçersiz yanıt döndürdü.' });
+    }
     const text = data.choices?.[0]?.message?.content ?? '';
     return res.json({ result: text });
   } catch (err: unknown) {
+    if (err instanceof Error && err.name === 'AbortError') {
+      console.error(`[/api/ai] Timeout (${timeoutMs}ms aşıldı)`);
+      return res.status(504).json({ error: 'AI servisi zaman aşımına uğradı.' });
+    }
     console.error('[/api/ai] Hata:', err);
     return res.status(500).json({ error: 'AI servisi yanıt vermedi.' });
+  } finally {
+    clearTimeout(timer);
   }
 });
 
@@ -183,9 +212,20 @@ app.get('/api/health', (_req, res) => {
 
 // API-dışı istekler → frontend'e (vizeakil.com) yönlendir.
 // Bu servis sadece api.vizeakil.com altında API sunar; frontend ayrı Static Site'da.
-app.get('*', (req, res) => {
-  if (req.path.startsWith('/api/')) return res.status(404).json({ error: 'Not found' });
-  res.redirect(301, `https://vizeakil.com${req.path}`);
+//
+// app.all() kullanmak `app.get` yerine — POST/PUT/DELETE istekleri de bu
+// catch-all'a düşer ve düzgün 404 JSON döner. Aksi halde Express'in default
+// 404 handler'ı text response veriyor ve CORS header taşımıyordu.
+app.all('*', (req, res) => {
+  if (req.path.startsWith('/api/')) {
+    return res.status(404).json({ error: 'Not found' });
+  }
+  // Yalnızca GET için redirect (browser navigation senaryosu); diğer method'lar
+  // için redirect yanıltıcı olur — 404 dön.
+  if (req.method === 'GET') {
+    return res.redirect(301, `https://vizeakil.com${req.path}`);
+  }
+  return res.status(404).json({ error: 'Not found' });
 });
 
 const PORT = process.env.PORT ?? 3001;

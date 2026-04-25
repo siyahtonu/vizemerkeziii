@@ -101,3 +101,19 @@ export async function ensureTurkishFont(doc: jsPDF): Promise<boolean> {
  * setFont çağrıları için kullanışlı.
  */
 export const TR_FONT = FONT_NAME;
+
+/**
+ * Font'u arka planda önbelleğe alır (PDF üretimine girmeden).
+ * Dashboard yüklendiğinde `requestIdleCallback` ile çağrılır; kullanıcı PDF
+ * butonuna bastığında font cache'ten anında gelir, gecikme yaşanmaz.
+ */
+export function prefetchTurkishFont(): void {
+  if (cachedFont || pendingFetch) return;
+  // Browser idle window — main thread'i bloklamaz.
+  type IdleWindow = Window & {
+    requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
+  };
+  const w = window as IdleWindow;
+  const schedule = w.requestIdleCallback ?? ((cb: () => void) => setTimeout(cb, 1000));
+  schedule(() => { void loadFonts(); }, { timeout: 5000 });
+}

@@ -14,6 +14,11 @@ import express from 'express';
 import Iyzipay from 'iyzipay';
 import jwt from 'jsonwebtoken';
 import rateLimit from 'express-rate-limit';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const router = express.Router();
 
@@ -27,18 +32,48 @@ if (!jwtSecret || jwtSecret.length < 32) {
 // ── Kullanılmış callback token'ları (replay koruması) ─────────────────────
 // iyzico'nun checkoutForm.retrieve'i aynı token için her zaman aynı başarılı
 // sonucu döner; saldırgan token'ı ele geçirirse teorik olarak kendi tarayıcısı
-// için tekrar JWT üretebilir. Bu set tüketilmiş token'ları bellekte tutar
-// (24 saat TTL) — böylece aynı token tekrar kullanılamaz.
-// Not: Tek instance için yeterli. Multi-instance deployment'te Redis'e taşınmalı.
-const consumedTokens = new Map<string, number>(); // token → ilk kullanım ts
+// için tekrar JWT üretebilir. Bu Map tüketilmiş token'ları tutar (24 saat TTL).
+//
+// Persistent: applications.json pattern'i ile JSON dosyaya da yazılır.
+// Render restart/redeploy sonrasında pencere sıfırlanmasın diye. Multi-instance
+// deployment'te bu yine yetersizdir; o zaman Redis/Postgres'e taşınmalı.
+const TOKENS_FILE = path.join(__dirname, 'consumed-tokens.json');
 const TOKEN_REPLAY_WINDOW_MS = 24 * 60 * 60 * 1000; // 24 saat
+
+function loadConsumedTokens(): Map<string, number> {
+  try {
+    if (fs.existsSync(TOKENS_FILE)) {
+      const raw = fs.readFileSync(TOKENS_FILE, 'utf-8');
+      const arr = JSON.parse(raw) as Array<[string, number]>;
+      const cutoff = Date.now() - TOKEN_REPLAY_WINDOW_MS;
+      // Yüklerken eski kayıtları zaten ele
+      return new Map(arr.filter(([, ts]) => ts >= cutoff));
+    }
+  } catch (e) {
+    console.error('[payment] consumed-tokens.json okunamadı:', e);
+  }
+  return new Map();
+}
+
+const consumedTokens: Map<string, number> = loadConsumedTokens();
+
+function persistConsumedTokens(): void {
+  try {
+    const arr = Array.from(consumedTokens.entries());
+    fs.writeFileSync(TOKENS_FILE, JSON.stringify(arr), 'utf-8');
+  } catch (e) {
+    console.error('[payment] consumed-tokens.json yazılamadı:', e);
+  }
+}
+
 function markTokenConsumed(token: string): void {
   consumedTokens.set(token, Date.now());
-  // Temizlik: 24 saatten eski kayıtları at (her yeni ekte, O(n) ama n küçük)
+  // Temizlik: 24 saatten eski kayıtları at
   const cutoff = Date.now() - TOKEN_REPLAY_WINDOW_MS;
   for (const [t, ts] of consumedTokens) {
     if (ts < cutoff) consumedTokens.delete(t);
   }
+  persistConsumedTokens();
 }
 function isTokenConsumed(token: string): boolean {
   return consumedTokens.has(token);
@@ -160,7 +195,10 @@ router.post('/init', paymentLimiter, async (req, res) => {
   return new Promise<void>((resolve) => {
     iyzipay.checkoutFormInitialize.create(request, (err: unknown, result: Record<string, unknown>) => {
       if (err || result.status !== 'success') {
-        res.status(500).json({ error: 'Ödeme başlatılamadı.', detail: result?.errorMessage });
+        // iyzico errorMessage iç referans / BIN ipucu içerebilir — client'a sızdırma.
+        // Sadece sunucu loguna düşür, client'a generic mesaj döner.
+        console.error('[/api/payment/init] iyzico hata:', err ?? result?.errorMessage ?? result?.errorCode);
+        res.status(500).json({ error: 'Ödeme başlatılamadı. Lütfen daha sonra tekrar deneyin.' });
         return resolve();
       }
       res.json({

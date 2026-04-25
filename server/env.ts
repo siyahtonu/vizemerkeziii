@@ -20,6 +20,13 @@ const REQUIRED_IN_PROD = [
   'JWT_SECRET',          // payment premium token'ı
   'ADMIN_SECRET',        // admin endpoint'leri (outcomes, rates, appointments, answena)
   'CHECK_SECRET',        // outcomes check script
+  'IYZICO_API_KEY',      // ödeme entegrasyonu
+  'IYZICO_SECRET_KEY',   // ödeme entegrasyonu
+  'APP_URL',             // payment callback ve redirect URL'lerinde kullanılır
+  'CONTACT_TO',          // iletişim formu hedef e-posta (yoksa 503 dönüyor zaten)
+  'SMTP_HOST',           // tüm e-posta gönderimleri (contact, outcomes, appointment)
+  'SMTP_USER',
+  'SMTP_PASS',
 ] as const;
 
 const missing = REQUIRED_IN_PROD.filter((k) => !process.env[k]);

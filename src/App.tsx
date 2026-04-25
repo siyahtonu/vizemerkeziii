@@ -68,7 +68,9 @@ import {
   askCrossConsistency, type CrossConsistencyResult,
   askRedFlagScan,
 } from './lib/ai';
-import { extractPdfText } from './lib/pdfExtract';
+// pdfExtract pdfjs-dist'i bağlar (~135 KB gzip). Sadece banka/SGK PDF
+// upload akışında gerekli — `await import('./lib/pdfExtract')` ile lazy
+// yükleniyor, ilk paint'e sızdırılmıyor.
 import type { CountryWarning } from './lib/scoringV2';
 
 // ── Lazy modallar: kullanıcı tıklamadan yüklenmiyor ─────────────────────────
@@ -220,6 +222,24 @@ export default function App() {
   const [apptSubStatus, setApptSubStatus] = useState<'idle'|'loading'|'success'|'error'>('idle');
   const [apptCountryFilter, setApptCountryFilter] = useState('Tümü');
   const [apptShowAvailableOnly, setApptShowAvailableOnly] = useState(false);
+
+  // ── KVKK Madde 9 Açık Rıza — Banka/SGK ham metni AI analizi ──────────────
+  // Banka ekstresi ve SGK döküm ham metni DeepSeek (Çin) API'sine gönderiliyor.
+  // KVKK Madde 9 yurt dışı veri transferi açık rıza şart. Kullanıcı bir kez
+  // onaylar, kararı localStorage'a kaydolur (kararı geri çekebilir).
+  const AI_CONSENT_KEY = 'vizeakil_ai_kvkk_consent_v1';
+  const [aiConsent, setAiConsent] = useState<boolean>(() => {
+    try { return localStorage.getItem(AI_CONSENT_KEY) === '1'; }
+    catch { return false; }
+  });
+  const grantAiConsent = () => {
+    try { localStorage.setItem(AI_CONSENT_KEY, '1'); } catch { /* noop */ }
+    setAiConsent(true);
+  };
+  const revokeAiConsent = () => {
+    try { localStorage.removeItem(AI_CONSENT_KEY); } catch { /* noop */ }
+    setAiConsent(false);
+  };
 
   // ── Feedback Loop — Başvuru Sonuç Takibi ──────────────────────────────────
   const [feedbackStep, setFeedbackStep] = useState<'register' | 'submit' | 'done'>('register');
@@ -1442,6 +1462,7 @@ export default function App() {
     try {
       let rawText = '';
       if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+        const { extractPdfText } = await import('./lib/pdfExtract');
         rawText = await extractPdfText(file);
       }
       setSgkRawText(rawText);
@@ -1598,6 +1619,7 @@ export default function App() {
     let rawText = '';
     if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
       try {
+        const { extractPdfText } = await import('./lib/pdfExtract');
         rawText = await extractPdfText(file);
         setBankRawText(rawText);
       } catch (err) {
@@ -2393,8 +2415,13 @@ Signature: _______________     Date: ${today}`;
   }, []); // DEFAULT_PROFILE is a module-level constant value, safe as empty dep
 
   const generatePDFEN = async (type: 'cover' | 'sponsor' | 'employer' | 'itinerary' = 'cover') => {
-    const { jsPDF } = await import('jspdf');
+    // Türkçe font yüklensin: kullanıcının adı/adresi Türkçe karakter içerebilir.
+    const [{ jsPDF }, { ensureTurkishFont, TR_FONT }] = await Promise.all([
+      import('jspdf'),
+      import('./lib/pdfFont'),
+    ]);
     const doc = new jsPDF();
+    await ensureTurkishFont(doc);
     const today = new Date().toLocaleDateString('en-GB');
     const titles: Record<string, string> = {
       cover: 'Cover Letter (Visa Application)',
@@ -2408,22 +2435,22 @@ Signature: _______________     Date: ${today}`;
     doc.rect(0, 0, 220, 22, 'F');
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(11);
-    doc.setFont('helvetica', 'bold');
-    doc.text('VizeAkil.com — Smart Document Generator 2.0 (EN)', 14, 10);
+    doc.setFont(TR_FONT, 'bold');
+    doc.text('VizeAkıl.com — Smart Document Generator 2.0 (EN)', 14, 10);
     doc.setFontSize(8);
-    doc.setFont('helvetica', 'normal');
+    doc.setFont(TR_FONT, 'normal');
     doc.text(`Generated: ${today}`, 14, 17);
 
     // Title
     doc.setTextColor(30, 41, 59);
     doc.setFontSize(13);
-    doc.setFont('helvetica', 'bold');
+    doc.setFont(TR_FONT, 'bold');
     doc.text(titles[type], 14, 30);
     doc.setDrawColor(229, 231, 235);
     doc.line(14, 33, 196, 33);
 
     // Body
-    doc.setFont('helvetica', 'normal');
+    doc.setFont(TR_FONT, 'normal');
     doc.setFontSize(9.5);
     doc.setTextColor(51, 65, 85);
     const body = buildLetterBodyEN(type);
@@ -2442,14 +2469,18 @@ Signature: _______________     Date: ${today}`;
   };
 
   const generatePDF = async (type: 'cover' | 'sponsor' | 'employer' | 'itinerary' = 'cover') => {
-    const { jsPDF } = await import('jspdf');
+    const [{ jsPDF }, { ensureTurkishFont, TR_FONT }] = await Promise.all([
+      import('jspdf'),
+      import('./lib/pdfFont'),
+    ]);
     const doc = new jsPDF();
+    await ensureTurkishFont(doc);
     const today = new Date().toLocaleDateString('tr-TR');
     const titles: Record<string, string> = {
-      cover: 'VIZE NIYET MEKTUBU / COVER LETTER',
-      sponsor: 'FINANSAL SPONSORLUK BEYANNAMESI',
-      employer: 'CALISMA BELGESI VE IZIN ONAYI',
-      itinerary: 'DETAYLI SEYAHAT PLANI / ITINERARY'
+      cover: 'VİZE NİYET MEKTUBU / COVER LETTER',
+      sponsor: 'FİNANSAL SPONSORLUK BEYANNAMESİ',
+      employer: 'ÇALIŞMA BELGESİ VE İZİN ONAYI',
+      itinerary: 'DETAYLI SEYAHAT PLANI / ITINERARY',
     };
 
     // Header
@@ -2457,23 +2488,23 @@ Signature: _______________     Date: ${today}`;
     doc.rect(0, 0, 210, 18, 'F');
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(11);
-    doc.setFont('helvetica', 'bold');
-    doc.text('VizeAkil — vizeakil.com', 14, 12);
+    doc.setFont(TR_FONT, 'bold');
+    doc.text('VizeAkıl — vizeakil.com', 14, 12);
     doc.text(today, 196, 12, { align: 'right' });
 
     // Title
     doc.setTextColor(30, 41, 59);
     doc.setFontSize(13);
-    doc.text(normalizeTr(titles[type]), 14, 30);
+    doc.text(titles[type], 14, 30);
     doc.setDrawColor(229, 231, 235);
     doc.line(14, 33, 196, 33);
 
     // Body
-    doc.setFont('helvetica', 'normal');
+    doc.setFont(TR_FONT, 'normal');
     doc.setFontSize(9.5);
     doc.setTextColor(51, 65, 85);
     const body = buildLetterBody(type);
-    const splitText = doc.splitTextToSize(normalizeTr(body), 180);
+    const splitText = doc.splitTextToSize(body, 180);
     doc.text(splitText, 14, 40);
 
     // Footer
@@ -2482,177 +2513,137 @@ Signature: _______________     Date: ${today}`;
     doc.rect(0, pageHeight - 12, 210, 12, 'F');
     doc.setTextColor(148, 163, 184);
     doc.setFontSize(7);
-    doc.text('Bu belge VizeAkil (vizeakil.com) Smart Document Generator 2.0 ile olusturulmustur. Resmi vize danismanliginin yerini tutmaz.', 14, pageHeight - 4);
+    doc.text('Bu belge VizeAkıl (vizeakil.com) Smart Document Generator 2.0 ile oluşturulmuştur. Resmi vize danışmanlığının yerini tutmaz.', 14, pageHeight - 4);
 
-    doc.save(`VizeAkil_${normalizeTr(titles[type]).replace(/\s+/g, '_')}_${normalizeTr(letterData.fullName || 'Belge').replace(/\s+/g, '_')}.pdf`);
+    doc.save(`VizeAkil_${titles[type].replace(/\s+/g, '_')}_${(letterData.fullName || 'Belge').replace(/\s+/g, '_')}.pdf`);
   };
 
   // ── Belge Kontrol Listesi PDF ─────────────────────────────────────────────
-  const generateDocumentChecklistPDF = async () => {
-    const { jsPDF } = await import('jspdf');
+  // İşaretli kalemleri (modal'daki Set) PDF'te de işaretli + üstü çizili gösterir.
+  // Liste kaynağı buildSections — modal ile aynı kaynak (src/lib/docChecklist).
+  const generateDocumentChecklistPDF = async (checked?: Set<string>) => {
+    const [{ jsPDF }, { ensureTurkishFont, TR_FONT }, { buildSections }] = await Promise.all([
+      import('jspdf'),
+      import('./lib/pdfFont'),
+      import('./lib/docChecklist'),
+    ]);
     const doc = new jsPDF();
+    await ensureTurkishFont(doc);
     const today = new Date().toLocaleDateString('tr-TR');
     const country = profile.targetCountry || 'Schengen';
-    const isUK = country === 'İngiltere';
-    const isUSA = country === 'ABD';
+    const sections = buildSections(profile);
+    const checkedSet = checked ?? new Set<string>();
+    const totalCount = sections.reduce((acc, s) => acc + s.items.length, 0);
+    const doneCount = Array.from(checkedSet).filter((t) =>
+      sections.some((s) => s.items.some((it) => it.text === t)),
+    ).length;
 
-    // Header
+    // ── Header bandı ────────────────────────────────────────────
     doc.setFillColor(37, 99, 235);
     doc.rect(0, 0, 210, 18, 'F');
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(11);
-    doc.setFont('helvetica', 'bold');
-    doc.text('VizeAkil — vizeakil.com', 14, 12);
+    doc.setFont(TR_FONT, 'bold');
+    doc.text('VizeAkıl — vizeakil.com', 14, 12);
     doc.text(today, 196, 12, { align: 'right' });
 
     // Title
     doc.setTextColor(30, 41, 59);
     doc.setFontSize(13);
-    doc.setFont('helvetica', 'bold');
-    doc.text(normalizeTr(`${country} Vize Basvurusu — Kisisel Belge Kontrol Listesi`), 14, 30);
+    doc.setFont(TR_FONT, 'bold');
+    doc.text(`${country} Vize Başvurusu — Kişisel Belge Kontrol Listesi`, 14, 30);
     doc.setDrawColor(229, 231, 235);
     doc.line(14, 33, 196, 33);
 
-    let y = 42;
+    // Genel ilerleme satırı
+    doc.setFontSize(9);
+    doc.setFont(TR_FONT, 'normal');
+    doc.setTextColor(71, 85, 105);
+    doc.text(`Hazır belge: ${doneCount} / ${totalCount}`, 14, 39);
+
+    let y = 48;
 
     const addSection = (title: string) => {
       if (y > 260) { doc.addPage(); y = 20; }
-      doc.setFont('helvetica', 'bold');
+      doc.setFont(TR_FONT, 'bold');
       doc.setFontSize(10);
       doc.setTextColor(37, 99, 235);
-      doc.text(normalizeTr(title), 14, y);
+      doc.text(title, 14, y);
       y += 5;
       doc.setDrawColor(219, 234, 254);
       doc.line(14, y, 196, y);
       y += 6;
     };
 
-    const addItem = (text: string, note?: string) => {
+    const addItem = (text: string, note: string | undefined, isChecked: boolean) => {
       if (y > 270) { doc.addPage(); y = 20; }
-      doc.setFont('helvetica', 'normal');
+      doc.setFont(TR_FONT, 'normal');
       doc.setFontSize(9);
-      doc.setTextColor(51, 65, 85);
-      doc.setDrawColor(100, 116, 139);
-      doc.rect(14, y - 3.5, 4, 4);
-      const lines = doc.splitTextToSize(normalizeTr(text), 165);
+      // Onay kutusu — işaretliyse dolu yeşil + ✓; değilse boş çerçeve
+      if (isChecked) {
+        doc.setFillColor(16, 185, 129);
+        doc.setDrawColor(16, 185, 129);
+        doc.rect(14, y - 3.5, 4, 4, 'FD');
+        // Beyaz check mark
+        doc.setDrawColor(255, 255, 255);
+        doc.setLineWidth(0.4);
+        doc.line(14.7, y - 1.6, 15.6, y - 0.7);
+        doc.line(15.6, y - 0.7, 17.3, y - 2.7);
+        doc.setLineWidth(0.2);
+      } else {
+        doc.setDrawColor(100, 116, 139);
+        doc.setLineWidth(0.3);
+        doc.rect(14, y - 3.5, 4, 4);
+      }
+      // Metin: işaretliyse soluk gri + üstü çizili efekti (çizgi sonradan)
+      const lines = doc.splitTextToSize(text, 165);
+      if (isChecked) {
+        doc.setTextColor(148, 163, 184);
+      } else {
+        doc.setTextColor(51, 65, 85);
+      }
       doc.text(lines, 21, y);
+      // Üstü çizili — her satır için yatay çizgi
+      if (isChecked) {
+        doc.setDrawColor(148, 163, 184);
+        doc.setLineWidth(0.3);
+        for (let i = 0; i < lines.length; i++) {
+          const lw = doc.getTextWidth(lines[i]);
+          const ly = y + i * 5 - 1.2;
+          doc.line(21, ly, 21 + Math.min(lw, 165), ly);
+        }
+      }
       y += lines.length * 5;
       if (note) {
         doc.setTextColor(148, 163, 184);
         doc.setFontSize(7.5);
-        const noteLines = doc.splitTextToSize(normalizeTr('  Not: ' + note), 165);
+        const noteLines = doc.splitTextToSize('Not: ' + note, 165);
         doc.text(noteLines, 21, y);
         y += noteLines.length * 4 + 1;
-        doc.setTextColor(51, 65, 85);
         doc.setFontSize(9);
       }
       y += 1.5;
     };
 
-    // 1. Zorunlu Belgeler
-    addSection('1. Zorunlu Belgeler (Tum Basvurucular)');
-    addItem('Gecerli pasaport (son 10 yilda alinmis, en az 2 bos sayfa)');
-    addItem('Onceki pasaportlar — vizeli/damgali sayfalar ile birlikte');
-    addItem('Vize basvuru formu (eksiksiz doldurulmus ve imzalanmis)');
-    addItem('Biyometrik fotograf (6 aydan yeni, 35x45mm, beyaz arka fon)');
-    addItem('Nufus cuzdani fotokopisi (on ve arka yuz)');
-    addItem('Tam tekmil vukuatli nufus kayit ornegi (e-Devletten barkodlu)');
-    addItem('Yerlesim yeri belgesi (e-Devletten barkodlu)');
-    addItem('Tarihceli yerlesim yeri belgesi (e-Devletten barkodlu)');
-    addItem('e-Devletten yurda giris-cikis belgesi (01.01.2009\'dan buguye)');
-    addItem('Ucak rezervasyonu — gidis ve donus (iptal edilebilir olmasi tercih edilir)');
-    addItem('Otel / konaklama rezervasyonu veya ev sahibi davet mektubu');
-    addItem('Detayli seyahat plani (itinerary) — gunluk aktiviteler ve ziyaret yerleri');
-    if (!isUSA) {
-      addItem('Seyahat saglik sigortasi (min 30.000 EUR teminath, Schengen Bolgesi kapsami)', 'Schengen icin zorunlu — AXA, Allianz veya Europ Assistance onerilen firmalar');
-    }
-    y += 3;
-
-    // 2. Finansal Belgeler
-    addSection('2. Finansal Belgeler');
-    if (isUK) {
-      addItem('Son 6 aylik banka hesap dokumu (banka kaseli ve imzali)', '28 gun kurali: paranin en az 28 gun hesapta kalmis olmasi gerekir');
-    } else {
-      addItem('Son 3 aylik banka hesap dokumu (banka kaseli ve imzali)', 'Schengen icin gunluk min. 100-120 EUR gosterilebilmeli; 10 gunluk trip ~ 55-60K TL');
-    }
-    if (profile.hasSteadyIncome || profile.salaryDetected) {
-      addItem('Son 3 aylik maas bordrosu');
-    }
-    if (profile.hasAssets) {
-      addItem('Tapu fotokopisi ve/veya arac ruhsati fotokopisi');
-    }
-    y += 3;
-
-    // 3. Mesleki / Ogrenci Belgeler
-    if (profile.hasSgkJob || profile.isPublicSectorEmployee) {
-      addSection('3. Mesleki Belgeler');
-      addItem('SGK hizmet dokumu (e-Devletten barkodlu)');
-      if (profile.isPublicSectorEmployee) {
-        addItem('Kamu kurumu gorev belgesi (imzali ve kaseli)');
-        addItem('Kamu kurumu izin onay belgesi (geri donus tarihi yazili)');
-      } else {
-        addItem('Isveren izin ve gorev yazisi (kesin geri donus tarihi ve kaseli-imzali)', 'Sadece "izin verilmistir" yetmez; geri donus taahhudunu icermeli');
-        addItem('Isyerine ait vergi levhasi fotokopisi (guncel)');
-        addItem('Ticaret Odasi kayit sureti (6 aydan eski olmamali)');
-      }
+    sections.forEach((section, idx) => {
+      addSection(`${idx + 1}. ${section.title}`);
+      section.items.forEach((item) => {
+        addItem(item.text, item.note, checkedSet.has(item.text));
+      });
       y += 3;
-    } else if (profile.isStudent) {
-      addSection('3. Ogrenci Belgeleri');
-      addItem('Ogrenci belgesi (guncel tarihli, tercihen Ingilizce veya Almanca)');
-      addItem('Not dokumu / Transkript');
-      addItem('Burs belgesi veya veliye ait finansal sponsorluk belgesi');
-      y += 3;
-    }
+    });
 
-    // 4. Aile ve Bag Belgeleri
-    if (profile.isMarried || profile.hasChildren || profile.strongFamilyTies) {
-      addSection('4. Aile ve Memleket Bag Belgeleri');
-      if (profile.isMarried) {
-        addItem('Evlilik cuzdani fotokopisi');
-        addItem('Formul B — evlilik kayit belgesi (e-Devletten)');
-      }
-      if (profile.hasChildren) {
-        addItem('Cocuklarin nufus cuzdani fotokopisi');
-        addItem('Formul A — dogum belgesi (e-Devletten)');
-      }
-      y += 3;
-    }
-
-    // 5. Ulkeye Ozel
-    if (isUSA) {
-      addSection('5. ABD Ozel Belgeler (B1/B2 Turistik Vize)');
-      addItem('DS-160 formu (online doldurulmus, barkod sayfasi basilmis)');
-      addItem('Mulakat randevu onay e-postasi veya ekran goruntüsü');
-      addItem('Mulakata hazirlik: "Turkiye\'deki guclu baglar" belgesi paketi');
-      addItem('SGK + tapu + is belgesi + aile belgesi — hepsini birlikte sunun');
-    } else if (isUK) {
-      addSection('5. Ingiltere Ozel Belgeler (Standard Visitor)');
-      addItem('Online UK vize basvuru teyidi (IHS ucreti odeme makbuzu)');
-      addItem('28 gun boyunca sabit kalan banka bakiye kaniti (ekstreden acikca gorulmeli)');
-      addItem('Varsa Schengen vize gecmisi — eski pasaport sayfasi fotokopisi', 'Schengen gecmisi olmadan UK basvurusu risklidir');
-    } else {
-      addSection('5. Schengen Ozel Belgeler');
-      if (profile.hasPreviousRefusal) {
-        addItem('Onceki ret mektubu fotokopisi — MUTLAKA beyan edilmeli', 'Gizlemek kara listeye alinmaniza yol acabilir');
-      }
-      if (profile.hasHighValueVisa || profile.hasOtherVisa) {
-        addItem('Onceki vize ve yurt disi seyahat kaniti (pul/vize sayfasi fotokopisi)');
-      }
-      addItem('Konsolosluga hitaben niyet mektubu (amac, tarihler, masraf karsilama)');
-    }
-    y += 3;
-
-    // Uyari kutusu
+    // Uyarı kutusu
     if (y > 245) { doc.addPage(); y = 20; }
     doc.setFillColor(254, 243, 199);
     doc.setDrawColor(251, 191, 36);
     doc.roundedRect(14, y, 182, 22, 2, 2, 'FD');
     doc.setTextColor(146, 64, 14);
-    doc.setFont('helvetica', 'bold');
+    doc.setFont(TR_FONT, 'bold');
     doc.setFontSize(8);
-    doc.text(normalizeTr('ONEMLI: Bu liste profilinize gore otomatik olusturulmustur.'), 18, y + 8);
-    doc.setFont('helvetica', 'normal');
-    doc.text(normalizeTr('Konsolosluk ek belge isteyebilir. Nihai kontrol icin resmi konsolosluk sitesini ziyaret edin.'), 18, y + 15);
+    doc.text('ÖNEMLİ: Bu liste profilinize göre otomatik oluşturulmuştur.', 18, y + 8);
+    doc.setFont(TR_FONT, 'normal');
+    doc.text('Konsolosluk ek belge isteyebilir. Nihai kontrol için resmi konsolosluk sitesini ziyaret edin.', 18, y + 15);
 
     // Footer
     const pageHeight = doc.internal.pageSize.height;
@@ -2660,9 +2651,9 @@ Signature: _______________     Date: ${today}`;
     doc.rect(0, pageHeight - 12, 210, 12, 'F');
     doc.setTextColor(148, 163, 184);
     doc.setFontSize(7);
-    doc.text('Bu liste VizeAkil (vizeakil.com) tarafindan profilinize gore olusturulmustur. Resmi vize danismanliginin yerini tutmaz.', 14, pageHeight - 4);
+    doc.text('Bu liste VizeAkıl (vizeakil.com) tarafından profilinize göre oluşturulmuştur. Resmi vize danışmanlığının yerini tutmaz.', 14, pageHeight - 4);
 
-    doc.save(`VizeAkil_Belge_Kontrol_Listesi_${normalizeTr(country)}_${today.replace(/\//g, '-')}.pdf`);
+    doc.save(`VizeAkil_Belge_Kontrol_Listesi_${country}_${today.replace(/\//g, '-')}.pdf`);
   };
 
   // ── Kişiye Özel Sihirbaz Evrak Listesi PDF ────────────────────────────────
@@ -4068,6 +4059,53 @@ Signature: _______________     Date: ${today}`;
                 </div>
                 <div className="flex-1 overflow-y-auto p-8 space-y-6">
 
+                  {/* KVKK Madde 9 — açık rıza bandı (yurt dışı veri transferi) */}
+                  {!aiBankResult && !aiBankLoading && !aiConsent && (
+                    <div className="p-5 bg-amber-50 border-2 border-amber-300 rounded-2xl space-y-3">
+                      <div className="flex items-start gap-3">
+                        <ShieldCheck className="w-5 h-5 text-amber-600 mt-0.5 shrink-0" />
+                        <div>
+                          <h4 className="text-sm font-bold text-amber-900 mb-1">
+                            KVKK Madde 9 — Yurt Dışı Veri Aktarımı Açık Rıza
+                          </h4>
+                          <p className="text-xs text-amber-800 leading-relaxed">
+                            Yapay zekâ destekli banka/SGK döküm analizi sırasında, yüklediğiniz dosyadan çıkarılan
+                            <strong> metin verisi DeepSeek (Çin Halk Cumhuriyeti)</strong> API'sine iletilir.
+                            Çin, KVK Kurulu'nun yeterli korumaya sahip ülkeler listesinde değildir; bu nedenle
+                            aktarım <strong>açık rızanıza</strong> dayanır. Veriler analiz dışında saklanmaz,
+                            üçüncü taraflarla paylaşılmaz. Detay: <Link to="/kvkk" target="_blank" className="underline font-bold">KVKK Aydınlatma Metni</Link>.
+                          </p>
+                          <button
+                            type="button"
+                            onClick={grantAiConsent}
+                            className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition-colors"
+                          >
+                            <CheckCircle2 className="w-3.5 h-3.5" />
+                            Açık Rıza Veriyorum (Çin'e veri aktarımı dahil)
+                          </button>
+                          <p className="text-[10px] text-amber-700 mt-2">
+                            Rıza vermediğinizde dosyasız manuel form alanları çalışmaya devam eder; ham döküm
+                            yüklemesi ve AI analizi devre dışı kalır.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  {!aiBankResult && !aiBankLoading && aiConsent && (
+                    <div className="px-3 py-2 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between gap-2 text-xs">
+                      <span className="text-emerald-700 flex items-center gap-1.5">
+                        <CheckCircle2 className="w-3.5 h-3.5" /> AI analizi için açık rızanız aktif (Çin transferi dahil)
+                      </span>
+                      <button
+                        type="button"
+                        onClick={revokeAiConsent}
+                        className="text-emerald-700 underline font-bold hover:text-emerald-900"
+                      >
+                        Geri çek
+                      </button>
+                    </div>
+                  )}
+
                   {/* Yükleniyor spinner */}
                   {aiBankLoading && (
                     <div className="flex flex-col items-center justify-center gap-4 py-12">
@@ -4130,8 +4168,8 @@ Signature: _______________     Date: ${today}`;
                     </div>
                   )}
 
-                  {/* Yükleme alanı */}
-                  {!aiBankResult && !aiBankLoading && (
+                  {/* Yükleme alanı — KVKK rızası verilmediyse devre dışı */}
+                  {!aiBankResult && !aiBankLoading && aiConsent && (
                   <label className="flex flex-col items-center justify-center gap-4 p-10 border-2 border-dashed border-slate-200 hover:border-blue-400 hover:bg-blue-50/30 rounded-2xl cursor-pointer transition-all">
                     <input type="file" accept=".pdf,image/*" className="hidden"
                       onChange={e => handleAiBankUpload(e.target.files)} />
@@ -4143,6 +4181,11 @@ Signature: _______________     Date: ${today}`;
                       <p className="text-sm text-slate-400 mt-1">Ekstreyi yükle + yukarıdaki bilgileri doldur → daha kapsamlı analiz</p>
                     </div>
                   </label>
+                  )}
+                  {!aiBankResult && !aiBankLoading && !aiConsent && (
+                    <div className="p-8 border-2 border-dashed border-slate-200 rounded-2xl text-center text-xs text-slate-500">
+                      Dosya yükleme alanı için <strong>KVKK açık rıza</strong> gerekir (yukarıda).
+                    </div>
                   )}
 
                   {/* Analiz sonucu — Yapılandırılmış görünüm */}
@@ -5785,6 +5828,22 @@ Signature: _______________     Date: ${today}`;
             <div className="text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-4">İletişim</div>
             <ul className="space-y-2.5">
               <li><a href="mailto:destek@vizeakil.com" className="text-sm text-slate-500 hover:text-brand-600 transition-colors font-light">destek@vizeakil.com</a></li>
+              <li>
+                <a
+                  href="https://www.instagram.com/vizeakil"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-slate-500 hover:text-brand-600 transition-colors font-light inline-flex items-center gap-1.5"
+                  aria-label="VizeAkıl Instagram hesabı (yeni sekmede açılır)"
+                >
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <rect x="3" y="3" width="18" height="18" rx="5" ry="5" />
+                    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+                    <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
+                  </svg>
+                  @vizeakil
+                </a>
+              </li>
             </ul>
           </div>
         </div>

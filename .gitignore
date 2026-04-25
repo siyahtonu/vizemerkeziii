@@ -12,3 +12,4 @@ docs/*.txt
 # Server runtime state (deploy-spesifik, repo'ya girmemeli)
 server/applications.json
 server/rates-history.json
+server/consumed-tokens.json

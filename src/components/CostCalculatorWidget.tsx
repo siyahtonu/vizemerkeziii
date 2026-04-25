@@ -25,8 +25,9 @@ interface Props {
   downloadRef?: React.MutableRefObject<(() => void) | null>;
 }
 
-// 2026 başı ortalama kur varsayımı — gerçek kur için backend endpoint'i eklenebilir
-const DEFAULT_EUR_TRY = 45;
+// Nisan 2026 ortalama kur varsayımı — gerçek kur için backend endpoint'i eklenebilir.
+// 2025 sonu/2026 başı: €1 ≈ ₺52,7 (Merkez Bankası ortalama günlük efektif).
+const DEFAULT_EUR_TRY = 52.72;
 
 const TIER_LABEL: Record<TravelTier, string> = {
   budget:  'Ekonomik',
@@ -161,7 +162,7 @@ export const CostCalculatorWidget: React.FC<Props> = ({ country, eurToTry = DEFA
     doc.setFontSize(10);
     doc.setFont(TR_FONT, 'normal');
     doc.setTextColor(100, 116, 139);
-    doc.text(`Yaklaşık ₺${Math.round(breakdown.totalEUR * eurToTry).toLocaleString('tr-TR')} (kur €1 ≈ ₺${eurToTry})`, 18, y);
+    doc.text(`Yaklaşık ₺${Math.round(breakdown.totalEUR * eurToTry).toLocaleString('tr-TR')} (kur €1 ≈ ₺${eurToTry.toLocaleString('tr-TR', { minimumFractionDigits: 2 })})`, 18, y);
     y += 12;
     // Konsolosluk min kontrol
     doc.setTextColor(15, 23, 42);
@@ -340,7 +341,7 @@ export const CostCalculatorWidget: React.FC<Props> = ({ country, eurToTry = DEFA
               <div className="text-xs text-indigo-200">Tahmini toplam maliyet</div>
               <div className="text-2xl font-black mt-0.5">{fmtEUR(breakdown.totalEUR)}</div>
               <div className="text-xs text-indigo-200 mt-0.5">
-                ≈ {fmtTRY(breakdown.totalEUR * eurToTry)} <span className="opacity-70">(kur €1 ≈ ₺{eurToTry})</span>
+                ≈ {fmtTRY(breakdown.totalEUR * eurToTry)} <span className="opacity-70">(kur €1 ≈ ₺{eurToTry.toLocaleString('tr-TR', { minimumFractionDigits: 2 })})</span>
               </div>
             </div>
             <div className="text-right text-xs text-indigo-100">
