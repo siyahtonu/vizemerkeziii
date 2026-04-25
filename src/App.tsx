@@ -1311,7 +1311,7 @@ export default function App() {
   }, [profile, currentScore]);
 
   // ── Özellik 1: Ret Mektubu Analizi ──────────────────────────
-  // Önce Claude'a sor; AI başarısız olursa keyword-tabanlı fallback'e düş.
+  // Önce AI'a sor; AI başarısız olursa keyword-tabanlı fallback'e düş.
   const analyzeRefusal = async () => {
     setRefusalLoading(true);
     setRefusalError(null);
@@ -1483,7 +1483,7 @@ export default function App() {
   };
 
   // ── Özellik 8: Banka Dökümü — AI + Kural Bazlı Analizi ──────────────
-  // Claude'dan önce dene; başarısız olursa lokal kural motoruna düş.
+  // Önce AI'a sor; başarısız olursa lokal kural motoruna düş.
   const analyzeWithRules = async (fileName: string, rawText?: string) => {
     setAiBankLoading(true);
     setAiBankResult(null);

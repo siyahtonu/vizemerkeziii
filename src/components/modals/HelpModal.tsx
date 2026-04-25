@@ -120,7 +120,7 @@ export function HelpModal({ isOpen, onClose }: Props) {
                 </div>
                 <div className="space-y-2">
                   {[
-                    { icon: '🤖', name: 'Vize Danışmanım (AI Copilot)', desc: 'Yapay zeka destekli kişisel vize danışmanı. Profilini analiz eder, en kritik 3 adımı belirler, sorularını yanıtlar. Claude Sonnet 4.6 ile çalışır.' },
+                    { icon: '🤖', name: 'Vize Danışmanım (AI Copilot)', desc: 'Yapay zeka destekli kişisel vize danışmanı. Profilini analiz eder, en kritik 3 adımı belirler, sorularını yanıtlar.' },
                     { icon: '📊', name: 'Schengen Ülke Kıyaslayıcı', desc: 'Schengen ülkelerini 8 kriter üzerinde detaylı karşılaştır — TR ret oranı, ortalama bekleme, finansal eşik, randevu kolaylığı.' },
                     { icon: '💬', name: 'Ret Mektubu Analizi', desc: 'Elindeki ret mektubunu yapıştır. Hangi koddan reddedildiğini, ne kadar beklemen gerektiğini ve hangi belgeleri güçlendirmen gerektiğini öğren.' },
                     { icon: '🏦', name: 'AI Banka Dökümü Analizi', desc: 'Banka ekstrenini yükle veya rakamları gir, yapay zeka konsolosluk gözüyle değerlendirir. Son dakika mevduatı, düzensizlik, şüpheli hareketleri işaretler.' },

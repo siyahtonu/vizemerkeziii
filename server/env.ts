@@ -16,7 +16,7 @@ dotenv.config({ path: path.join(__dirname, '..', '.env.local') });
 //   - development: sadece uyarı logu (her dev ortamında tümü gerekmeyebilir)
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const REQUIRED_IN_PROD = [
-  'ANTHROPIC_API_KEY',   // /api/ai proxy
+  'DEEPSEEK_API_KEY',    // /api/ai proxy (DeepSeek OpenAI-uyumlu chat completions)
   'JWT_SECRET',          // payment premium token'ı
   'ADMIN_SECRET',        // admin endpoint'leri (outcomes, rates, appointments, answena)
   'CHECK_SECRET',        // outcomes check script

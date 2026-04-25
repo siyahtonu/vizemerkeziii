@@ -1,6 +1,6 @@
 // ============================================================
 // AnalysisReportModal — "Sonucu Çıkart" kapsamlı PDF raporu
-// Claude Research tarzında: özet + ülke tablosu + aksiyon planı
+// Editöryel rapor stili: özet + ülke tablosu + aksiyon planı
 // window.print() ile PDF üretir — jsPDF gerektirmez
 // ============================================================
 

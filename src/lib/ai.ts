@@ -4,7 +4,7 @@ import type { RefusalRule } from '../data/documents';
 import type { BankAnalysisResult } from '../data/countries';
 
 /**
- * Backend'deki /api/ai endpoint'ine prompt gönderir, Claude'un metin yanıtını
+ * Backend'deki /api/ai endpoint'ine prompt gönderir, AI'ın metin yanıtını
  * döner. Hata durumunda Error fırlatır — çağıran UI'da yakalamalı.
  */
 export async function askAI(prompt: string): Promise<string> {
@@ -25,7 +25,7 @@ export async function askAI(prompt: string): Promise<string> {
 }
 
 /**
- * AI yanıtı içinden ilk JSON bloğunu çıkarır. Claude genelde açıklama +
+ * AI yanıtı içinden ilk JSON bloğunu çıkarır. Modeller genelde açıklama +
  * kod bloğu şeklinde cevap verir; bu helper tri-backtick JSON veya düz
  * { ... } ifadesini yakalar.
  */
@@ -51,7 +51,7 @@ export interface CopilotResult {
 }
 
 /**
- * Profil özetini Claude'a yollar, kişiye özel 3 kritik adım + hedef ülke
+ * Profil özetini AI'a yollar, kişiye özel 3 kritik adım + hedef ülke
  * taktiği ister. JSON parse başarısız olursa CopilotError fırlatır.
  */
 export async function askCopilot(profile: ProfileData): Promise<CopilotResult> {
@@ -152,7 +152,7 @@ export interface RefusalFinding extends RefusalRule {
 }
 
 /**
- * Konsolosluktan gelen ret mektubu metnini Claude'a yollar, hangi gerekçelerin
+ * Konsolosluktan gelen ret mektubu metnini AI'a yollar, hangi gerekçelerin
  * tetiklendiğini ve ne kadar beklenmesi gerektiğini döner. UI mevcut
  * RefusalRule renderer'ını kullanır, o yüzden şema bire bir uyumludur.
  */
@@ -217,7 +217,7 @@ export interface BankAnalysisInput {
 
 /**
  * Kullanıcının banka dökümü özet girdilerini (rakamlar + 2 checkbox) alır,
- * Claude'dan konsolosluk bakış açısıyla 0-100 skor + gerekçeli rapor ister.
+ * AI'dan konsolosluk bakış açısıyla 0-100 skor + gerekçeli rapor ister.
  * Dönüş BankAnalysisResult şemasına birebir uyar (mevcut UI değişmeden çalışır).
  */
 export async function askBankAnalysis(input: BankAnalysisInput): Promise<BankAnalysisResult> {
@@ -285,7 +285,7 @@ export interface RedFlagFinding {
 }
 
 /**
- * Kullanıcının girdiği 5 sayı + 6 checkbox kombinasyonunu Claude'a yollar,
+ * Kullanıcının girdiği 5 sayı + 6 checkbox kombinasyonunu AI'a yollar,
  * konsolosluk otomatik tarama bakış açısıyla kırmızı bayrak listesi üretir.
  * Dönüş mevcut state (`{severity, msg}[]`) ile bire bir uyumludur.
  */
@@ -380,7 +380,7 @@ const LETTER_TYPE_SPEC: Record<LetterType, { label: string; voice: string; struc
 };
 
 /**
- * LetterData + ProfileData'yı alır, Claude'dan belge tipine özel format + ton ile
+ * LetterData + ProfileData'yı alır, AI'dan belge tipine özel format + ton ile
  * Türkçe mektup gövdesi + 2-3 yazım ipucu üretir. Form input'larını aynen kullanır
  * — uydurmaz, boş alanları "[girilmedi]" ile vurgular.
  */
@@ -436,7 +436,7 @@ export interface LetterQualityScore {
 }
 
 /**
- * Üretilmiş bir mektubu konsolosluk gözüyle 0-100 puanlar. 2. tur Claude çağrısı
+ * Üretilmiş bir mektubu konsolosluk gözüyle 0-100 puanlar. 2. tur AI çağrısı
  * — kullanıcıya "bu mektup 87/100, şu yönler eksik" diyerek güven/değer gösterir.
  */
 export async function askLetterScore(
@@ -479,7 +479,7 @@ ${body.slice(0, 6000)}
 
 // ── Mektup Revize Et ─────────────────────────────────────────────────────
 /**
- * Kullanıcının feedback'ine göre mevcut mektubu Claude'a yeniden yazdırır.
+ * Kullanıcının feedback'ine göre mevcut mektubu AI'a yeniden yazdırır.
  * Örn: "Türkiye bağlarını daha güçlü vurgula" / "Daha kısa yaz" gibi.
  */
 export async function askLetterRevise(
@@ -530,7 +530,7 @@ export interface PersonalTactic {
 }
 
 /**
- * Profil özetini alır, Claude'dan bu profildeki en etkili 5 taktik ister.
+ * Profil özetini alır, AI'dan bu profildeki en etkili 5 taktik ister.
  * TacticsStep'teki sabit 13 taktiğin üstüne "size özel" şerit olarak bağlanır.
  */
 export async function askPersonalTactics(profile: ProfileData): Promise<PersonalTactic[]> {

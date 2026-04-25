@@ -235,7 +235,7 @@ export function TacticsStep({ onNavigate, profile }: Props) {
         );
       })()}
 
-      {/* Kişiye Özel Taktikler (Claude) */}
+      {/* Kişiye Özel Taktikler (AI) */}
       <div className="rounded-2xl border border-indigo-100 bg-gradient-to-br from-indigo-50/60 to-white p-6 space-y-4">
         <div className="flex items-start justify-between gap-3">
           <div>
@@ -244,7 +244,7 @@ export function TacticsStep({ onNavigate, profile }: Props) {
             </p>
             <h3 className="text-lg font-bold text-slate-900">Profilinize göre en etkili 5 taktik</h3>
             <p className="text-sm text-slate-600 mt-1">
-              13 genel taktiğin üstüne, Claude profilinizdeki zayıflık ve güçleri analiz ederek
+              13 genel taktiğin üstüne, yapay zekâ profilinizdeki zayıflık ve güçleri analiz ederek
               kişiselleştirilmiş 5 madde çıkarır.
             </p>
           </div>
