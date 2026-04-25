@@ -30,6 +30,16 @@ const APPLICATIONS_FILE = path.join(__dirname, 'applications.json');
 
 const router: Router = express.Router();
 
+// E-posta adresinin loglara düşmemesi için (KVKK Madde 12) — kısmi maskele.
+// Render/Datadog gibi log aggregator 30-90 gün saklayabilir; ham PII orada bırakmak risk.
+function maskEmail(email: string): string {
+  const at = email.indexOf('@');
+  if (at <= 0) return '***';
+  const user = email.slice(0, at);
+  const domain = email.slice(at);
+  return user.slice(0, Math.min(2, user.length)) + '***' + domain;
+}
+
 // ── Ret Kodları (Schengen + UK + ABD) ────────────────────────────────────────
 export const REJECTION_CODES = [
   // Schengen
@@ -200,7 +210,7 @@ async function sendFollowupEmail(app: ApplicationRecord): Promise<boolean> {
     });
     return true;
   } catch (e) {
-    console.error(`[outcomes] Follow-up e-posta gönderilemedi (${app.email}):`, e);
+    console.error(`[outcomes] Follow-up e-posta gönderilemedi (${maskEmail(app.email)}):`, e);
     return false;
   }
 }
