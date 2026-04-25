@@ -50,7 +50,15 @@
           "@id": "https://vizeakil.com/#organization",
           "name": "VizeAkıl",
           "url": "https://vizeakil.com",
-          "logo": "https://vizeakil.com/og-image.png",
+          "logo": {
+            "@type": "ImageObject",
+            "url": "https://vizeakil.com/og-image.png",
+            "width": 1200,
+            "height": 630
+          },
+          "sameAs": [
+            "https://www.instagram.com/vizeakil"
+          ],
           "contactPoint": {
             "@type": "ContactPoint",
             "email": "destek@vizeakil.com",
@@ -64,12 +72,7 @@
           "url": "https://vizeakil.com",
           "name": "VizeAkıl",
           "publisher": { "@id": "https://vizeakil.com/#organization" },
-          "inLanguage": "tr-TR",
-          "potentialAction": {
-            "@type": "SearchAction",
-            "target": "https://vizeakil.com/?q={search_term_string}",
-            "query-input": "required name=search_term_string"
-          }
+          "inLanguage": "tr-TR"
         },
         {
           "@type": "SoftwareApplication",

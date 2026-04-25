@@ -1,21 +1,61 @@
+# ── Tüm crawler'lar ───────────────────────────────────────────
 User-agent: *
 
-# ── İndekslenecek sayfalar ──────────────────────────────────
+# İndekslenecek sayfalar
 Allow: /$
 Allow: /blog/
 Allow: /blog/$
+Allow: /rehber/
 Allow: /iletisim
 Allow: /hakkimizda
+Allow: /yardim
+Allow: /kvkk
+Allow: /gizlilik-politikasi
+Allow: /kullanim-kosullari
+Allow: /mesafeli-satis
+Allow: /cerez-politikasi
 
-# ── SPA uygulama rotaları — dinamik durum, indeksleme anlamsız
+# SPA uygulama rotaları — dinamik durum, indeksleme anlamsız
 Disallow: /basla
 Disallow: /sonuc
 Disallow: /panel
 Disallow: /mektup
 Disallow: /taktikler
+Disallow: /sonuc-bildir
+Disallow: /admin/
 
-# ── Statik varlıklar ve API
+# Statik varlıklar ve API
 Disallow: /api/
 Allow: /data/
+Allow: /fonts/
+
+# ── AI cevap motorları (AEO için açık izin) ───────────────────
+# Aşağıdaki crawler'lar VizeAkıl içeriğini AI cevaplarında alıntılayabilir.
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+User-agent: cohere-ai
+Allow: /
 
 Sitemap: https://vizeakil.com/sitemap.xml

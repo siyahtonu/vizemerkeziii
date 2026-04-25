@@ -8,7 +8,7 @@ const SCHEMA = {
   headline: 'ABD B1/B2 Vize Başvurusu 2026 — Türkiye\'den Mülakat Rehberi',
   description: 'ABD B1/B2 turistik vize başvurusu için 2026 güncel rehber. DS-160, mülakat hazırlığı, 214(b) ret kodu ve Türkiye bağları.',
   author: { '@type': 'Organization', name: 'VizeAkıl', url: 'https://vizeakil.com' },
-  publisher: { '@type': 'Organization', name: 'VizeAkıl', logo: 'https://vizeakil.com/og-image.png' },
+  publisher: { '@type': 'Organization', name: 'VizeAkıl', logo: { '@type': 'ImageObject', url: 'https://vizeakil.com/og-image.png' } },
   datePublished: '2026-04-01',
   dateModified: '2026-04-15',
   url: 'https://vizeakil.com/rehber/abd-vize-b2',

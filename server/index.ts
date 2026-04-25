@@ -149,24 +149,38 @@ app.post('/api/ai', aiLimiter, async (req, res) => {
       signal: controller.signal,
     });
 
+    // Yalnızca status + request-id logla — `detail` içeriği DeepSeek'in
+    // hata yanıtı; bazı API'ler `echo: true` ile prompt içeriğini geri
+    // yansıtabilir (kullanıcının banka/SGK ham metni!). Bu yüzden body
+    // hiç okumuyoruz; KVKK ihlali riskini sıfırlıyoruz.
+    const reqId = upstream.headers.get('x-request-id') ?? '-';
     if (!upstream.ok) {
-      const detail = await upstream.text().catch(() => '');
-      // Sunucu loguna kısaltılmış olarak yaz; client'a generic hata döndür.
-      console.error('[/api/ai] DeepSeek HTTP', upstream.status, detail.slice(0, 300));
+      console.error('[/api/ai] DeepSeek HTTP', upstream.status, 'reqId:', reqId);
       return res.status(502).json({ error: 'AI servisi yanıt vermedi.' });
     }
 
-    // Cloudflare/CDN HTML hata sayfası dönerse JSON parse patlar — yakala.
+    // Cloudflare/CDN HTML hata sayfası dönerse JSON parse patlar.
+    // Body stream'i sadece bir kez okunabilir; clone() ile fallback için
+    // ayrı bir kopya tutuyoruz. (`upstream.json()` body'yi tüketir;
+    // ardından `.text()` çağrısı locked stream hatası verir.)
+    const fallbackBody = upstream.clone();
     let data: { choices?: Array<{ message?: { content?: string } }> };
     try {
       data = await upstream.json();
     } catch (parseErr: unknown) {
-      const fallbackText = await upstream.text().catch(() => '');
+      // Hata logu sadece status + reqId + parse hatası — body içeriğini
+      // (kullanıcı verisi olabilir) loglamıyoruz.
       console.error(
         '[/api/ai] DeepSeek JSON parse hatası',
-        parseErr instanceof Error ? parseErr.message : parseErr,
-        fallbackText.slice(0, 200),
+        'reqId:', reqId,
+        parseErr instanceof Error ? parseErr.message : 'unknown',
       );
+      // fallbackBody.text() çalışsa bile body ham içeriği loglamak risk;
+      // sadece içerik uzunluğunu logla (tanılama için yeterli).
+      try {
+        const txt = await fallbackBody.text();
+        console.error('[/api/ai] body length:', txt.length);
+      } catch { /* noop */ }
       return res.status(502).json({ error: 'AI servisi geçersiz yanıt döndürdü.' });
     }
     const text = data.choices?.[0]?.message?.content ?? '';

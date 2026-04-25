@@ -8,7 +8,7 @@ const SCHEMA = {
   headline: 'Schengen Vize Belgeleri 2026 — Türk Vatandaşları İçin Eksiksiz Liste',
   description: 'Schengen vizesi başvurusu için 2026 güncel belge listesi. Pasaport, banka ekstresi, sigorta, konaklama ve işveren belgelerinin tümü.',
   author: { '@type': 'Organization', name: 'VizeAkıl', url: 'https://vizeakil.com' },
-  publisher: { '@type': 'Organization', name: 'VizeAkıl', logo: 'https://vizeakil.com/og-image.png' },
+  publisher: { '@type': 'Organization', name: 'VizeAkıl', logo: { '@type': 'ImageObject', url: 'https://vizeakil.com/og-image.png' } },
   datePublished: '2026-04-01',
   dateModified: '2026-04-15',
   url: 'https://vizeakil.com/rehber/schengen-vize-belgeleri',

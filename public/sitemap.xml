@@ -4,7 +4,7 @@
   <!-- ── Ana sayfa ─────────────────────────────────────────────── -->
   <url>
     <loc>https://vizeakil.com/</loc>
-    <lastmod>2026-04-16</lastmod>
+    <lastmod>2026-04-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
@@ -12,159 +12,277 @@
   <!-- ── Blog index ────────────────────────────────────────────── -->
   <url>
     <loc>https://vizeakil.com/blog</loc>
-    <lastmod>2026-04-16</lastmod>
+    <lastmod>2026-04-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
 
-  <!-- ── Blog yazıları ─────────────────────────────────────────── -->
+  <!-- ── Rehber sayfaları ──────────────────────────────────────── -->
+  <url>
+    <loc>https://vizeakil.com/rehber/schengen-vize-belgeleri</loc>
+    <lastmod>2026-04-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://vizeakil.com/rehber/almanya-vize-basvurusu</loc>
+    <lastmod>2026-04-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://vizeakil.com/rehber/abd-vize-b2</loc>
+    <lastmod>2026-04-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- ── Blog yazıları — Genel ─────────────────────────────────── -->
   <url>
     <loc>https://vizeakil.com/blog/almanya-vizesi-nasil-alinir-2026</loc>
-    <lastmod>2026-04-16</lastmod>
+    <lastmod>2026-04-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://vizeakil.com/blog/schengen-vizesi-nasil-alinir</loc>
-    <lastmod>2026-04-16</lastmod>
+    <lastmod>2026-04-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://vizeakil.com/blog/abd-vizesi-nasil-alinir-2026</loc>
-    <lastmod>2026-04-16</lastmod>
+    <lastmod>2026-04-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://vizeakil.com/blog/kanada-vizesi-nasil-alinir-2026</loc>
-    <lastmod>2026-04-16</lastmod>
+    <lastmod>2026-04-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://vizeakil.com/blog/vize-icin-banka-hesabinda-ne-kadar-para</loc>
-    <lastmod>2026-04-16</lastmod>
+    <lastmod>2026-04-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://vizeakil.com/blog/schengen-vize-ret-kodlari-c1-c14</loc>
-    <lastmod>2026-04-16</lastmod>
+    <lastmod>2026-04-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://vizeakil.com/blog/schengen-reddi-madde-8-itiraz</loc>
-    <lastmod>2026-04-16</lastmod>
+    <lastmod>2026-04-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://vizeakil.com/blog/pasaportunda-ret-varken-yeni-vize</loc>
-    <lastmod>2026-04-16</lastmod>
+    <lastmod>2026-04-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://vizeakil.com/blog/ev-hanimi-italya-schengen-vizesi</loc>
-    <lastmod>2026-04-16</lastmod>
+    <lastmod>2026-04-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://vizeakil.com/blog/freelance-ingiltere-vize-basvurusu</loc>
-    <lastmod>2026-04-16</lastmod>
+    <lastmod>2026-04-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://vizeakil.com/blog/ogrenci-sponsorsuz-amerika-turist-vizesi</loc>
-    <lastmod>2026-04-16</lastmod>
+    <lastmod>2026-04-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://vizeakil.com/blog/emekli-yunanistan-kapi-vizesi-2026</loc>
-    <lastmod>2026-04-16</lastmod>
+    <lastmod>2026-04-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://vizeakil.com/blog/vize-mulakatinda-heyecan</loc>
-    <lastmod>2026-04-16</lastmod>
+    <lastmod>2026-04-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://vizeakil.com/blog/vize-randevusu-nasil-alinir</loc>
-    <lastmod>2026-04-16</lastmod>
+    <lastmod>2026-04-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://vizeakil.com/blog/fransa-vize-randevu-alternatif</loc>
-    <lastmod>2026-04-16</lastmod>
+    <lastmod>2026-04-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://vizeakil.com/blog/ds-160-form-doldurma-rehberi</loc>
-    <lastmod>2026-04-16</lastmod>
+    <lastmod>2026-04-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://vizeakil.com/blog/ingiltere-tier4-niyet-mektubu</loc>
-    <lastmod>2026-04-16</lastmod>
+    <lastmod>2026-04-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://vizeakil.com/blog/f1-j1-vizesi-farklari</loc>
-    <lastmod>2026-04-16</lastmod>
+    <lastmod>2026-04-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://vizeakil.com/blog/2026-schengen-kolay-zor-ulkeler</loc>
-    <lastmod>2026-04-16</lastmod>
+    <lastmod>2026-04-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://vizeakil.com/blog/dubai-evize-mi-kapida-vize-mi</loc>
-    <lastmod>2026-04-16</lastmod>
+    <lastmod>2026-04-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://vizeakil.com/blog/cascade-kurali-schengen-vizesi</loc>
-    <lastmod>2026-04-16</lastmod>
+    <lastmod>2026-04-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://vizeakil.com/blog/ees-sistemi-nedir</loc>
-    <lastmod>2026-04-16</lastmod>
+    <lastmod>2026-04-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://vizeakil.com/blog/ingiltere-evisa-rehberi</loc>
-    <lastmod>2026-04-16</lastmod>
+    <lastmod>2026-04-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://vizeakil.com/blog/kapida-vize-veren-ulkeler-2026</loc>
-    <lastmod>2026-04-16</lastmod>
+    <lastmod>2026-04-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://vizeakil.com/blog/dijital-nomad-vizesi-2026</loc>
-    <lastmod>2026-04-16</lastmod>
+    <lastmod>2026-04-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- ── Blog yazıları — 2026 Rehber serisi (yeni) ─────────────── -->
+  <url>
+    <loc>https://vizeakil.com/blog/vize-icin-banka-hesabi-ne-kadar-olmali</loc>
+    <lastmod>2026-04-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://vizeakil.com/blog/ev-hanimlari-icin-schengen-vizesi</loc>
+    <lastmod>2026-04-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://vizeakil.com/blog/vize-reddi-sonrasi-ne-yapmali-itiraz-rehberi</loc>
+    <lastmod>2026-04-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://vizeakil.com/blog/ds-160-formu-nasil-doldurulur-rehberi</loc>
+    <lastmod>2026-04-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://vizeakil.com/blog/en-kolay-schengen-vizesi-veren-ulkeler-2026</loc>
+    <lastmod>2026-04-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://vizeakil.com/blog/emekliler-icin-vize-basvurusu-rehberi</loc>
+    <lastmod>2026-04-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://vizeakil.com/blog/schengen-vizesi-gerekli-belgeler-2026</loc>
+    <lastmod>2026-04-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://vizeakil.com/blog/ogrenciler-icin-vize-rehberi-2026</loc>
+    <lastmod>2026-04-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://vizeakil.com/blog/dubai-e-vizesi-2026-basvuru-rehberi</loc>
+    <lastmod>2026-04-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://vizeakil.com/blog/vize-ucretleri-karsilastirma-2026</loc>
+    <lastmod>2026-04-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://vizeakil.com/blog/serbest-meslek-sahipleri-icin-vize-rehberi</loc>
+    <lastmod>2026-04-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://vizeakil.com/blog/issizler-ve-calismayanlar-icin-vize</loc>
+    <lastmod>2026-04-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://vizeakil.com/blog/yesil-pasaport-avantajlari-vizesiz-ulkeler-2026</loc>
+    <lastmod>2026-04-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://vizeakil.com/blog/sponsor-dilekcesi-nasil-yazilir-ornek</loc>
+    <lastmod>2026-04-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://vizeakil.com/blog/90-180-gun-kurali-nasil-hesaplanir</loc>
+    <lastmod>2026-04-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://vizeakil.com/blog/vize-icin-seyahat-sigortasi-nasil-secilir</loc>
+    <lastmod>2026-04-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -172,13 +290,19 @@
   <!-- ── Kurumsal sayfalar ──────────────────────────────────────── -->
   <url>
     <loc>https://vizeakil.com/hakkimizda</loc>
-    <lastmod>2026-04-16</lastmod>
+    <lastmod>2026-04-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://vizeakil.com/iletisim</loc>
-    <lastmod>2026-04-16</lastmod>
+    <lastmod>2026-04-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://vizeakil.com/yardim</loc>
+    <lastmod>2026-04-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -186,19 +310,31 @@
   <!-- ── Yasal sayfalar ─────────────────────────────────────────── -->
   <url>
     <loc>https://vizeakil.com/kvkk</loc>
-    <lastmod>2026-04-16</lastmod>
+    <lastmod>2026-04-25</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
     <loc>https://vizeakil.com/gizlilik-politikasi</loc>
-    <lastmod>2026-04-16</lastmod>
+    <lastmod>2026-04-25</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
     <loc>https://vizeakil.com/kullanim-kosullari</loc>
-    <lastmod>2026-04-16</lastmod>
+    <lastmod>2026-04-25</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://vizeakil.com/mesafeli-satis</loc>
+    <lastmod>2026-04-25</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://vizeakil.com/cerez-politikasi</loc>
+    <lastmod>2026-04-25</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>

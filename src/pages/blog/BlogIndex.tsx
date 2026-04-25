@@ -423,7 +423,7 @@ const SCHEMA = {
   name: 'VizeAkıl Blog',
   description: 'Vize başvurusu rehberleri, ipuçları ve güncel bilgiler.',
   url: 'https://vizeakil.com/blog',
-  publisher: { '@type': 'Organization', name: 'VizeAkıl', url: 'https://vizeakil.com' },
+  publisher: { '@type': 'Organization', name: 'VizeAkıl', url: 'https://vizeakil.com', logo: { '@type': 'ImageObject', url: 'https://vizeakil.com/og-image.png' } },
 };
 
 // ── Kategoriler (arama filtresi için) ──────────────────────────────────────

@@ -19,7 +19,7 @@ const SCHEMA = {
   headline: POST.title,
   description: POST.description,
   author: { '@type': 'Organization', name: 'VizeAkıl', url: 'https://vizeakil.com' },
-  publisher: { '@type': 'Organization', name: 'VizeAkıl' },
+  publisher: { '@type': 'Organization', name: 'VizeAkıl', logo: { '@type': 'ImageObject', url: 'https://vizeakil.com/og-image.png' } },
   datePublished: POST.date,
   dateModified: POST.date,
   url: `https://vizeakil.com/blog/${POST.slug}`,

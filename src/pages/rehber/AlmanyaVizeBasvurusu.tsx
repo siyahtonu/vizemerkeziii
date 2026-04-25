@@ -8,7 +8,7 @@ const SCHEMA = {
   headline: 'Almanya Vize Başvurusu 2026 — Türkiye\'den Türk Vatandaşları İçin Rehber',
   description: 'Almanya Schengen vizesi başvurusu için 2026 güncel rehber. Gerekli belgeler, bekleme süreleri, ret nedenleri ve başarı ipuçları.',
   author: { '@type': 'Organization', name: 'VizeAkıl', url: 'https://vizeakil.com' },
-  publisher: { '@type': 'Organization', name: 'VizeAkıl', logo: 'https://vizeakil.com/og-image.png' },
+  publisher: { '@type': 'Organization', name: 'VizeAkıl', logo: { '@type': 'ImageObject', url: 'https://vizeakil.com/og-image.png' } },
   datePublished: '2026-04-01',
   dateModified: '2026-04-15',
   url: 'https://vizeakil.com/rehber/almanya-vize-basvurusu',
