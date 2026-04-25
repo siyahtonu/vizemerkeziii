@@ -752,6 +752,75 @@ export default function App() {
       .sort((a, b) => b.matchScore - a.matchScore),
   [schengenCountries, computeCountryMatchScore]);
 
+  // ── Schengen Kıyaslama PDF üretimi (Türkçe font, hem üst hem alt buton kullanır) ──
+  const handleSchengenComparatorPdf = useCallback(async () => {
+    const { jsPDF } = await import('jspdf');
+    const { ensureTurkishFont, TR_FONT } = await import('./lib/pdfFont');
+    const doc = new jsPDF();
+    await ensureTurkishFont(doc);
+    const today = new Date().toLocaleDateString('tr-TR');
+    doc.setFillColor(37, 99, 235);
+    doc.rect(0, 0, 220, 22, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(14);
+    doc.setFont(TR_FONT, 'bold');
+    doc.text('VizeAkıl — Schengen Ülke Kıyaslaması', 14, 14);
+    doc.setFontSize(9);
+    doc.setFont(TR_FONT, 'normal');
+    doc.text(today, 196, 14, { align: 'right' });
+    doc.setTextColor(15, 23, 42);
+    let y = 32;
+    doc.setFontSize(10);
+    doc.setFont(TR_FONT, 'bold');
+    doc.text(`Profilinize göre sıralanmış · Skor: %${currentScore}`, 14, y); y += 8;
+    doc.setFillColor(241, 245, 249);
+    doc.rect(14, y - 5, 182, 7, 'F');
+    doc.setFontSize(9);
+    doc.text('#', 17, y);
+    doc.text('Ülke', 24, y);
+    doc.text('Onay %', 90, y, { align: 'right' });
+    doc.text('Ret %', 110, y, { align: 'right' });
+    doc.text('Uyum %', 132, y, { align: 'right' });
+    doc.text('Süre (gün)', 158, y, { align: 'right' });
+    doc.text('Trend', 192, y, { align: 'right' });
+    y += 6;
+    doc.setFont(TR_FONT, 'normal');
+    doc.setDrawColor(226, 232, 240);
+    rankedCountries.forEach((c, i) => {
+      if (y > 270) { doc.addPage(); y = 20; }
+      doc.text(String(i + 1), 17, y);
+      doc.text(c.name, 24, y);
+      doc.text(`${c.approvalRate}`, 90, y, { align: 'right' });
+      doc.text(`${c.rejectionRate}`, 110, y, { align: 'right' });
+      doc.text(`${c.matchScore}`, 132, y, { align: 'right' });
+      doc.text(`${c.avgProcessDays}`, 158, y, { align: 'right' });
+      doc.text(c.trend, 192, y, { align: 'right' });
+      y += 5;
+      doc.line(14, y - 1, 196, y - 1);
+    });
+    y += 6;
+    if (y > 240) { doc.addPage(); y = 20; }
+    doc.setFont(TR_FONT, 'bold');
+    doc.setFontSize(11);
+    doc.text('İlk 3 Ülke — Detaylı Tavsiye', 14, y); y += 7;
+    doc.setFont(TR_FONT, 'normal');
+    doc.setFontSize(9);
+    rankedCountries.slice(0, 3).forEach((c, i) => {
+      if (y > 265) { doc.addPage(); y = 20; }
+      doc.setFont(TR_FONT, 'bold');
+      doc.text(`${i + 1}. ${c.name} (Uyum %${c.matchScore})`, 14, y); y += 5;
+      doc.setFont(TR_FONT, 'normal');
+      const tipLines = doc.splitTextToSize(c.tip, 180);
+      doc.text(tipLines, 14, y);
+      y += tipLines.length * 4 + 4;
+    });
+    doc.setFontSize(8);
+    doc.setTextColor(148, 163, 184);
+    doc.text('Veriler 2024-2025 Schengen istatistiklerine dayanır.', 14, 285);
+    doc.text('vizeakil.com', 196, 285, { align: 'right' });
+    doc.save(`VizeAkil_Schengen_Kiyaslama_${today.replace(/\//g, '-')}.pdf`);
+  }, [rankedCountries, currentScore]);
+
 
   const intelligence = useMemo(() => {
     // ─────────────────────────────────────────────────────────
@@ -4511,18 +4580,28 @@ Signature: _______________     Date: ${today}`;
               >
                 {/* Header */}
                 <div className="p-8 border-b border-slate-100 bg-gradient-to-r from-blue-600 to-indigo-700 text-white shrink-0 rounded-t-[2.5rem]">
-                  <div className="flex justify-between items-start">
-                    <div>
+                  <div className="flex justify-between items-start gap-3">
+                    <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 text-blue-200 text-xs font-bold uppercase tracking-widest mb-2">
                         <Globe className="w-4 h-4" /> Profil Bazlı Analiz
                       </div>
                       <h3 className="text-2xl font-bold">Schengen Ülke Kıyaslayıcısı</h3>
-                      <p className="text-blue-100 text-sm mt-1">
-                        Profilinize göre onay şansınız en yüksek ülkeler — 2026 ret oranları ile sıralanmış.
-                      </p>
+                      <div className="flex items-start gap-3 mt-1 flex-wrap">
+                        <p className="text-blue-100 text-sm flex-1 min-w-[260px]">
+                          Profilinize göre onay şansınız en yüksek ülkeler — 2026 ret oranları ile sıralanmış.
+                        </p>
+                        <button
+                          onClick={handleSchengenComparatorPdf}
+                          className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 bg-white text-blue-700 rounded-lg text-xs font-bold hover:bg-blue-50 transition-colors"
+                          title="Sıralamayı PDF olarak indir"
+                        >
+                          <Download className="w-3.5 h-3.5" />
+                          PDF olarak indir
+                        </button>
+                      </div>
                     </div>
                     <button onClick={() => setIsSchengenComparatorOpen(false)}
-                      className="p-2 hover:bg-white/10 rounded-full transition-colors">
+                      className="p-2 hover:bg-white/10 rounded-full transition-colors shrink-0">
                       <X className="w-6 h-6" />
                     </button>
                   </div>
@@ -4575,82 +4654,6 @@ Signature: _______________     Date: ${today}`;
                   <div className="flex items-center gap-2 px-1">
                     <TrendingUp className="w-4 h-4 text-blue-600"/>
                     <p className="text-xs font-bold text-slate-500 flex-1">Profilinize göre en uyumlu ülkeler üstte — algoritma: onay oranı × skor uyumu × finansal kapasite × SGK × vize geçmişi</p>
-                    <button
-                      type="button"
-                      onClick={async () => {
-                        const { jsPDF } = await import('jspdf');
-                        const doc = new jsPDF();
-                        const today = new Date().toLocaleDateString('tr-TR');
-                        doc.setFillColor(37, 99, 235);
-                        doc.rect(0, 0, 220, 22, 'F');
-                        doc.setTextColor(255, 255, 255);
-                        doc.setFontSize(14);
-                        doc.setFont('helvetica', 'bold');
-                        doc.text('VizeAkil - Schengen Ulke Kiyaslamasi', 14, 14);
-                        doc.setFontSize(9);
-                        doc.setFont('helvetica', 'normal');
-                        doc.text(today, 196, 14, { align: 'right' });
-                        doc.setTextColor(15, 23, 42);
-                        let y = 32;
-                        doc.setFontSize(10);
-                        doc.setFont('helvetica', 'bold');
-                        doc.text(`Profilinize gore siralanmis - Skor: %${currentScore}`, 14, y); y += 8;
-                        // Header row
-                        doc.setFillColor(241, 245, 249);
-                        doc.rect(14, y - 5, 182, 7, 'F');
-                        doc.setFontSize(9);
-                        doc.text('#', 17, y);
-                        doc.text('Ulke', 24, y);
-                        doc.text('Onay %', 90, y, { align: 'right' });
-                        doc.text('Ret %', 110, y, { align: 'right' });
-                        doc.text('Uyum %', 132, y, { align: 'right' });
-                        doc.text('Sure (gun)', 158, y, { align: 'right' });
-                        doc.text('Trend', 192, y, { align: 'right' });
-                        y += 6;
-                        doc.setFont('helvetica', 'normal');
-                        doc.setDrawColor(226, 232, 240);
-                        rankedCountries.forEach((c, i) => {
-                          if (y > 270) { doc.addPage(); y = 20; }
-                          doc.text(String(i + 1), 17, y);
-                          // Bayrak emoji'si jsPDF helvetica'ya tam render olmaz; sadece ad yazarız
-                          doc.text(c.name, 24, y);
-                          doc.text(`${c.approvalRate}`, 90, y, { align: 'right' });
-                          doc.text(`${c.rejectionRate}`, 110, y, { align: 'right' });
-                          doc.text(`${c.matchScore}`, 132, y, { align: 'right' });
-                          doc.text(`${c.avgProcessDays}`, 158, y, { align: 'right' });
-                          doc.text(c.trend, 192, y, { align: 'right' });
-                          y += 5;
-                          doc.line(14, y - 1, 196, y - 1);
-                        });
-                        y += 6;
-                        // Top 3 detayli
-                        if (y > 240) { doc.addPage(); y = 20; }
-                        doc.setFont('helvetica', 'bold');
-                        doc.setFontSize(11);
-                        doc.text('Ilk 3 Ulke - Detayli Tavsiye', 14, y); y += 7;
-                        doc.setFont('helvetica', 'normal');
-                        doc.setFontSize(9);
-                        rankedCountries.slice(0, 3).forEach((c, i) => {
-                          if (y > 265) { doc.addPage(); y = 20; }
-                          doc.setFont('helvetica', 'bold');
-                          doc.text(`${i + 1}. ${c.name} (Uyum %${c.matchScore})`, 14, y); y += 5;
-                          doc.setFont('helvetica', 'normal');
-                          const tipLines = doc.splitTextToSize(c.tip, 180);
-                          doc.text(tipLines, 14, y);
-                          y += tipLines.length * 4 + 4;
-                        });
-                        // Footer
-                        doc.setFontSize(8);
-                        doc.setTextColor(148, 163, 184);
-                        doc.text('Veriler 2024-2025 Schengen istatistiklerine dayanir.', 14, 285);
-                        doc.text('vizeakil.com', 196, 285, { align: 'right' });
-                        doc.save(`VizeAkil_Schengen_Kiyaslama_${today.replace(/\//g, '-')}.pdf`);
-                      }}
-                      className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-blue-200 text-blue-700 rounded-lg text-xs font-bold hover:bg-blue-50 transition-colors whitespace-nowrap"
-                    >
-                      <Download className="w-3.5 h-3.5" />
-                      PDF indir
-                    </button>
                   </div>
 
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -4799,7 +4802,14 @@ Signature: _______________     Date: ${today}`;
                   </div>
                 </div>
 
-                <div className="p-6 border-t border-slate-100 bg-slate-50 shrink-0 rounded-b-[2.5rem]">
+                <div className="p-6 border-t border-slate-100 bg-slate-50 shrink-0 rounded-b-[2.5rem] space-y-3">
+                  <button
+                    onClick={handleSchengenComparatorPdf}
+                    className="w-full flex items-center justify-center gap-2 py-3 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700 transition-colors shadow-md"
+                  >
+                    <Download className="w-4 h-4" />
+                    Tüm Sıralamayı PDF Olarak İndir
+                  </button>
                   <p className="text-xs text-slate-400 text-center">
                     * Veriler 2024-2026 Schengen istatistiklerine dayanmaktadır. Ret oranları Türk başvurucuları için hesaplanmıştır. Trendler 2026 konsolosluk raporlarına göre güncellenmiştir.
                   </p>
@@ -7307,36 +7317,36 @@ Signature: _______________     Date: ${today}`;
                     type="button"
                     onClick={async () => {
                       const { jsPDF } = await import('jspdf');
+                      const { ensureTurkishFont, TR_FONT } = await import('./lib/pdfFont');
                       const doc = new jsPDF();
+                      await ensureTurkishFont(doc);
                       const today = new Date().toLocaleDateString('tr-TR');
                       const country = refusalMapCountry;
                       doc.setFillColor(234, 88, 12);
                       doc.rect(0, 0, 220, 22, 'F');
                       doc.setTextColor(255, 255, 255);
                       doc.setFontSize(14);
-                      doc.setFont('helvetica', 'bold');
-                      doc.text('VizeAkil - Ret Nedeni Haritasi', 14, 14);
+                      doc.setFont(TR_FONT, 'bold');
+                      doc.text('VizeAkıl — Ret Nedeni Haritası', 14, 14);
                       doc.setFontSize(9);
-                      doc.setFont('helvetica', 'normal');
+                      doc.setFont(TR_FONT, 'normal');
                       doc.text(today, 196, 14, { align: 'right' });
                       doc.setTextColor(15, 23, 42);
                       let y = 32;
                       doc.setFontSize(11);
-                      doc.setFont('helvetica', 'bold');
-                      doc.text(`Ulke: ${country}`, 14, y); y += 8;
+                      doc.setFont(TR_FONT, 'bold');
+                      doc.text(`Ülke: ${country}`, 14, y); y += 8;
                       doc.setFontSize(9);
-                      doc.setFont('helvetica', 'normal');
-                      doc.text('2021-2026 gercek ret kodlari ve yuzdelik dagilim', 14, y); y += 8;
-                      // Table header
+                      doc.setFont(TR_FONT, 'normal');
+                      doc.text('2021–2026 gerçek ret kodları ve yüzdelik dağılım', 14, y); y += 8;
                       doc.setFillColor(255, 237, 213);
                       doc.rect(14, y - 5, 182, 7, 'F');
-                      doc.setFont('helvetica', 'bold');
+                      doc.setFont(TR_FONT, 'bold');
                       doc.text('Kod', 17, y);
                       doc.text('Sebep', 32, y);
                       doc.text('Pay (%)', 192, y, { align: 'right' });
                       y += 7;
-                      doc.setFont('helvetica', 'normal');
-                      // Build rows depending on country
+                      doc.setFont(TR_FONT, 'normal');
                       type RefRow = { code: string; label: string; pct: number; desc: string };
                       const rows: RefRow[] = [];
                       if (country === 'İngiltere') {
@@ -7352,9 +7362,9 @@ Signature: _______________     Date: ${today}`;
                       rows.sort((a, b) => b.pct - a.pct);
                       rows.forEach((r) => {
                         if (y > 270) { doc.addPage(); y = 20; }
-                        doc.setFont('helvetica', 'bold');
+                        doc.setFont(TR_FONT, 'bold');
                         doc.text(r.code, 17, y);
-                        doc.setFont('helvetica', 'normal');
+                        doc.setFont(TR_FONT, 'normal');
                         const labelLines = doc.splitTextToSize(r.label, 145);
                         doc.text(labelLines, 32, y);
                         doc.text(`%${r.pct}`, 192, y, { align: 'right' });
@@ -7369,7 +7379,7 @@ Signature: _______________     Date: ${today}`;
                       });
                       doc.setFontSize(8);
                       doc.setTextColor(148, 163, 184);
-                      doc.text('Veriler 2021-2026 EU/UK/US istatistikleri + Turk basvurucu ornek havuzu.', 14, 285);
+                      doc.text('Veriler 2021–2026 EU/UK/US istatistikleri + Türk başvurucu örnek havuzu.', 14, 285);
                       doc.text('vizeakil.com', 196, 285, { align: 'right' });
                       doc.save(`VizeAkil_RetHaritasi_${country.replace(/\s+/g, '_')}_${today.replace(/\//g, '-')}.pdf`);
                     }}

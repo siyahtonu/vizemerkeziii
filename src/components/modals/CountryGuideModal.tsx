@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Plane, Layers, LayoutList } from 'lucide-react';
+import { X, Plane, Layers, LayoutList, Download } from 'lucide-react';
+import { ensureTurkishFont, TR_FONT } from '../../lib/pdfFont';
 
 interface Props {
   isOpen: boolean;
@@ -48,6 +49,83 @@ export function CountryGuideModal({ isOpen, onClose, currentScore }: Props) {
     return 'bg-rose-100 text-rose-700';
   };
 
+  // ── PDF üretimi (üst ve alt buton aynı işlevi paylaşır) ────────────
+  const handleDownloadPdf = useCallback(async () => {
+    const { jsPDF } = await import('jspdf');
+    const doc = new jsPDF();
+    await ensureTurkishFont(doc);
+    const today = new Date().toLocaleDateString('tr-TR');
+    // Header
+    doc.setFillColor(14, 165, 233);
+    doc.rect(0, 0, 220, 22, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(14);
+    doc.setFont(TR_FONT, 'bold');
+    doc.text('VizeAkıl — Ülke Karşılaştırma Tablosu', 14, 14);
+    doc.setFontSize(9);
+    doc.setFont(TR_FONT, 'normal');
+    doc.text(today, 196, 14, { align: 'right' });
+    // Body
+    doc.setTextColor(15, 23, 42);
+    let y = 32;
+    doc.setFontSize(11);
+    doc.setFont(TR_FONT, 'bold');
+    doc.text(`Profil Skoru: %${currentScore}`, 14, y); y += 5;
+    doc.setFontSize(9);
+    doc.setFont(TR_FONT, 'normal');
+    doc.setTextColor(100, 116, 139);
+    doc.text('Tüm hedef ülkeler — kişisel onay tahmini ile sıralanmış', 14, y); y += 8;
+    // Table header
+    doc.setTextColor(15, 23, 42);
+    doc.setFillColor(241, 245, 249);
+    doc.rect(14, y - 5, 182, 8, 'F');
+    doc.setFont(TR_FONT, 'bold');
+    doc.setFontSize(9);
+    doc.text('#', 17, y);
+    doc.text('Ülke', 24, y);
+    doc.text('Vize Tipi', 90, y);
+    doc.text('Tahmini Onay (%)', 150, y, { align: 'right' });
+    doc.text('Zorluk', 175, y, { align: 'right' });
+    doc.text('Bekleme', 195, y, { align: 'right' });
+    y += 7;
+    doc.setFont(TR_FONT, 'normal');
+    doc.setDrawColor(226, 232, 240);
+    scored.forEach((c, i) => {
+      if (y > 270) { doc.addPage(); y = 20; }
+      doc.text(String(i + 1), 17, y);
+      doc.text(c.name, 24, y);
+      doc.text(c.visaType, 90, y);
+      doc.text(`%${c.personalApproval}`, 150, y, { align: 'right' });
+      doc.text(c.difficultyLabel, 175, y, { align: 'right' });
+      doc.text(`${c.avgWait}g`, 195, y, { align: 'right' });
+      y += 5;
+      doc.line(14, y - 1, 196, y - 1);
+    });
+    y += 6;
+    // İlk 5 detaylı taktik
+    if (y > 240) { doc.addPage(); y = 20; }
+    doc.setFont(TR_FONT, 'bold');
+    doc.setFontSize(11);
+    doc.text('İlk 5 Hedef — Taktik Notları', 14, y); y += 7;
+    doc.setFont(TR_FONT, 'normal');
+    doc.setFontSize(9);
+    scored.slice(0, 5).forEach((c, i) => {
+      if (y > 265) { doc.addPage(); y = 20; }
+      doc.setFont(TR_FONT, 'bold');
+      doc.text(`${i + 1}. ${c.name} — Tahmini onay %${c.personalApproval}`, 14, y); y += 5;
+      doc.setFont(TR_FONT, 'normal');
+      const tipLines = doc.splitTextToSize(c.tips, 180);
+      doc.text(tipLines, 14, y);
+      y += tipLines.length * 4 + 4;
+    });
+    // Footer
+    doc.setFontSize(8);
+    doc.setTextColor(148, 163, 184);
+    doc.text('Tahminler 2024-2025 konsolosluk istatistikleri ve profilinize dayalıdır.', 14, 285);
+    doc.text('vizeakil.com', 196, 285, { align: 'right' });
+    doc.save(`VizeAkil_Ulke_Karsilastirma_${today.replace(/\//g, '-')}.pdf`);
+  }, [scored, currentScore]);
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -59,13 +137,25 @@ export function CountryGuideModal({ isOpen, onClose, currentScore }: Props) {
             exit={{ opacity: 0, scale: 0.96, y: 16 }}
             className="relative w-full max-w-xl bg-white rounded-3xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden">
 
-            <div className="px-6 pt-6 pb-4 border-b border-slate-100 flex items-start justify-between gap-4 shrink-0">
-              <div>
+            <div className="px-6 pt-6 pb-4 border-b border-slate-100 flex items-start justify-between gap-3 shrink-0">
+              <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
                   <Plane className="w-5 h-5 text-sky-600" />
                   <h3 className="text-lg font-bold text-slate-900">Ülke Karşılaştırma Tablosu</h3>
                 </div>
-                <p className="text-sm text-slate-500">Tüm hedef ülkeler — skor {currentScore}/100 bazında kişisel onay tahmini</p>
+                <div className="flex items-start gap-3 flex-wrap">
+                  <p className="text-sm text-slate-500 flex-1 min-w-[220px]">
+                    Tüm hedef ülkeler — skor {currentScore}/100 bazında kişisel onay tahmini
+                  </p>
+                  <button
+                    onClick={handleDownloadPdf}
+                    className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 bg-sky-600 text-white rounded-lg text-xs font-bold hover:bg-sky-700 transition-colors shadow-sm"
+                    title="Tabloyu PDF olarak indir"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    PDF olarak indir
+                  </button>
+                </div>
               </div>
               <button onClick={onClose} aria-label="Kapat"
                 className="p-2 rounded-xl hover:bg-slate-100 transition-colors shrink-0">
@@ -194,7 +284,14 @@ export function CountryGuideModal({ isOpen, onClose, currentScore }: Props) {
               )}
             </div>
 
-            <div className="px-6 py-4 border-t border-slate-100 shrink-0">
+            <div className="px-6 py-4 border-t border-slate-100 shrink-0 space-y-2">
+              <button
+                onClick={handleDownloadPdf}
+                className="w-full flex items-center justify-center gap-2 py-3 bg-sky-600 text-white rounded-2xl font-bold text-sm hover:bg-sky-700 transition-colors shadow-md"
+              >
+                <Download className="w-4 h-4" />
+                Tabloyu PDF Olarak İndir
+              </button>
               <button onClick={onClose}
                 className="w-full py-3 bg-slate-900 text-white rounded-2xl font-bold text-sm hover:bg-slate-800 transition-colors">
                 Kapat

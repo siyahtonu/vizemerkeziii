@@ -6,6 +6,7 @@
 import React, { useState, useMemo } from 'react';
 import { Download } from 'lucide-react';
 import { TR_REJECTION_RATES } from '../scoring/matrices';
+import { ensureTurkishFont, TR_FONT } from '../lib/pdfFont';
 
 // ── Ülke meta verisi ─────────────────────────────────────────────────────────
 interface CountryMeta {
@@ -125,35 +126,35 @@ export function CountryCompareWidget({ defaultLeft = 'Almanya', defaultRight = '
           onClick={async () => {
             const { jsPDF } = await import('jspdf');
             const doc = new jsPDF();
+            await ensureTurkishFont(doc);
             const today = new Date().toLocaleDateString('tr-TR');
             doc.setFillColor(99, 102, 241);
             doc.rect(0, 0, 220, 22, 'F');
             doc.setTextColor(255, 255, 255);
             doc.setFontSize(14);
-            doc.setFont('helvetica', 'bold');
-            doc.text('VizeAkil - Ulke Karsilastirma', 14, 14);
+            doc.setFont(TR_FONT, 'bold');
+            doc.text('VizeAkıl — Ülke Karşılaştırma', 14, 14);
             doc.setFontSize(9);
-            doc.setFont('helvetica', 'normal');
+            doc.setFont(TR_FONT, 'normal');
             doc.text(today, 196, 14, { align: 'right' });
             doc.setTextColor(15, 23, 42);
             let y = 32;
             doc.setFontSize(13);
-            doc.setFont('helvetica', 'bold');
+            doc.setFont(TR_FONT, 'bold');
             doc.text(`${left}  vs  ${right}`, 14, y); y += 10;
-            // Iki sutunlu tablo
             doc.setFontSize(10);
             doc.setFillColor(241, 245, 249);
             doc.rect(14, y - 5, 182, 8, 'F');
-            doc.text('Olcut', 18, y);
+            doc.text('Ölçüt', 18, y);
             doc.text(left, 110, y, { align: 'right' });
             doc.text(right, 192, y, { align: 'right' });
             y += 8;
-            doc.setFont('helvetica', 'normal');
+            doc.setFont(TR_FONT, 'normal');
             const rows: Array<[string, string, string]> = [
               ['Vize Tipi', L.visaType, R.visaType],
-              ['Ret Orani (%)', String(L.rejRate), String(R.rejRate)],
-              ['Onay Orani (%)', String(100 - L.rejRate), String(100 - R.rejRate)],
-              ['Ortalama Bekleme (gun)', String(L.waitDays), String(R.waitDays)],
+              ['Ret Oranı (%)', String(L.rejRate), String(R.rejRate)],
+              ['Onay Oranı (%)', String(100 - L.rejRate), String(100 - R.rejRate)],
+              ['Ortalama Bekleme (gün)', String(L.waitDays), String(R.waitDays)],
               ['Zorluk', DIFFICULTY_LABEL[L.difficulty], DIFFICULTY_LABEL[R.difficulty]],
             ];
             rows.forEach(([k, lv, rv]) => {
@@ -165,31 +166,28 @@ export function CountryCompareWidget({ defaultLeft = 'Almanya', defaultRight = '
               y += 7;
             });
             y += 4;
-            // Tavsiye
-            doc.setFont('helvetica', 'bold');
+            doc.setFont(TR_FONT, 'bold');
             doc.setFontSize(11);
             doc.setTextColor(5, 150, 105);
             const winner = leftScore >= rightScore ? left : right;
-            doc.text(`Tavsiye: Once ${winner}'a basvur`, 14, y); y += 7;
-            doc.setFont('helvetica', 'normal');
+            doc.text(`Tavsiye: Önce ${winner}'a başvur`, 14, y); y += 7;
+            doc.setFont(TR_FONT, 'normal');
             doc.setFontSize(9);
             doc.setTextColor(15, 23, 42);
-            doc.text('Daha dusuk ret orani ve daha kisa bekleme suresi avantaji.', 14, y); y += 8;
-            // Tip notlari
-            doc.setFont('helvetica', 'bold');
-            doc.text(`${left} icin tip:`, 14, y); y += 5;
-            doc.setFont('helvetica', 'normal');
+            doc.text('Daha düşük ret oranı ve daha kısa bekleme süresi avantajı.', 14, y); y += 8;
+            doc.setFont(TR_FONT, 'bold');
+            doc.text(`${left} için ipucu:`, 14, y); y += 5;
+            doc.setFont(TR_FONT, 'normal');
             const lt = doc.splitTextToSize(L.tip, 180);
             doc.text(lt, 14, y); y += lt.length * 4.5 + 4;
-            doc.setFont('helvetica', 'bold');
-            doc.text(`${right} icin tip:`, 14, y); y += 5;
-            doc.setFont('helvetica', 'normal');
+            doc.setFont(TR_FONT, 'bold');
+            doc.text(`${right} için ipucu:`, 14, y); y += 5;
+            doc.setFont(TR_FONT, 'normal');
             const rt = doc.splitTextToSize(R.tip, 180);
             doc.text(rt, 14, y);
-            // Footer
             doc.setFontSize(8);
             doc.setTextColor(148, 163, 184);
-            doc.text('Veriler 2024-2025 EU/UK/US istatistik havuzuna dayanir.', 14, 285);
+            doc.text('Veriler 2024-2025 EU/UK/US istatistik havuzuna dayanır.', 14, 285);
             doc.text('vizeakil.com', 196, 285, { align: 'right' });
             doc.save(`VizeAkil_${left}_vs_${right}_${today.replace(/\//g, '-')}.pdf`);
           }}
