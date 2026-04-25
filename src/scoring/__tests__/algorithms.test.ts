@@ -132,9 +132,10 @@ describe('calculateConfidenceInterval', () => {
     expect(ci.high - ci.low).toBeLessThanOrEqual(10);
   });
 
-  test('bos profilde aralik genis (toplam >=30)', () => {
+  test('bos profilde aralik genis (toplam >=15)', () => {
+    // v3.11: max width ±10 (önceki ±20). Boş profilde 60±10 = 50–70, diff=20.
     const ci = calculateConfidenceInterval(60, 0.0);
-    expect(ci.high - ci.low).toBeGreaterThanOrEqual(30);
+    expect(ci.high - ci.low).toBeGreaterThanOrEqual(15);
   });
 
   test('skor 0 -> low en az 0', () => {

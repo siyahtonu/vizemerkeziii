@@ -5,7 +5,7 @@
 // ============================================================
 
 import React, { useMemo, useState } from 'react';
-import { Calculator, Euro, Plane, Bed, Utensils, ShieldCheck, Info, AlertCircle, Users } from 'lucide-react';
+import { Calculator, Euro, Plane, Bed, Utensils, ShieldCheck, Info, AlertCircle, Users, Download } from 'lucide-react';
 import {
   COUNTRY_COSTS,
   calculateTripCost,
@@ -288,6 +288,87 @@ export const CostCalculatorWidget: React.FC<Props> = ({ country, eurToTry = DEFA
             ))}
           </ul>
         )}
+
+        {/* ── PDF indirme butonu ───────────────────────────── */}
+        <button
+          type="button"
+          onClick={async () => {
+            const { jsPDF } = await import('jspdf');
+            const doc = new jsPDF();
+            const today = new Date().toLocaleDateString('tr-TR');
+            // Header
+            doc.setFillColor(99, 102, 241);
+            doc.rect(0, 0, 220, 22, 'F');
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(14);
+            doc.setFont('helvetica', 'bold');
+            doc.text('VizeAkil - Tahmini Seyahat Maliyeti', 14, 14);
+            doc.setFontSize(9);
+            doc.setFont('helvetica', 'normal');
+            doc.text(today, 196, 14, { align: 'right' });
+            // Body
+            doc.setTextColor(15, 23, 42);
+            let y = 35;
+            doc.setFontSize(11);
+            doc.setFont('helvetica', 'bold');
+            doc.text(`Hedef Ulke: ${country}`, 14, y); y += 7;
+            doc.setFont('helvetica', 'normal');
+            doc.text(`Sure: ${days} gun  -  Kisi: ${travelers}  -  Sezon: ${SEASON_LABEL[season]}`, 14, y); y += 6;
+            doc.text(`Stil: ${TIER_LABEL[tier]}  -  Sehir: ${CITY_LABEL[cityTier]}`, 14, y); y += 10;
+            // Breakdown table
+            doc.setFont('helvetica', 'bold');
+            doc.setFillColor(241, 245, 249);
+            doc.rect(14, y - 5, 182, 8, 'F');
+            doc.text('Kalem', 18, y); doc.text('Tutar (EUR)', 192, y, { align: 'right' });
+            y += 7;
+            doc.setFont('helvetica', 'normal');
+            for (const r of rows) {
+              doc.text(r.label + (r.note ? ` (${r.note})` : ''), 18, y);
+              doc.text(`EUR ${r.eur.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}`, 192, y, { align: 'right' });
+              y += 6;
+            }
+            // Total
+            y += 4;
+            doc.setDrawColor(99, 102, 241);
+            doc.setLineWidth(0.5);
+            doc.line(14, y, 196, y);
+            y += 7;
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(13);
+            doc.text('TOPLAM', 18, y);
+            doc.text(`EUR ${breakdown.totalEUR.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}`, 192, y, { align: 'right' });
+            y += 6;
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(100, 116, 139);
+            doc.text(`Yaklasik TRY ${Math.round(breakdown.totalEUR * eurToTry).toLocaleString('tr-TR')} (kur EUR1 = TRY${eurToTry})`, 18, y);
+            y += 12;
+            // Notes
+            doc.setTextColor(15, 23, 42);
+            if (breakdown.notes.length > 0) {
+              doc.setFont('helvetica', 'bold');
+              doc.setFontSize(10);
+              doc.text('Notlar:', 14, y); y += 5;
+              doc.setFont('helvetica', 'normal');
+              doc.setFontSize(9);
+              for (const n of breakdown.notes) {
+                const lines = doc.splitTextToSize('- ' + n, 180);
+                doc.text(lines, 14, y);
+                y += lines.length * 4.5;
+              }
+            }
+            // Footer
+            doc.setFontSize(8);
+            doc.setTextColor(148, 163, 184);
+            doc.text('Rakamlar 2026 piyasa ortalamasi - tahmini.', 14, 285);
+            doc.text('vizeakil.com', 196, 285, { align: 'right' });
+            doc.save(`VizeAkil_Maliyet_${country.replace(/\s+/g, '_')}_${today.replace(/\//g, '-')}.pdf`);
+          }}
+          className="w-full flex items-center justify-center gap-2 py-2.5 bg-white border border-indigo-200 text-indigo-700 rounded-xl text-sm font-bold hover:bg-indigo-50 transition-colors"
+        >
+          <Download className="w-4 h-4" />
+          PDF olarak indir
+        </button>
 
         <div className="text-[10px] text-slate-400 pt-1 border-t border-slate-100">
           Rakamlar 2026 piyasa ortalamalarına göre tahmini. Gerçek fiyatlar sezon, rezervasyon zamanı ve tercihlere göre değişir.

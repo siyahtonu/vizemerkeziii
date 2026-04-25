@@ -4,6 +4,7 @@
 // ============================================================
 
 import React, { useState, useMemo } from 'react';
+import { Download } from 'lucide-react';
 import { TR_REJECTION_RATES } from '../scoring/matrices';
 
 // ── Ülke meta verisi ─────────────────────────────────────────────────────────
@@ -118,6 +119,85 @@ export function CountryCompareWidget({ defaultLeft = 'Almanya', defaultRight = '
         <span className="ml-auto text-[10px] text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
           VS Modu
         </span>
+        <button
+          type="button"
+          title="Karşılaştırmayı PDF olarak indir"
+          onClick={async () => {
+            const { jsPDF } = await import('jspdf');
+            const doc = new jsPDF();
+            const today = new Date().toLocaleDateString('tr-TR');
+            doc.setFillColor(99, 102, 241);
+            doc.rect(0, 0, 220, 22, 'F');
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(14);
+            doc.setFont('helvetica', 'bold');
+            doc.text('VizeAkil - Ulke Karsilastirma', 14, 14);
+            doc.setFontSize(9);
+            doc.setFont('helvetica', 'normal');
+            doc.text(today, 196, 14, { align: 'right' });
+            doc.setTextColor(15, 23, 42);
+            let y = 32;
+            doc.setFontSize(13);
+            doc.setFont('helvetica', 'bold');
+            doc.text(`${left}  vs  ${right}`, 14, y); y += 10;
+            // Iki sutunlu tablo
+            doc.setFontSize(10);
+            doc.setFillColor(241, 245, 249);
+            doc.rect(14, y - 5, 182, 8, 'F');
+            doc.text('Olcut', 18, y);
+            doc.text(left, 110, y, { align: 'right' });
+            doc.text(right, 192, y, { align: 'right' });
+            y += 8;
+            doc.setFont('helvetica', 'normal');
+            const rows: Array<[string, string, string]> = [
+              ['Vize Tipi', L.visaType, R.visaType],
+              ['Ret Orani (%)', String(L.rejRate), String(R.rejRate)],
+              ['Onay Orani (%)', String(100 - L.rejRate), String(100 - R.rejRate)],
+              ['Ortalama Bekleme (gun)', String(L.waitDays), String(R.waitDays)],
+              ['Zorluk', DIFFICULTY_LABEL[L.difficulty], DIFFICULTY_LABEL[R.difficulty]],
+            ];
+            rows.forEach(([k, lv, rv]) => {
+              doc.text(k, 18, y);
+              doc.text(lv, 110, y, { align: 'right' });
+              doc.text(rv, 192, y, { align: 'right' });
+              doc.setDrawColor(226, 232, 240);
+              doc.line(14, y + 2, 196, y + 2);
+              y += 7;
+            });
+            y += 4;
+            // Tavsiye
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(11);
+            doc.setTextColor(5, 150, 105);
+            const winner = leftScore >= rightScore ? left : right;
+            doc.text(`Tavsiye: Once ${winner}'a basvur`, 14, y); y += 7;
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(9);
+            doc.setTextColor(15, 23, 42);
+            doc.text('Daha dusuk ret orani ve daha kisa bekleme suresi avantaji.', 14, y); y += 8;
+            // Tip notlari
+            doc.setFont('helvetica', 'bold');
+            doc.text(`${left} icin tip:`, 14, y); y += 5;
+            doc.setFont('helvetica', 'normal');
+            const lt = doc.splitTextToSize(L.tip, 180);
+            doc.text(lt, 14, y); y += lt.length * 4.5 + 4;
+            doc.setFont('helvetica', 'bold');
+            doc.text(`${right} icin tip:`, 14, y); y += 5;
+            doc.setFont('helvetica', 'normal');
+            const rt = doc.splitTextToSize(R.tip, 180);
+            doc.text(rt, 14, y);
+            // Footer
+            doc.setFontSize(8);
+            doc.setTextColor(148, 163, 184);
+            doc.text('Veriler 2024-2025 EU/UK/US istatistik havuzuna dayanir.', 14, 285);
+            doc.text('vizeakil.com', 196, 285, { align: 'right' });
+            doc.save(`VizeAkil_${left}_vs_${right}_${today.replace(/\//g, '-')}.pdf`);
+          }}
+          className="ml-1 inline-flex items-center gap-1 px-2 py-1 bg-white border border-slate-200 rounded-lg text-[10px] font-bold text-slate-600 hover:bg-slate-50 transition-colors"
+        >
+          <Download className="w-3 h-3" />
+          PDF
+        </button>
       </div>
 
       <div className="p-4 space-y-4">

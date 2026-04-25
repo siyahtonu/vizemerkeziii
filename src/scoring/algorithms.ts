@@ -95,13 +95,19 @@ export const calculateCompleteness = (data: ProfileData): number => {
 // ── #6 Güven Aralığı (Confidence Interval) ────────────────────────────────
 // Mantık: Completeness düşükse aralık geniş. Yüksekse dar.
 // Çıktı: { label, width, low, high }
+//
+// v3.11: Aralık daraltıldı. Önceki ±20 max widht "%9–%47" gibi mantıksız geniş
+// aralıklar üretiyordu. Aslında düşük completeness'da bile iyi kalibre edilmiş
+// algoritma için ±10 üstüne çıkmamalı; yoksa skor anlamını kaybediyor.
+//   completeness = 1.0 → ±3   (tam profilde bile 0 değil — model belirsizliği)
+//   completeness = 0.5 → ±7
+//   completeness = 0.0 → ±10  (boş profilde maksimum)
 export const calculateConfidenceInterval = (
   score: number,
   completeness: number,
 ): { label: 'Yüksek' | 'Orta' | 'Düşük'; color: string; low: number; high: number; missingCount: number } => {
   const missingCount = KEY_FIELDS.length - Math.round(completeness * KEY_FIELDS.length);
-  // Width: completeness=1 → ±5, completeness=0.5 → ±12, completeness=0 → ±20
-  const width = Math.round(20 - completeness * 15);
+  const width = Math.round(10 - completeness * 7);
   const low  = Math.max(0,   score - width);
   const high = Math.min(100, score + width);
   if (completeness >= 0.80) return { label: 'Yüksek', color: 'text-emerald-600', low, high, missingCount };
