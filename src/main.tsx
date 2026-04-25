@@ -85,6 +85,8 @@ createRoot(document.getElementById('root')!).render(
       <HelmetProvider>
         <BrowserRouter>
           <ScrollToTop />
+          {/* Skip link — klavye kullanıcısı Tab ile ilk olarak buraya odaklanır */}
+          <a href="#main-content" className="skip-link">Ana içeriğe atla</a>
           <Suspense fallback={<LoadingSpinner />}>
             <Routes>
             <Route path="/"                    element={<App />} />

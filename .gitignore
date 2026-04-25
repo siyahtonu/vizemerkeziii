@@ -13,3 +13,7 @@ docs/*.txt
 server/applications.json
 server/rates-history.json
 server/consumed-tokens.json
+
+# Geliştirme notları + agent çıktıları (dahili — public repo'da görünmemeli)
+# NOT: Mevcut tracked dosyaları kaldırmak için: `git rm --cached -r arastirma/`
+arastirma/

@@ -5,21 +5,44 @@
 //   <ErrorBoundary>     — Tam sayfa hata ekranı (main.tsx için)
 //   <WidgetBoundary>    — Satır içi hata kartı (bileşen seviyesi)
 //
-// Loglama: console.error + window.__vizeMerkezi_onError hook
-// Sentry veya başka bir izleme aracı entegre etmek için
-// window.__vizeMerkezi_onError'ü override et:
-//   window.__vizeMerkezi_onError = (err, info) => Sentry.captureException(err, { extra: info });
+// Loglama:
+//   1. console.error (development)
+//   2. window.__vizeMerkezi_onError hook (Sentry/Glitchtip vb. entegrasyon noktası)
+//   3. POST /api/errors (server log stream — built-in lightweight reporter)
 // ============================================================
 
 /// <reference types="vite/client" />
 
 import { Component } from 'react';
 import type { ReactNode, ErrorInfo } from 'react';
+import { apiUrl } from '../lib/api';
 
 // Global hook — dışarıdan override edilebilir (Sentry vb.)
 declare global {
   interface Window {
     __vizeMerkezi_onError?: (error: Error, info: ErrorInfo) => void;
+  }
+}
+
+// Server'a hata raporu gönderir — fire-and-forget; başarısız olursa sessiz geç.
+function reportToServer(error: Error, info: ErrorInfo, context: string, errorId: string | null): void {
+  try {
+    void fetch(apiUrl('/api/errors'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      keepalive: true, // sayfa kapanırken bile gitsin
+      body: JSON.stringify({
+        message: error.message,
+        stack: error.stack,
+        componentStack: info.componentStack ?? '',
+        url: typeof window !== 'undefined' ? window.location.href : '',
+        userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
+        errorId: errorId ?? '',
+        context,
+      }),
+    }).catch(() => { /* network kesintisi — sessiz geç */ });
+  } catch {
+    /* noop */
   }
 }
 
@@ -60,6 +83,7 @@ export class ErrorBoundary extends Component<Props, State> {
     } catch {
       // izleme hook kendisi crash olursa uygulamayı etkilemesin
     }
+    reportToServer(error, info, `boundary:${name}`, this.state.errorId);
   }
 
   private handleRetry = () => {
@@ -136,6 +160,7 @@ export class WidgetBoundary extends Component<Props, WidgetState> {
     } catch {
       // izleme hook kendisi crash olursa uygulamayı etkilemesin
     }
+    reportToServer(error, info, `widget:${name}`, null);
   }
 
   private handleRetry = () => {

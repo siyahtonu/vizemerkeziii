@@ -31,6 +31,34 @@ function formatDate(iso: string) {
   });
 }
 
+// BreadcrumbList schema — Google arama sonuçlarında "vizeakil.com › Blog › ..."
+// breadcrumb göstermesi için. Her blog yazısı altına eklenir, ayrı bir schema'dır.
+function buildBreadcrumbSchema(post: BlogPost) {
+  return {
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'Ana Sayfa',
+        item: 'https://vizeakil.com/',
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: 'Blog',
+        item: 'https://vizeakil.com/blog',
+      },
+      {
+        '@type': 'ListItem',
+        position: 3,
+        name: post.title,
+        item: `https://vizeakil.com/blog/${post.slug}`,
+      },
+    ],
+  };
+}
+
 export default function BlogPostLayout({ post, schema, children }: BlogPostLayoutProps) {
   // İlgili yazılar: aynı kategori öncelikli, sonra tag örtüşmesi (max 3)
   const sameCategory = BLOG_POSTS.filter(
@@ -58,7 +86,7 @@ export default function BlogPostLayout({ post, schema, children }: BlogPostLayou
         title={post.title}
         description={post.description}
         canonical={`/blog/${post.slug}`}
-        schema={schema}
+        schema={[schema, buildBreadcrumbSchema(post)]}
       />
 
       {/* ── Navigasyon ── */}

@@ -175,6 +175,51 @@ const KVKK: React.FC = () => (
             Tebliğ'de öngörülen usule uygun olarak düzenlenmelidir. Başvurularınız en geç 30 gün
             içinde sonuçlandırılır.
           </p>
+
+          {/* Hızlı işlem kartları — yerel veri silme + e-posta talebi */}
+          <div className="mt-5 grid sm:grid-cols-2 gap-3">
+            <button
+              type="button"
+              onClick={() => {
+                if (!window.confirm('Tarayıcınızdaki yerel profil verileri ve tüm tercihler silinsin mi? Bu işlem geri alınamaz.')) return;
+                try {
+                  // Skorlama profili, mülakat ilerlemesi, AI rıza vs. tüm uygulama state'i
+                  const keys = [
+                    'vizeakil_profile_v1',
+                    'vizeakil_applicant_type',
+                    'vizeakil_used_tools',
+                    'vizeakil_completed_tools',
+                    'vizeakil_custom_cursor',
+                    'vizeakil_community_v1',
+                    'vizeakil_ai_kvkk_consent_v1',
+                  ];
+                  for (const k of keys) localStorage.removeItem(k);
+                  alert('Yerel verileriniz silindi. Sayfa yenileniyor.');
+                  window.location.href = '/';
+                } catch {
+                  alert('Silme sırasında bir hata oluştu. Tarayıcı verilerinizi manuel temizleyebilirsiniz.');
+                }
+              }}
+              className="text-left p-4 bg-white border border-slate-200 hover:border-rose-300 hover:bg-rose-50/30 rounded-xl transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400"
+            >
+              <div className="text-sm font-bold text-slate-900 mb-1">🗑️ Yerel Verilerimi Sil</div>
+              <div className="text-xs text-slate-500 leading-relaxed">
+                Tarayıcı belleğindeki profil bilgileri, AI rızası ve tercihleri tek tıkla siler.
+                Sunucudaki kayıtlar (varsa) için aşağıdaki e-posta talebi gerekir.
+              </div>
+            </button>
+
+            <a
+              href="mailto:kvkk@vizeakil.com?subject=KVKK%20Madde%2011%20-%20Veri%20Silme%20Talebi&body=KVKK%20Madde%2011%20kapsam%C4%B1nda%20taraf%C4%B1ma%20ait%20ki%C5%9Fisel%20verilerin%20silinmesini%2C%20yok%20edilmesini%20veya%20anonim%20h%C3%A2le%20getirilmesini%20talep%20ediyorum.%0A%0AAd%2C%20Soyad%3A%20%5B...%5D%0AKay%C4%B1tl%C4%B1%20E-posta%3A%20%5B...%5D%0ATalep%3A%20%5BSilme%20%2F%20Anonimle%C5%9Ftirme%20%2F%20D%C3%BCzeltme%5D%0A%0ATe%C5%9Fekk%C3%BCrler."
+              className="block text-left p-4 bg-white border border-slate-200 hover:border-brand-300 hover:bg-brand-50/30 rounded-xl transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
+            >
+              <div className="text-sm font-bold text-slate-900 mb-1">✉️ Sunucu Verisi Silme Talebi</div>
+              <div className="text-xs text-slate-500 leading-relaxed">
+                E-posta hazır şablonla açılır. Talebiniz <strong>30 gün</strong> içinde sonuçlandırılır.
+                Bilgilerinizi doldurup gönderin.
+              </div>
+            </a>
+          </div>
         </section>
 
         <section>

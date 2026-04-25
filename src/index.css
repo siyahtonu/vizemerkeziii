@@ -43,6 +43,29 @@
   ::selection {
     @apply bg-brand-100 text-brand-900;
   }
+
+  /* ── Skip link — WCAG 2.2 AA / klavye kullanıcısı için ana içeriğe atla ── */
+  /* Görsel olarak gizli; Tab tuşuyla focus alınca görünür hale gelir. */
+  .skip-link {
+    position: absolute;
+    top: -40px;
+    left: 12px;
+    z-index: 9999;
+    padding: 8px 16px;
+    background: var(--color-brand-700);
+    color: white;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    text-decoration: none;
+    transition: top 0.2s;
+  }
+  .skip-link:focus,
+  .skip-link:focus-visible {
+    top: 12px;
+    outline: 2px solid white;
+    outline-offset: 2px;
+  }
 }
 
 @layer components {

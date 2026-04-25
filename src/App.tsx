@@ -3129,7 +3129,7 @@ Signature: _______________     Date: ${today}`;
       {/* Funnel adım göstergesi */}
       <StepProgress currentStep={step} onNavigate={setStep} />
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative">
+      <main id="main-content" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative">
 
         {/* ═══ UPGRADE MODAL — 3 Katmanlı Fiyatlandırma ═══ */}
         <AnimatePresence>
@@ -4125,7 +4125,7 @@ Signature: _______________     Date: ${today}`;
               <motion.div initial={{opacity:0,scale:0.95,y:20}} animate={{opacity:1,scale:1,y:0}}
                 exit={{opacity:0,scale:0.95,y:20}}
                 className="relative w-full max-w-2xl bg-white rounded-[2.5rem] shadow-2xl border border-slate-100 flex flex-col max-h-[92vh] overflow-hidden">
-                <div className="p-8 bg-gradient-to-r from-blue-700 to-indigo-800 text-white rounded-t-[2.5rem] shrink-0">
+                <div className="p-8 bg-gradient-to-r from-indigo-700 to-brand-700 text-white rounded-t-[2.5rem] shrink-0">
                   <div className="flex justify-between items-start">
                     <div>
                       <div className="flex items-center gap-2 text-blue-200 text-xs font-bold uppercase tracking-widest mb-2">
@@ -4710,7 +4710,7 @@ Signature: _______________     Date: ${today}`;
                 className="relative w-full max-w-5xl bg-white rounded-[2.5rem] shadow-2xl border border-slate-200 flex flex-col max-h-[92vh] overflow-hidden"
               >
                 {/* Header */}
-                <div className="p-8 border-b border-slate-100 bg-gradient-to-r from-blue-600 to-indigo-700 text-white shrink-0 rounded-t-[2.5rem]">
+                <div className="p-8 border-b border-slate-100 bg-gradient-to-r from-indigo-700 to-brand-700 text-white shrink-0 rounded-t-[2.5rem]">
                   <div className="flex justify-between items-start gap-3">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 text-blue-200 text-xs font-bold uppercase tracking-widest mb-2">

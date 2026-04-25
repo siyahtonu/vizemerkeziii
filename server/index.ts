@@ -12,6 +12,7 @@ import outcomesRouter from './outcomes.js';
 import contactRouter from './contact.js';
 import ratesRouter from './rates.js';
 import answenaRouter from './answena.js';
+import errorsRouter from './errors.js';
 
 const app = express();
 
@@ -219,9 +220,83 @@ app.use('/api/rates', ratesRouter);
 // Tüm endpoint'ler admin-gated; ANSWENA_API_KEY sunucuda kalır.
 app.use('/api/answena', answenaRouter);
 
+// ── Frontend hata raporlama ───────────────────────────────
+// ErrorBoundary'den ve global handler'dan gelen hataları log stream'ine yazar.
+app.use('/api/errors', errorsRouter);
+
 // ── Sağlık kontrolü ───────────────────────────────────────
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', ts: Date.now() });
+});
+
+// ── Derin sağlık kontrolü (admin-gated) ────────────────────
+// Upstream bağımlılıkların durumunu raporlar: DeepSeek, iyzipay, SMTP.
+// Production incident'ında hızlı tanı için. ADMIN_SECRET header'ı gerekir.
+app.get('/api/health/deep', async (req, res) => {
+  const adminSecret = req.headers['x-admin-secret'];
+  if (!adminSecret || adminSecret !== process.env.ADMIN_SECRET) {
+    return res.status(403).json({ error: 'Yetkisiz.' });
+  }
+
+  type Check = { name: string; ok: boolean; ms: number; detail?: string };
+  const checks: Check[] = [];
+
+  // 1) DeepSeek API erişilebilir mi (auth header şart, /models endpoint kullan)
+  if (process.env.DEEPSEEK_API_KEY) {
+    const t0 = Date.now();
+    try {
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 5000);
+      const r = await fetch(`${DEEPSEEK_BASE_URL}/models`, {
+        headers: { Authorization: `Bearer ${process.env.DEEPSEEK_API_KEY}` },
+        signal: ctrl.signal,
+      });
+      clearTimeout(timer);
+      checks.push({ name: 'deepseek', ok: r.ok, ms: Date.now() - t0, detail: `HTTP ${r.status}` });
+    } catch (e) {
+      checks.push({ name: 'deepseek', ok: false, ms: Date.now() - t0, detail: e instanceof Error ? e.message : 'unknown' });
+    }
+  } else {
+    checks.push({ name: 'deepseek', ok: false, ms: 0, detail: 'DEEPSEEK_API_KEY env yok' });
+  }
+
+  // 2) Iyzipay env varlığı (gerçek API ping yapmıyoruz — kart bilgisi gerekir)
+  const iyzipayConfigured = !!(process.env.IYZICO_API_KEY && process.env.IYZICO_SECRET_KEY);
+  checks.push({
+    name: 'iyzipay',
+    ok: iyzipayConfigured,
+    ms: 0,
+    detail: iyzipayConfigured ? `env=${process.env.IYZICO_ENV ?? 'sandbox'}` : 'IYZICO_API_KEY/SECRET_KEY env yok',
+  });
+
+  // 3) SMTP — verify() çağrısı bağlantıyı sınar
+  const smtpConfigured = !!(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS);
+  if (smtpConfigured) {
+    const t0 = Date.now();
+    try {
+      const nodemailer = await import('nodemailer');
+      const transporter = nodemailer.default.createTransport({
+        host: process.env.SMTP_HOST,
+        port: parseInt(process.env.SMTP_PORT ?? '587', 10),
+        secure: parseInt(process.env.SMTP_PORT ?? '587', 10) === 465,
+        auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+        tls: { rejectUnauthorized: process.env.SMTP_TLS_ALLOW_SELF_SIGNED !== '1' },
+      });
+      await transporter.verify();
+      checks.push({ name: 'smtp', ok: true, ms: Date.now() - t0 });
+    } catch (e) {
+      checks.push({ name: 'smtp', ok: false, ms: Date.now() - t0, detail: e instanceof Error ? e.message : 'unknown' });
+    }
+  } else {
+    checks.push({ name: 'smtp', ok: false, ms: 0, detail: 'SMTP_HOST/USER/PASS env yok' });
+  }
+
+  const allOk = checks.every((c) => c.ok);
+  res.status(allOk ? 200 : 503).json({
+    status: allOk ? 'ok' : 'degraded',
+    ts: Date.now(),
+    checks,
+  });
 });
 
 // API-dışı istekler → frontend'e (vizeakil.com) yönlendir.
